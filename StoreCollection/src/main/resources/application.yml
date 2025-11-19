@@ -18,7 +18,7 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
 
 jwt:
-  secret: mi-clave-secreta-muy-larga-y-segura-1234567890abcdef
+  secret: 8f9e2a7c1d5b3e6f4a9d8c7b6e5f4d3c2b1a0f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2910
   expiration: 86400000 # 24 horas
 
 app:

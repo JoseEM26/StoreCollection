@@ -4,6 +4,7 @@ import com.proyecto.StoreCollection.dto.response.CategoriaResponse;
 import com.proyecto.StoreCollection.dto.response.PageResponse;
 import com.proyecto.StoreCollection.service.CategoriaService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -13,55 +14,37 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 @RestController
-@RequestMapping("/api/categorias")
+@RequiredArgsConstructor
 public class CategoriaController {
 
-    @Autowired
-    private CategoriaService service;
+    private final CategoriaService service;
 
-    @GetMapping
-    public ResponseEntity<PageResponse<CategoriaResponse>> listar(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        Page<CategoriaResponse> pagina = service.findAll(PageRequest.of(page, size));
-        return ResponseEntity.ok(toPageResponse(pagina));
+    // PÚBLICO - para menú y filtros
+    @GetMapping("/api/public/tiendas/{tiendaSlug}/categorias")
+    public ResponseEntity<List<CategoriaResponse>> publicList(@PathVariable String tiendaSlug) {
+        return ResponseEntity.ok(service.findByTiendaSlug(tiendaSlug));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<CategoriaResponse> porId(@PathVariable Long id) {
-        return ResponseEntity.ok(service.findById(id));
+    // PRIVADO - panel del dueño
+    @GetMapping("/api/owner/categorias")
+    public ResponseEntity<List<CategoriaResponse>> misCategorias() {
+        return ResponseEntity.ok(service.findAllByTenant());
     }
 
-    @PostMapping
+    @PostMapping("/api/owner/categorias")
     public ResponseEntity<CategoriaResponse> crear(@Valid @RequestBody CategoriaRequest request) {
         return ResponseEntity.ok(service.save(request));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<CategoriaResponse> actualizar(
-            @PathVariable Long id,
-            @Valid @RequestBody CategoriaRequest request) {
+    @PutMapping("/api/owner/categorias/{id}")
+    public ResponseEntity<CategoriaResponse> actualizar(@PathVariable Long id,
+                                                        @Valid @RequestBody CategoriaRequest request) {
         return ResponseEntity.ok(service.save(request, id));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/api/owner/categorias/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         service.deleteById(id);
         return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/tienda/{tiendaId}")
-    public ResponseEntity<java.util.List<CategoriaResponse>> porTienda(@PathVariable Long tiendaId) {
-        return ResponseEntity.ok(service.findByTiendaId(tiendaId));
-    }
-
-    private PageResponse<CategoriaResponse> toPageResponse(Page<CategoriaResponse> page) {
-        PageResponse<CategoriaResponse> response = new PageResponse<>();
-        response.setContent(page.getContent());
-        response.setPage(page.getNumber());
-        response.setSize(page.getSize());
-        response.setTotalElements(page.getTotalElements());
-        response.setTotalPages(page.getTotalPages());
-        return response;
     }
 }

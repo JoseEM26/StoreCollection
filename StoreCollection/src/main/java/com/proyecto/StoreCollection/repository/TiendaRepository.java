@@ -13,4 +13,9 @@ public interface TiendaRepository extends JpaRepository<Tienda, Long> {
     Optional<Tienda> findBySlug(String slug);  // Usa Optional
 
     List<Tienda> findByUserId(Long userId);
+    // En TiendaRepository.java
+    Optional<Tienda> findByUserEmail(String email);
+
+    Optional<Tienda> findFirstByUserEmail(String email);
+
 }
