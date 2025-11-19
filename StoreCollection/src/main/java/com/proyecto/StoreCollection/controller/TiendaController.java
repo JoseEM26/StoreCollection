@@ -9,66 +9,52 @@ import com.proyecto.StoreCollection.service.AtributoValorService;
 import com.proyecto.StoreCollection.service.CarritoService;
 import com.proyecto.StoreCollection.service.TiendaService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
 @RestController
-@RequestMapping("/api/tiendas")
+@RequiredArgsConstructor
 public class TiendaController {
 
-    @Autowired
-    private TiendaService service;
+    private final TiendaService service;
 
-    @GetMapping
-    public ResponseEntity<PageResponse<TiendaResponse>> listar(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        Page<TiendaResponse> pagina = service.findAll(PageRequest.of(page, size));
-        return ResponseEntity.ok(toPageResponse(pagina));
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<TiendaResponse> porId(@PathVariable Long id) {
-        return ResponseEntity.ok(service.findById(id));
-    }
-
-    @GetMapping("/slug/{slug}")
-    public ResponseEntity<TiendaResponse> porSlug(@PathVariable String slug) {
+    // PÚBLICO - Info de tienda por slug
+    @GetMapping("/api/public/tiendas/{slug}")
+    public ResponseEntity<TiendaResponse> publicInfo(@PathVariable String slug) {
         return ResponseEntity.ok(service.findBySlug(slug));
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<java.util.List<TiendaResponse>> porUsuario(@PathVariable Long userId) {
-        return ResponseEntity.ok(service.findByUserId(userId));
+    // PRIVADO - Mis tiendas
+    @GetMapping("/api/owner/tiendas")
+    public ResponseEntity<List<TiendaResponse>> misTiendas() {
+        return ResponseEntity.ok(service.getMisTiendas());
     }
 
-    @PostMapping
+    @GetMapping("/api/owner/tiendas/mi-tienda")
+    public ResponseEntity<TiendaResponse> miTienda() {
+        return ResponseEntity.ok(service.getMiTienda());
+    }
+
+    @PostMapping("/api/owner/tiendas")
     public ResponseEntity<TiendaResponse> crear(@Valid @RequestBody TiendaRequest request) {
         return ResponseEntity.ok(service.save(request));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<TiendaResponse> actualizar(
-            @PathVariable Long id,
-            @Valid @RequestBody TiendaRequest request) {
+    @PutMapping("/api/owner/tiendas/{id}")
+    public ResponseEntity<TiendaResponse> actualizar(@PathVariable Long id,
+                                                     @Valid @RequestBody TiendaRequest request) {
         return ResponseEntity.ok(service.save(request, id));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/api/owner/tiendas/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         service.deleteById(id);
         return ResponseEntity.noContent().build();
-    }
-
-    private PageResponse<TiendaResponse> toPageResponse(Page<TiendaResponse> page) {
-        PageResponse<TiendaResponse> response = new PageResponse<>();
-        response.setContent(page.getContent());
-        response.setPage(page.getNumber());
-        response.setSize(page.getSize());
-        response.setTotalElements(page.getTotalElements());
-        response.setTotalPages(page.getTotalPages());
-        return response;
     }
 }

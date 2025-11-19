@@ -3,83 +3,85 @@ package com.proyecto.StoreCollection.service;
 import com.proyecto.StoreCollection.dto.request.CategoriaRequest;
 import com.proyecto.StoreCollection.dto.response.CategoriaResponse;
 import com.proyecto.StoreCollection.entity.Categoria;
-import com.proyecto.StoreCollection.entity.Tienda;
 import com.proyecto.StoreCollection.repository.CategoriaRepository;
-import com.proyecto.StoreCollection.repository.TiendaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class CategoriaServiceImpl implements CategoriaService {
 
-    @Autowired
-    private CategoriaRepository categoriaRepository;
+    private final CategoriaRepository categoriaRepository;
+    private final TiendaService tiendaService; // ← para asignar automáticamente la tienda
 
-    @Autowired
-    private TiendaRepository tiendaRepository;
-
+    // === PÚBLICO: para el menú y filtros del catálogo ===
     @Override
     @Transactional(readOnly = true)
-    public Page<CategoriaResponse> findAll(Pageable pageable) {
-        return categoriaRepository.findAll(pageable)
-                .map(this::toResponse);
+    public List<CategoriaResponse> findByTiendaSlug(String tiendaSlug) {
+        // TenantFilter ya puso el tenantId → solo mostramos las categorías de esa tienda
+        return categoriaRepository.findAllByTenant().stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    // === PRIVADO: panel del dueño ===
+    @Override
+    @Transactional(readOnly = true)
+    public List<CategoriaResponse> findAllByTenant() {
+        return categoriaRepository.findAllByTenant().stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<CategoriaResponse> findByTiendaId(Long tiendaId) {
-        return categoriaRepository.findByTiendaId(tiendaId)
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+    public Page<CategoriaResponse> findAll(Pageable pageable) {
+        return categoriaRepository.findAll(pageable).map(this::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public CategoriaResponse findById(Long id) {
-        Categoria categoria = categoriaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada: " + id));
+        Categoria categoria = categoriaRepository.getByIdAndTenant(id); // ← solo si es suyo
         return toResponse(categoria);
     }
 
     @Override
-    public CategoriaResponse save(CategoriaRequest request) { return save(request, null); }
+    public CategoriaResponse save(CategoriaRequest request) {
+        return save(request, null);
+    }
 
     @Override
     public CategoriaResponse save(CategoriaRequest request, Long id) {
-        Categoria cat = id == null ? new Categoria() : categoriaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada: " + id));
+        Categoria cat = id == null
+                ? new Categoria()
+                : categoriaRepository.getByIdAndTenant(id); // ← seguridad: solo puede editar las suyas
 
         cat.setNombre(request.getNombre());
         cat.setSlug(request.getSlug());
-        Tienda t = tiendaRepository.findById(request.getTiendaId())
-                .orElseThrow(() -> new RuntimeException("Tienda no encontrada"));
-        cat.setTienda(t);
+        cat.setTienda(tiendaService.getTiendaDelUsuarioActual()); // ← automático, 100% seguro
 
         return toResponse(categoriaRepository.save(cat));
     }
 
     @Override
     public void deleteById(Long id) {
-        if (!categoriaRepository.existsById(id)) {
-            throw new RuntimeException("Categoría no encontrada: " + id);
-        }
-        categoriaRepository.deleteById(id);
+        Categoria cat = categoriaRepository.getByIdAndTenant(id);
+        categoriaRepository.delete(cat);
     }
 
     private CategoriaResponse toResponse(Categoria c) {
-        CategoriaResponse dto = new CategoriaResponse();
-        dto.setId(c.getId());
-        dto.setNombre(c.getNombre());
-        dto.setSlug(c.getSlug());
-        dto.setTiendaId(c.getTienda().getId());
-        return dto;
+        return new CategoriaResponse(
+                c.getId(),
+                c.getNombre(),
+                c.getSlug(),
+                c.getTienda().getId()
+        );
     }
 }

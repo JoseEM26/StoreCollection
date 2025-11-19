@@ -1,8 +1,11 @@
 package com.proyecto.StoreCollection.dto.response;
 
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class AtributoResponse {
     private Long id;
     private String nombre;

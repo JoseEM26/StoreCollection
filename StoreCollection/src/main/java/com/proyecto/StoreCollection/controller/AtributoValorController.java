@@ -7,6 +7,7 @@ import com.proyecto.StoreCollection.dto.response.PageResponse;
 import com.proyecto.StoreCollection.service.AtributoService;
 import com.proyecto.StoreCollection.service.AtributoValorService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,57 +16,40 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
 @RestController
-@RequestMapping("/api/atributos-valores")
+@RequiredArgsConstructor
 public class AtributoValorController {
 
-    @Autowired
-    private AtributoValorService service;
+    private final AtributoValorService service;
 
-    @GetMapping
-    public ResponseEntity<PageResponse<AtributoValorResponse>> listar(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        Page<AtributoValorResponse> pagina = service.findAll(PageRequest.of(page, size));
-        return ResponseEntity.ok(toPageResponse(pagina));
+    // PÚBLICO: para filtros en catálogo
+    @GetMapping("/api/public/tiendas/{tiendaSlug}/atributos/{atributoId}/valores")
+    public ResponseEntity<List<AtributoValorResponse>> publicPorAtributo(
+            @PathVariable String tiendaSlug,
+            @PathVariable Long atributoId) {
+        return ResponseEntity.ok(service.findByAtributoIdAndTiendaSlug(atributoId, tiendaSlug));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<AtributoValorResponse> porId(@PathVariable Long id) {
-        return ResponseEntity.ok(service.findById(id));
+    // PRIVADO: panel del dueño
+    @GetMapping("/api/owner/atributos/{atributoId}/valores")
+    public ResponseEntity<List<AtributoValorResponse>> porAtributo(@PathVariable Long atributoId) {
+        return ResponseEntity.ok(service.findByAtributoId(atributoId)); // ya validado por tenant
     }
 
-    @PostMapping
+    @PostMapping("/api/owner/atributos-valores")
     public ResponseEntity<AtributoValorResponse> crear(@Valid @RequestBody AtributoValorRequest request) {
         return ResponseEntity.ok(service.save(request));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/api/owner/atributos-valores/{id}")
     public ResponseEntity<AtributoValorResponse> actualizar(
-            @PathVariable Long id,
-            @Valid @RequestBody AtributoValorRequest request) {
+            @PathVariable Long id, @Valid @RequestBody AtributoValorRequest request) {
         return ResponseEntity.ok(service.save(request, id));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/api/owner/atributos-valores/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         service.deleteById(id);
         return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/atributo/{atributoId}")
-    public ResponseEntity<java.util.List<AtributoValorResponse>> porAtributo(@PathVariable Long atributoId) {
-        return ResponseEntity.ok(service.findByAtributoId(atributoId));
-    }
-
-    private PageResponse<AtributoValorResponse> toPageResponse(Page<AtributoValorResponse> page) {
-        PageResponse<AtributoValorResponse> response = new PageResponse<>();
-        response.setContent(page.getContent());
-        response.setPage(page.getNumber());
-        response.setSize(page.getSize());
-        response.setTotalElements(page.getTotalElements());
-        response.setTotalPages(page.getTotalPages());
-        return response;
     }
 }

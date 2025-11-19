@@ -36,7 +36,10 @@ public class ProductoVariante {
 
     @Column(columnDefinition = "TEXT")
     private String imagenUrl;
-
+    // ← AÑADE ESTO (aunque herede, Spring a veces necesita verlo explícito)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tienda_id", nullable = false, updatable = false, insertable = false)
+    private Tienda tienda;
     @Column(nullable = false)
     private Boolean activo = true;
 

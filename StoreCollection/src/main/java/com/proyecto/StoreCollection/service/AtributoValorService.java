@@ -14,4 +14,5 @@ public interface AtributoValorService {
     AtributoValorResponse save(AtributoValorRequest request, Long id);
     void deleteById(Long id);
     List<AtributoValorResponse> findByAtributoId(Long atributoId);
+    List<AtributoValorResponse> findByAtributoIdAndTiendaSlug(Long atributoId, String tiendaSlug);
 }

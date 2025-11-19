@@ -3,45 +3,40 @@ package com.proyecto.StoreCollection.service;
 import com.proyecto.StoreCollection.dto.request.AtributoRequest;
 import com.proyecto.StoreCollection.dto.response.AtributoResponse;
 import com.proyecto.StoreCollection.entity.Atributo;
-import com.proyecto.StoreCollection.entity.Tienda;
 import com.proyecto.StoreCollection.repository.AtributoRepository;
-import com.proyecto.StoreCollection.repository.TiendaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class AtributoServiceImpl implements AtributoService {
 
-    @Autowired
-    private AtributoRepository repository;
+    private final AtributoRepository repository;
+    private final TiendaService tiendaService; // ← clave para obtener la tienda del usuario
 
-    @Autowired
-    private TiendaRepository tiendaRepository;
-
+    // === PÚBLICO: para filtros en catálogo ===
     @Override
-    public AtributoResponse save(AtributoRequest request) {
-        return save(request, null);
+    @Transactional(readOnly = true)
+    public List<AtributoResponse> findByTiendaSlug(String tiendaSlug) {
+        // El TenantFilter ya puso el tenantId → solo usamos findAllByTenant()
+        return repository.findAllByTenant().stream()
+                .map(this::toResponse)
+                .toList();
     }
 
+    // === PRIVADO: dueño logueado ===
     @Override
-    public AtributoResponse save(AtributoRequest request, Long id) {
-        Atributo atributo = id == null ? new Atributo() : repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Atributo no encontrado: " + id));
-
-        atributo.setNombre(request.getNombre());
-        Tienda tienda = tiendaRepository.findById(request.getTiendaId())
-                .orElseThrow(() -> new RuntimeException("Tienda no encontrada: " + request.getTiendaId()));
-        atributo.setTienda(tienda);
-
-        atributo = repository.save(atributo);
-        return toResponse(atributo);
+    @Transactional(readOnly = true)
+    public List<AtributoResponse> findAllByTenant() {
+        return repository.findAllByTenant().stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Override
@@ -53,28 +48,38 @@ public class AtributoServiceImpl implements AtributoService {
     @Override
     @Transactional(readOnly = true)
     public AtributoResponse findById(Long id) {
-        return repository.findById(id).map(this::toResponse)
-                .orElseThrow(() -> new RuntimeException("Atributo no encontrado: " + id));
+        Atributo atributo = repository.getByIdAndTenant(id); // ← solo si es suyo
+        return toResponse(atributo);
+    }
+
+    @Override
+    public AtributoResponse save(AtributoRequest request) {
+        return save(request, null);
+    }
+
+    @Override
+    public AtributoResponse save(AtributoRequest request, Long id) {
+        Atributo atributo = id == null
+                ? new Atributo()
+                : repository.getByIdAndTenant(id); // ← solo puede editar los suyos
+
+        atributo.setNombre(request.getNombre());
+        atributo.setTienda(tiendaService.getTiendaDelUsuarioActual()); // ← automático
+
+        return toResponse(repository.save(atributo));
     }
 
     @Override
     public void deleteById(Long id) {
-        if (!repository.existsById(id)) throw new RuntimeException("Atributo no encontrado: " + id);
-        repository.deleteById(id);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<AtributoResponse> findByTiendaId(Long tiendaId) {
-        return repository.findByTiendaId(tiendaId).stream()
-                .map(this::toResponse).collect(Collectors.toList());
+        Atributo atributo = repository.getByIdAndTenant(id);
+        repository.delete(atributo);
     }
 
     private AtributoResponse toResponse(Atributo a) {
-        AtributoResponse dto = new AtributoResponse();
-        dto.setId(a.getId());
-        dto.setNombre(a.getNombre());
-        dto.setTiendaId(a.getTienda().getId());
-        return dto;
+        return new AtributoResponse(
+                a.getId(),
+                a.getNombre(),
+                a.getTienda().getId()
+        );
     }
 }

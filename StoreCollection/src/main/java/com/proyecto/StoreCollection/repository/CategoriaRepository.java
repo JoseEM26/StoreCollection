@@ -8,5 +8,4 @@ import java.util.List;
 
 @Repository
 public interface CategoriaRepository extends TenantBaseRepository<Categoria, Long> {
-     List<Categoria> findByTiendaId(Long tiendaId);
 }

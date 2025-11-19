@@ -1,3 +1,5 @@
+// src/main/java/com/proyecto/StoreCollection/service/ProductoVarianteServiceImpl.java
+
 package com.proyecto.StoreCollection.service;
 
 import com.proyecto.StoreCollection.dto.request.ProductoVarianteRequest;
@@ -9,7 +11,7 @@ import com.proyecto.StoreCollection.entity.ProductoVariante;
 import com.proyecto.StoreCollection.repository.AtributoValorRepository;
 import com.proyecto.StoreCollection.repository.ProductoRepository;
 import com.proyecto.StoreCollection.repository.ProductoVarianteRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -21,48 +23,59 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class ProductoVarianteServiceImpl implements ProductoVarianteService {
 
-    @Autowired
-    private ProductoVarianteRepository repository;
+    private final ProductoVarianteRepository varianteRepository;
+    private final ProductoRepository productoRepository;
+    private final AtributoValorRepository atributoValorRepository;
+    private final TiendaService tiendaService; // ← para seguridad
 
-    @Autowired
-    private ProductoRepository productoRepository;
+    // PÚBLICO: catálogo
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductoVarianteResponse> findByTiendaSlugAndProductoSlug(
+            String tiendaSlug, String productoSlug) {
 
-    @Autowired
-    private AtributoValorRepository atributoValorRepository;
+        return varianteRepository.findByTiendaSlugAndProductoSlug(tiendaSlug, productoSlug)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
 
+    // PRIVADO: panel del dueño
     @Override
     @Transactional(readOnly = true)
     public Page<ProductoVarianteResponse> findAll(Pageable pageable) {
-        return repository.findAll(pageable)
-                .map(this::toResponse);
+        return varianteRepository.findAll(pageable).map(this::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ProductoVarianteResponse> findByProductoId(Long productoId) {
-        return repository.findByProductoId(productoId)
-                .stream()
+        // SEGURIDAD: el producto debe ser del dueño
+        productoRepository.getByIdAndTenant(productoId);
+        return varianteRepository.findByProductoIdSafe(productoId).stream()
                 .map(this::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public ProductoVarianteResponse findById(Long id) {
-        ProductoVariante variante = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Variante no encontrada: " + id));
-        return toResponse(variante);
+        return toResponse(varianteRepository.getByIdAndTenant(id));
     }
 
     @Override
-    public ProductoVarianteResponse save(ProductoVarianteRequest request) { return save(request, null); }
+    public ProductoVarianteResponse save(ProductoVarianteRequest request) {
+        return save(request, null);
+    }
 
     @Override
     public ProductoVarianteResponse save(ProductoVarianteRequest request, Long id) {
-        ProductoVariante v = id == null ? new ProductoVariante() : repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Variante no encontrada: " + id));
+        ProductoVariante v = id == null
+                ? new ProductoVariante()
+                : varianteRepository.getByIdAndTenant(id); // ← solo puede editar las suyas
 
         v.setSku(request.getSku());
         v.setPrecio(request.getPrecio());
@@ -70,23 +83,35 @@ public class ProductoVarianteServiceImpl implements ProductoVarianteService {
         v.setImagenUrl(request.getImagenUrl());
         v.setActivo(request.getActivo());
 
-        Producto p = productoRepository.findById(request.getProductoId())
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+        // SEGURIDAD: solo puede usar productos de su tienda
+        Producto p = productoRepository.getByIdAndTenant(request.getProductoId());
         v.setProducto(p);
 
-        if (request.getAtributoValorIds() != null) {
-            v.setAtributos(atributoValorRepository.findAllById(request.getAtributoValorIds()).stream().collect(Collectors.toSet()));
+        // Atributos (colores, tallas, etc.)
+        if (request.getAtributoValorIds() != null && !request.getAtributoValorIds().isEmpty()) {
+            Set<AtributoValor> attrs = atributoValorRepository.findAllById(request.getAtributoValorIds())
+                    .stream()
+                    .collect(Collectors.toSet());
+            v.setAtributos(attrs);
+        } else {
+            v.setAtributos(Set.of());
         }
 
-        return toResponse(repository.save(v));
+        return toResponse(varianteRepository.save(v));
     }
 
     @Override
     public void deleteById(Long id) {
-        if (!repository.existsById(id)) {
-            throw new RuntimeException("Variante no encontrada: " + id);
-        }
-        repository.deleteById(id);
+        varianteRepository.delete(varianteRepository.getByIdAndTenant(id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductoVarianteResponse> findByProductoSlug(String tiendaSlug, String productoSlug) {
+        return varianteRepository.findByTiendaSlugAndProductoSlug(tiendaSlug, productoSlug)
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     private ProductoVarianteResponse toResponse(ProductoVariante v) {
@@ -105,6 +130,7 @@ public class ProductoVarianteServiceImpl implements ProductoVarianteService {
                     avDto.setId(av.getId());
                     avDto.setValor(av.getValor());
                     avDto.setAtributoId(av.getAtributo().getId());
+                    avDto.setAtributoNombre(av.getAtributo().getNombre());
                     return avDto;
                 })
                 .collect(Collectors.toSet());

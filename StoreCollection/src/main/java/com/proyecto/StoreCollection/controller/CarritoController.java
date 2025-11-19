@@ -10,6 +10,7 @@
     import com.proyecto.StoreCollection.service.AtributoValorService;
     import com.proyecto.StoreCollection.service.CarritoService;
     import jakarta.validation.Valid;
+    import lombok.RequiredArgsConstructor;
     import org.springframework.beans.factory.annotation.Autowired;
     import org.springframework.data.domain.Page;
     import org.springframework.data.domain.PageRequest;
@@ -20,42 +21,36 @@
     import java.util.stream.Collectors;
 
     @RestController
-    @RequestMapping("/api/carrito")
+    @RequiredArgsConstructor
+    @RequestMapping("/api/public/carrito")
     public class CarritoController {
 
-        @Autowired
-        private CarritoService service;
+        private final CarritoService service;
 
         @GetMapping("/session/{sessionId}")
-        public ResponseEntity<java.util.List<CarritoResponse>> porSession(@PathVariable String sessionId) {
+        public ResponseEntity<List<CarritoResponse>> getBySession(@PathVariable String sessionId) {
             return ResponseEntity.ok(service.findBySessionId(sessionId));
         }
 
-        @GetMapping("/{id}")
-        public ResponseEntity<CarritoResponse> porId(@PathVariable Long id) {
-            return ResponseEntity.ok(service.findById(id));
-        }
-
         @PostMapping
-        public ResponseEntity<CarritoResponse> agregar(@Valid @RequestBody CarritoRequest request) {
+        public ResponseEntity<CarritoResponse> agregar(@RequestBody CarritoRequest request) {
             return ResponseEntity.ok(service.save(request));
         }
 
         @PutMapping("/{id}")
-        public ResponseEntity<CarritoResponse> actualizar(
-                @PathVariable Long id,
-                @Valid @RequestBody CarritoRequest request) {
+        public ResponseEntity<CarritoResponse> actualizar(@PathVariable Long id,
+                                                          @RequestBody CarritoRequest request) {
             return ResponseEntity.ok(service.save(request, id));
         }
 
         @DeleteMapping("/{id}")
-        public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        public ResponseEntity<Void> eliminarItem(@PathVariable Long id) {
             service.deleteById(id);
             return ResponseEntity.noContent().build();
         }
 
         @DeleteMapping("/session/{sessionId}")
-        public ResponseEntity<Void> limpiar(@PathVariable String sessionId) {
+        public ResponseEntity<Void> vaciar(@PathVariable String sessionId) {
             service.limpiarCarrito(sessionId);
             return ResponseEntity.noContent().build();
         }

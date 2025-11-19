@@ -14,26 +14,27 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 public class ProductoController {
 
     private final ProductoService service;
 
-    // === PÚBLICO: Catálogo por slug de tienda ===
+    // PÚBLICO - Catálogo por slug
     @GetMapping("/api/public/tiendas/{tiendaSlug}/productos")
-    public ResponseEntity<java.util.List<ProductoResponse>> publicPorTienda(@PathVariable String tiendaSlug) {
+    public ResponseEntity<List<ProductoResponse>> publicList(@PathVariable String tiendaSlug) {
         return ResponseEntity.ok(service.findByTiendaSlug(tiendaSlug));
     }
 
     @GetMapping("/api/public/tiendas/{tiendaSlug}/productos/{productoSlug}")
-    public ResponseEntity<ProductoResponse> publicDetalle(
-            @PathVariable String tiendaSlug,
-            @PathVariable String productoSlug) {
+    public ResponseEntity<ProductoResponse> publicDetail(
+            @PathVariable String tiendaSlug, @PathVariable String productoSlug) {
         return ResponseEntity.ok(service.findByTiendaSlugAndProductoSlug(tiendaSlug, productoSlug));
     }
 
-    // === DUEÑO: Panel de administración ===
+    // PRIVADO - Panel del dueño
     @GetMapping("/api/owner/productos")
     public ResponseEntity<PageResponse<ProductoResponse>> misProductos(
             @RequestParam(defaultValue = "0") int page,
@@ -43,7 +44,7 @@ public class ProductoController {
     }
 
     @GetMapping("/api/owner/productos/categoria/{categoriaId}")
-    public ResponseEntity<java.util.List<ProductoResponse>> porCategoria(@PathVariable Long categoriaId) {
+    public ResponseEntity<List<ProductoResponse>> porCategoria(@PathVariable Long categoriaId) {
         return ResponseEntity.ok(service.findByCategoriaId(categoriaId));
     }
 
@@ -53,9 +54,8 @@ public class ProductoController {
     }
 
     @PutMapping("/api/owner/productos/{id}")
-    public ResponseEntity<ProductoResponse> actualizar(
-            @PathVariable Long id,
-            @Valid @RequestBody ProductoRequest request) {
+    public ResponseEntity<ProductoResponse> actualizar(@PathVariable Long id,
+                                                       @Valid @RequestBody ProductoRequest request) {
         return ResponseEntity.ok(service.save(request, id));
     }
 
@@ -65,14 +65,8 @@ public class ProductoController {
         return ResponseEntity.noContent().build();
     }
 
-
     private PageResponse<ProductoResponse> toPageResponse(Page<ProductoResponse> page) {
-        PageResponse<ProductoResponse> response = new PageResponse<>();
-        response.setContent(page.getContent());
-        response.setPage(page.getNumber());
-        response.setSize(page.getSize());
-        response.setTotalElements(page.getTotalElements());
-        response.setTotalPages(page.getTotalPages());
-        return response;
+        return new PageResponse<>(page.getContent(), page.getNumber(), page.getSize(),
+                page.getTotalElements(), page.getTotalPages());
     }
 }
