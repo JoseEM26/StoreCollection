@@ -1,0 +1,64 @@
+<div class="producto-detalle" *ngIf="producto; else noEncontrado">
+  <div class="container py-5">
+    <div class="row g-5 align-items-start">
+
+      <!-- IMAGEN CON ZOOM LUPA -->
+      <div class="col-lg-6">
+        <div class="imagen-zoom-container" data-aos="fade-right">
+          <img 
+            [src]="producto.imagen" 
+            [alt]="producto.nombre"
+            class="imagen-principal"
+            id="imgZoom">
+          <div class="lupa" id="lupa"></div>
+        </div>
+      </div>
+
+      <!-- INFORMACIÓN -->
+      <div class="col-lg-6">
+        <div class="info-container" data-aos="fade-left">
+          <span class="categoria">{{ producto.categoria }}</span>
+          <h1 class="nombre">{{ producto.nombre }}</h1>
+
+          <div class="precio">
+            <span class="simbolo">$</span>
+            <span class="valor">{{ producto.precio }}</span>
+          </div>
+
+          <p class="descripcion">{{ producto.descripcion }}</p>
+
+          <div class="stock mt-4" [class.agotado]="!hayStock">
+            <strong>{{ hayStock ? 'En stock' : 'Agotado' }}</strong>
+            <span *ngIf="hayStock && producto.stock <= 10" class="pocos">
+              ¡Solo quedan {{ producto.stock }} unidades!
+            </span>
+          </div>
+
+          <div class="acciones mt-5">
+            <button class="btn-comprar" [disabled]="!hayStock">
+              {{ hayStock ? 'Comprar Ahora' : 'Sin stock' }}
+            </button>
+            <button class="btn-carrito" [disabled]="!hayStock">
+              Agregar al carrito
+            </button>
+          </div>
+
+          <div class="volver mt-4">
+            <a routerLink="/catalogo" class="link-volver">Seguir explorando</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NO ENCONTRADO -->
+<ng-template #noEncontrado>
+  <div class="no-encontrado">
+    <div class="container text-center py-5">
+      <h2 class="mb-3">Producto no encontrado</h2>
+      <p class="text-muted mb-4">El producto que buscas no está disponible en este momento.</p>
+      <a routerLink="/" class="btn-home">Volver al inicio</a>
+    </div>
+  </div>
+</ng-template>

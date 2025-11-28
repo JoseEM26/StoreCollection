@@ -1,0 +1,45 @@
+<!-- src/app/componente/producto-card/producto-card.component.html -->
+<div class="producto-card" 
+     [class.agotado]="!hayStock"
+     data-aos="fade-up"
+     data-aos-duration="600">
+
+  <a [routerLink]="['/producto', producto.id]" class="producto-link">
+    
+    <!-- Imagen con overlay premium -->
+    <div class="imagen-container">
+      <img 
+        [src]="producto.imagen" 
+        [alt]="producto.nombre"
+        class="producto-imagen"
+        loading="lazy">
+      
+      <!-- Overlay solo aparece en hover -->
+      <div class="imagen-overlay">
+        <span class="ver-detalle">Ver detalle</span>
+      </div>
+
+      <!-- Badge de agotado -->
+      <div class="badge-agotado" *ngIf="!hayStock">
+        Agotado
+      </div>
+    </div>
+
+    <!-- Información -->
+    <div class="info-container">
+      <span class="categoria">{{ producto.categoria }}</span>
+      
+      <h3 class="nombre">{{ producto.nombre }}</h3>
+      
+      <div class="precio">
+        <span class="simbolo">$</span>
+        <span class="valor">{{ producto.precio }}</span>
+      </div>
+
+      <!-- Stock sutil -->
+      <div class="stock-info" *ngIf="hayStock && producto.stock <= 5">
+        ¡Solo quedan {{ producto.stock }}!
+      </div>
+    </div>
+  </a>
+</div>

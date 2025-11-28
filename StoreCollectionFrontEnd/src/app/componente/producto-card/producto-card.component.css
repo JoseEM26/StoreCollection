@@ -1,0 +1,158 @@
+.producto-card {
+  background: white;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 100%;
+  position: relative;
+  border: 1px solid #f1f1f1;
+}
+
+.producto-card:hover {
+  transform: translateY(-16px);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.15);
+  border-color: #e5e5e5;
+}
+
+.producto-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.imagen-container {
+  position: relative;
+  height: 300px;
+  overflow: hidden;
+  background: #f8f8f8;
+}
+
+.producto-imagen {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.7s ease;
+}
+
+.producto-card:hover .producto-imagen {
+  transform: scale(1.1);
+}
+
+.imagen-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(transparent 40%, rgba(0,0,0,0.7));
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.producto-card:hover .imagen-overlay {
+  opacity: 1;
+}
+
+.ver-detalle {
+  color: white;
+  background: rgba(17, 17, 17, 0.92);
+  padding: 0.8rem 2rem;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 1rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.info-container {
+  padding: 1.8rem 1.4rem;
+  text-align: center;
+}
+
+.categoria {
+  display: inline-block;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 0.5rem 1.1rem;
+  border-radius: 50px;
+  margin-bottom: 1rem;
+}
+
+.nombre {
+  font-size: 1.28rem;
+  font-weight: 800;
+  color: #111111;
+  margin: 0.8rem 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.precio {
+  margin: 1.2rem 0 0.5rem;
+}
+
+.simbolo {
+  font-size: 1.3rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.valor {
+  font-size: 2.3rem;
+  font-weight: 900;
+  color: #111111;
+  margin-left: 6px;
+}
+
+.stock-info {
+  font-size: 0.9rem;
+  color: #dc2626;
+  font-weight: 700;
+  margin-top: 0.8rem;
+  background: #fef2f2;
+  padding: 0.4rem 1rem;
+  border-radius: 50px;
+  display: inline-block;
+}
+
+/* Badge de agotado */
+.badge-agotado {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #dc2626;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  z-index: 10;
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+}
+
+/* Estado agotado */
+.producto-card.agotado {
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.producto-card.agotado .imagen-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 40%, rgba(0,0,0,0.6));
+}
+
+.producto-card.agotado:hover {
+  transform: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}

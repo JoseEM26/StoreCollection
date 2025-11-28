@@ -1,0 +1,68 @@
+<div class="catalogo-page" data-aos="fade-up">
+  <!-- Header elegante -->
+  <header class="catalogo-header">
+    <div class="container">
+      <h1 class="catalogo-titulo">{{ tituloPagina }}</h1>
+      <p class="c20atalogo-subtitulo">{{ totalResultados }} productos disponibles</p>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="row">
+
+      <!-- Filtros laterales (solo desktop) -->
+      <div class="col-lg-3 d-none d-lg-block">
+        <div class="filtros-card" data-aos="fade-right" data-aos-delay="200">
+          <h3>Filtros</h3>
+
+          <div class="filtro">
+            <label>Búsqueda</label>
+            <input type="text" [(ngModel)]="busqueda" (input)="aplicarFiltros()" placeholder="Buscar producto...">
+          </div>
+
+          <div class="filtro">
+            <label>Precio máximo: ${{ precioMax }}</label>
+            <input type="range" [(ngModel)]="precioMax" (input)="aplicarFiltros()" min="0" max="5000" step="50">
+          </div>
+
+          <div class="filtro checkbox">
+            <label>
+              <input type="checkbox" [(ngModel)]="soloEnStock" (change)="aplicarFiltros()">
+              Solo productos en stock
+            </label>
+          </div>
+
+          <button class="btn-limpiar" (click)="limpiarFiltros()">Limpiar filtros</button>
+        </div>
+      </div>
+
+      <!-- Productos -->
+      <div class="col-lg-9">
+        <!-- Filtros móviles -->
+        <div class="filtros-moviles d-lg-none mb-4" data-aos="fade-up">
+          <input type="text" [(ngModel)]="busqueda" (input)="aplicarFiltros()" placeholder="Buscar en {{ tituloPagina }}..." class="buscador-movil">
+        </div>
+
+        <div class="productos-grid" *ngIf="productos.length; else vacio">
+          <div 
+            class="producto-item" 
+            *ngFor="let p of productos; let i = index"
+            data-aos="fade-up"
+            [attr.data-aos-delay]="i * 50">
+            <app-producto-card [producto]="p"></app-producto-card>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Estado vacío -->
+<ng-template #vacio>
+  <div class="empty-state">
+    <div class="empty-icon">Search</div>
+    <h3>No se encontraron productos</h3>
+    <p>Intenta con otros filtros o palabras clave.</p>
+    <button class="btn-limpiar" (click)="limpiarFiltros()">Limpiar filtros</button>
+  </div>
+</ng-template>
