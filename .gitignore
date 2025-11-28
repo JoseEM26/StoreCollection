@@ -1,0 +1,58 @@
+# ==================== ASP.NET CORE + VISUAL STUDIO (LO MÁS IMPORTANTE) ====================
+# Esto es lo que te estaba dando el error de "Permission denied"
+.vs/
+bin/
+obj/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.csproj.user
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio cache files
+*.vsidx
+*.sdf
+*.opensdf
+*.tlog
+*.pdb
+*.cache
+*.log
+
+
+# ==================== EL RESTO QUE YA TENÍAS (lo dejo porque está bien) ====================
+# Eclipse / Java / Maven (no aplica a ti, pero no molesta)
+.metadata
+.classpath
+.project
+.settings/
+*.tmp
+*.bak
+*.swp
+*.jar
+*.war
+*.ear
+target/
+pom.xml.*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Otros
+*.lnk
+*.orig
