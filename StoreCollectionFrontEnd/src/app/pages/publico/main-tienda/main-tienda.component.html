@@ -1,0 +1,61 @@
+<!-- HERO MINIMALISTA Y ELEGANTE -->
+<section class="hero-section">
+  <div class="hero-content">
+    <h1 class="hero-title" data-aos="fade-down">
+      STORE COLLECTION
+    </h1>
+    <p class="hero-subtitle" data-aos="fade-down" data-aos-delay="200">
+      Tu tienda online premium
+    </p>
+    <p class="hero-text" data-aos="fade-up" data-aos-delay="400">
+      Tecnología • Moda • Hogar • Belleza<br>
+      Calidad garantizada • Envíos rápidos • Devoluciones gratis
+    </p>
+    <a routerLink="/catalogo" class="btn-primary" data-aos="fade-up" data-aos-delay="600">
+      Explorar Catálogo
+    </a>
+  </div>
+</section>
+
+<!-- CATEGORÍAS -->
+<section class="section-categories py-5">
+  <div class="container">
+    <h2 class="section-title text-center mb-5" data-aos="fade-up">
+      Categorías populares
+    </h2>
+    <div class="row g-4 justify-content-center">
+      <div 
+        class="col-6 col-sm-4 col-md-3 col-lg-2"
+        *ngFor="let cat of categorias; let i = index"
+        data-aos="fade-up"
+        [attr.data-aos-delay]="i * 100">
+        
+        <a [routerLink]="['/catalogo', cat.slug]" class="category-card">
+          <div class="category-img-wrapper">
+            <img [src]="cat.image" [alt]="cat.nombre" class="category-img">
+            <div class="category-overlay"></div>
+          </div>
+          <div class="category-name">{{ cat.nombre }}</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTOS DESTACADOS -->
+<section class="section-featured py-5 bg-light">
+  <div class="container">
+    <h2 class="section-title text-center mb-5" data-aos="fade-up">
+      Productos Destacados
+    </h2>
+    <div class="row g-4 g-xl-5 justify-content-center">
+      <div 
+        class="col-6 col-md-4 col-lg-3"
+        *ngFor="let p of destacados; let i = index"
+        data-aos="fade-up"
+        [attr.data-aos-delay]="i * 120">
+        <app-producto-card [producto]="p"></app-producto-card>
+      </div>
+    </div>
+  </div>
+</section>

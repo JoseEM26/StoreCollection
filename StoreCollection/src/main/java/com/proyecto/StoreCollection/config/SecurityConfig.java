@@ -49,9 +49,9 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**").permitAll()
 
                         // ROLES
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/owner/**").hasRole("OWNER")
-                        .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
+                        .requestMatchers("/api/admin/**").hasAnyRole("ADMIN")
+                        .requestMatchers("/api/owner/**").hasAnyRole("OWNER","ADMIN")
+                        .requestMatchers("/api/customer/**").hasAnyRole("CUSTOMER","ADMIN","OWNER")
 
                         .anyRequest().authenticated()
                 )
@@ -68,7 +68,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOriginPatterns(List.of(
                 "http://localhost:4200",
-                "http://localhost:8080",  // PARA SWAGGER
+                "http://localhost:8080",
                 "https://storecollection.pe",
                 "https://www.storecollection.pe"
         ));
