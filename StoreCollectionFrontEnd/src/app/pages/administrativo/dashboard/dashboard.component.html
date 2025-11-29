@@ -1,1 +1,106 @@
-<p>dashboard works!</p>
+<!-- src/app/admin/dashboard/dashboard.component.html -->
+<div class="dashboard-page" data-aos="fade-up">
+
+  <!-- Header -->
+  <div class="page-header mb-5">
+    <div class="container-fluid">
+      <h1 class="display-5 fw-bold text-dark mb-2">Dashboard General</h1>
+      <p class="text-muted lead">Respuesta: mb-0">Resumen completo de tu plataforma multitenant</p>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="row g-4 mb-5">
+    <div 
+      class="col-md-6 col-lg-3" 
+      *ngFor="let stat of stats(); let i = index"
+      data-aos="fade-up"
+      [attr.data-aos-delay]="100 + (i * 100)">
+      
+      <div class="stat-card">
+        <div class="card-inner">
+          <div class="icon-circle" [class]="'bg-' + stat.color + '-subtle'">
+            <i [class]="stat.icon + ' fs-2 text-' + stat.color"></i>
+          </div>
+          <div class="stat-info">
+            <h3 class="value">
+              {{ stat.prefix || '' }}{{ stat.value | number }}
+            </h3>
+            <p class="label text-muted mb-1">{{ stat.label }}</p>
+            <span class="change text-success small fw-semibold">
+              <i class="bi bi-arrow-up-right"></i> {{ stat.change }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grids de actividad -->
+  <div class="row g-4">
+    <!-- Últimas tiendas creadas -->
+    <div class="col-lg-6" data-aos="fade-up" data-aos-delay="200">
+      <div class="activity-card">
+        <div class="card-header">
+          <h5 class="mb-0 fw-bold">Últimas Tiendas</h5>
+          <span class="badge bg-primary">Nuevas</span>
+        </div>
+        <div class="list-group list-group-flush">
+          <div 
+            class="list-group-item d-flex align-items-center justify-content-between py-3"
+            *ngFor="let store of recentStores()">
+            <div class="d-flex align-items-center gap-3">
+              <div class="store-avatar">
+                <i class="bi bi-shop"></i>
+              </div>
+              <div>
+                <div class="fw-semibold">{{ store.name }}</div>
+                <small class="text-muted">{{ store.domain }}</small>
+              </div>
+            </div>
+            <span class="status-dot" [class.active]="store.status === 'active'"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráfico falso (solo diseño) -->
+    <div class="col-lg-6" data-aos="fade-up" data-aos-delay="300">
+      <div class="activity-card">
+        <div class="card-header">
+          <h5 class="mb-0 fw-bold">Crecimiento mensual</h5>
+          <small class="text-success fw-semibold">+42% vs mes anterior</small>
+        </div>
+        <div class="chart-placeholder">
+          <div class="bars">
+            <div class="bar" style="height: 60%"></div>
+            <div class="bar" style="height: 75%"></div>
+            <div class="bar" style="height: 50%"></div>
+            <div class="bar" style="height: 90%"></div>
+            <div class="bar" style="height: 85%"></div>
+            <div class="bar" style="height: 95%"></div>
+          </div>
+          <div class="chart-overlay">
+            <i class="bi bi-graph-up-arrow fs-1 text-primary opacity-10"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer motivacional -->
+  <div class="motivation-card mt-5" data-aos="zoom-in" data-aos-delay="400">
+    <div class="motivation-inner">
+      <h2 class="display-6 fw-bold text-white mb-3">
+        ¡Todo listo para que los creadores de TikTok tengan su tienda propia!
+      </h2>
+      <p class="lead text-white opacity-90 mb-0">
+        Multitenant • Escalable • 100% Automatizado
+      </p>
+      <div class="motivation-badge mt-4">
+        <i class="bi bi-rocket-takeoff-fill"></i>
+        <span>Store Collection v2.0</span>
+      </div>
+    </div>
+  </div>
+</div>

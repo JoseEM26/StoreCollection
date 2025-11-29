@@ -1,0 +1,108 @@
+<!-- src/app/admin/stores/stores.component.html -->
+<div class="stores-page" data-aos="fade-up">
+  <!-- Header -->
+  <div class="page-header mb-5">
+    <div class="container-fluid">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-4">
+        <div>
+          <h1 class="display-5 fw-bold text-dark mb-2">Gestión de Tiendas</h1>
+          <p class="text-muted lead">Administra todas las tiendas multitenant de la plataforma</p>
+        </div>
+        <button 
+          (click)="openModal()" 
+          class="btn btn-primary btn-lg fw-bold shadow-lg d-flex align-items-center gap-3 px-5 py-3 rounded-pill"
+          data-aos="fade-left" data-aos-delay="300">
+          <i class="bi bi-plus-circle-fill fs-4"></i>
+          Nueva Tienda
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grid de tiendas -->
+  <div class="container-fluid">
+    <div class="row g-4">
+      <div 
+        class="col-md-6 col-lg-4" 
+        *ngFor="let store of stores(); let i = index" 
+        data-aos="fade-up" 
+        [attr.data-aos-delay]="100 + (i * 100)">
+        
+        <div class="store-card h-100 position-relative overflow-hidden rounded-4" 
+             [class.inactive]="!store.active">
+          <div class="card-border"></div>
+          
+          <div class="card-content p-5">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+              <div class="store-icon">
+                <i class="bi bi-shop-window"></i>
+              </div>
+              <span class="status-badge" [class.active]="store.active">
+                {{ store.active ? 'Activa' : 'Inactiva' }}
+              </span>
+            </div>
+
+            <h3 class="store-name fw-bold mb-2">{{ store.name }}</h3>
+            <p class="store-domain text-muted mb-4">
+              <i class="bi bi-globe me-2"></i>{{ store.domain }}
+            </p>
+
+            <div class="mt-auto">
+              <button 
+                (click)="toggleStore(store); $event.stopPropagation()" 
+                class="btn btn-sm fw-semibold w-100 rounded-pill"
+                [class.btn-success]="!store.active"
+                [class.btn-outline-primary]="store.active">
+                <i class="bi me-2" [class.bi-toggle-on]="store.active" [class.bi-toggle-off]="!store.active"></i>
+                {{ store.active ? 'Desactivar' : 'Activar' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Premium (fondo claro) -->
+  <div class="modal-backdrop" *ngIf="showModal" (click)="closeModal()"></div>
+  <div class="create-modal" *ngIf="showModal" data-aos="zoom-in">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">
+          <i class="bi bi-plus-circle me-3"></i>
+          Crear Nueva Tienda
+        </h2>
+        <button class="btn-close" (click)="closeModal()"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="mb-4">
+          <label class="form-label fw-medium">Nombre de la tienda</label>
+          <input 
+            [(ngModel)]="newStore.name" 
+            type="text" 
+            class="form-control form-control-lg rounded-pill"
+            placeholder="Ej: Ropita TikTok">
+        </div>
+
+        <div class="mb-5">
+          <label class="form-label fw-medium">Dominio / Subdominio</label>
+          <input 
+            [(ngModel)]="newStore.domain" 
+            type="text" 
+            class="form-control form-control-lg rounded-pill"
+            placeholder="mitienda.storecollection.com">
+        </div>
+
+        <div class="d-flex gap-3">
+          <button (click)="closeModal()" class="btn btn-outline-secondary btn-lg flex-fill rounded-pill">
+            Cancelar
+          </button>
+          <button (click)="createStore()" class="btn btn-primary btn-lg flex-fill rounded-pill fw-bold">
+            Crear Tienda
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

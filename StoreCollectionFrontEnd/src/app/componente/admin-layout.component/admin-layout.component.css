@@ -1,0 +1,142 @@
+/* src/app/admin/admin-layout/admin-layout.component.scss */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f8fafc;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* SIDEBAR FIJO */
+.sidebar {
+  width: 280px;
+  background: white;
+  border-right: 1px solid #e2e8f0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+
+  /* Botón colapsar */
+  .collapse-btn-wrapper {
+    position: absolute;
+    top: 16px;
+    right: -18px;
+    z-index: 10;
+  }
+
+  .btn-collapse {
+    width: 36px;
+    height: 36px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: #f8fafc;
+      transform: scale(1.1);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+  }
+
+  /* Header, nav y footer (igual que antes) */
+  .sidebar-header { padding: 2rem 1.5rem 1.5rem; text-align: center; border-bottom: 1px solid #e2e8f0; }
+  .logo { display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 1.6rem; font-weight: 800; color: #1e293b; }
+  .logo i { font-size: 2rem; }
+  .logo-text { transition: opacity 0.3s ease 0.1s; }
+
+  .sidebar-nav { flex: 1; padding: 1rem 0; }
+  .nav-item { display: flex; align-items: center; gap: 14px; padding: 0.9rem 1.5rem; margin: 0.3rem 1rem; border-radius: 1rem; color: #475569; font-weight: 500; transition: all 0.3s ease; }
+  .nav-item i { font-size: 1.3rem; width: 28px; text-align: center; }
+  .nav-item:hover { background: #f1f5f9; color: #4338ca; transform: translateX(4px); }
+  .nav-item.active { background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-weight: 600; box-shadow: 0 8px 25px rgba(102,126,234,0.3); }
+
+  .sidebar-footer { padding: 1.5rem; border-top: 1px solid #e2e8f0; }
+  .btn-logout { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 0.9rem; background: #fee2e2; color: #991b1b; border: none; border-radius: 1rem; font-weight: 600; transition: all 0.3s ease; }
+  .btn-logout:hover { background: #fecaca; transform: translateY(-2px); }
+}
+
+/* SIDEBAR COLAPSADO */
+.admin-layout.sidebar-collapsed {
+  .sidebar {
+    width: 78px;
+
+    .logo-text,
+    .sidebar-header small,
+    .nav-item span,
+    .btn-logout span {
+      opacity: 0;
+      visibility: hidden;
+      width: 0;
+      overflow: hidden;
+    }
+
+    .sidebar-header { padding: 1.8rem 0; }
+    .nav-item { justify-content: center; padding: 1rem; margin: 0.3rem 0.8rem; }
+    .sidebar-footer { padding: 1rem; }
+  }
+}
+
+/* CONTENIDO PRINCIPAL – EL TRUCO ESTÁ AQUÍ */
+.main-content {
+  flex: 1;
+  margin-left: 280px; /* <-- Este es el que controla el espacio */
+  transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 0; /* Importante para flex */
+}
+
+/* Cuando el sidebar está colapsado → reduce el margen */
+.admin-layout.sidebar-collapsed .main-content {
+  margin-left: 78px;
+}
+
+/* MÓVIL – Sidebar como drawer */
+@media (max-width: 991.98px) {
+  .sidebar {
+    position: fixed;
+    left: -280px;
+    transition: left 0.35s ease;
+  }
+  .admin-layout.sidebar-open .sidebar { left: 0; }
+
+  .main-content {
+    margin-left: 0 !important;
+  }
+
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(6px);
+    z-index: 1040;
+  }
+}
+
+/* Topbar y contenido */
+.topbar {
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.8rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+}
+
+.page-content {
+  flex: 1;
+  padding: 2rem 1.5rem;
+  background: #f8fafc;
+}
