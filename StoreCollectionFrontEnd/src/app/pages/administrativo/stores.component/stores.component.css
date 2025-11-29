@@ -1,0 +1,160 @@
+/* src/app/admin/stores/stores.component.scss */
+.stores-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 3rem 0;
+}
+
+.page-header {
+  margin-bottom: 4rem;
+}
+
+.store-card {
+  background: white;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  transition: all 0.4s ease;
+  cursor: pointer;
+  border: 1px solid #e2e8f0;
+
+  .card-border {
+    position: absolute;
+    inset: 0;
+    border: 2px solid transparent;
+    border-radius: 1.5rem;
+    background: linear-gradient(45deg, #667eea, #764ba2, #8b5cf6) border-box;
+    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  &:hover {
+    transform: translateY(-12px);
+    box-shadow: 0 30px 60px rgba(102, 126, 234, 0.15);
+
+    .card-border {
+      opacity: 1;
+    }
+
+    .store-icon {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      transform: scale(1.1);
+    }
+  }
+
+  &.inactive {
+    opacity: 0.7;
+    filter: grayscale(30%);
+  }
+}
+
+.card-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.store-icon {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border-radius: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+  transition: all 0.4s ease;
+}
+
+.store-name {
+  font-size: 1.4rem;
+  color: #1e293b;
+}
+
+.store-domain {
+  font-size: 0.95rem;
+}
+
+.status-badge {
+  padding: 0.4rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: rgba(34, 197, 94, 0.15);
+  color: #16a34a;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+
+  &:not(.active) {
+    background: rgba(239, 68, 68, 0.15);
+    color: #dc2626;
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+}
+
+/* === MODAL (fondo claro) === */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  z-index: 1040;
+}
+
+.create-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 2rem;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 2rem 2rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0;
+
+  .modal-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1e293b;
+  }
+
+  .btn-close {
+    background: #e2e8f0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    opacity: 0.8;
+  }
+}
+
+.modal-body {
+  padding: 2rem;
+
+  .form-control {
+    padding: 1rem 1.5rem;
+    border: 1px solid #cbd5e1;
+
+    &:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.2);
+    }
+  }
+}

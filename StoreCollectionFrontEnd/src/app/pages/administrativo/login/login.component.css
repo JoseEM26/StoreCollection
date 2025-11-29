@@ -1,0 +1,75 @@
+.login-wrapper {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 460px;
+}
+
+.login-card {
+  .card {
+    border-radius: 1.5rem;
+    overflow: hidden;
+  }
+
+  .logo-circle {
+    width: 90px;
+    height: 90px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white !important;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+  }
+}
+
+.input-group {
+  .form-control {
+    &:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+      z-index: 3;
+    }
+  }
+
+  .input-group-text {
+    background: transparent;
+  }
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: none;
+  border-radius: 1rem;
+  padding: 0.9rem 1.5rem;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+  }
+
+  &:active {
+    transform: translateY(-1px);
+  }
+}
+
+.spinner-border-sm {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+
+@media (max-width: 480px) {
+  .login-card .card-body {
+    padding: 2rem !important;
+  }
+}

@@ -1,0 +1,106 @@
+<!-- src/app/shared/table/table.component.html -->
+<div class="custom-table-container">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-header">
+        <tr>
+          <th *ngFor="let col of columns" class="header-cell">
+            {{ col.header }}
+          </th>
+          <th class="text-end header-cell">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr 
+          *ngFor="let row of data; let i = index" 
+          class="table-row"
+          [class.inactive-row]="!row.active"
+          [style.--delay]="i * 50 + 'ms'">
+          
+          <td *ngFor="let col of columns" class="cell">
+            <ng-container [ngSwitch]="col.key">
+              <!-- Avatar + nombre para 'name' -->
+              <div *ngSwitchCase="'name'" class="d-flex align-items-center gap-3">
+                <div class="row-avatar">
+                  <i class="bi bi-box-seam"></i>
+                </div>
+                <div>
+                  <div class="fw-semibold">{{ row[col.key] }}</div>
+                  <small class="text-muted" *ngIf="row.description">{{ row.description }}</small>
+                </div>
+              </div>
+
+              <!-- Precio con formato -->
+              <strong *ngSwitchCase="'price'" class="text-primary">
+                ${{ row[col.key]?.toFixed(2) }}
+              </strong>
+
+              <!-- Badge para categoría -->
+              <span *ngSwitchCase="'category'" class="badge-category">
+                {{ row[col.key] }}
+              </span>
+
+              <!-- Estado con badge -->
+              <span *ngSwitchCase="'active'" 
+                    class="status-badge-mini"
+                    [class.active]="row[col.key]">
+                {{ row[col.key] ? 'Activo' : 'Inactivo' }}
+              </span>
+
+              <!-- Default: texto normal -->
+              <ng-container *ngSwitchDefault>
+                {{ row[col.key] }}
+              </ng-container>
+            </ng-container>
+          </td>
+
+          <td class="text-end cell-actions">
+            <button 
+              (click)="edit.emit(row)" 
+              class="btn btn-sm btn-outline-primary rounded-pill me-2 shadow-sm"
+              title="Editar">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button 
+              (click)="toggle.emit(row)" 
+              class="btn btn-sm rounded-pill shadow-sm"
+              [class.btn-success]="!row.active"
+              [class.btn-outline-secondary]="row.active"
+              [title]="row.active ? 'Desactivar' : 'Activar'">
+              <i class="bi" [class.bi-toggle-on]="row.active" [class.bi-toggle-off]="!row.active"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paginación falsa (solo diseño bonito) -->
+  <div class="pagination-fake mt-4">
+    <div class="d-flex align-items-center justify-content-between">
+      <div class="text-muted small">
+        Mostrando <strong>todos los registros</strong>
+      </div>
+      <ul class="pagination pagination-clean mb-0">
+        <li class="page-item disabled">
+          <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+        </li>
+        <li class="page-item active">
+          <span class="page-link">1</span>
+        </li>
+        <li class="page-item">
+          <a class="page-link">2</a>
+        </li>
+        <li class="page-item">
+          <a class="page-link">3</a>
+        </li>
+        <li class="page-item disabled">
+          <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+        </li>
+      </ul>
+      <div class="text-muted small">
+        <i class="bi bi-info-circle me-1"></i> Paginación completa próximamente
+      </div>
+    </div>
+  </div>
+</div>
