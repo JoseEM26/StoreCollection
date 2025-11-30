@@ -1,150 +1,98 @@
 .catalogo-page {
-  background: #f8fafc;
+  background: #ffffff;
   min-height: 100vh;
-  padding-bottom: 4rem;
+  padding-bottom: 5rem;
 }
 
+/* Header con botón volver */
 .catalogo-header {
-  background: linear-gradient(135deg, #111111 0%, #1f1f1f 100%);
-  color: white;
-  padding: 4rem 0;
+  padding: 2.5rem 0 2rem;
+  border-bottom: 1px solid #f1f5f9;
   margin-bottom: 3rem;
-  text-align: center;
 }
 
-.catalogo-titulo {
-  font-size: 3.8rem;
-  font-weight: 900;
-  letter-spacing: -2px;
+.titulo {
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: #111111;
   margin: 0;
-  text-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  line-height: 1.1;
 }
 
-.catalogo-subtitulo {
-  font-size: 1.3rem;
-  opacity: 0.9;
-  margin-top: 0.8rem;
+.subtitulo {
+  color: #64748b;
+  font-size: 1.1rem;
   font-weight: 500;
 }
 
-.filtros-card {
-  background: white;
-  padding: 2rem;
+/* BOTÓN VOLVER AL INICIO */
+.btn-volver-inicio {
+  background: #111111;
+  color: white;
+  padding: 0.8rem 1.6rem;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.btn-volver-inicio:hover {
+  background: #222222;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+  color: white;
+  text-decoration: none;
+}
+
+.btn-volver-inicio i {
+  font-size: 1.3rem;
+}
+
+/* Filtros sidebar */
+.filtros-sidebar {
+  background: #f8fafc;
+  padding: 1.8rem;
   border-radius: 20px;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+  border: 1px solid #e2e8f0;
   position: sticky;
   top: 100px;
 }
 
-.filtros-card h3 {
-  font-size: 1.4rem;
-  font-weight: 800;
-  margin-bottom: 1.5rem;
-  color: #111;
-}
-
-.filtro {
-  margin-bottom: 1.8rem;
-}
-
-.filtro label {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: #374151;
-  font-size: 0.95rem;
-}
-
-.filtro input[type="text"],
-.filtro input[type="range"] {
-  width: 100%;
-  padding: 0.7rem 1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
+.filtro-busqueda {
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 0.9rem 1.2rem;
   font-size: 1rem;
-  transition: border 0.3s;
 }
 
-.filtro input[type="text"]:focus,
-.filtro input[type="range"]:focus {
+.filtro-busqueda:focus {
   outline: none;
   border-color: #111111;
-}
-
-.checkbox label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-}
-
-.btn-limpiar {
-  background: transparent;
-  color: #6b7280;
-  border: 2px solid #d1d5db;
-  padding: 0.7rem 1.2rem;
-  border-radius: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  width: 100%;
-  transition: all 0.3s;
-}
-
-.btn-limpiar:hover {
-  background: #111111;
-  color: white;
-  border-color: #111111;
-}
-
-.productos-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 2rem;
-  padding: 0 1rem;
-}
-
-.producto-item {
-  width: 100%;
-}
-
-/* Filtros móviles */
-.buscador-movil {
-  width: 100%;
-  padding: 1rem 1.2rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 16px;
-  font-size: 1.1rem;
-  background: white;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 6rem 2rem;
-  color: #6b7280;
-}
-
-.empty-icon {
-  font-size: 5rem;
-  opacity: 0.3;
-  margin-bottom: 1.5rem;
-}
-
-.empty-state h3 {
-  font-size: 1.8rem;
-  margin-bottom: 1rem;
-  color: #374151;
+  box-shadow: 0 0 0 4px rgba(17,17,17,0.08);
 }
 
 /* Responsive */
 @media (max-width: 992px) {
-  .catalogo-titulo { font-size: 3rem; }
+  .titulo { font-size: 2.5rem; }
+  .btn-volver-inicio {
+    font-size: 0.95rem;
+    padding: 0.7rem 1.4rem;
+  }
 }
 
 @media (max-width: 768px) {
-  .catalogo-titulo { font-size: 2.6rem; }
-  .catalogo-header { padding: 3rem 0; }
-}
-
-@media (max-width: 576px) {
-  .catalogo-titulo { font-size: 2.3rem; letter-spacing: -1px; }
+  .catalogo-header {
+    text-align: center;
+    padding: 2rem 0;
+  }
+  .d-flex.justify-content-between {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .titulo { font-size: 2.3rem; }
 }
