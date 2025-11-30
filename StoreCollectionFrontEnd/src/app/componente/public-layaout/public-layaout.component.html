@@ -1,0 +1,44 @@
+<!-- src/app/componente/public-layout/public-layout.component.html -->
+
+<!-- HEADER -->
+<header class="public-header">
+  <div class="container d-flex justify-content-between align-items-center py-3">
+    <a routerLink="/" class="logo">
+      <strong>STORE COLLECTION</strong>
+    </a>
+
+    <nav class="nav-links">
+      <a 
+        routerLink="/" 
+        routerLinkActive="active" 
+        [routerLinkActiveOptions]="{ exact: true }">
+        Inicio
+      </a>
+      <a 
+        routerLink="/catalogo" 
+        routerLinkActive="active">
+        Catálogo
+      </a>
+    </nav>
+  </div>
+</header>
+
+<!-- CONTENIDO DINÁMICO -->
+<main class="public-main">
+  <router-outlet></router-outlet>
+</main>
+
+<!-- BOTÓN WHATSAPP FLOTANTE (siempre visible) -->
+<button class="btn-whatsapp-flotante" (click)="abrirWhatsApp()" title="¡Hablemos por WhatsApp!">
+  <i class="bi bi-whatsapp"></i>
+  <span class="pulse"></span>
+</button>
+
+<!-- FOOTER -->
+<footer class="public-footer">
+  <div class="container text-center py-4">
+    <p class="mb-0 text-muted">
+      © 2025 STORE COLLECTION • Todos los derechos reservados
+    </p>
+  </div>
+</footer>

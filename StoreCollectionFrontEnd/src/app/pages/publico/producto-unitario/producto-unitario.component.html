@@ -1,64 +1,117 @@
 <div class="producto-detalle" *ngIf="producto; else noEncontrado">
-  <div class="container py-5">
+  <div class="container py-4 py-md-5">
+
+    <!-- BOTÓN VOLVER ELEGANTE (flotante pero discreto) -->
+    <div class="volver-flotante">
+      <button class="btn-volver-elegante" routerLink="/catalogo" title="Volver al catálogo">
+        <i class="bi bi-arrow-left"></i>
+      </button>
+    </div>
+
     <div class="row g-5 align-items-start">
 
-      <!-- IMAGEN CON ZOOM LUPA -->
+      <!-- IMAGEN CON ZOOM PERFECTO -->
       <div class="col-lg-6">
         <div class="imagen-zoom-container" data-aos="fade-right">
           <img 
-            [src]="producto.imagen" 
+            [src]="producto.imagen || 'https://via.placeholder.com/800x800/white'"
             [alt]="producto.nombre"
-            class="imagen-principal"
-            id="imgZoom">
-          <div class="lupa" id="lupa"></div>
+            class="img-principal"
+            id="imgPrincipal">
+          
+          <!-- Lupa flotante (ahora sí funciona perfecto) -->
+          <div class="lupa" id="lupa">
+            <img [src]="producto.imagen || 'https://via.placeholder.com/2000x2000/white'" class="img-lupa">
+          </div>
         </div>
       </div>
 
       <!-- INFORMACIÓN -->
       <div class="col-lg-6">
         <div class="info-container" data-aos="fade-left">
-          <span class="categoria">{{ producto.categoria }}</span>
-          <h1 class="nombre">{{ producto.nombre }}</h1>
 
-          <div class="precio">
-            <span class="simbolo">$</span>
-            <span class="valor">{{ producto.precio }}</span>
+          <div class="categoria-badge mb-3">{{ producto.categoria }}</div>
+          <h1 class="nombre-producto">{{ producto.nombre }}</h1>
+
+          <div class="precio-display mb-4">
+            <span class="precio">$ {{ producto.precio.toFixed(2) }}</span>
           </div>
 
-          <p class="descripcion">{{ producto.descripcion }}</p>
+          <p class="descripcion mb-4">{{ producto.descripcion }}</p>
 
-          <div class="stock mt-4" [class.agotado]="!hayStock">
-            <strong>{{ hayStock ? 'En stock' : 'Agotado' }}</strong>
-            <span *ngIf="hayStock && producto.stock <= 10" class="pocos">
-              ¡Solo quedan {{ producto.stock }} unidades!
-            </span>
+          <div class="stock-badge mb-5" [class.agotado]="!hayStock">
+            <i class="bi" [class.bi-check-circle-fill]="hayStock" [class.bi-x-circle-fill]="!hayStock"></i>
+            <span>{{ hayStock ? 'Disponible' : 'Sin stock' }}</span>
+            <small *ngIf="hayStock && producto.stock <= 10" class="ms-2 text-danger fw-bold">
+              ¡Solo {{ producto.stock }} left!
+            </small>
           </div>
 
-          <div class="acciones mt-5">
-            <button class="btn-comprar" [disabled]="!hayStock">
-              {{ hayStock ? 'Comprar Ahora' : 'Sin stock' }}
+          <!-- BOTONES PRINCIPALES -->
+          <div class="acciones-principales">
+            <button 
+              class="btn-whatsapp-principal" 
+              (click)="consultarWhatsApp()"
+              [disabled]="!hayStock">
+              <i class="bi bi-whatsapp"></i>
+              Consultar por WhatsApp
             </button>
-            <button class="btn-carrito" [disabled]="!hayStock">
-              Agregar al carrito
-            </button>
+
+            <div class="acciones-secundarias mt-3">
+              <button class="btn-secundario" (click)="llamarAhora()">
+                <i class="bi bi-telephone-fill"></i> Llamar
+              </button>
+              <button class="btn-secundario" (click)="abrirCotizacion()">
+                <i class="bi bi-envelope"></i> Cotizar
+              </button>
+            </div>
           </div>
 
-          <div class="volver mt-4">
-            <a routerLink="/catalogo" class="link-volver">Seguir explorando</a>
+          <!-- GARANTÍAS -->
+          <div class="garantias mt-5">
+            <div class="garantia-item">
+              <i class="bi bi-shield-check"></i> Garantía de calidad
+            </div>
+            <div class="garantia-item">
+              <i class="bi bi-truck"></i> Envíos a todo el país
+            </div>
+            <div class="garantia-item">
+              <i class="bi bi-chat-dots"></i> Respuesta inmediata
+            </div>
           </div>
+
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- NO ENCONTRADO -->
-<ng-template #noEncontrado>
-  <div class="no-encontrado">
-    <div class="container text-center py-5">
-      <h2 class="mb-3">Producto no encontrado</h2>
-      <p class="text-muted mb-4">El producto que buscas no está disponible en este momento.</p>
-      <a routerLink="/" class="btn-home">Volver al inicio</a>
+<!-- MODAL COTIZACIÓN -->
+<div class="modal-backdrop" *ngIf="showQuoteModal" (click)="cerrarModal()"></div>
+<div class="modal-cotizacion" *ngIf="showQuoteModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h4>Solicitar Cotización</h4>
+      <button class="btn-cerrar" (click)="cerrarModal()">×</button>
     </div>
+    <div class="modal-body">
+      <form (ngSubmit)="enviarCotizacion()">
+        <input [(ngModel)]="clienteNombre" type="text" placeholder="Tu nombre" required class="form-control mb-3">
+        <input [(ngModel)]="clienteTelefono" type="tel" placeholder="WhatsApp o celular" required class="form-control mb-3">
+        <textarea [(ngModel)]="clienteMensaje" rows="3" placeholder="Mensaje (opcional)" class="form-control mb-4"></textarea>
+        <button type="submit" class="btn-enviar">
+          Enviar solicitud
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<ng-template #noEncontrado>
+  <div class="text-center py-5">
+    <h2>Producto no encontrado</h2>
+    <button class="btn-volver-elegante mt-4" routerLink="/">
+      <i class="bi bi-house"></i> Volver al inicio
+    </button>
   </div>
 </ng-template>

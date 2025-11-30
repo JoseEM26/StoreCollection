@@ -1,68 +1,107 @@
-<div class="catalogo-page" data-aos="fade-up">
-  <!-- Header elegante -->
+<div class="catalogo-page">
+
+  <!-- HEADER + BOTÓN VOLVER AL INICIO -->
   <header class="catalogo-header">
     <div class="container">
-      <h1 class="catalogo-titulo">{{ tituloPagina }}</h1>
-      <p class="c20atalogo-subtitulo">{{ totalResultados }} productos disponibles</p>
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+
+        <!-- Título y resultados -->
+        <div>
+          <h1 class="titulo mb-1">{{ tituloPagina }}</h1>
+          <p class="subtitulo mb-0">{{ totalResultados }} productos disponibles</p>
+        </div>
+
+        <!-- BOTÓN VOLVER AL INICIO (siempre visible y bonito) -->
+        <div>
+          <a routerLink="/" class="btn-volver-inicio">
+            <i class="bi bi-house-door-fill me-2"></i>
+            Volver al inicio
+          </a>
+        </div>
+      </div>
     </div>
   </header>
 
   <div class="container">
-    <div class="row">
+    <div class="row g-4">
 
-      <!-- Filtros laterales (solo desktop) -->
+      <!-- FILTROS LATERALES (solo desktop) -->
       <div class="col-lg-3 d-none d-lg-block">
-        <div class="filtros-card" data-aos="fade-right" data-aos-delay="200">
-          <h3>Filtros</h3>
+        <div class="filtros-sidebar" data-aos="fade-right">
+          <h3 class="mb-4 fw-bold">Filtros</h3>
 
-          <div class="filtro">
-            <label>Búsqueda</label>
-            <input type="text" [(ngModel)]="busqueda" (input)="aplicarFiltros()" placeholder="Buscar producto...">
+          <div class="mb-4">
+            <input 
+              type="text" 
+              [(ngModel)]="busqueda" 
+              (input)="aplicarFiltros()" 
+              placeholder="Buscar producto..." 
+              class="form-control filtro-busqueda">
           </div>
 
-          <div class="filtro">
-            <label>Precio máximo: ${{ precioMax }}</label>
-            <input type="range" [(ngModel)]="precioMax" (input)="aplicarFiltros()" min="0" max="5000" step="50">
+          <div class="mb-4">
+            <label class="form-label fw-semibold d-block mb-2">Precio máximo: ${{ precioMax }}</label>
+            <input 
+              type="range" 
+              [(ngModel)]="precioMax" 
+              (input)="aplicarFiltros()" 
+              min="0" max="5000" step="50" 
+              class="form-range">
           </div>
 
-          <div class="filtro checkbox">
-            <label>
-              <input type="checkbox" [(ngModel)]="soloEnStock" (change)="aplicarFiltros()">
+          <div class="form-check mb-4">
+            <input 
+              class="form-check-input" 
+              type="checkbox" 
+              [(ngModel)]="soloEnStock" 
+              (change)="aplicarFiltros()"
+              id="stockCheck">
+            <label class="form-check-label" for="stockCheck">
               Solo productos en stock
             </label>
           </div>
 
-          <button class="btn-limpiar" (click)="limpiarFiltros()">Limpiar filtros</button>
+          <button class="btn btn-outline-dark w-100 rounded-pill py-2" (click)="limpiarFiltros()">
+            Limpiar filtros
+          </button>
         </div>
       </div>
 
-      <!-- Productos -->
+      <!-- PRODUCTOS -->
       <div class="col-lg-9">
-        <!-- Filtros móviles -->
-        <div class="filtros-moviles d-lg-none mb-4" data-aos="fade-up">
-          <input type="text" [(ngModel)]="busqueda" (input)="aplicarFiltros()" placeholder="Buscar en {{ tituloPagina }}..." class="buscador-movil">
+
+        <!-- Buscador móvil -->
+        <div class="d-lg-none mb-4">
+          <input 
+            type="text" 
+            [(ngModel)]="busqueda" 
+            (input)="aplicarFiltros()" 
+            placeholder="Buscar en {{ tituloPagina }}..." 
+            class="form-control form-control-lg rounded-pill shadow-sm">
         </div>
 
-        <div class="productos-grid" *ngIf="productos.length; else vacio">
+        <!-- Grid de productos -->
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-3 g-4">
           <div 
-            class="producto-item" 
-            *ngFor="let p of productos; let i = index"
-            data-aos="fade-up"
+            class="col" 
+            *ngFor="let p of productos; let i = index" 
+            data-aos="fade-up" 
             [attr.data-aos-delay]="i * 50">
             <app-producto-card [producto]="p"></app-producto-card>
           </div>
         </div>
+
+        <!-- Estado vacío -->
+        <div class="empty-state text-center py-5 my-5" *ngIf="!productos.length">
+          <i class="bi bi-search fs-1 text-muted mb-4 opacity-50"></i>
+          <h4 class="text-dark">No se encontraron productos</h4>
+          <p class="text-muted">Intenta con otros filtros o palabras clave</p>
+          <button class="btn btn-outline-dark rounded-pill px-4" (click)="limpiarFiltros()">
+            Limpiar filtros
+          </button>
+        </div>
+
       </div>
     </div>
   </div>
 </div>
-
-<!-- Estado vacío -->
-<ng-template #vacio>
-  <div class="empty-state">
-    <div class="empty-icon">Search</div>
-    <h3>No se encontraron productos</h3>
-    <p>Intenta con otros filtros o palabras clave.</p>
-    <button class="btn-limpiar" (click)="limpiarFiltros()">Limpiar filtros</button>
-  </div>
-</ng-template>
