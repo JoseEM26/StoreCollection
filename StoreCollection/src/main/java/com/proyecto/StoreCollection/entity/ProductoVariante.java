@@ -9,7 +9,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 @Entity
 @Table(name = "Producto_Variante")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductoVariante {
@@ -34,12 +35,13 @@ public class ProductoVariante {
     @Column(nullable = false)
     private Integer stock = 0;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "imagenUrl", columnDefinition = "TEXT")
     private String imagenUrl;
-    // ← AÑADE ESTO (aunque herede, Spring a veces necesita verlo explícito)
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tienda_id", nullable = false, updatable = false, insertable = false)
     private Tienda tienda;
+
     @Column(nullable = false)
     private Boolean activo = true;
 

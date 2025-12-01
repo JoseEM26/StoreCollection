@@ -15,6 +15,7 @@ import { StoresComponent } from './pages/administrativo/stores.component/stores.
 import { CategoriesComponent } from './pages/administrativo/categories.component/categories.component';
 import { ProductsComponent } from './pages/administrativo/products.component/products.component';
 import { PublicLayaoutComponent } from './componente/public-layaout/public-layaout.component';
+import { UsuariosComponent } from './pages/administrativo/usuarios/usuarios.component';
 
 export const routes: Routes = [
 
@@ -42,6 +43,7 @@ export const routes: Routes = [
       { path: 'stores', component: StoresComponent },
       { path: 'categories', component: CategoriesComponent },
       { path: 'products', component: ProductsComponent },
+      { path: 'usuarios', component: UsuariosComponent }
     ]
   },
 

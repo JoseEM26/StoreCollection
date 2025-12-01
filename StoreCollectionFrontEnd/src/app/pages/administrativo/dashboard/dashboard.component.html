@@ -1,105 +1,114 @@
 <!-- src/app/admin/dashboard/dashboard.component.html -->
-<div class="dashboard-page" data-aos="fade-up">
-
-  <!-- Header -->
-  <div class="page-header mb-5">
+<div class="dashboard-page" [class.dark]="darkMode()">
+  <!-- Header + Dark Mode Toggle -->
+  <div class="header-container">
     <div class="container-fluid">
-      <h1 class="display-5 fw-bold text-dark mb-2">Dashboard General</h1>
-      <p class="text-muted lead">Respuesta: mb-0">Resumen completo de tu plataforma multitenant</p>
-    </div>
-  </div>
-
-  <!-- Stats Cards -->
-  <div class="row g-4 mb-5">
-    <div 
-      class="col-md-6 col-lg-3" 
-      *ngFor="let stat of stats(); let i = index"
-      data-aos="fade-up"
-      [attr.data-aos-delay]="100 + (i * 100)">
-      
-      <div class="stat-card">
-        <div class="card-inner">
-          <div class="icon-circle" [class]="'bg-' + stat.color + '-subtle'">
-            <i [class]="stat.icon + ' fs-2 text-' + stat.color"></i>
-          </div>
-          <div class="stat-info">
-            <h3 class="value">
-              {{ stat.prefix || '' }}{{ stat.value | number }}
-            </h3>
-            <p class="label text-muted mb-1">{{ stat.label }}</p>
-            <span class="change text-success small fw-semibold">
-              <i class="bi bi-arrow-up-right"></i> {{ stat.change }}
-            </span>
-          </div>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h1 class="title">Dashboard General</h1>
+          <p class="subtitle">Resumen completo de Store Collection v2.0</p>
         </div>
+        <button class="btn-theme-toggle" (click)="toggleDarkMode()" [attr.aria-label]="'Modo ' + (darkMode() ? 'claro' : 'oscuro')">
+          <i class="bi" [class.bi-sun-fill]="darkMode()" [class.bi-moon-fill]="!darkMode()"></i>
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Grids de actividad -->
-  <div class="row g-4">
-    <!-- Últimas tiendas creadas -->
-    <div class="col-lg-6" data-aos="fade-up" data-aos-delay="200">
-      <div class="activity-card">
-        <div class="card-header">
-          <h5 class="mb-0 fw-bold">Últimas Tiendas</h5>
-          <span class="badge bg-primary">Nuevas</span>
+  <div class="container-fluid">
+
+    <!-- Stats Cards con efecto glassmorphism -->
+    <div class="row g-4 mb-5">
+      <div class="col-xl-3 col-md-6" *ngFor="let stat of stats(); let i = index" 
+           data-aos="fade-up" [attr.data-aos-delay]="i * 100">
+        <div class="stat-card glass">
+          <div class="stat-icon" [style.background]="stat.gradient">
+            <i [class]="stat.icon"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value">{{ stat.prefix }}{{ stat.value | number:'1.0-0' }}</div>
+            <div class="stat-label">{{ stat.label }}</div>
+            <div class="stat-change" [class.positive]="stat.change > 0" [class.negative]="stat.change < 0">
+              <i class="bi" [class.bi-arrow-up-right]="stat.change > 0" [class.bi-arrow-down-right]="stat.change < 0"></i>
+              {{ stat.change > 0 ? '+' : '' }}{{ stat.change }}%
+            </div>
+          </div>
+          <div class="stat-sparkline">
+            <canvas [id]="'sparkline-' + i"></canvas>
+          </div>
         </div>
-        <div class="list-group list-group-flush">
-          <div 
-            class="list-group-item d-flex align-items-center justify-content-between py-3"
-            *ngFor="let store of recentStores()">
-            <div class="d-flex align-items-center gap-3">
-              <div class="store-avatar">
-                <i class="bi bi-shop"></i>
+      </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="row g-4">
+      <!-- Gráfico de ingresos (Chart.js) -->
+      <div class="col-lg-8">
+        <div class="chart-card glass">
+          <div class="card-header">
+            <h5>Ingresos Mensuales 2025</h5>
+            <div class="header-actions">
+              <button class="btn-sm active">Mes</button>
+              <button class="btn-sm">Año</button>
+            </div>
+          </div>
+          <canvas #revenueChart height="320"></canvas>
+        </div>
+      </div>
+
+      <!-- Últimas tiendas + Actividad reciente -->
+      <div class="col-lg-4">
+        <div class="activity-card glass mb-4">
+          <div class="card-header">
+            <h6>Tiendas Recientes</h6>
+            <span class="badge-success">+12 esta semana</span>
+          </div>
+          <div class="store-list">
+            <div class="store-item" *ngFor="let store of recentStores()">
+              <div class="store-avatar" [style.background-image]="'url(https://api.dicebear.com/7.x/shapes/svg?seed=' + store.name + ')'">
               </div>
-              <div>
-                <div class="fw-semibold">{{ store.name }}</div>
-                <small class="text-muted">{{ store.domain }}</small>
+              <div class="store-info">
+                <div class="store-name">{{ store.name }}</div>
+                <div class="store-domain">{{ store.domain }}</div>
+              </div>
+              <span class="status-dot" [class.active]="store.active"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="activity-card glass">
+          <div class="card-header">
+            <h6>Actividad Reciente</h6>
+          </div>
+          <div class="activity-list">
+            <div class="activity-item" *ngFor="let act of recentActivity()">
+              <div class="activity-icon" [style.background]="act.color">
+                <i [class]="act.icon"></i>
+              </div>
+              <div class="activity-text">
+                <div>{{ act.text }}</div>
+                <small>{{ act.time }}</small>
               </div>
             </div>
-            <span class="status-dot" [class.active]="store.status === 'active'"></span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Gráfico falso (solo diseño) -->
-    <div class="col-lg-6" data-aos="fade-up" data-aos-delay="300">
-      <div class="activity-card">
-        <div class="card-header">
-          <h5 class="mb-0 fw-bold">Crecimiento mensual</h5>
-          <small class="text-success fw-semibold">+42% vs mes anterior</small>
-        </div>
-        <div class="chart-placeholder">
-          <div class="bars">
-            <div class="bar" style="height: 60%"></div>
-            <div class="bar" style="height: 75%"></div>
-            <div class="bar" style="height: 50%"></div>
-            <div class="bar" style="height: 90%"></div>
-            <div class="bar" style="height: 85%"></div>
-            <div class="bar" style="height: 95%"></div>
-          </div>
-          <div class="chart-overlay">
-            <i class="bi bi-graph-up-arrow fs-1 text-primary opacity-10"></i>
+    <!-- Tarjeta motivacional épica -->
+    <div class="motivation-section mt-5">
+      <div class="motivation-card glass">
+        <div class="motivation-content">
+          <h2>¡Los creadores de TikTok ya tienen su tienda propia!</h2>
+          <p class="lead">Multitenant • Escalable • 100% Automatizado • Listo para millones</p>
+          <div class="badges">
+            <span class="badge-premium">Store Collection v2.0</span>
+            <span class="badge-live">EN VIVO</span>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Footer motivacional -->
-  <div class="motivation-card mt-5" data-aos="zoom-in" data-aos-delay="400">
-    <div class="motivation-inner">
-      <h2 class="display-6 fw-bold text-white mb-3">
-        ¡Todo listo para que los creadores de TikTok tengan su tienda propia!
-      </h2>
-      <p class="lead text-white opacity-90 mb-0">
-        Multitenant • Escalable • 100% Automatizado
-      </p>
-      <div class="motivation-badge mt-4">
-        <i class="bi bi-rocket-takeoff-fill"></i>
-        <span>Store Collection v2.0</span>
+        <div class="motivation-decoration">
+          <i class="bi bi-rocket-takeoff-fill"></i>
+        </div>
       </div>
     </div>
   </div>
