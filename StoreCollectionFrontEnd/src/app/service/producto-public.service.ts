@@ -13,14 +13,12 @@ export class ProductoPublicService {
   ) {}
 
   getAll(): Observable<ProductoPublic[]> {
-    return this.http.get<ProductoPublic[]>(
-      `${this.tiendaService.getBaseUrl()}/productos`
-    );
+    const base = this.tiendaService.getBaseUrl(); // ej: http://localhost:8080/api/public/tiendas/zapatik
+    return this.http.get<ProductoPublic[]>(`${base}/productos`);
   }
 
   getBySlug(slug: string): Observable<ProductoPublic> {
-    return this.http.get<ProductoPublic>(
-      `${this.tiendaService.getBaseUrl()}/productos/${slug}`
-    );
+    const base = this.tiendaService.getBaseUrl();
+    return this.http.get<ProductoPublic>(`${base}/productos/${slug}`);
   }
 }

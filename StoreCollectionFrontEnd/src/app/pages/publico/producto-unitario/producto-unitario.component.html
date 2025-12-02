@@ -1,95 +1,94 @@
 <div class="container py-5" *ngIf="!loading && producto; else cargando">
-  <button class="btn-volver-flotante" routerLink="/catalogo">
-    <i class="bi bi-arrow-left"></i>
-  </button>
+  <button class="btn-volver" routerLink="/catalogo">Back Regresar</button>
 
-  <div class="row g-5 align-items-start">
+  <div class="producto-grid">
 
-    <!-- IMAGEN CON ZOOM + BADGES IGUALES QUE EN EL CARD -->
-    <div class="col-lg-6 position-relative">
-      <div class="imagen-zoom-container">
-        ">
-        <img 
-          [src]="imagenUrl" 
-          [alt]="producto.nombre" 
-          class="img-principal">
+    <!-- IMAGEN CON LUPA INTERNA (solo una imagen) -->
+    <div class="imagen-seccion">
+      <div class="zoom-container"
+           (mousemove)="actualizarLupa($event)"
+           (mouseenter)="mostrarLupa($event)"
+           (mouseleave)="ocultarLupa()">
 
-        <div class="lupa">
-          <img [src]="imagenZoom" class="img-lupa">
+        <img [src]="imagenActual"
+             [alt]="producto.nombre"
+             class="imagen-principal"
+             loading="lazy"
+             (error)="imagenActual = fallbackImage">
+
+        <!-- Lupa circular dentro de la imagen -->
+        <div class="lupa-interna"
+             [class.visible]="lupaVisible"
+             [style.left.px]="lupaX"
+             [style.top.px]="lupaY"
+             [style.backgroundImage]="'url(' + imagenActual + ')'"
+             [style.backgroundPosition.%]="(lupaX / 500 * 100)"
+             [style.backgroundPositionY.%]="(lupaY / 500 * 100)">
         </div>
 
-        <!-- BADGE AGOTADO (igual que en el card -->
-        @if (!hayStock) {
-          <div class="badge-agotado pulse-animation" style="top: 15px; right: 15px; font-size: 1.1rem; padding: 10px 18px;">
-            <i class="bi bi-bag-x-fill"></i>
-            AGOTADO
-          </div>
-        }
-
-        <!-- BADGE ÚLTIMAS UNIDADES -->
-        @if (hayStock && stockActual <= 5 && stockActual > 0) {
-          <div class="badge-ultimas" style="top: 15px; left: 15px; font-size: 1rem; padding: 8px 14px;">
-            <i class="bi bi-fire"></i>
+        <!-- Badge stock -->
+        <div class="badge-stock" *ngIf="varianteSeleccionada">
+          <span class="agotado" *ngIf="stockActual === 0">AGOTADO</span>
+          <span class="ultimas" *ngIf="stockActual > 0 && stockActual <= 5">
             ¡Últimas {{ stockActual }}!
-          </div>
-        }
+          </span>
+        </div>
+      </div>
+
+      <!-- Miniaturas (opcional) -->
+      <div class="miniaturas" *ngIf="producto.variantes.length > 1">
+        <button *ngFor="let v of producto.variantes"
+                class="mini-btn"
+                [class.active]="v.imagenUrl === imagenActual"
+                (click)="cambiarImagen(v.imagenUrl)"
+                [disabled]="!v.imagenUrl">
+          <img [src]="v.imagenUrl || fallbackImage" alt="variante">
+        </button>
       </div>
     </div>
 
-    <!-- INFO DEL PRODUCTO - ESTILO TOTALMENTE IGUAL AL CARD -->
-    <div class="col-lg-6">
-      <div class="info-container" style="max-width: 500px; margin: 0 auto;">
+    <!-- INFO PRODUCTO -->
+    <div class="info-seccion">
+      <span class="categoria">{{ producto.nombreCategoria }}</span>
+      <h1 class="titulo">{{ producto.nombre }}</h1>
 
-        <!-- Categoría -->
-        @if (producto.nombreCategoria) {
-          <div class="categoria-chip mb-3">
-            {{ producto.nombreCategoria }}
-          </div>
-        }
+      <div class="precio">
+        S/ <span>{{ precioActual | number:'1.2-2' }}</span>
+      </div>
 
-        <!-- Nombre del producto -->
-        <h1 class="nombre" style="font-size: 2.2rem; font-weight: 700; margin-bottom: 1rem;">
-          {{ producto.nombre }}
-        </h1>
-
-        <!-- Precio grande y elegante -->
-        <div class="precio-wrapper mb-4" style="font-size: 2.5rem;">
-          <span class="simbolo">S/</span>
-          <span class="valor">{{ precio | number:'1.2-2' }}</span>
-        </div>
-
-        <!-- Estado de stock - igual que el card -->
-        
-
-        <!-- Acciones principales -->
-        <div class="acciones-principales mt-5">
-
-          <button 
-            class="btn-whatsapp-gigante w-100 mb-3" 
-            (click)="consultarWhatsApp()"
-            [disabled]="!hayStock">
-            <i class="bi bi-whatsapp"></i>
-            Consultar por WhatsApp
+      <!-- Variantes -->
+      <div class="variantes" *ngIf="producto.variantes.length > 1">
+        <h3>Elige tu variante</h3>
+        <div class="lista-variantes">
+          <button *ngFor="let v of producto.variantes"
+                  class="variante-btn"
+                  [class.selected]="v === varianteSeleccionada"
+                  [class.agotado]="v.stock === 0"
+                  [disabled]="v.stock === 0"
+                  (click)="seleccionarVariante(v)">
+            <div>S/ {{ v.precio | number:'1.2-2' }}</div>
+            <small>{{ v.stock > 0 ? v.stock + ' disponibles' : 'Agotado' }}</small>
+            <span class="check" *ngIf="v === varianteSeleccionada">Check</span>
           </button>
-
-          <div class="d-flex gap-3">
-            <button class="btn-secundario flex-fill" (click)="llamarAhora()">
-              <i class="bi bi-telephone-fill"></i> Llamar ahora
-            </button>
-            <button class="btn-secundario flex-fill" (click)="abrirCotizacion()">
-              <i class="bi bi-chat-text"></i> Pedir cotización
-            </button>
-          </div>
         </div>
+      </div>
 
-        <!-- Info extra (opcional) -->
-        <div class="mt-5 pt-4 border-top">
-          <small class="text-muted">
-            <i class="bi bi-truck"></i> Envíos a todo el Perú • 
-            <i class="bi bi-shield-check"></i> Compra segura • 
-            <i class="bi bi-headset"></i> Atención 24/7
-          </small>
+      <!-- Botones principales -->
+      <div class="acciones">
+        <button class="btn-whatsapp" (click)="consultarWhatsApp()" [disabled]="!hayStock">
+          WhatsApp Consultar por WhatsApp
+        </button>
+        <div class="secundarios">
+          <button class="btn-sec" (click)="llamarAhora()">Phone Llamar</button>
+          <button class="btn-sec" (click)="abrirCotizacion()">Chat Cotizar</button>
         </div>
+      </div>
+
+      <!-- Garantías -->
+      <div class="garantias">
+        <div>Truck <strong>Envíos a todo el Perú</strong></div>
+        <div>Shield <strong>Compra segura</strong></div>
+        <div>Headset <strong>Atención 24/7</strong></div>
       </div>
     </div>
   </div>
@@ -97,8 +96,19 @@
 
 <!-- Loading -->
 <ng-template #cargando>
-  <div class="text-center py-5">
-    <div class="spinner-border text-success" style="width:3rem;height:3rem;"></div>
-    <p class="mt-3">Cargando producto...</p>
-  </div>
+  <div class="loading">Cargando producto...</div>
 </ng-template>
+
+<!-- Modal -->
+<div class="modal" *ngIf="showQuoteModal" (click)="cerrarModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <button class="cerrar" (click)="cerrarModal()">Close</button>
+    <h3>Pide tu cotización</h3>
+    <input [(ngModel)]="clienteNombre" placeholder="Nombre" required>
+    <input [(ngModel)]="clienteTelefono" placeholder="WhatsApp" required>
+    <textarea [(ngModel)]="clienteMensaje" placeholder="Mensaje (opcional)"></textarea>
+    <button class="enviar" (click)="enviarCotizacion()" [disabled]="enviandoCotizacion">
+      {{ enviandoCotizacion ? 'Enviando...' : 'Enviar por WhatsApp' }}
+    </button>
+  </div>
+</div>

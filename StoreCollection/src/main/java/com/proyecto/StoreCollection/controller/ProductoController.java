@@ -34,15 +34,7 @@ public class ProductoController {
     public ResponseEntity<ProductoCardResponse> publicDetail(
             @PathVariable String tiendaSlug,
             @PathVariable String productoSlug) {
-        try {
-            ProductoCardResponse producto = service.findByTiendaSlugAndProductoSlug(tiendaSlug, productoSlug);
-            return ResponseEntity.ok(producto);
-        } catch (ResponseStatusException ex) {
-            if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
-                return ResponseEntity.notFound().build();
-            }
-            throw ex;
-        }
+        return ResponseEntity.ok(service.findByTiendaSlugAndProductoSlug(tiendaSlug, productoSlug));
     }
 
     // PRIVADO - Panel del dueño

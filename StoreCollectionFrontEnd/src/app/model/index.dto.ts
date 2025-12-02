@@ -1,12 +1,13 @@
+// src/app/model/index.dto.ts
 export interface ProductoPublic {
   id: number;
   nombre: string;
   slug: string;
-  nombreCategoria: string;        // ← este campo viene del backend
-  precioMinimo: number;           // ← este también
-  imagenPrincipal: string;        // ← y este
-  stockTotal: number;             // ← y este
-  variantes?: {
+  nombreCategoria: string;
+  precioMinimo: number;        // ← viene como number (Java BigDecimal → JS number)
+  stockTotal: number;
+  imagenPrincipal: string;
+  variantes: {
     precio: number;
     stock: number;
     imagenUrl: string;

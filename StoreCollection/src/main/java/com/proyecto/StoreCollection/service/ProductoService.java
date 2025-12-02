@@ -22,4 +22,5 @@ public interface ProductoService {
     ProductoResponse save(ProductoRequest request);
     ProductoResponse save(ProductoRequest request, Integer id);
     void deleteById(Integer id);
+
 }
