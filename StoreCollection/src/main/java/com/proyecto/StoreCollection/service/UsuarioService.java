@@ -9,9 +9,9 @@ import java.util.Optional;
 
 public interface UsuarioService {
     Page<UsuarioResponse> findAll(Pageable pageable);
-    UsuarioResponse findById(Long id);
+    UsuarioResponse findById(Integer id);
     Optional<UsuarioResponse> findByEmail(String email);
     UsuarioResponse save(UsuarioRequest request);
-    UsuarioResponse save(UsuarioRequest request, Long id);
-    void deleteById(Long id);
+    UsuarioResponse save(UsuarioRequest request, Integer id);
+    void deleteById(Integer id);
 }

@@ -6,10 +6,10 @@ import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, combineLatest } from 'rxjs';
 
 import { ProductoCardComponent } from '../../../componente/producto-card/producto-card.component';
-import { Producto, Categoria } from '../../../model';
+import { Categoria } from '../../../model';
+import { ProductoPublic } from '../../../model/index.dto';
 import { ProductoPublicService } from '../../../service/producto-public.service';
 import { CategoriaPublicService } from '../../../service/categoria-public.service';
-import { TiendaService } from '../../../service/tienda.service';
 
 @Component({
   selector: 'app-catalogo',
@@ -21,9 +21,9 @@ import { TiendaService } from '../../../service/tienda.service';
 export class CatalogoComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
-  // Datos
-  productos: Producto[] = [];
-  todasLasCategorias: Categoria[] = [];
+  productos: ProductoPublic[] = [];
+  todosLosProductos: ProductoPublic[] = []; // para filtros
+  categorias: Categoria[] = [];
   categoriaActual: Categoria | null = null;
 
   // Filtros
@@ -31,100 +31,82 @@ export class CatalogoComponent implements OnInit, OnDestroy {
   precioMax = 5000;
   soloEnStock = false;
 
-  // Estado
   loading = true;
 
   constructor(
     private route: ActivatedRoute,
     private productoService: ProductoPublicService,
-    private categoriaService: CategoriaPublicService,
-    private tiendaService: TiendaService
+    private categoriaService: CategoriaPublicService
   ) {}
 
   ngOnInit(): void {
-    // Combinar cambios de ruta (slug de categoría) + filtros
     combineLatest([
       this.route.paramMap,
-      this.categoriaService.getAll()
+      this.categoriaService.getAll(),
+      this.productoService.getAll()
     ])
       .pipe(takeUntil(this.destroy$))
-      .subscribe(([params, categorias]) => {
-        this.todasLasCategorias = categorias;
-        const categoriaSlug = params.get('categoriaSlug');
+      .subscribe(([params, categorias, productos]) => {
+        this.categorias = categorias;
+        this.todosLosProductos = productos;
+        this.productos = [...productos];
 
+        const categoriaSlug = params.get('categoriaSlug');
         if (categoriaSlug) {
           this.categoriaActual = categorias.find(c => c.slug === categoriaSlug) || null;
         } else {
           this.categoriaActual = null;
         }
 
-        this.cargarProductos();
+        this.filtrarPorCategoria();
+        this.aplicarFiltros();
+        this.loading = false;
       });
   }
 
-  private cargarProductos(): void {
-    this.loading = true;
+  private filtrarPorCategoria(): void {
+    if (!this.categoriaActual) {
+      this.productos = [...this.todosLosProductos];
+      return;
+    }
 
-    this.productoService.getAll().subscribe({
-      next: (todos) => {
-        let filtrados = [...todos];
-
-        // Filtrar por categoría si aplica
-        if (this.categoriaActual) {
-          filtrados = filtrados.filter(p => p.categoria?.id === this.categoriaActual!.id);
-        }
-
-        this.productos = filtrados;
-        this.aplicarFiltros(); // Aplicar búsqueda, precio, stock
-        this.loading = false;
-      },
-      error: () => {
-        this.productos = [];
-        this.loading = false;
-      }
-    });
+    this.productos = this.todosLosProductos.filter(p =>
+      p.nombreCategoria === this.categoriaActual!.nombre
+    );
   }
 
-  // === FILTROS ===
-  aplicarFiltros() {
-    let filtrados = this.productos;
+  aplicarFiltros(): void {
+    let filtrados = this.categoriaActual
+      ? this.todosLosProductos.filter(p => p.nombreCategoria === this.categoriaActual!.nombre)
+      : [...this.todosLosProductos];
 
     // Búsqueda
     if (this.busqueda.trim()) {
       const term = this.busqueda.toLowerCase();
       filtrados = filtrados.filter(p =>
-        p.nombre.toLowerCase().includes(term) ||
-        p.nombre?.toLowerCase().includes(term)
+        p.nombre.toLowerCase().includes(term)
       );
     }
 
-    // Precio máximo (usamos el menor precio de variantes)
-    filtrados = filtrados.filter(p => {
-      const precioMin = p.variantes?.length
-        ? Math.min(...p.variantes.map(v => v.precio))
-        : 0;
-      return precioMin <= this.precioMax;
-    });
+    // Precio máximo
+    filtrados = filtrados.filter(p => p.precioMinimo <= this.precioMax);
 
     // Solo en stock
     if (this.soloEnStock) {
-      filtrados = filtrados.filter(p => {
-        if (!p.variantes?.length) return false;
-        return p.variantes.some(v => v.activo && v.stock > 0);
-      });
+      filtrados = filtrados.filter(p => p.stockTotal > 0);
     }
 
     this.productos = filtrados;
   }
 
-  limpiarFiltros() {
+  limpiarFiltros(): void {
     this.busqueda = '';
     this.precioMax = 5000;
     this.soloEnStock = false;
-    this.cargarProductos();
+    this.filtrarPorCategoria();
+    this.aplicarFiltros();
   }
 
-  // Título dinámico
   get tituloPagina(): string {
     return this.categoriaActual?.nombre || 'Todos los Productos';
   }

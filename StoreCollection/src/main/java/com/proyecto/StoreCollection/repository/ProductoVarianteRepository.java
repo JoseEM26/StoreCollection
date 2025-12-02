@@ -12,9 +12,9 @@ import java.util.Optional;
 
 @Repository
 public interface ProductoVarianteRepository
-        extends TenantBaseRepository<ProductoVariante, Long> {
+        extends TenantBaseRepository<ProductoVariante, Integer> {
 
-     default List<ProductoVariante> findByProductoIdSafe(Long productoId) {
+     default List<ProductoVariante> findByProductoIdSafe(Integer productoId) {
           return findAllByTenant().stream()
                   .filter(v -> v.getProducto().getId().equals(productoId))
                   .toList();

@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ProductoRepository extends TenantBaseRepository<Producto, Long> {
+public interface ProductoRepository extends TenantBaseRepository<Producto, Integer> {
 
      // Ya no necesitas estos → los borras o los dejas por compatibilidad
      // List<Producto> findByTiendaId(Long tiendaId);
@@ -21,16 +21,23 @@ public interface ProductoRepository extends TenantBaseRepository<Producto, Long>
      Optional<Producto> findByTiendaSlugAndProductoSlug(
              @Param("tiendaSlug") String tiendaSlug,
              @Param("productoSlug") String productoSlug);
+// src/main/java/com/proyecto/StoreCollection/repository/ProductoRepository.java
+@Query("SELECT DISTINCT p FROM Producto p " +
+        "LEFT JOIN FETCH p.categoria " +
+        "LEFT JOIN FETCH p.variantes v " +
+        "WHERE p.tienda.slug = :tiendaSlug")
+List<Producto> findByTiendaSlugPublic(@Param("tiendaSlug") String tiendaSlug);
+
 
      // Por categoría (seguro con tenant)
      @Query("SELECT p FROM Producto p WHERE p.categoria.id = :categoriaId AND p.tienda.id = :tenantId")
      List<Producto> findByCategoriaIdAndTiendaId(
-             @Param("categoriaId") Long categoriaId,
-             @Param("tenantId") Long tenantId);
+             @Param("categoriaId") Integer categoriaId,
+             @Param("tenantId") Integer tenantId);
 
      // Versión segura automática
-     default List<Producto> findByCategoriaIdSafe(Long categoriaId) {
-          Long tenantId = com.proyecto.StoreCollection.tenant.TenantContext.getTenantId();
+     default List<Producto> findByCategoriaIdSafe(Integer categoriaId) {
+          Integer tenantId = com.proyecto.StoreCollection.tenant.TenantContext.getTenantId();
           if (tenantId == null) throw new IllegalStateException("Tenant no establecido");
           return findByCategoriaIdAndTiendaId(categoriaId, tenantId);
      }

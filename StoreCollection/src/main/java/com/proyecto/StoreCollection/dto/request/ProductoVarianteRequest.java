@@ -15,6 +15,6 @@ public class ProductoVarianteRequest {
     private Integer stock = 0;
     private String imagenUrl;
     private Boolean activo = true;
-    private Long productoId;
-    private Set<Long> atributoValorIds;
+    private Integer productoId;
+    private Set<Integer> atributoValorIds;
 }

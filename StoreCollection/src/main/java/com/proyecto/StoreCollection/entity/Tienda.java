@@ -8,7 +8,7 @@ import lombok.*;
 @Data @NoArgsConstructor @AllArgsConstructor
 public class Tienda {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @NotBlank
     private String nombre;

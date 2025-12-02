@@ -15,11 +15,11 @@ public interface CategoriaService {
     // === PRIVADO: panel del dueño ===
     List<CategoriaResponse> findAllByTenant();           // ← nuevo
     Page<CategoriaResponse> findAll(Pageable pageable);  // ← solo sus categorías
-    CategoriaResponse findById(Long id);                 // ← solo si es suyo
+    CategoriaResponse findById(Integer id);                 // ← solo si es suyo
 
     CategoriaResponse save(CategoriaRequest request);
-    CategoriaResponse save(CategoriaRequest request, Long id);
-    void deleteById(Long id);
+    CategoriaResponse save(CategoriaRequest request, Integer id);
+    void deleteById(Integer id);
 
     // ELIMINADO: findByTiendaId(Long tiendaId) → ya no se necesita nunca más
 }

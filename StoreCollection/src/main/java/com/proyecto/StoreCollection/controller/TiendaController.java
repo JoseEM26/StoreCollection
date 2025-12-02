@@ -47,13 +47,13 @@ public class TiendaController {
     }
 
     @PutMapping("/api/owner/tiendas/{id}")
-    public ResponseEntity<TiendaResponse> actualizar(@PathVariable Long id,
+    public ResponseEntity<TiendaResponse> actualizar(@PathVariable Integer id,
                                                      @Valid @RequestBody TiendaRequest request) {
         return ResponseEntity.ok(service.save(request, id));
     }
 
     @DeleteMapping("/api/owner/tiendas/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
         service.deleteById(id);
         return ResponseEntity.noContent().build();
     }

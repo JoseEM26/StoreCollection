@@ -2,9 +2,7 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-
-// Usa la interfaz real que te llega del backend
-import { Producto } from '../../model';
+import { ProductoPublic } from '../../model/index.dto';
 
 @Component({
   selector: 'app-producto-card',
@@ -14,42 +12,25 @@ import { Producto } from '../../model';
   styleUrls: ['./producto-card.component.css']
 })
 export class ProductoCardComponent {
-  @Input({ required: true }) producto!: Producto;
-
-  // Precio más bajo de las variantes (o precio base si no hay variantes)
-  get precio(): number {
-    if (this.producto.variantes && this.producto.variantes.length > 0) {
-      return Math.min(...this.producto.variantes.map(v => v.precio));
-    }
-    return 0; // o un precio por defecto
-  }
-
-  // Stock total (suma de todas las variantes)
-  get stock(): number {
-    if (this.producto.variantes && this.producto.variantes.length > 0) {
-      return this.producto.variantes.reduce((total, v) => total + (v.activo ? v.stock : 0), 0);
-    }
-    return 0;
-  }
+  @Input({ required: true }) producto!: ProductoPublic;
 
   get hayStock(): boolean {
-    return this.stock > 0;
+    return this.producto.stockTotal > 0;
   }
 
-  // Imagen principal: la primera variante activa o una por defecto
   get imagenUrl(): string {
-    if (this.producto.variantes && this.producto.variantes.length > 0) {
-      const varianteConImagen = this.producto.variantes.find(v => v.imagenUrl && v.activo);
-      if (varianteConImagen?.imagenUrl) {
-        return varianteConImagen.imagenUrl;
-      }
-    }
-    // Imagen por defecto si no hay
-    return 'https://img.freepik.com/vector-premium/no-hay-fotos-ilustracion-plana_120816-197113.jpg';
+    return this.producto.imagenPrincipal || 'https://via.placeholder.com/300x300.png?text=Sin+Imagen';
   }
 
-  // Nombre de categoría
+  get precio(): number {
+    return this.producto.precioMinimo;
+  }
+
   get nombreCategoria(): string {
-    return this.producto.categoria?.nombre || 'Sin categoría';
+    return this.producto.nombreCategoria;
+  }
+
+  get stock(): number {
+    return this.producto.stockTotal;
   }
 }

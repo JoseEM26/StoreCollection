@@ -17,7 +17,7 @@ public class ProductoVariante {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @ManyToOne
     @JoinColumn(name = "producto_id", nullable = false)
@@ -35,7 +35,8 @@ public class ProductoVariante {
     @Column(nullable = false)
     private Integer stock = 0;
 
-    @Column(name = "imagenUrl", columnDefinition = "TEXT")
+
+    @Column(name = "imagenUrl")
     private String imagenUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)

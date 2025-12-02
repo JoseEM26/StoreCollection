@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface TiendaRepository extends JpaRepository<Tienda, Long> {
+public interface TiendaRepository extends JpaRepository<Tienda, Integer> {
 
     Optional<Tienda> findBySlug(String slug);  // Usa Optional
 
-    List<Tienda> findByUserId(Long userId);
+    List<Tienda> findByUserId(Integer userId);
     // En TiendaRepository.java
     Optional<Tienda> findByUserEmail(String email);
 

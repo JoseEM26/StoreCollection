@@ -2,6 +2,7 @@
 package com.proyecto.StoreCollection.service;
 
 import com.proyecto.StoreCollection.dto.request.ProductoRequest;
+import com.proyecto.StoreCollection.dto.response.ProductoCardResponse;
 import com.proyecto.StoreCollection.dto.response.ProductoResponse;
 import com.proyecto.StoreCollection.entity.Categoria;
 import com.proyecto.StoreCollection.entity.Producto;
@@ -52,10 +53,37 @@ public class ProductoServiceImpl implements ProductoService {
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
         return toResponse(p);
     }
+// En tu ProductoService.java (el que ya tienes)
 
+    public List<ProductoCardResponse> findAllForPublicCatalog(String tiendaSlug) {
+        List<Producto> productos = productoRepository.findByTiendaSlugPublic(tiendaSlug);
+
+        return productos.stream().map(p -> {
+            ProductoCardResponse dto = new ProductoCardResponse();
+            dto.setId(p.getId());
+            dto.setNombre(p.getNombre());
+            dto.setSlug(p.getSlug());
+            dto.setNombreCategoria(p.getCategoria().getNombre());
+
+            List<ProductoCardResponse.VarianteCard> vars = p.getVariantes().stream()
+                    .filter(v -> v.getActivo() != null && v.getActivo())
+                    .map(v -> {
+                        ProductoCardResponse.VarianteCard vc = new ProductoCardResponse.VarianteCard();
+                        vc.setPrecio(v.getPrecio());
+                        vc.setStock(v.getStock());
+                        vc.setImagenUrl(v.getImagenUrl());
+                        vc.setActivo(true);
+                        return vc;
+                    })
+                    .toList();
+
+            dto.setVariantes(vars);
+            return dto;
+        }).toList();
+    }
     @Override
     @Transactional(readOnly = true)
-    public List<ProductoResponse> findByCategoriaId(Long categoriaId) {
+    public List<ProductoResponse> findByCategoriaId(Integer categoriaId) {
         return productoRepository.findByCategoriaIdSafe(categoriaId).stream()
                 .map(this::toResponse)
                 .toList();
@@ -63,7 +91,7 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional(readOnly = true)
-    public ProductoResponse findById(Long id) {
+    public ProductoResponse findById(Integer id) {
         return toResponse(productoRepository.getByIdAndTenant(id));
     }
 
@@ -73,7 +101,7 @@ public class ProductoServiceImpl implements ProductoService {
     }
 
     @Override
-    public ProductoResponse save(ProductoRequest request, Long id) {
+    public ProductoResponse save(ProductoRequest request, Integer id) {
         Producto p = id == null ? new Producto() : productoRepository.getByIdAndTenant(id);
 
         p.setNombre(request.getNombre());
@@ -87,7 +115,7 @@ public class ProductoServiceImpl implements ProductoService {
     }
 
     @Override
-    public void deleteById(Long id) {
+    public void deleteById(Integer id) {
         productoRepository.delete(productoRepository.getByIdAndTenant(id));
     }
 

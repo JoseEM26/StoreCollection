@@ -29,7 +29,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
-    public UsuarioResponse save(UsuarioRequest request, Long id) {
+    public UsuarioResponse save(UsuarioRequest request, Integer id) {
         Usuario usuario;
 
         if (id == null) {
@@ -62,7 +62,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     @Transactional(readOnly = true)
-    public UsuarioResponse findById(Long id) {
+    public UsuarioResponse findById(Integer id) {
         return repository.findById(id)
                 .map(this::toResponse)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + id));
@@ -75,7 +75,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
-    public void deleteById(Long id) {
+    public void deleteById(Integer id) {
         if (!repository.existsById(id)) {
             throw new RuntimeException("Usuario no encontrado: " + id);
         }

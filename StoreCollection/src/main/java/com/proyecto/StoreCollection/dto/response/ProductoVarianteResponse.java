@@ -6,12 +6,12 @@ import java.util.Set;
 
 @Data
 public class ProductoVarianteResponse {
-    private Long id;
+    private Integer id;
     private String sku;
     private BigDecimal precio;
     private Integer stock;
     private String imagenUrl;
     private Boolean activo;
-    private Long productoId;
+    private Integer productoId;
     private Set<AtributoValorResponse> atributos;
 }

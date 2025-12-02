@@ -38,13 +38,13 @@ public class AtributoController {
     }
 
     @PutMapping("/api/owner/atributos/{id}")
-    public ResponseEntity<AtributoResponse> actualizar(@PathVariable Long id,
+    public ResponseEntity<AtributoResponse> actualizar(@PathVariable Integer id,
                                                        @Valid @RequestBody AtributoRequest request) {
         return ResponseEntity.ok(service.save(request, id));
     }
 
     @DeleteMapping("/api/owner/atributos/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
         service.deleteById(id);
         return ResponseEntity.noContent().build();
     }

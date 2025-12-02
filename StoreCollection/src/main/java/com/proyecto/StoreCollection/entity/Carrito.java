@@ -5,20 +5,22 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-// 9. Carrito.java
 @Entity
 @Table(name = "carrito")
 @Data @NoArgsConstructor @AllArgsConstructor
 public class Carrito {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @NotBlank
+    @Column(name = "session_id")
     private String sessionId;
 
+    // CAMBIA ESTO:
     @ManyToOne
-    private Variante variante;
+    @JoinColumn(name = "variante_id", nullable = false)
+    private ProductoVariante variante;  // ← ahora sí existe
 
-    @Positive
+    @PositiveOrZero
     private Integer cantidad = 1;
 }

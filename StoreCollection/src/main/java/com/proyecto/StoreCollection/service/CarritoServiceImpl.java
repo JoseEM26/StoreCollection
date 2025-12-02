@@ -3,10 +3,9 @@ package com.proyecto.StoreCollection.service;
 import com.proyecto.StoreCollection.dto.request.CarritoRequest;
 import com.proyecto.StoreCollection.dto.response.CarritoResponse;
 import com.proyecto.StoreCollection.entity.Carrito;
-import com.proyecto.StoreCollection.entity.Variante;
+import com.proyecto.StoreCollection.entity.ProductoVariante;
 import com.proyecto.StoreCollection.repository.CarritoRepository;
 import com.proyecto.StoreCollection.repository.ProductoVarianteRepository;
-import com.proyecto.StoreCollection.repository.VarianteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +21,7 @@ public class CarritoServiceImpl implements CarritoService {
     private CarritoRepository repository;
 
     @Autowired
-    private VarianteRepository varianteRepository;
+    private ProductoVarianteRepository varianteRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -35,7 +34,7 @@ public class CarritoServiceImpl implements CarritoService {
 
     @Override
     @Transactional(readOnly = true)
-    public CarritoResponse findById(Long id) {
+    public CarritoResponse findById(Integer id) {
         Carrito carrito = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Carrito no encontrado: " + id));
         return toResponse(carrito);
@@ -45,14 +44,14 @@ public class CarritoServiceImpl implements CarritoService {
     public CarritoResponse save(CarritoRequest request) { return save(request, null); }
 
     @Override
-    public CarritoResponse save(CarritoRequest request, Long id) {
+    public CarritoResponse save(CarritoRequest request, Integer id) {
         Carrito carrito = id == null ? new Carrito() : repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Carrito no encontrado: " + id));
 
         carrito.setSessionId(request.getSessionId());
         carrito.setCantidad(request.getCantidad());
         if (request.getVarianteId() != null) {
-            Variante v = varianteRepository.findById(request.getVarianteId())
+            ProductoVariante v = varianteRepository.findById(request.getVarianteId())
                     .orElseThrow(() -> new RuntimeException("Variante no encontrada"));
             carrito.setVariante(v);
         }
@@ -61,7 +60,7 @@ public class CarritoServiceImpl implements CarritoService {
     }
 
     @Override
-    public void deleteById(Long id) {
+    public void deleteById(Integer id) {
         repository.deleteById(id);
     }
 

@@ -8,7 +8,7 @@ import jakarta.validation.constraints.*;
 @Data @NoArgsConstructor @AllArgsConstructor
 public class Atributo {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @NotBlank
     private String nombre;

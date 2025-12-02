@@ -7,5 +7,5 @@ import lombok.Data;
 public class AtributoValorRequest {
     @NotBlank
     private String valor;
-    private Long atributoId;
+    private Integer atributoId;
 }

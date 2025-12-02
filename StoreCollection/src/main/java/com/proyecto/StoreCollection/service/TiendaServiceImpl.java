@@ -37,7 +37,7 @@ public class TiendaServiceImpl implements TiendaService {
 
     @Override
     @Transactional(readOnly = true)
-    public TiendaResponse findById(Long id) {
+    public TiendaResponse findById(Integer id) {
         return toResponse(tiendaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tienda no encontrada: " + id)));
     }
@@ -51,7 +51,7 @@ public class TiendaServiceImpl implements TiendaService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TiendaResponse> findByUserId(Long userId) {
+    public List<TiendaResponse> findByUserId(Integer userId) {
         return tiendaRepository.findByUserId(userId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -93,7 +93,7 @@ public class TiendaServiceImpl implements TiendaService {
     }
 
     @Override
-    public TiendaResponse save(TiendaRequest request, Long id) {
+    public TiendaResponse save(TiendaRequest request, Integer id) {
         Tienda t = id == null ? new Tienda() : tiendaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tienda no encontrada"));
 
@@ -131,7 +131,7 @@ public class TiendaServiceImpl implements TiendaService {
     }
 
     @Override
-    public void deleteById(Long id) {
+    public void deleteById(Integer id) {
         Tienda tienda = tiendaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tienda no encontrada"));
 

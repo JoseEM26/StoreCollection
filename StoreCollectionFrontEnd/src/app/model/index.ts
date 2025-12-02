@@ -1,16 +1,26 @@
 // src/app/model/index.ts
+// MODELOS 100% COMPATIBLES CON TU BACKEND JAVA (StoreCollection 2025)
 
-// 1. Usuario
 export interface Usuario {
   id: number;
   nombre: string;
   email: string;
-  password?: string; // solo en creación
+  password?: string; // solo en creación/login
   celular?: string;
   rol: 'ADMIN' | 'OWNER' | 'CUSTOMER';
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-// 2. Tienda
+export interface Plan {
+  id: number;
+  nombre: string;
+  precio: number;
+  maxProductos: number;
+  mesInicio: number;  // ← coincide con mes_inicio en BD
+  mesFin: number;     // ← coincide con mes_fin en BD
+}
+
 export interface Tienda {
   id: number;
   nombre: string;
@@ -20,89 +30,98 @@ export interface Tienda {
   descripcion?: string;
   direccion?: string;
   horarios?: string;
+  mapaUrl?: string;
   plan?: Plan | null;
+  planId?: number;
   user?: Usuario | null;
+  userId?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-// 3. Plan
-export interface Plan {
-  id: number;
-  nombre: string;
-  precio: number;
-  maxProductos: number;
-  mesInicio: number;
-  mesFin: number;
-}
-
-// 4. Categoria
 export interface Categoria {
   id: number;
   nombre: string;
   slug: string;
-  tienda: Tienda;
   tiendaId: number;
+  tienda?: Tienda;
 }
 
-// 5. Atributo (ej: Color, Talla, Material)
 export interface Atributo {
   id: number;
-  nombre: string; // "Color", "Talla", etc.
-  tienda: Tienda;
+  nombre: string; // ej: "Talla", "Color"
   tiendaId: number;
+  tienda?: Tienda;
+  valores?: AtributoValor[]; // opcional para cargar con atributos
 }
 
-// 6. AtributoValor (ej: "Rojo", "M", "Algodón")
 export interface AtributoValor {
   id: number;
-  valor: string; // "Rojo", "L", "Blanco"
-  atributo: Atributo;
+  valor: string;     // ej: "Rojo", "38", "65W"
   atributoId: number;
-  tienda: Tienda;
+  atributo?: Atributo;
   tiendaId: number;
+  tienda?: Tienda;
 }
 
-// 7. Producto
 export interface Producto {
   id: number;
   nombre: string;
   slug: string;
-  categoria: Categoria;
   categoriaId: number;
-  tienda: Tienda;
+  categoria?: Categoria;
   tiendaId: number;
+  tienda?: Tienda;
   variantes?: Variante[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-// 8. Variante (SKU específico con combinaciones de atributos)
 export interface Variante {
   id: number;
+  productoId: number;
+  producto?: Producto;
+  tiendaId: number;
+  tienda?: Tienda;
   sku: string;
   precio: number;
   stock: number;
-  imagenUrl?: string;
+  imagenUrl?: string | null;  // ← ¡¡IMPORTANTE!! coincide con imagen_url en BD
   activo: boolean;
-  producto: Producto;
-  productoId: number;
-  tienda: Tienda;
-  tiendaId: number;
-  atributos: AtributoValor[]; // ej: [Color: Rojo, Talla: M]
+  atributos?: AtributoValor[]; // relación muchos-a-muchos (Variante_Atributo)
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-// 9. Carrito Item
 export interface CarritoItem {
   id: number;
   sessionId: string;
-  variante: Variante;
   varianteId: number;
+  variante?: Variante;
   cantidad: number;
+  createdAt?: string;
 }
 
-// 10. DTOs útiles para formularios
+// ========================================
+// DTOs PARA FORMULARIOS Y PETICIONES
+// ========================================
+
+export interface CrearTiendaDTO {
+  nombre: string;
+  slug: string;
+  whatsapp?: string;
+  moneda: 'SOLES' | 'DOLARES';
+  descripcion?: string;
+  direccion?: string;
+  horarios?: string;
+  mapaUrl?: string;
+  planId: number;
+}
+
 export interface CrearProductoDTO {
   nombre: string;
   slug: string;
   categoriaId: number;
-  tiendaId: number;
 }
 
 export interface CrearVarianteDTO {
@@ -112,32 +131,55 @@ export interface CrearVarianteDTO {
   stock: number;
   imagenUrl?: string;
   activo?: boolean;
-  atributoValorIds: number[]; // ids de AtributoValor seleccionados
+  atributoValorIds: number[]; // IDs de los AtributoValor seleccionados
+}
+
+export interface CrearCategoriaDTO {
+  nombre: string;
+  slug: string;
 }
 
 export interface CrearAtributoDTO {
   nombre: string;
-  tiendaId: number;
 }
 
 export interface CrearAtributoValorDTO {
   valor: string;
   atributoId: number;
-  tiendaId: number;
 }
 
-// 11. Respuestas paginadas (para listas grandes)
+// ========================================
+// RESPUESTAS PAGINADAS (Spring Data)
+// ========================================
+
 export interface Page<T> {
   content: T[];
   pageable: {
     pageNumber: number;
     pageSize: number;
+    sort: {
+      sorted: boolean;
+      unsorted: boolean;
+      empty: boolean;
+    };
   };
   totalElements: number;
   totalPages: number;
   last: boolean;
+  first: boolean;
+  numberOfElements: number;
+  size: number;
+  number: number;
 }
 
-// 12. Enums para formularios
-export const Roles = ['ADMIN', 'OWNER', 'CUSTOMER'] as const;
-export const Monedas = ['SOLES', 'DOLARES'] as const;
+// ========================================
+// ENUMS / CONSTANTES
+// ========================================
+
+export const ROLES = ['ADMIN', 'OWNER', 'CUSTOMER'] as const;
+export type Rol = typeof ROLES[number];
+
+export const MONEDAS = ['SOLES', 'DOLARES'] as const;
+export type Moneda = typeof MONEDAS[number];
+
+export const ESTADOS_VARIANTE = ['ACTIVO', 'INACTIVO'] as const;

@@ -8,7 +8,7 @@ import jakarta.validation.constraints.*;
 @Data @NoArgsConstructor @AllArgsConstructor
 public class    AtributoValor {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "atributo_id", nullable = false)

@@ -10,9 +10,9 @@ import java.util.List;
 
 public interface TiendaService {
     Page<TiendaResponse> findAll(Pageable pageable);
-    TiendaResponse findById(Long id);
+    TiendaResponse findById(Integer id);
     TiendaResponse findBySlug(String slug);
-    List<TiendaResponse> findByUserId(Long userId);
+    List<TiendaResponse> findByUserId(Integer userId);
 
     // NUEVOS: para multi-tenant
     Tienda getTiendaDelUsuarioActual();           // ← clave para crear productos, etc.
@@ -20,6 +20,6 @@ public interface TiendaService {
     List<TiendaResponse> getMisTiendas();         // ← si permite varias
 
     TiendaResponse save(TiendaRequest request);
-    TiendaResponse save(TiendaRequest request, Long id);
-    void deleteById(Long id);
+    TiendaResponse save(TiendaRequest request, Integer id);
+    void deleteById(Integer id);
 }

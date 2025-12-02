@@ -26,7 +26,7 @@ public class PlanServiceImpl implements PlanService {
 
     @Override
     @Transactional(readOnly = true)
-    public PlanResponse findById(Long id) {
+    public PlanResponse findById(Integer id) {
         Plan plan = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Plan no encontrado: " + id));
         return toResponse(plan);
@@ -36,7 +36,7 @@ public class PlanServiceImpl implements PlanService {
     public PlanResponse save(PlanRequest request) { return save(request, null); }
 
     @Override
-    public PlanResponse save(PlanRequest request, Long id) {
+    public PlanResponse save(PlanRequest request, Integer id) {
         Plan plan = id == null ? new Plan() : repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Plan no encontrado: " + id));
 
@@ -50,7 +50,7 @@ public class PlanServiceImpl implements PlanService {
     }
 
     @Override
-    public void deleteById(Long id) {
+    public void deleteById(Integer id) {
         if (!repository.existsById(id)) {
             throw new RuntimeException("Plan no encontrado: " + id);
         }

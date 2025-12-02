@@ -3,14 +3,21 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
+
 @Entity
 @Table(name = "producto", uniqueConstraints = @UniqueConstraint(columnNames = {"slug", "tienda_id"}))
-@Data @NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Producto {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @NotBlank
     private String nombre;
@@ -23,4 +30,7 @@ public class Producto {
 
     @ManyToOne @JoinColumn(nullable = false)
     private Tienda tienda;
+
+    @OneToMany(mappedBy = "producto", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ProductoVariante> variantes = new HashSet<>();
 }

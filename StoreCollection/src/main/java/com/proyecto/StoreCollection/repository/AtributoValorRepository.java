@@ -8,9 +8,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface AtributoValorRepository extends TenantBaseRepository<AtributoValor, Long> {
+public interface AtributoValorRepository extends TenantBaseRepository<AtributoValor, Integer> {
 
-    default List<AtributoValor> findByAtributoIdSafe(Long atributoId) {
+    default List<AtributoValor> findByAtributoIdSafe(Integer atributoId) {
         return findAllByTenant().stream()
                 .filter(v -> v.getAtributo().getId().equals(atributoId))
                 .toList();

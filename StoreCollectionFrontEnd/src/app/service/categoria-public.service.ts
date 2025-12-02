@@ -7,15 +7,9 @@ import { Categoria } from '../model';
 
 @Injectable({ providedIn: 'root' })
 export class CategoriaPublicService {
+  constructor(private http: HttpClient, private tiendaService: TiendaService) {}
 
-  constructor(
-    private http: HttpClient,
-    private tiendaService: TiendaService
-  ) {}
-
-  /** Lista todas las categorías de la tienda actual (por slug) */
   getAll(): Observable<Categoria[]> {
-    const url = `${this.tiendaService.getBaseUrl()}/categorias`;
-    return this.http.get<Categoria[]>(url);
+    return this.http.get<Categoria[]>(`${this.tiendaService.getBaseUrl()}/categorias`);
   }
 }

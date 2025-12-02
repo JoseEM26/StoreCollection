@@ -2,24 +2,21 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { TiendaService } from './tienda.service';
-import { Observable, tap } from 'rxjs';
+import { Observable } from 'rxjs';
 import { Tienda } from '../model';
+import { tap } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class TiendaPublicService {
-
   constructor(
     private http: HttpClient,
-    private tiendaService: TiendaService  // el que guarda el slug
+    private tiendaService: TiendaService
   ) {}
 
   cargarTiendaActual(): Observable<Tienda> {
-    const url = `${this.tiendaService.getBaseUrl()}`;  // → /api/public/tiendas/zapatik
+    const url = this.tiendaService.getBaseUrl();
     return this.http.get<Tienda>(url).pipe(
-      tap(tienda => {
-        // Guardamos los datos reales de la tienda para usar en header, hero, etc.
-        (this.tiendaService as any).currentTiendaSubject?.next(tienda);
-      })
+      tap(tienda => this.tiendaService.setTienda(tienda))
     );
   }
 }

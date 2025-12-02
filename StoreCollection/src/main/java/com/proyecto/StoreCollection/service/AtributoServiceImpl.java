@@ -47,7 +47,7 @@ public class AtributoServiceImpl implements AtributoService {
 
     @Override
     @Transactional(readOnly = true)
-    public AtributoResponse findById(Long id) {
+    public AtributoResponse findById(Integer id) {
         Atributo atributo = repository.getByIdAndTenant(id); // ← solo si es suyo
         return toResponse(atributo);
     }
@@ -58,7 +58,7 @@ public class AtributoServiceImpl implements AtributoService {
     }
 
     @Override
-    public AtributoResponse save(AtributoRequest request, Long id) {
+    public AtributoResponse save(AtributoRequest request, Integer id) {
         Atributo atributo = id == null
                 ? new Atributo()
                 : repository.getByIdAndTenant(id); // ← solo puede editar los suyos
@@ -70,7 +70,7 @@ public class AtributoServiceImpl implements AtributoService {
     }
 
     @Override
-    public void deleteById(Long id) {
+    public void deleteById(Integer id) {
         Atributo atributo = repository.getByIdAndTenant(id);
         repository.delete(atributo);
     }

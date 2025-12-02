@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 
 @Data
 public class PlanResponse {
-    private Long id;
+    private Integer id;
     private String nombre;
     private BigDecimal precio;
     private Integer maxProductos;

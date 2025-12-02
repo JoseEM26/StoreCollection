@@ -33,7 +33,7 @@ public class AtributoValorServiceImpl implements AtributoValorService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<AtributoValorResponse> findByAtributoId(Long atributoId) {
+    public List<AtributoValorResponse> findByAtributoId(Integer atributoId) {
         atributoRepository.getByIdAndTenant(atributoId); // seguridad
         return valorRepository.findByAtributoIdSafe(atributoId).stream()
                 .map(this::toResponse)
@@ -43,7 +43,7 @@ public class AtributoValorServiceImpl implements AtributoValorService {
     @Override
     @Transactional(readOnly = true)
     public List<AtributoValorResponse> findByAtributoIdAndTiendaSlug(
-            Long atributoId, String tiendaSlug) {
+            Integer atributoId, String tiendaSlug) {
 
         // TenantFilter ya garantiza que solo ve valores de esa tienda
         return valorRepository.findAllByTenant().stream()
@@ -54,7 +54,7 @@ public class AtributoValorServiceImpl implements AtributoValorService {
 
     @Override
     @Transactional(readOnly = true)
-    public AtributoValorResponse findById(Long id) {
+    public AtributoValorResponse findById(Integer id) {
         return toResponse(valorRepository.getByIdAndTenant(id));
     }
 
@@ -64,7 +64,7 @@ public class AtributoValorServiceImpl implements AtributoValorService {
     }
 
     @Override
-    public AtributoValorResponse save(AtributoValorRequest request, Long id) {
+    public AtributoValorResponse save(AtributoValorRequest request, Integer id) {
         AtributoValor valor = id == null
                 ? new AtributoValor()
                 : valorRepository.getByIdAndTenant(id);
@@ -78,7 +78,7 @@ public class AtributoValorServiceImpl implements AtributoValorService {
     }
 
     @Override
-    public void deleteById(Long id) {
+    public void deleteById(Integer id) {
         valorRepository.delete(valorRepository.getByIdAndTenant(id));
     }
 

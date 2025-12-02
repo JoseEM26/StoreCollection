@@ -14,6 +14,6 @@ public class TiendaRequest {
     private String descripcion;
     private String direccion;
     private String horarios;
-    private Long planId;
-    private Long userId;
+    private Integer planId;
+    private Integer userId;
 }

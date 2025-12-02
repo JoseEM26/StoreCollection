@@ -14,7 +14,7 @@ public interface TenantBaseRepository<T, ID> extends JpaRepository<T, ID> {
 
     // Filtro automático usando el tenant actual
     default List<T> findAllByTenant() {
-        Long tenantId = TenantContext.getTenantId();
+        Integer tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
             throw new IllegalStateException("Tenant no establecido. ¿Pasaste por el TenantFilter?");
         }
@@ -22,7 +22,7 @@ public interface TenantBaseRepository<T, ID> extends JpaRepository<T, ID> {
     }
 
     default Optional<T> findByIdAndTenant(ID id) {
-        Long tenantId = TenantContext.getTenantId();
+        Integer tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
             throw new IllegalStateException("Tenant no establecido");
         }
@@ -36,8 +36,8 @@ public interface TenantBaseRepository<T, ID> extends JpaRepository<T, ID> {
 
     // Métodos que SÍ puedes sobrescribir con @Query si quieres más eficiencia
     @Query("SELECT e FROM #{#entityName} e WHERE e.tienda.id = :tiendaId")
-    List<T> findAllByTiendaId(Long tiendaId);
+    List<T> findAllByTiendaId(Integer tiendaId);
 
     @Query("SELECT e FROM #{#entityName} e WHERE e.tienda.id = :tiendaId AND e.id = :id")
-    Optional<T> findByIdAndTiendaId(ID id, Long tiendaId);
+    Optional<T> findByIdAndTiendaId(ID id, Integer tiendaId);
 }

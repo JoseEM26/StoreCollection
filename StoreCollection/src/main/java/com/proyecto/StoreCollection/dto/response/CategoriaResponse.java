@@ -8,8 +8,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CategoriaResponse {
-    private Long id;
+    private Integer id;
     private String nombre;
     private String slug;
-    private Long tiendaId;
+    private Integer tiendaId;
 }

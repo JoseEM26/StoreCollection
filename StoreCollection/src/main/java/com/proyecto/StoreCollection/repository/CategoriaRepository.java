@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface CategoriaRepository extends TenantBaseRepository<Categoria, Long> {
+public interface CategoriaRepository extends TenantBaseRepository<Categoria, Integer> {
 }
