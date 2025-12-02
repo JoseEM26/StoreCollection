@@ -1,117 +1,104 @@
-<div class="producto-detalle" *ngIf="producto; else noEncontrado">
-  <div class="container py-4 py-md-5">
+<div class="container py-5" *ngIf="!loading && producto; else cargando">
+  <button class="btn-volver-flotante" routerLink="/catalogo">
+    <i class="bi bi-arrow-left"></i>
+  </button>
 
-    <!-- BOTÓN VOLVER ELEGANTE (flotante pero discreto) -->
-    <div class="volver-flotante">
-      <button class="btn-volver-elegante" routerLink="/catalogo" title="Volver al catálogo">
-        <i class="bi bi-arrow-left"></i>
-      </button>
+  <div class="row g-5 align-items-start">
+
+    <!-- IMAGEN CON ZOOM + BADGES IGUALES QUE EN EL CARD -->
+    <div class="col-lg-6 position-relative">
+      <div class="imagen-zoom-container">
+        ">
+        <img 
+          [src]="imagenUrl" 
+          [alt]="producto.nombre" 
+          class="img-principal">
+
+        <div class="lupa">
+          <img [src]="imagenZoom" class="img-lupa">
+        </div>
+
+        <!-- BADGE AGOTADO (igual que en el card -->
+        @if (!hayStock) {
+          <div class="badge-agotado pulse-animation" style="top: 15px; right: 15px; font-size: 1.1rem; padding: 10px 18px;">
+            <i class="bi bi-bag-x-fill"></i>
+            AGOTADO
+          </div>
+        }
+
+        <!-- BADGE ÚLTIMAS UNIDADES -->
+        @if (hayStock && stockActual <= 5 && stockActual > 0) {
+          <div class="badge-ultimas" style="top: 15px; left: 15px; font-size: 1rem; padding: 8px 14px;">
+            <i class="bi bi-fire"></i>
+            ¡Últimas {{ stockActual }}!
+          </div>
+        }
+      </div>
     </div>
 
-    <div class="row g-5 align-items-start">
+    <!-- INFO DEL PRODUCTO - ESTILO TOTALMENTE IGUAL AL CARD -->
+    <div class="col-lg-6">
+      <div class="info-container" style="max-width: 500px; margin: 0 auto;">
 
-      <!-- IMAGEN CON ZOOM PERFECTO -->
-      <div class="col-lg-6">
-        <div class="imagen-zoom-container" data-aos="fade-right">
-          <img 
-            [src]="producto.imagen || 'https://via.placeholder.com/800x800/white'"
-            [alt]="producto.nombre"
-            class="img-principal"
-            id="imgPrincipal">
-          
-          <!-- Lupa flotante (ahora sí funciona perfecto) -->
-          <div class="lupa" id="lupa">
-            <img [src]="producto.imagen || 'https://via.placeholder.com/2000x2000/white'" class="img-lupa">
+        <!-- Categoría -->
+        @if (producto.nombreCategoria) {
+          <div class="categoria-chip mb-3">
+            {{ producto.nombreCategoria }}
           </div>
+        }
+
+        <!-- Nombre del producto -->
+        <h1 class="nombre" style="font-size: 2.2rem; font-weight: 700; margin-bottom: 1rem;">
+          {{ producto.nombre }}
+        </h1>
+
+        <!-- Precio grande y elegante -->
+        <div class="precio-wrapper mb-4" style="font-size: 2.5rem;">
+          <span class="simbolo">S/</span>
+          <span class="valor">{{ precio | number:'1.2-2' }}</span>
         </div>
-      </div>
 
-      <!-- INFORMACIÓN -->
-      <div class="col-lg-6">
-        <div class="info-container" data-aos="fade-left">
+        <!-- Estado de stock - igual que el card -->
+        
 
-          <div class="categoria-badge mb-3">{{ producto.categoria }}</div>
-          <h1 class="nombre-producto">{{ producto.nombre }}</h1>
+        <!-- Acciones principales -->
+        <div class="acciones-principales mt-5">
 
-          <div class="precio-display mb-4">
-            <span class="precio">$ {{ producto.precio.toFixed(2) }}</span>
-          </div>
+          <button 
+            class="btn-whatsapp-gigante w-100 mb-3" 
+            (click)="consultarWhatsApp()"
+            [disabled]="!hayStock">
+            <i class="bi bi-whatsapp"></i>
+            Consultar por WhatsApp
+          </button>
 
-          <p class="descripcion mb-4">{{ producto.descripcion }}</p>
-
-          <div class="stock-badge mb-5" [class.agotado]="!hayStock">
-            <i class="bi" [class.bi-check-circle-fill]="hayStock" [class.bi-x-circle-fill]="!hayStock"></i>
-            <span>{{ hayStock ? 'Disponible' : 'Sin stock' }}</span>
-            <small *ngIf="hayStock && producto.stock <= 10" class="ms-2 text-danger fw-bold">
-              ¡Solo {{ producto.stock }} left!
-            </small>
-          </div>
-
-          <!-- BOTONES PRINCIPALES -->
-          <div class="acciones-principales">
-            <button 
-              class="btn-whatsapp-principal" 
-              (click)="consultarWhatsApp()"
-              [disabled]="!hayStock">
-              <i class="bi bi-whatsapp"></i>
-              Consultar por WhatsApp
+          <div class="d-flex gap-3">
+            <button class="btn-secundario flex-fill" (click)="llamarAhora()">
+              <i class="bi bi-telephone-fill"></i> Llamar ahora
             </button>
-
-            <div class="acciones-secundarias mt-3">
-              <button class="btn-secundario" (click)="llamarAhora()">
-                <i class="bi bi-telephone-fill"></i> Llamar
-              </button>
-              <button class="btn-secundario" (click)="abrirCotizacion()">
-                <i class="bi bi-envelope"></i> Cotizar
-              </button>
-            </div>
+            <button class="btn-secundario flex-fill" (click)="abrirCotizacion()">
+              <i class="bi bi-chat-text"></i> Pedir cotización
+            </button>
           </div>
+        </div>
 
-          <!-- GARANTÍAS -->
-          <div class="garantias mt-5">
-            <div class="garantia-item">
-              <i class="bi bi-shield-check"></i> Garantía de calidad
-            </div>
-            <div class="garantia-item">
-              <i class="bi bi-truck"></i> Envíos a todo el país
-            </div>
-            <div class="garantia-item">
-              <i class="bi bi-chat-dots"></i> Respuesta inmediata
-            </div>
-          </div>
-
+        <!-- Info extra (opcional) -->
+        <div class="mt-5 pt-4 border-top">
+          <small class="text-muted">
+            <i class="bi bi-truck"></i> Envíos a todo el Perú • 
+            <i class="bi bi-shield-check"></i> Compra segura • 
+            <i class="bi bi-headset"></i> Atención 24/7
+          </small>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- MODAL COTIZACIÓN -->
-<div class="modal-backdrop" *ngIf="showQuoteModal" (click)="cerrarModal()"></div>
-<div class="modal-cotizacion" *ngIf="showQuoteModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h4>Solicitar Cotización</h4>
-      <button class="btn-cerrar" (click)="cerrarModal()">×</button>
-    </div>
-    <div class="modal-body">
-      <form (ngSubmit)="enviarCotizacion()">
-        <input [(ngModel)]="clienteNombre" type="text" placeholder="Tu nombre" required class="form-control mb-3">
-        <input [(ngModel)]="clienteTelefono" type="tel" placeholder="WhatsApp o celular" required class="form-control mb-3">
-        <textarea [(ngModel)]="clienteMensaje" rows="3" placeholder="Mensaje (opcional)" class="form-control mb-4"></textarea>
-        <button type="submit" class="btn-enviar">
-          Enviar solicitud
-        </button>
-      </form>
-    </div>
-  </div>
-</div>
-
-<ng-template #noEncontrado>
+<!-- Loading -->
+<ng-template #cargando>
   <div class="text-center py-5">
-    <h2>Producto no encontrado</h2>
-    <button class="btn-volver-elegante mt-4" routerLink="/">
-      <i class="bi bi-house"></i> Volver al inicio
-    </button>
+    <div class="spinner-border text-success" style="width:3rem;height:3rem;"></div>
+    <p class="mt-3">Cargando producto...</p>
   </div>
 </ng-template>

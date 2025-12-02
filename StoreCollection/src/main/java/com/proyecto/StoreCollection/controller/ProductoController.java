@@ -25,8 +25,7 @@ public class ProductoController {
 
     @GetMapping("/api/public/tiendas/{tiendaSlug}/productos")
     public ResponseEntity<List<ProductoCardResponse>> publicList(@PathVariable String tiendaSlug) {
-        List<ProductoCardResponse> x=service.findAllForPublicCatalog(tiendaSlug);
-        return ResponseEntity.ok(x);
+        return ResponseEntity.ok(service.findAllForPublicCatalog(tiendaSlug));
     }
 
     @GetMapping("/api/public/tiendas/{tiendaSlug}/productos/{productoSlug}")
