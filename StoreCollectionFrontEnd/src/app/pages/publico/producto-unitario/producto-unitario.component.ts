@@ -2,7 +2,6 @@
 import { Component, inject, AfterViewInit, Renderer2, ElementRef, OnDestroy } from '@angular/core';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { ProductosService } from '../../../service/productos.service';
 import { Producto } from '../../../model/producto.model';
 import { FormsModule } from '@angular/forms';
 
@@ -15,7 +14,6 @@ import { FormsModule } from '@angular/forms';
 })
 export class ProductoUnitarioComponent implements AfterViewInit, OnDestroy {
   private route = inject(ActivatedRoute);
-  private service = inject(ProductosService);
   private renderer = inject(Renderer2);
   private el = inject(ElementRef);
 
@@ -34,7 +32,6 @@ export class ProductoUnitarioComponent implements AfterViewInit, OnDestroy {
 
   constructor() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.producto = this.service.getById(id);
   }
 
   get hayStock(): boolean {

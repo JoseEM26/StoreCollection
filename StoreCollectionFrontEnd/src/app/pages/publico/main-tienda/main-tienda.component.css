@@ -206,20 +206,11 @@
   .categories-grid { gap: 1.5rem; }
   .category-img-wrapper { width: 100px; height: 100px; }
 }
-/* Botón WhatsApp flotante opcional (puedes ponerlo en layout) */
-.btn-whatsapp {
-  background: #25d366;
-  color: white;
-  padding: 0.95rem 2rem;
+.info-chip {
+  background: rgba(25, 135, 84, 0.1);
+  color: #198754;
+  padding: 8px 14px;
   border-radius: 50px;
-  font-weight: 700;
-  text-decoration: none;
-  transition: all 0.3s;
-  box-shadow: 0 8px 25px rgba(37, 211, 102, 0.3);
-}
-
-.btn-whatsapp:hover {
-  background: #128c7e;
-  transform: translateY(-3px);
-  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
 }

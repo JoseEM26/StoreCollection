@@ -1,17 +1,32 @@
-<!-- HERO -->
+<!-- HERO con datos reales de la tienda -->
 <section class="hero-minimal">
   <div class="container">
     <div class="row align-items-center min-vh-100">
       <div class="col-lg-6" data-aos="fade-right">
         <h1 class="hero-title">
           {{ tienda?.nombre || 'Cargando tienda...' }}
+          <small class="d-block fs-5 text-success fw-normal" *ngIf="tienda?.planNombre">
+            Plan {{ tienda.planNombre }}
+          </small>
         </h1>
         <p class="hero-subtitle">Bienvenido a tu tienda favorita</p>
         <p class="hero-description">
           {{ tienda?.descripcion || 'Los mejores productos con envíos a todo el país.' }}
         </p>
+
+        <!-- Info rápida -->
+        <div class="d-flex flex-wrap gap-3 mt-4 mb-4">
+          <div class="info-chip" *ngIf="tienda?.direccion">
+            <i class="bi bi-geo-alt-fill"></i> {{ tienda.direccion }}
+          </div>
+          <div class="info-chip" *ngIf="tienda?.horarios">
+            <i class="bi bi-clock-fill"></i> {{ tienda.horarios }}
+          </div>
+        </div>
+
         <div class="hero-actions">
-          <a routerLink="catalogo" class="btn-explore">Explorar Catálogo</a>
+          <a routerLink="catalogo" class="btn-explore me-3">Explorar Catálogo</a>
+        
         </div>
       </div>
       <div class="col-lg-6 text-center" data-aos="fade-left">
@@ -24,13 +39,13 @@
   </div>
 </section>
 
-<!-- CATEGORÍAS -->
+<!-- Resto igual (categorías y productos) -->
 <section class="section-categories py-5" *ngIf="categorias.length > 0">
   <div class="container">
     <h2 class="section-title text-center mb-5">Categorías populares</h2>
     <div class="categories-grid">
       <a *ngFor="let cat of categorias; let i = index"
-         [routerLink]="['catalogo', cat.slug]"
+         [routerLink]="['colo', cat.slug]"
          class="category-circle"
          data-aos="fade-up"
          [attr.data-aos-delay]="i * 80">
@@ -44,7 +59,7 @@
   </div>
 </section>
 
-<!-- PRODUCTOS DESTACADOS -->
+<!-- Productos destacados -->
 <section class="section-featured py-5 bg-light" *ngIf="destacados.length > 0">
   <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-5">
@@ -58,44 +73,16 @@
            *ngFor="let p of destacados; let i = index"
            data-aos="fade-up"
            [attr.data-aos-delay]="i * 100">
-        <!-- CORREGIDO: [producto] no [productos] -->
         <app-producto-card [producto]="p"></app-producto-card>
       </div>
     </div>
   </div>
 </section>
 
-<!-- LOADING -->
+<!-- Loading -->
 <div class="container py-5 text-center" *ngIf="loading">
   <div class="spinner-border text-success" style="width: 3rem; height: 3rem;" role="status">
     <span class="visually-hidden">Cargando...</span>
   </div>
   <p class="mt-3 text-muted">Cargando tu tienda...</p>
 </div>
-
-<!-- CONFIANZA -->
-<section class="section-trust py-5">
-  <div class="container">
-    <div class="row text-center">
-      <div class="col-md-4 mb-4" data-aos="fade-up">
-        <div class="trust-item">
-          <i class="bi bi-shield-check fs-1 text-success mb-3"></i>
-          <h5>Garantía de calidad</h5>
-          <p class="text-muted">Productos 100% originales</p>
-        </div>
-      </div>
-      <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="100">
-        <div class="trust-item">
-          <i class="bi bi-truck fs-1 text-primary mb-3"></i>
-          <h5>Envíos a todo el país</h5>
-        </div>
-      </div>
-      <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="200">
-        <div class="trust-item">
-          <i class="bi bi-headset fs-1 text-info mb-3"></i>
-          <h5>Soporte 24/7</h5>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>

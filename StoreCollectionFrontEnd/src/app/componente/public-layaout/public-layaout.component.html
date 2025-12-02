@@ -3,42 +3,45 @@
 <!-- HEADER -->
 <header class="public-header">
   <div class="container d-flex justify-content-between align-items-center py-3">
-    <a routerLink="/" class="logo">
-      <strong>STORE COLLECTION</strong>
+    <a routerLink="/" class="logo d-flex align-items-center gap-2">
+      <strong>{{ tienda?.nombre || 'STORE COLLECTION' }}</strong>
+      @if (tienda?.planNombre) {
+        <span class="badge bg-success text-white fs-6">{{ tienda.planNombre }}</span>
+      }
     </a>
 
     <nav class="nav-links">
-      <a 
-        routerLink="/" 
-        routerLinkActive="active" 
-        [routerLinkActiveOptions]="{ exact: true }">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
         Inicio
       </a>
-      <a 
-        routerLink="/catalogo" 
-        routerLinkActive="active">
-        Catálogo
-      </a>
+      <a routerLink="catalogo" routerLinkActive="active">Catálogo</a>
     </nav>
   </div>
 </header>
 
-<!-- CONTENIDO DINÁMICO -->
 <main class="public-main">
   <router-outlet></router-outlet>
 </main>
 
-<!-- BOTÓN WHATSAPP FLOTANTE (siempre visible) -->
-<button class="btn-whatsapp-flotante" (click)="abrirWhatsApp()" title="¡Hablemos por WhatsApp!">
+<!-- BOTÓN WHATSAPP FLOTANTE -->
+@if (tienda?.whatsapp) {
+  <button class="btn-whatsapp-flotante" (click)="abrirWhatsApp()" title="¡Chatea con {{ tienda?.nombre || 'nosotros' }} por WhatsApp!" aria-label="WhatsApp">
   <i class="bi bi-whatsapp"></i>
   <span class="pulse"></span>
 </button>
+}
 
 <!-- FOOTER -->
 <footer class="public-footer">
   <div class="container text-center py-4">
+    <p class="mb-2">
+      <strong>{{ tienda?.nombre || 'STORE COLLECTION' }}</strong>
+      @if (tienda?.direccion) {
+        <span> • {{ tienda.direccion }}</span>
+      }
+    </p>
     <p class="mb-0 text-muted">
-      © 2025 STORE COLLECTION • Todos los derechos reservados
+      © {{ currentYear }} {{ tienda?.nombre || 'STORE COLLECTION' }} • Todos los derechos reservados
     </p>
   </div>
 </footer>

@@ -1,40 +1,75 @@
 <div class="producto-card" 
      [class.agotado]="!hayStock"
      data-aos="fade-up"
-     data-aos-duration="600">
+     data-aos-duration="800"
+     data-aos-offset="100">
 
-  <!-- Enlace usando el SLUG, no el ID -->
-  <a [routerLink]="['/producto', producto.slug]" class="producto-link">
-    
+  <!-- ENLACE RELATIVO PERFECTO -->
+  <a [routerLink]="['producto', producto.slug]" 
+     class="producto-link"
+     [attr.aria-label]="'Ver detalle de ' + producto.nombre">
+
+    <!-- IMAGEN CON EFECTO PARALLAX SUAVE -->
     <div class="imagen-container">
       <img 
         [src]="imagenUrl" 
         [alt]="producto.nombre"
         class="producto-imagen"
-        loading="lazy">
-      
+        loading="lazy"
+        decoding="async">
+
+      <!-- Overlay con botón flotante estilo Apple -->
       <div class="imagen-overlay">
-        <span class="ver-detalle">Ver detalle</span>
+        <div class="btn-ver-detalle">
+          <i class="bi bi-arrow-right-circle-fill"></i>
+          <span>Ver Detalle</span>
+        </div>
       </div>
 
-      <div class="badge-agotado" *ngIf="!hayStock">
-        Agotado
-      </div>
+      <!-- Badge agotado con onda -->
+      @if (!hayStock) {
+        <div class="badge-agotado pulse-animation">
+          <i class="bi bi-bag-x-fill"></i>
+          AGOTADO
+        </div>
+      }
+
+      <!-- Badge últimas unidades -->
+      @if (hayStock && stock <= 5 && stock > 0) {
+        <div class="badge-ultimas">
+          <i class="bi bi-fire"></i>
+          ¡Últimas {{ stock }}!
+        </div>
+      }
     </div>
 
+    <!-- INFORMACIÓN -->
     <div class="info-container">
-      <span class="categoria">{{ nombreCategoria }}</span>
-      
+      @if (nombreCategoria) {
+        <div class="categoria-chip">
+          {{ nombreCategoria }}
+        </div>
+      }
+
       <h3 class="nombre">{{ producto.nombre }}</h3>
-      
-      <div class="precio">
-        <span class="simbolo">S/ </span>
+
+      <div class="precio-wrapper">
+        <span class="simbolo">S/</span>
         <span class="valor">{{ precio | number:'1.2-2' }}</span>
       </div>
 
-      <div class="stock-info" *ngIf="hayStock && stock <= 5">
-        ¡Solo quedan {{ stock }}!
-      </div>
+      <!-- Estado stock -->
+      @if (hayStock) {
+        <div class="stock-status disponible">
+          <i class="bi bi-check-circle-fill"></i>
+          Disponible
+        </div>
+      } @else {
+        <div class="stock-status no-disponible">
+          <i class="bi bi-x-circle-fill"></i>
+          Sin stock
+        </div>
+      }
     </div>
   </a>
 </div>
