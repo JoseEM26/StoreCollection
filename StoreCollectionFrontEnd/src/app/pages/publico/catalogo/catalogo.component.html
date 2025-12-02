@@ -1,23 +1,17 @@
 <div class="catalogo-page">
 
-  <!-- HEADER + BOTÓN VOLVER AL INICIO -->
+  <!-- HEADER -->
   <header class="catalogo-header">
     <div class="container">
       <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-
-        <!-- Título y resultados -->
         <div>
           <h1 class="titulo mb-1">{{ tituloPagina }}</h1>
           <p class="subtitulo mb-0">{{ totalResultados }} productos disponibles</p>
         </div>
-
-        <!-- BOTÓN VOLVER AL INICIO (siempre visible y bonito) -->
-        <div>
-          <a routerLink="/" class="btn-volver-inicio">
-            <i class="bi bi-house-door-fill me-2"></i>
-            Volver al inicio
-          </a>
-        </div>
+        <a routerLink="/" class="btn-volver-inicio">
+          <i class="bi bi-house-door-fill me-2"></i>
+          Volver al inicio
+        </a>
       </div>
     </div>
   </header>
@@ -25,7 +19,7 @@
   <div class="container">
     <div class="row g-4">
 
-      <!-- FILTROS LATERALES (solo desktop) -->
+      <!-- FILTROS LATERALES -->
       <div class="col-lg-3 d-none d-lg-block">
         <div class="filtros-sidebar" data-aos="fade-right">
           <h3 class="mb-4 fw-bold">Filtros</h3>
@@ -40,7 +34,9 @@
           </div>
 
           <div class="mb-4">
-            <label class="form-label fw-semibold d-block mb-2">Precio máximo: ${{ precioMax }}</label>
+            <label class="form-label fw-semibold d-block mb-2">
+              Precio máximo: S/ {{ precioMax }}
+            </label>
             <input 
               type="range" 
               [(ngModel)]="precioMax" 
@@ -50,18 +46,15 @@
           </div>
 
           <div class="form-check mb-4">
-            <input 
-              class="form-check-input" 
-              type="checkbox" 
-              [(ngModel)]="soloEnStock" 
-              (change)="aplicarFiltros()"
-              id="stockCheck">
+            <input class="form-check-input" type="checkbox" 
+                   [(ngModel)]="soloEnStock" (change)="aplicarFiltros()" id="stockCheck">
             <label class="form-check-label" for="stockCheck">
               Solo productos en stock
             </label>
           </div>
 
-          <button class="btn btn-outline-dark w-100 rounded-pill py-2" (click)="limpiarFiltros()">
+          <button class="btn btn-outline-dark w-100 rounded-pill py-2" 
+                  (click)="limpiarFiltros()">
             Limpiar filtros
           </button>
         </div>
@@ -72,27 +65,29 @@
 
         <!-- Buscador móvil -->
         <div class="d-lg-none mb-4">
-          <input 
-            type="text" 
-            [(ngModel)]="busqueda" 
-            (input)="aplicarFiltros()" 
-            placeholder="Buscar en {{ tituloPagina }}..." 
-            class="form-control form-control-lg rounded-pill shadow-sm">
+          <input type="text" [(ngModel)]="busqueda" (input)="aplicarFiltros()"
+                 placeholder="Buscar en {{ tituloPagina }}..." 
+                 class="form-control form-control-lg rounded-pill shadow-sm">
+        </div>
+
+        <!-- Loading -->
+        <div class="text-center py-5" *ngIf="loading">
+          <div class="spinner-border text-success" style="width: 3rem; height: 3rem;"></div>
+          <p class="mt-3 text-muted">Cargando productos...</p>
         </div>
 
         <!-- Grid de productos -->
-        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-3 g-4">
-          <div 
-            class="col" 
-            *ngFor="let p of productos; let i = index" 
-            data-aos="fade-up" 
-            [attr.data-aos-delay]="i * 50">
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-3 g-4" *ngIf="!loading && productos.length">
+          <div class="col" 
+               *ngFor="let p of productos; let i = index" 
+               data-aos="fade-up" 
+               [attr.data-aos-delay]="i * 50">
             <app-producto-card [producto]="p"></app-producto-card>
           </div>
         </div>
 
-        <!-- Estado vacío -->
-        <div class="empty-state text-center py-5 my-5" *ngIf="!productos.length">
+        <!-- Sin resultados -->
+        <div class="empty-state text-center py-5 my-5" *ngIf="!loading && !productos.length">
           <i class="bi bi-search fs-1 text-muted mb-4 opacity-50"></i>
           <h4 class="text-dark">No se encontraron productos</h4>
           <p class="text-muted">Intenta con otros filtros o palabras clave</p>
