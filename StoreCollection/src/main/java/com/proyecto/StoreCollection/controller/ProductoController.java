@@ -4,6 +4,7 @@ package com.proyecto.StoreCollection.controller;
 import com.proyecto.StoreCollection.dto.request.ProductoRequest;
 import com.proyecto.StoreCollection.dto.response.PageResponse;
 import com.proyecto.StoreCollection.dto.response.PlanResponse;
+import com.proyecto.StoreCollection.dto.response.ProductoCardResponse;
 import com.proyecto.StoreCollection.dto.response.ProductoResponse;
 import com.proyecto.StoreCollection.entity.Producto;
 import com.proyecto.StoreCollection.service.ProductoService;
@@ -11,8 +12,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -22,15 +25,15 @@ public class ProductoController {
 
     private final ProductoService service;
 
-    // PÚBLICO - Catálogo por slug
     @GetMapping("/api/public/tiendas/{tiendaSlug}/productos")
-    public ResponseEntity<List<ProductoResponse>> publicList(@PathVariable String tiendaSlug) {
-        return ResponseEntity.ok(service.findByTiendaSlug(tiendaSlug));
+    public ResponseEntity<List<ProductoCardResponse>> publicList(@PathVariable String tiendaSlug) {
+        return ResponseEntity.ok(service.findAllForPublicCatalog(tiendaSlug));
     }
 
     @GetMapping("/api/public/tiendas/{tiendaSlug}/productos/{productoSlug}")
-    public ResponseEntity<ProductoResponse> publicDetail(
-            @PathVariable String tiendaSlug, @PathVariable String productoSlug) {
+    public ResponseEntity<ProductoCardResponse> publicDetail(
+            @PathVariable String tiendaSlug,
+            @PathVariable String productoSlug) {
         return ResponseEntity.ok(service.findByTiendaSlugAndProductoSlug(tiendaSlug, productoSlug));
     }
 
@@ -44,7 +47,7 @@ public class ProductoController {
     }
 
     @GetMapping("/api/owner/productos/categoria/{categoriaId}")
-    public ResponseEntity<List<ProductoResponse>> porCategoria(@PathVariable Long categoriaId) {
+    public ResponseEntity<List<ProductoResponse>> porCategoria(@PathVariable Integer categoriaId) {
         return ResponseEntity.ok(service.findByCategoriaId(categoriaId));
     }
 
@@ -54,13 +57,13 @@ public class ProductoController {
     }
 
     @PutMapping("/api/owner/productos/{id}")
-    public ResponseEntity<ProductoResponse> actualizar(@PathVariable Long id,
+    public ResponseEntity<ProductoResponse> actualizar(@PathVariable Integer id,
                                                        @Valid @RequestBody ProductoRequest request) {
         return ResponseEntity.ok(service.save(request, id));
     }
 
     @DeleteMapping("/api/owner/productos/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
         service.deleteById(id);
         return ResponseEntity.noContent().build();
     }
@@ -69,4 +72,5 @@ public class ProductoController {
         return new PageResponse<>(page.getContent(), page.getNumber(), page.getSize(),
                 page.getTotalElements(), page.getTotalPages());
     }
+
 }

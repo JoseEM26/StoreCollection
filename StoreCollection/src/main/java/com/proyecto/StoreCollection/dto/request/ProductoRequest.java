@@ -9,6 +9,6 @@ public class ProductoRequest {
     private String nombre;
     @NotBlank
     private String slug;
-    private Long categoriaId;
-    private Long tiendaId;
+    private Integer categoriaId;
+    private Integer tiendaId;
 }

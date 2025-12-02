@@ -52,7 +52,7 @@ public class ProductoVarianteServiceImpl implements ProductoVarianteService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProductoVarianteResponse> findByProductoId(Long productoId) {
+    public List<ProductoVarianteResponse> findByProductoId(Integer productoId) {
         // SEGURIDAD: el producto debe ser del dueño
         productoRepository.getByIdAndTenant(productoId);
         return varianteRepository.findByProductoIdSafe(productoId).stream()
@@ -62,7 +62,7 @@ public class ProductoVarianteServiceImpl implements ProductoVarianteService {
 
     @Override
     @Transactional(readOnly = true)
-    public ProductoVarianteResponse findById(Long id) {
+    public ProductoVarianteResponse findById(Integer id) {
         return toResponse(varianteRepository.getByIdAndTenant(id));
     }
 
@@ -72,7 +72,7 @@ public class ProductoVarianteServiceImpl implements ProductoVarianteService {
     }
 
     @Override
-    public ProductoVarianteResponse save(ProductoVarianteRequest request, Long id) {
+    public ProductoVarianteResponse save(ProductoVarianteRequest request, Integer id) {
         ProductoVariante v = id == null
                 ? new ProductoVariante()
                 : varianteRepository.getByIdAndTenant(id); // ← solo puede editar las suyas
@@ -101,7 +101,7 @@ public class ProductoVarianteServiceImpl implements ProductoVarianteService {
     }
 
     @Override
-    public void deleteById(Long id) {
+    public void deleteById(Integer id) {
         varianteRepository.delete(varianteRepository.getByIdAndTenant(id));
     }
 

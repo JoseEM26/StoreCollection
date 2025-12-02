@@ -1,117 +1,114 @@
-<div class="producto-detalle" *ngIf="producto; else noEncontrado">
-  <div class="container py-4 py-md-5">
+<div class="container py-5" *ngIf="!loading && producto; else cargando">
+  <button class="btn-volver" routerLink="/catalogo">Back Regresar</button>
 
-    <!-- BOTÓN VOLVER ELEGANTE (flotante pero discreto) -->
-    <div class="volver-flotante">
-      <button class="btn-volver-elegante" routerLink="/catalogo" title="Volver al catálogo">
-        <i class="bi bi-arrow-left"></i>
-      </button>
-    </div>
+  <div class="producto-grid">
 
-    <div class="row g-5 align-items-start">
+    <!-- IMAGEN CON LUPA INTERNA (solo una imagen) -->
+    <div class="imagen-seccion">
+      <div class="zoom-container"
+           (mousemove)="actualizarLupa($event)"
+           (mouseenter)="mostrarLupa($event)"
+           (mouseleave)="ocultarLupa()">
 
-      <!-- IMAGEN CON ZOOM PERFECTO -->
-      <div class="col-lg-6">
-        <div class="imagen-zoom-container" data-aos="fade-right">
-          <img 
-            [src]="producto.imagen || 'https://via.placeholder.com/800x800/white'"
-            [alt]="producto.nombre"
-            class="img-principal"
-            id="imgPrincipal">
-          
-          <!-- Lupa flotante (ahora sí funciona perfecto) -->
-          <div class="lupa" id="lupa">
-            <img [src]="producto.imagen || 'https://via.placeholder.com/2000x2000/white'" class="img-lupa">
-          </div>
+        <img [src]="imagenActual"
+             [alt]="producto.nombre"
+             class="imagen-principal"
+             loading="lazy"
+             (error)="imagenActual = fallbackImage">
+
+        <!-- Lupa circular dentro de la imagen -->
+        <div class="lupa-interna"
+             [class.visible]="lupaVisible"
+             [style.left.px]="lupaX"
+             [style.top.px]="lupaY"
+             [style.backgroundImage]="'url(' + imagenActual + ')'"
+             [style.backgroundPosition.%]="(lupaX / 500 * 100)"
+             [style.backgroundPositionY.%]="(lupaY / 500 * 100)">
+        </div>
+
+        <!-- Badge stock -->
+        <div class="badge-stock" *ngIf="varianteSeleccionada">
+          <span class="agotado" *ngIf="stockActual === 0">AGOTADO</span>
+          <span class="ultimas" *ngIf="stockActual > 0 && stockActual <= 5">
+            ¡Últimas {{ stockActual }}!
+          </span>
         </div>
       </div>
 
-      <!-- INFORMACIÓN -->
-      <div class="col-lg-6">
-        <div class="info-container" data-aos="fade-left">
-
-          <div class="categoria-badge mb-3">{{ producto.categoria }}</div>
-          <h1 class="nombre-producto">{{ producto.nombre }}</h1>
-
-          <div class="precio-display mb-4">
-            <span class="precio">$ {{ producto.precio.toFixed(2) }}</span>
-          </div>
-
-          <p class="descripcion mb-4">{{ producto.descripcion }}</p>
-
-          <div class="stock-badge mb-5" [class.agotado]="!hayStock">
-            <i class="bi" [class.bi-check-circle-fill]="hayStock" [class.bi-x-circle-fill]="!hayStock"></i>
-            <span>{{ hayStock ? 'Disponible' : 'Sin stock' }}</span>
-            <small *ngIf="hayStock && producto.stock <= 10" class="ms-2 text-danger fw-bold">
-              ¡Solo {{ producto.stock }} left!
-            </small>
-          </div>
-
-          <!-- BOTONES PRINCIPALES -->
-          <div class="acciones-principales">
-            <button 
-              class="btn-whatsapp-principal" 
-              (click)="consultarWhatsApp()"
-              [disabled]="!hayStock">
-              <i class="bi bi-whatsapp"></i>
-              Consultar por WhatsApp
-            </button>
-
-            <div class="acciones-secundarias mt-3">
-              <button class="btn-secundario" (click)="llamarAhora()">
-                <i class="bi bi-telephone-fill"></i> Llamar
-              </button>
-              <button class="btn-secundario" (click)="abrirCotizacion()">
-                <i class="bi bi-envelope"></i> Cotizar
-              </button>
-            </div>
-          </div>
-
-          <!-- GARANTÍAS -->
-          <div class="garantias mt-5">
-            <div class="garantia-item">
-              <i class="bi bi-shield-check"></i> Garantía de calidad
-            </div>
-            <div class="garantia-item">
-              <i class="bi bi-truck"></i> Envíos a todo el país
-            </div>
-            <div class="garantia-item">
-              <i class="bi bi-chat-dots"></i> Respuesta inmediata
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL COTIZACIÓN -->
-<div class="modal-backdrop" *ngIf="showQuoteModal" (click)="cerrarModal()"></div>
-<div class="modal-cotizacion" *ngIf="showQuoteModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h4>Solicitar Cotización</h4>
-      <button class="btn-cerrar" (click)="cerrarModal()">×</button>
-    </div>
-    <div class="modal-body">
-      <form (ngSubmit)="enviarCotizacion()">
-        <input [(ngModel)]="clienteNombre" type="text" placeholder="Tu nombre" required class="form-control mb-3">
-        <input [(ngModel)]="clienteTelefono" type="tel" placeholder="WhatsApp o celular" required class="form-control mb-3">
-        <textarea [(ngModel)]="clienteMensaje" rows="3" placeholder="Mensaje (opcional)" class="form-control mb-4"></textarea>
-        <button type="submit" class="btn-enviar">
-          Enviar solicitud
+      <!-- Miniaturas (opcional) -->
+      <div class="miniaturas" *ngIf="producto.variantes.length > 1">
+        <button *ngFor="let v of producto.variantes"
+                class="mini-btn"
+                [class.active]="v.imagenUrl === imagenActual"
+                (click)="cambiarImagen(v.imagenUrl)"
+                [disabled]="!v.imagenUrl">
+          <img [src]="v.imagenUrl || fallbackImage" alt="variante">
         </button>
-      </form>
+      </div>
+    </div>
+
+    <!-- INFO PRODUCTO -->
+    <div class="info-seccion">
+      <span class="categoria">{{ producto.nombreCategoria }}</span>
+      <h1 class="titulo">{{ producto.nombre }}</h1>
+
+      <div class="precio">
+        S/ <span>{{ precioActual | number:'1.2-2' }}</span>
+      </div>
+
+      <!-- Variantes -->
+      <div class="variantes" *ngIf="producto.variantes.length > 1">
+        <h3>Elige tu variante</h3>
+        <div class="lista-variantes">
+          <button *ngFor="let v of producto.variantes"
+                  class="variante-btn"
+                  [class.selected]="v === varianteSeleccionada"
+                  [class.agotado]="v.stock === 0"
+                  [disabled]="v.stock === 0"
+                  (click)="seleccionarVariante(v)">
+            <div>S/ {{ v.precio | number:'1.2-2' }}</div>
+            <small>{{ v.stock > 0 ? v.stock + ' disponibles' : 'Agotado' }}</small>
+            <span class="check" *ngIf="v === varianteSeleccionada">Check</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Botones principales -->
+      <div class="acciones">
+        <button class="btn-whatsapp" (click)="consultarWhatsApp()" [disabled]="!hayStock">
+          WhatsApp Consultar por WhatsApp
+        </button>
+        <div class="secundarios">
+          <button class="btn-sec" (click)="llamarAhora()">Phone Llamar</button>
+          <button class="btn-sec" (click)="abrirCotizacion()">Chat Cotizar</button>
+        </div>
+      </div>
+
+      <!-- Garantías -->
+      <div class="garantias">
+        <div>Truck <strong>Envíos a todo el Perú</strong></div>
+        <div>Shield <strong>Compra segura</strong></div>
+        <div>Headset <strong>Atención 24/7</strong></div>
+      </div>
     </div>
   </div>
 </div>
 
-<ng-template #noEncontrado>
-  <div class="text-center py-5">
-    <h2>Producto no encontrado</h2>
-    <button class="btn-volver-elegante mt-4" routerLink="/">
-      <i class="bi bi-house"></i> Volver al inicio
+<!-- Loading -->
+<ng-template #cargando>
+  <div class="loading">Cargando producto...</div>
+</ng-template>
+
+<!-- Modal -->
+<div class="modal" *ngIf="showQuoteModal" (click)="cerrarModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <button class="cerrar" (click)="cerrarModal()">Close</button>
+    <h3>Pide tu cotización</h3>
+    <input [(ngModel)]="clienteNombre" placeholder="Nombre" required>
+    <input [(ngModel)]="clienteTelefono" placeholder="WhatsApp" required>
+    <textarea [(ngModel)]="clienteMensaje" placeholder="Mensaje (opcional)"></textarea>
+    <button class="enviar" (click)="enviarCotizacion()" [disabled]="enviandoCotizacion">
+      {{ enviandoCotizacion ? 'Enviando...' : 'Enviar por WhatsApp' }}
     </button>
   </div>
-</ng-template>
+</div>

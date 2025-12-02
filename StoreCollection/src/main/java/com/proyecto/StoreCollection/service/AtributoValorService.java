@@ -9,10 +9,10 @@ import java.util.List;
 
 public interface AtributoValorService {
     Page<AtributoValorResponse> findAll(Pageable pageable);
-    AtributoValorResponse findById(Long id);
+    AtributoValorResponse findById(Integer id);
     AtributoValorResponse save(AtributoValorRequest request);
-    AtributoValorResponse save(AtributoValorRequest request, Long id);
-    void deleteById(Long id);
-    List<AtributoValorResponse> findByAtributoId(Long atributoId);
-    List<AtributoValorResponse> findByAtributoIdAndTiendaSlug(Long atributoId, String tiendaSlug);
+    AtributoValorResponse save(AtributoValorRequest request, Integer id);
+    void deleteById(Integer id);
+    List<AtributoValorResponse> findByAtributoId(Integer atributoId);
+    List<AtributoValorResponse> findByAtributoIdAndTiendaSlug(Integer atributoId, String tiendaSlug);
 }

@@ -15,11 +15,11 @@ public interface AtributoService {
     // === PRIVADO (dueño logueado) ===
     List<AtributoResponse> findAllByTenant();           // ← nuevo
     Page<AtributoResponse> findAll(Pageable pageable);  // ← sigue igual (solo sus atributos)
-    AtributoResponse findById(Long id);                 // ← solo si es suyo
+    AtributoResponse findById(Integer id);                 // ← solo si es suyo
 
     AtributoResponse save(AtributoRequest request);
-    AtributoResponse save(AtributoRequest request, Long id);
-    void deleteById(Long id);
+    AtributoResponse save(AtributoRequest request, Integer id);
+    void deleteById(Integer id);
 
     // ELIMINADO: findByTiendaId(Long tiendaId) → ya no se necesita
 }

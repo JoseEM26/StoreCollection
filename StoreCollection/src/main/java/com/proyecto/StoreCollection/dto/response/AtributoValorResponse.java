@@ -8,8 +8,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AtributoValorResponse {
-    private Long id;
+    private Integer id;
     private String valor;
-    private Long atributoId;
+    private Integer atributoId;
     private String AtributoNombre;
 }

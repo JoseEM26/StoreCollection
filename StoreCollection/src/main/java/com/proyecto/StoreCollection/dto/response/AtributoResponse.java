@@ -7,7 +7,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AtributoResponse {
-    private Long id;
+    private Integer id;
     private String nombre;
-    private Long tiendaId;
+    private Integer tiendaId;
 }

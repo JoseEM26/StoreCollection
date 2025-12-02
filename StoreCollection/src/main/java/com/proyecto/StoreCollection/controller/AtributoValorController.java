@@ -26,13 +26,13 @@ public class AtributoValorController {
     @GetMapping("/api/public/tiendas/{tiendaSlug}/atributos/{atributoId}/valores")
     public ResponseEntity<List<AtributoValorResponse>> publicPorAtributo(
             @PathVariable String tiendaSlug,
-            @PathVariable Long atributoId) {
+            @PathVariable Integer atributoId) {
         return ResponseEntity.ok(service.findByAtributoIdAndTiendaSlug(atributoId, tiendaSlug));
     }
 
     // PRIVADO: panel del dueño
     @GetMapping("/api/owner/atributos/{atributoId}/valores")
-    public ResponseEntity<List<AtributoValorResponse>> porAtributo(@PathVariable Long atributoId) {
+    public ResponseEntity<List<AtributoValorResponse>> porAtributo(@PathVariable Integer atributoId) {
         return ResponseEntity.ok(service.findByAtributoId(atributoId)); // ya validado por tenant
     }
 
@@ -43,12 +43,12 @@ public class AtributoValorController {
 
     @PutMapping("/api/owner/atributos-valores/{id}")
     public ResponseEntity<AtributoValorResponse> actualizar(
-            @PathVariable Long id, @Valid @RequestBody AtributoValorRequest request) {
+            @PathVariable Integer id, @Valid @RequestBody AtributoValorRequest request) {
         return ResponseEntity.ok(service.save(request, id));
     }
 
     @DeleteMapping("/api/owner/atributos-valores/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
         service.deleteById(id);
         return ResponseEntity.noContent().build();
     }

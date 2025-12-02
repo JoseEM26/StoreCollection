@@ -37,13 +37,13 @@ public class CategoriaController {
     }
 
     @PutMapping("/api/owner/categorias/{id}")
-    public ResponseEntity<CategoriaResponse> actualizar(@PathVariable Long id,
+    public ResponseEntity<CategoriaResponse> actualizar(@PathVariable Integer id,
                                                         @Valid @RequestBody CategoriaRequest request) {
         return ResponseEntity.ok(service.save(request, id));
     }
 
     @DeleteMapping("/api/owner/categorias/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
         service.deleteById(id);
         return ResponseEntity.noContent().build();
     }

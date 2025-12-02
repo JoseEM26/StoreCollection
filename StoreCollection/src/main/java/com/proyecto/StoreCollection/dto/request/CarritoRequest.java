@@ -8,7 +8,7 @@ import lombok.Data;
 public class CarritoRequest {
     @NotBlank
     private String sessionId;
-    private Long varianteId;
+    private Integer varianteId;
     @Positive
     private Integer cantidad = 1;
 }

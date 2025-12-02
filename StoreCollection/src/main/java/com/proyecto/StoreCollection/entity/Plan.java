@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Data @NoArgsConstructor @AllArgsConstructor
 public class Plan {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @NotBlank
     private String nombre;

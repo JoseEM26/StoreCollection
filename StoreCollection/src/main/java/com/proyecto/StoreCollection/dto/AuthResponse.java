@@ -4,7 +4,7 @@ import com.proyecto.StoreCollection.entity.Usuario;
 
 public record AuthResponse(
         String token,
-        Long id,
+        Integer id,
         String nombre,
         String email,
         Usuario.Rol rol

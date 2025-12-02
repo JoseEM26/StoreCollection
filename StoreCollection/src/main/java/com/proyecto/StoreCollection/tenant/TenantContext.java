@@ -2,13 +2,13 @@
 package com.proyecto.StoreCollection.tenant;
 
 public class TenantContext {
-    private static final ThreadLocal<Long> currentTenantId = new ThreadLocal<>();
+    private static final ThreadLocal<Integer> currentTenantId = new ThreadLocal<>();
 
-    public static void setTenantId(Long tenantId) {
+    public static void setTenantId(Integer tenantId) {
         currentTenantId.set(tenantId);
     }
 
-    public static Long getTenantId() {
+    public static Integer getTenantId() {
         return currentTenantId.get();
     }
 

@@ -4,8 +4,8 @@ import lombok.Data;
 
 @Data
 public class CarritoResponse {
-    private Long id;
+    private Integer id;
     private String sessionId;
-    private Long varianteId;
+    private Integer varianteId;
     private Integer cantidad;
 }

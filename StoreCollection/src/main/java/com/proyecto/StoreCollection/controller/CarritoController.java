@@ -38,13 +38,13 @@
         }
 
         @PutMapping("/{id}")
-        public ResponseEntity<CarritoResponse> actualizar(@PathVariable Long id,
+        public ResponseEntity<CarritoResponse> actualizar(@PathVariable Integer id,
                                                           @RequestBody CarritoRequest request) {
             return ResponseEntity.ok(service.save(request, id));
         }
 
         @DeleteMapping("/{id}")
-        public ResponseEntity<Void> eliminarItem(@PathVariable Long id) {
+        public ResponseEntity<Void> eliminarItem(@PathVariable Integer id) {
             service.deleteById(id);
             return ResponseEntity.noContent().build();
         }

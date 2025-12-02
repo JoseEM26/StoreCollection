@@ -47,7 +47,7 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     @Override
     @Transactional(readOnly = true)
-    public CategoriaResponse findById(Long id) {
+    public CategoriaResponse findById(Integer id) {
         Categoria categoria = categoriaRepository.getByIdAndTenant(id); // ← solo si es suyo
         return toResponse(categoria);
     }
@@ -58,7 +58,7 @@ public class CategoriaServiceImpl implements CategoriaService {
     }
 
     @Override
-    public CategoriaResponse save(CategoriaRequest request, Long id) {
+    public CategoriaResponse save(CategoriaRequest request, Integer id) {
         Categoria cat = id == null
                 ? new Categoria()
                 : categoriaRepository.getByIdAndTenant(id); // ← seguridad: solo puede editar las suyas
@@ -71,7 +71,7 @@ public class CategoriaServiceImpl implements CategoriaService {
     }
 
     @Override
-    public void deleteById(Long id) {
+    public void deleteById(Integer id) {
         Categoria cat = categoriaRepository.getByIdAndTenant(id);
         categoriaRepository.delete(cat);
     }

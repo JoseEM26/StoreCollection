@@ -7,9 +7,9 @@ import java.util.List;
 
 public interface CarritoService {
     List<CarritoResponse> findBySessionId(String sessionId);
-    CarritoResponse findById(Long id);
+    CarritoResponse findById(Integer id);
     CarritoResponse save(CarritoRequest request);
-    CarritoResponse save(CarritoRequest request, Long id);
-    void deleteById(Long id);
+    CarritoResponse save(CarritoRequest request, Integer id);
+    void deleteById(Integer id);
     void limpiarCarrito(String sessionId);
 }

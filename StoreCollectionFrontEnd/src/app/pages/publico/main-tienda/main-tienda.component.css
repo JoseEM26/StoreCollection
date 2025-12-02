@@ -206,3 +206,11 @@
   .categories-grid { gap: 1.5rem; }
   .category-img-wrapper { width: 100px; height: 100px; }
 }
+.info-chip {
+  background: rgba(25, 135, 84, 0.1);
+  color: #198754;
+  padding: 8px 14px;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}

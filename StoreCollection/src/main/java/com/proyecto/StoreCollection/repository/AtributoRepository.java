@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface AtributoRepository extends TenantBaseRepository<Atributo, Long> {
+public interface AtributoRepository extends TenantBaseRepository<Atributo, Integer> {
     // Ya tienes findAllByTenant(), getByIdAndTenant() automáticamente
 }

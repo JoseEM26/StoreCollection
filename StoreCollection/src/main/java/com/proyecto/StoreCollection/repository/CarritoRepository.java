@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface CarritoRepository extends JpaRepository<Carrito,Long> {
+public interface CarritoRepository extends JpaRepository<Carrito,Integer> {
 
      List<Carrito> findBySessionId(String sessionId) ;
      void deleteBySessionId(String sessionId) ;

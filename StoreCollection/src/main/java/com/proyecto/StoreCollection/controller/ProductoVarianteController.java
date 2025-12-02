@@ -34,7 +34,7 @@ public class ProductoVarianteController {
 
     // PRIVADO: panel del dueño
     @GetMapping("/api/owner/variantes/producto/{productoId}")
-    public ResponseEntity<List<ProductoVarianteResponse>> porProducto(@PathVariable Long productoId) {
+    public ResponseEntity<List<ProductoVarianteResponse>> porProducto(@PathVariable Integer productoId) {
         return ResponseEntity.ok(service.findByProductoId(productoId)); // ya validado por tenant
     }
 
@@ -45,12 +45,12 @@ public class ProductoVarianteController {
 
     @PutMapping("/api/owner/variantes/{id}")
     public ResponseEntity<ProductoVarianteResponse> actualizar(
-            @PathVariable Long id, @Valid @RequestBody ProductoVarianteRequest request) {
+            @PathVariable Integer id, @Valid @RequestBody ProductoVarianteRequest request) {
         return ResponseEntity.ok(service.save(request, id));
     }
 
     @DeleteMapping("/api/owner/variantes/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
         service.deleteById(id);
         return ResponseEntity.noContent().build();
     }

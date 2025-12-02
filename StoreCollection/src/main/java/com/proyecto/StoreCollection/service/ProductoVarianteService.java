@@ -15,12 +15,12 @@ public interface ProductoVarianteService {
 
     // === PRIVADO: panel del dueño ===
     Page<ProductoVarianteResponse> findAll(Pageable pageable);
-    List<ProductoVarianteResponse> findByProductoId(Long productoId); // solo si el producto es suyo
-    ProductoVarianteResponse findById(Long id);
+    List<ProductoVarianteResponse> findByProductoId(Integer productoId); // solo si el producto es suyo
+    ProductoVarianteResponse findById(Integer id);
 
     ProductoVarianteResponse save(ProductoVarianteRequest request);
-    ProductoVarianteResponse save(ProductoVarianteRequest request, Long id);
-    void deleteById(Long id);
+    ProductoVarianteResponse save(ProductoVarianteRequest request, Integer id);
+    void deleteById(Integer id);
 
     List<ProductoVarianteResponse> findByProductoSlug(String tiendaSlug, String productoSlug);
 }

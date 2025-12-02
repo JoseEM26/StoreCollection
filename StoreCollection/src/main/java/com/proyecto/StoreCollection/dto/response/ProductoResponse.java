@@ -6,13 +6,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 public class ProductoResponse {
-    private Long id;
+    private Integer id;
     private String nombre;
     private String slug;
-    private Long categoriaId;
+    private Integer categoriaId;
     private String categoriaNombre;   
-    private Long tiendaId;
+    private Integer tiendaId;
 
 }
