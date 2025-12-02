@@ -41,6 +41,7 @@ CREATE TABLE tienda (
     direccion TEXT,
     horarios TEXT,
     mapa_url TEXT,
+    activo BOOLEAN DEFAULT true NOT NULL,
     plan_id INT,
     user_id INT NOT NULL,
     FOREIGN KEY (plan_id) REFERENCES plan(id) ON DELETE SET NULL,

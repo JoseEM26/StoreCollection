@@ -12,8 +12,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -29,9 +31,18 @@ public class ProductoController {
     }
 
     @GetMapping("/api/public/tiendas/{tiendaSlug}/productos/{productoSlug}")
-    public ResponseEntity<ProductoResponse> publicDetail(
-            @PathVariable String tiendaSlug, @PathVariable String productoSlug) {
-        return ResponseEntity.ok(service.findByTiendaSlugAndProductoSlug(tiendaSlug, productoSlug));
+    public ResponseEntity<ProductoCardResponse> publicDetail(
+            @PathVariable String tiendaSlug,
+            @PathVariable String productoSlug) {
+        try {
+            ProductoCardResponse producto = service.findByTiendaSlugAndProductoSlug(tiendaSlug, productoSlug);
+            return ResponseEntity.ok(producto);
+        } catch (ResponseStatusException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return ResponseEntity.notFound().build();
+            }
+            throw ex;
+        }
     }
 
     // PRIVADO - Panel del dueño
@@ -69,4 +80,5 @@ public class ProductoController {
         return new PageResponse<>(page.getContent(), page.getNumber(), page.getSize(),
                 page.getTotalElements(), page.getTotalPages());
     }
+
 }

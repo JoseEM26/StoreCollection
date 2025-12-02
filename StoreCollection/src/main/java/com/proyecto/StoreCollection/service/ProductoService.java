@@ -16,11 +16,9 @@ public interface ProductoService {
     List<ProductoResponse> findMisProductos();
     List<ProductoResponse> findByCategoriaId(Integer categoriaId);
     ProductoResponse findById(Integer id);
-    List<ProductoCardResponse> findAllForPublicCatalog(String tiendaSlug);
-    // Para público (por slug de tienda)
+    List<ProductoCardResponse> findAllForPublicCatalog(String tiendaSlug) ;    // Para público (por slug de tienda)
     List<ProductoResponse> findByTiendaSlug(String tiendaSlug);
-    ProductoResponse findByTiendaSlugAndProductoSlug(String tiendaSlug, String productoSlug);
-
+    ProductoCardResponse findByTiendaSlugAndProductoSlug(String tiendaSlug, String productoSlug);
     ProductoResponse save(ProductoRequest request);
     ProductoResponse save(ProductoRequest request, Integer id);
     void deleteById(Integer id);

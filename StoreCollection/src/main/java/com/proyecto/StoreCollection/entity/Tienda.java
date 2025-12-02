@@ -31,6 +31,8 @@ public class Tienda {
 
     @ManyToOne @JoinColumn(nullable = false)
     private Usuario user;
-
+    // En tu clase Tienda.java
+    @Column(nullable = false)
+    private Boolean activo = true; // o @Column(name = "activo", nullable = false, columnDefinition = "boolean default true")
     public enum Moneda { SOLES, DOLARES }
 }

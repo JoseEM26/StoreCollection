@@ -41,4 +41,50 @@ List<Producto> findByTiendaSlugPublic(@Param("tiendaSlug") String tiendaSlug);
           if (tenantId == null) throw new IllegalStateException("Tenant no establecido");
           return findByCategoriaIdAndTiendaId(categoriaId, tenantId);
      }
+
+
+
+     // ProductoRepository.java
+
+     @Query("""
+    SELECT 
+        p.id,
+        p.nombre,
+        p.slug,
+        c.nombre,
+        pv.precio,
+        pv.stock,
+        pv.imagenUrl,
+        pv.activo
+    FROM Producto p
+    JOIN p.categoria c
+    LEFT JOIN p.variantes pv WITH pv.activo = true
+    WHERE p.tienda.slug = :tiendaSlug
+      AND p.tienda.activo = true
+    ORDER BY p.id, pv.id
+    """)
+     List<Object[]> findRawCatalogByTiendaSlug(@Param("tiendaSlug") String tiendaSlug);
+
+
+     @Query("""
+    SELECT 
+        p.id,
+        p.nombre,
+        p.slug,
+        c.nombre,
+        pv.precio,
+        pv.stock,
+        pv.imagenUrl,
+        pv.activo
+    FROM Producto p
+    JOIN p.categoria c
+    LEFT JOIN p.variantes pv WITH pv.activo = true
+    WHERE p.tienda.slug = :tiendaSlug 
+      AND p.slug = :productoSlug
+      AND p.tienda.activo = true
+    ORDER BY p.id, pv.id
+    """)
+     List<Object[]> findRawDetailBySlugs(
+             @Param("tiendaSlug") String tiendaSlug,
+             @Param("productoSlug") String productoSlug);
 }
