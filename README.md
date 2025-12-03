@@ -24,4 +24,4 @@ cd backend
 # Frontend
 cd frontend
 npm install
-ng serve
+npm start
