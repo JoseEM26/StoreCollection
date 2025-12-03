@@ -1,0 +1,19 @@
+.hover-shadow {
+  transition: all 0.3s ease;
+  &:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important;
+  }
+}
+
+.transition {
+  transition: all 0.3s ease;
+}
+
+.space-y-3 > li:not(:last-child) {
+  margin-bottom: 0.75rem;
+}
+
+.bg-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}

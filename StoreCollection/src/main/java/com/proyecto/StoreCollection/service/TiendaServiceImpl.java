@@ -88,6 +88,12 @@ public class TiendaServiceImpl implements TiendaService {
     }
 
     @Override
+    public Page<TiendaResponse> buscarPorNombreContainingIgnoreCase(String texto, Pageable pageable) {
+        return tiendaRepository.findByNombreContainingIgnoreCase(texto, pageable)
+                .map(tienda -> this.toResponse(tienda));
+    }
+
+    @Override
     public TiendaResponse save(TiendaRequest request) {
         return save(request, null);
     }

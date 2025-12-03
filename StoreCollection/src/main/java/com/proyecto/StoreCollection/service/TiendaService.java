@@ -18,7 +18,7 @@ public interface TiendaService {
     Tienda getTiendaDelUsuarioActual();           // ← clave para crear productos, etc.
     TiendaResponse getMiTienda();                 // ← para el dashboard del dueño
     List<TiendaResponse> getMisTiendas();         // ← si permite varias
-
+    Page<TiendaResponse> buscarPorNombreContainingIgnoreCase(String texto, Pageable pageable);
     TiendaResponse save(TiendaRequest request);
     TiendaResponse save(TiendaRequest request, Integer id);
     void deleteById(Integer id);
