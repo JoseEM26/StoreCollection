@@ -1,7 +1,9 @@
 // src/app/app.routes.ts
 import { Routes } from '@angular/router';
 
-// === PÁGINAS PÚBLICAS ===
+// === DASHBOARD PÚBLICO (NUEVO) ===
+
+// === PÁGINAS PÚBLICAS CON SLUG DE TIENDA ===
 import { MainTiendaComponent } from './pages/publico/main-tienda/main-tienda.component';
 import { CatalogoComponent } from './pages/publico/catalogo/catalogo.component';
 import { ProductoUnitarioComponent } from './pages/publico/producto-unitario/producto-unitario.component';
@@ -17,29 +19,37 @@ import { CategoriesComponent } from './pages/administrativo/categories.component
 import { ProductsComponent } from './pages/administrativo/products.component/products.component';
 import { UsuariosComponent } from './pages/administrativo/usuarios/usuarios.component';
 import { TiendaResolver } from './service/tienda.resolver';
-
-// === RESOLVER PARA SLUG DE TIENDA ===
+import { DashboardPublicComponent } from './pages/publico/dashboard-public/dashboard-public.component';
 
 export const routes: Routes = [
 
-  // ==================================================================
-  // RUTAS PÚBLICAS CON SLUG DE TIENDA → http://localhost:4200/zapatik
-  // ==================================================================
+  // ================================================
+  // 1. RUTA RAÍZ → DASHBOARD PÚBLICO (LISTADO DE TIENDAS)
+  // ================================================
+  {
+    path: '',
+    component: DashboardPublicComponent
+  },
+
+  // ================================================
+  // 2. RUTAS CON SLUG → TIENDAS INDIVIDUALES
+  //    Ej: /accesorios-cel, /zapatik, /belleza-natural
+  // ================================================
   {
     path: ':tiendaSlug',
     component: PublicLayaoutComponent,
-    resolve: { tienda: TiendaResolver }, // ← Detecta el slug y lo guarda automáticamente
+    resolve: { tienda: TiendaResolver },
     children: [
-      { path: '', component: MainTiendaComponent },                              // /zapatik
-      { path: 'catalogo', component: CatalogoComponent },                        // /zapatik/catalogo
-      { path: 'catalogo/:categoriaSlug', component: CatalogoComponent },        // /zapatik/catalogo/celulares
-      { path: 'producto/:productoSlug', component: ProductoUnitarioComponent }, // /zapatik/producto/iphone-15
+      { path: '', component: MainTiendaComponent },                              // /accesorios-cel
+      { path: 'catalogo', component: CatalogoComponent },                        // /accesorios-cel/catalogo
+      { path: 'catalogo/:categoriaSlug', component: CatalogoComponent },        // /accesorios-cel/catalogo/celulares
+      { path: 'producto/:productoSlug', component: ProductoUnitarioComponent }, // /accesorios-cel/producto/iphone-15
     ]
   },
 
-  // ==================================================================
-  // LOGIN Y PANEL ADMINISTRATIVO (sin slug, como lo tenías antes)
-  // ==================================================================
+  // ================================================
+  // 3. LOGIN Y PANEL ADMINISTRATIVO
+  // ================================================
   { path: 'login', component: LoginComponent },
 
   {
@@ -56,9 +66,8 @@ export const routes: Routes = [
     ]
   },
 
-  // ==================================================================
-  // REDIRECCIONES
-  // ==================================================================
-  { path: '', redirectTo: '/zapatik', pathMatch: 'full' },     // ← Tienda por defecto al entrar
-  { path: '**', redirectTo: '/zapatik' }                       // ← Cualquier ruta rara → zapatik
+  // ================================================
+  // 4. RUTAS DE RESPALDO (opcional)
+  // ================================================
+  { path: '**', redirectTo: '' }  // Cualquier ruta desconocida → al dashboard público
 ];
