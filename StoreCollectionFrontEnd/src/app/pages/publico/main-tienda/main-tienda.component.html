@@ -38,37 +38,47 @@
     </div>
   </div>
 </section>
-
-<!-- Resto igual (categorías y productos) -->
-<section class="section-categories py-5" *ngIf="categorias.length > 0">
+<!-- CATEGORÍAS (con estado vacío) -->
+<section class="section-categories py-5" *ngIf="categorias.length > 0 || !loading">
   <div class="container">
     <h2 class="section-title text-center mb-5">Categorías populares</h2>
-    <div class="categories-grid">
-      <a *ngFor="let cat of categorias; let i = index"
-         [routerLink]="['catalogo', cat.slug]"
-         class="category-circle"
-         data-aos="fade-up"
-         [attr.data-aos-delay]="i * 80">
-        <div class="category-img-wrapper">
-          <img src="https://images.unsplash.com/photo-1495467033332-2cb1edf84cab?w=400" 
-               [alt]="cat.nombre" class="category-img">
-        </div>
-        <span class="category-name">{{ cat.nombre }}</span>
-      </a>
+
+    <div *ngIf="categorias.length > 0; else emptyCategories">
+      <div class="categories-grid">
+        <a *ngFor="let cat of categorias; let i = index"
+           [routerLink]="['catalogo', cat.slug]"
+           class="category-circle"
+           data-aos="fade-up"
+           [attr.data-aos-delay]="i * 100">
+          <div class="category-img-wrapper">
+  
+          </div>
+          <span class="category-name">{{ cat.nombre }}</span>
+        </a>
+      </div>
     </div>
+
+    <ng-template #emptyCategories>
+      <div class="empty-state">
+        <i class="bi bi-grid-3x3-gap"></i>
+        <h3>Aún no hay categorías</h3>
+        <p>Pronto estarán disponibles las categorías de productos. ¡Vuelve pronto!</p>
+      </div>
+    </ng-template>
   </div>
 </section>
 
-<!-- Productos destacados -->
-<section class="section-featured py-5 bg-light" *ngIf="destacados.length > 0">
+<!-- PRODUCTOS DESTACADOS (con estado vacío) -->
+<section class="section-featured py-5 bg-light" *ngIf="destacados.length > 0 || !loading">
   <div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
       <h2 class="section-title mb-0">Productos Destacados</h2>
-      <a routerLink="catalogo" class="text-decoration-none fw-semibold text-dark">
-        Ver todos →
+      <a routerLink="catalogo" class="text-decoration-none fw-semibold text-success">
+        Ver todo el catálogo →
       </a>
     </div>
-    <div class="row g-4">
+
+    <div *ngIf="destacados.length > 0; else emptyProducts" class="row g-4">
       <div class="col-6 col-md-4 col-lg-3"
            *ngFor="let p of destacados; let i = index"
            data-aos="fade-up"
@@ -76,6 +86,17 @@
         <app-producto-card [producto]="p"></app-producto-card>
       </div>
     </div>
+
+    <ng-template #emptyProducts>
+      <div class="empty-state">
+        <i class="bi bi-basket2"></i>
+        <h3>Pronto habrá productos destacados</h3>
+        <p>Estamos preparando lo mejor para ti. ¡Los productos llegarán muy pronto!</p>
+        <a routerLink="catalogo" class="btn-empty">
+          Explorar catálogo completo
+        </a>
+      </div>
+    </ng-template>
   </div>
 </section>
 
