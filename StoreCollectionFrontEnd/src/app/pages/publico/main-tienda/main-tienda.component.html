@@ -45,7 +45,7 @@
     <h2 class="section-title text-center mb-5">Categorías populares</h2>
     <div class="categories-grid">
       <a *ngFor="let cat of categorias; let i = index"
-         [routerLink]="['colo', cat.slug]"
+         [routerLink]="['catalogo', cat.slug]"
          class="category-circle"
          data-aos="fade-up"
          [attr.data-aos-delay]="i * 80">
