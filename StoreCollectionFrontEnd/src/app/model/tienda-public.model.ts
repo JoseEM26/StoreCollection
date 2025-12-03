@@ -1,18 +1,20 @@
+// src/app/model/tienda-public.model.ts
+import { Page } from './index';
+
 export interface TiendaPublic {
   id: number;
   nombre: string;
   slug: string;
-  whatsapp: string;
-  moneda: string;
-  descripcion: string;
+  whatsapp?: string;
+  moneda: 'SOLES' | 'DOLARES';
+  descripcion?: string;
   direccion?: string;
   horarios?: string;
   planId?: number;
-  planNombre: string;        // ← este viene del backend
-  userId: number;
-  userEmail: string;         // ← este también viene del backend
+  planNombre: 'Gratis' | 'Básico' | 'Pro' | 'Enterprise';
+  userId?: number;
+  userEmail?: string;
 }
 
-import { Page } from './index';
-
+/** Página de tiendas públicas */
 export type TiendaPage = Page<TiendaPublic>;

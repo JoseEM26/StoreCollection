@@ -1,39 +1,52 @@
 <!-- src/app/pages/public-dashboard/public-dashboard.component.html -->
-<div class="min-vh-100 bg-gradient">
+<div class="min-vh-100">
 
-  <!-- HERO -->
-  <section class="bg-primary text-white py-5">
-    <div class="container py-5 text-center">
-      <h1 class="display-3 fw-bold mb-3">StoreCollection</h1>
-      <p class="lead fs-4 mb-4">Tu catálogo digital profesional en minutos</p>
+  <!-- HERO con gradiente hermoso -->
+  <section class="hero-section text-white py-5 position-relative overflow-hidden">
+    <div class="container py-5 text-center position-relative z-3">
+      <h1 class="display-2 fw-bold mb-4">
+        Store<span class="text-warning">Collection</span>
+      </h1>
+      <p class="lead fs-3 mb-4">Tu catálogo digital profesional en minutos</p>
       <p class="fs-5 mb-5 opacity-90">
-        Sin tarjetas, sin contratos, sin complicaciones. Empieza gratis hoy.
+        Sin tarjetas, sin contratos, sin complicaciones.<br>
+        <strong class="text-warning">Empieza gratis hoy y crece cuando quieras.</strong>
       </p>
       <div class="d-flex gap-3 justify-content-center flex-wrap">
-        <a routerLink="/register" class="btn btn-light btn-lg px-5 shadow">Crear mi tienda GRATIS</a>
-        <a href="#precios" class="btn btn-outline-light btn-lg px-5">Ver planes</a>
+        <a routerLink="/register" class="btn btn-warning btn-lg px-5 shadow-lg fw-bold">
+          Crear mi tienda GRATIS
+        </a>
+        <a href="#precios" class="btn btn-outline-light btn-lg px-5 border-2">
+          Ver planes
+        </a>
       </div>
     </div>
   </section>
 
   <!-- BENEFICIOS -->
   <section class="py-5 bg-white">
-    <div class="container">
-      <div class="row text-center">
-        <div class="col-md-4 mb-4">
-          <div class="display-4 text-primary mb-3">Fast</div>
-          <h5>Lista en 2 minutos</h5>
+    <div class="container py-5">
+      <div class="row text-center g-5">
+        <div class="col-md-4">
+          <div class="text-primary mb-4">
+            <i class="bi bi-lightning-charge-fill display-1"></i>
+          </div>
+          <h4 class="fw-bold">Lista en 2 minutos</h4>
           <p class="text-muted">Sin programación, sin hosting</p>
         </div>
-        <div class="col-md-4 mb-4">
-          <div class="display-4 text-success mb-3">Money</div>
-          <h5>Plan gratis para siempre</h5>
+        <div class="col-md-4">
+          <div class="text-success mb-4">
+            <i class="bi bi-gift-fill display-1"></i>
+          </div>
+          <h4 class="fw-bold">Plan gratis para siempre</h4>
           <p class="text-muted">Crece sin pagar hasta que quieras</p>
         </div>
-        <div class="col-md-4 mb-4">
-          <div class="display-4 text-warning mb-3">WhatsApp</div>
-          <h5>Pedidos directos</h5>
-          <p class="text-muted">Tus clientes te escriben al WhatsApp</p>
+        <div class="col-md-4">
+          <div class="text-warning mb-4">
+            <i class="bi bi-whatsapp display-1"></i>
+          </div>
+          <h4 class="fw-bold">Pedidos por WhatsApp</h4>
+          <p class="text-muted">Tus clientes te escriben directo</p>
         </div>
       </div>
     </div>
@@ -41,136 +54,185 @@
 
   <!-- TIENDAS -->
   <section class="py-5 bg-light">
-    <div class="container">
+    <div class="container py-5">
       <div class="text-center mb-5">
         <h2 class="display-5 fw-bold">Tiendas que ya están vendiendo</h2>
         <p class="lead text-muted">Explora catálogos reales creados con StoreCollection</p>
-
         <div class="col-lg-6 mx-auto mt-4">
-          <div class="input-group input-group-lg shadow-sm">
-            <input type="text" class="form-control" placeholder="Buscar tienda..." 
-                   [(ngModel)]="searchTerm" (keyup.enter)="search()">
-            <button class="btn btn-primary" (click)="search()">Buscar</button>
+          <div class="input-group input-group-lg shadow rounded-pill overflow-hidden">
+            <span class="input-group-text bg-white border-0">
+              <i class="bi bi-search text-muted"></i>
+            </span>
+            <input type="text" class="form-control border-0 ps-0" 
+                   placeholder="Buscar tienda..." 
+                   [(ngModel)]="searchTerm" 
+                   (keyup.enter)="search()">
+            <button class="btn btn-primary rounded-pill px-5" (click)="search()">
+              Buscar
+            </button>
           </div>
         </div>
       </div>
 
-      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
-        <div class="col" *ngFor="let tienda of page.content">
-          <div class="card h-100 border-0 shadow-sm hover-shadow transition">
-            <div class="card-body text-center p-4">
-              <div class="bg-primary bg-opacity-10 rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center"
-                   style="width: 90px; height: 90px;">
-                <i class="bi bi-shop-window fs-2 text-primary"></i>
-              </div>
-              <h5 class="card-title fw-bold">{{ tienda.nombre }}</h5>
-              <p class="text-muted small flex-grow-1">{{ tienda.descripcion }}</p>
-              
-              <div class="d-flex justify-content-center gap-2 mb-3 flex-wrap">
-                <span class="badge rounded-pill" 
-                      [ngClass]="{
-                        'bg-success': tienda.planNombre === 'Enterprise',
-                        'bg-primary': tienda.planNombre === 'Pro',
-                        'bg-secondary': tienda.planNombre === 'Básico',
-                        'bg-light text-dark': tienda.planNombre === 'Gratis'
-                      }">
-                  {{ tienda.planNombre }}
-                </span>
-                <span class="badge bg-outline-secondary">{{ tienda.moneda }}</span>
-              </div>
+      <!-- Loading -->
+      <div class="text-center py-5" *ngIf="loading">
+        <div class="spinner-border text-primary" style="width: 4rem; height: 4rem;">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="mt-3 text-muted fs-5">Cargando tiendas...</p>
+      </div>
 
-              <a [routerLink]="['/', tienda.slug]" 
-                 class="btn btn-outline-primary w-100 stretched-link">
-                Visitar tienda
-              </a>
+      <!-- Lista de tiendas -->
+      <div *ngIf="!loading && page?.content?.length">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+          <div class="col" *ngFor="let tienda of page?.content">
+            <div class="card h-100 border-0 shadow-sm card-hover rounded-4 overflow-hidden">
+              <div class="card-body text-center p-4 d-flex flex-column">
+                <div class="bg-primary bg-opacity-10 rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center"
+                     style="width: 90px; height: 90px;">
+                  <i class="bi bi-shop-window fs-2 text-primary"></i>
+                </div>
+                <h5 class="card-title fw-bold mb-2">{{ tienda.nombre }}</h5>
+                <p class="text-muted small flex-grow-1 mb-3">
+                  {{ tienda.descripcion || 'Tienda online' }}
+                </p>
+
+                <div class="small text-muted mb-3 text-start">
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-geo-alt-fill text-danger"></i>
+                    <span>{{ tienda.direccion || '100% Online' }}</span>
+                  </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-clock-fill text-success"></i>
+                    <span>{{ tienda.horarios || '24/7' }}</span>
+                  </div>
+                </div>
+
+                <div class="d-flex justify-content-center gap-2 mb-3 flex-wrap">
+                  <span class="badge rounded-pill fw-bold fs-6"
+                        [ngClass]="{
+                          'bg-success': tienda.planNombre === 'Enterprise',
+                          'bg-primary': tienda.planNombre === 'Pro',
+                          'bg-warning text-dark': tienda.planNombre === 'Básico',
+                          'bg-light text-dark border': !tienda.planNombre || tienda.planNombre === 'Gratis'
+                        }">
+                    {{ tienda.planNombre || 'Gratis' }}
+                  </span>
+                  <span class="badge bg-secondary rounded-pill">{{ tienda.moneda }}</span>
+                </div>
+
+                <a [routerLink]="['/', tienda.slug]"
+                   class="btn btn-outline-primary rounded-pill mt-auto fw-bold stretched-link">
+                  Visitar tienda →
+                </a>
+              </div>
             </div>
           </div>
         </div>
+
+        <!-- Paginación -->
+        <div class="d-flex justify-content-center mt-5" *ngIf="page && page.totalPages > 1">
+          <nav>
+            <ul class="pagination pagination-lg">
+              <li class="page-item" [class.disabled]="!page || page.first">
+                <button class="page-link rounded-pill" (click)="goToPage(currentPage - 1)">Anterior</button>
+              </li>
+              <li class="page-item" 
+                  *ngFor="let i of getPageRange()" 
+                  [class.active]="i === currentPage">
+                <button class="page-link rounded-pill" (click)="goToPage(i)">
+                  {{ i + 1 }}
+                </button>
+              </li>
+              <li class="page-item" [class.disabled]="!page || page.last">
+                <button class="page-link rounded-pill" (click)="goToPage(currentPage + 1)">Siguiente</button>
+              </li>
+            </ul>
+          </nav>
+        </div>
+
+        <div class="text-center text-muted mt-3">
+          Mostrando {{ page?.numberOfElements || 0 }} de {{ page?.totalElements || 0 }} tiendas
+        </div>
       </div>
 
-      <!-- Paginación -->
-      <div class="d-flex justify-content-center mt-5" *ngIf="page && page.totalPages > 1">
-        <nav aria-label="Paginación de tiendas">
-          <ul class="pagination pagination-lg">
-            <li class="page-item" [class.disabled]="page.first">
-              <button class="page-link" (click)="goToPage(currentPage - 1)">Anterior</button>
-            </li>
-            <li class="page-item" 
-                *ngFor="let n of [].constructor(page.totalPages); let i = index"
-                [class.active]="i === currentPage">
-              <button class="page-link" (click)="goToPage(i)">{{ i + 1 }}</button>
-            </li>
-            <li class="page-item" [class.disabled]="page.last">
-              <button class="page-link" (click)="goToPage(currentPage + 1)">Siguiente</button>
-            </li>
-          </ul>
-        </nav>
-      </div>
-
-      <div class="text-center text-muted mt-3">
-        Mostrando {{ page.numberOfElements || 0 }} de {{ page.totalElements || 0 }} tiendas
+      <!-- Sin resultados -->
+      <div class="text-center py-5" *ngIf="!loading && page && page.content.length === 0">
+        <i class="bi bi-search display-1 text-muted"></i>
+        <p class="lead mt-4">No se encontraron tiendas con ese nombre</p>
+        <button class="btn btn-outline-primary rounded-pill" (click)="searchTerm = ''; loadTiendas(0)">
+          Ver todas las tiendas
+        </button>
       </div>
     </div>
   </section>
 
   <!-- PRECIOS -->
   <section id="precios" class="py-5 bg-white">
-    <div class="container">
+    <div class="container py-5">
       <div class="text-center mb-5">
-        <h2 class="display-5 fw-bold">Planes para todos</h2>
-        <p class="lead">Elige el que más se adapte a tu negocio</p>
+        <h2 class="display-5 fw-bold">Elige tu plan ideal</h2>
+        <p class="lead text-muted">Crece a tu ritmo, sin presiones</p>
       </div>
-
       <div class="row g-5 justify-content-center">
         <div class="col-md-4">
-          <div class="card border-0 shadow h-100">
+          <div class="card border-0 shadow h-100 rounded-4">
             <div class="card-body text-center p-5">
-              <h4>Gratis</h4>
-              <h2 class="fw-bold">S/ 0</h2>
+              <h4 class="fw-bold">Gratis</h4>
+              <div class="display-4 fw-bold text-primary">S/ 0</div>
               <p class="text-muted">Para siempre</p>
-              <ul class="list-unstyled mt-4 space-y-3">
-                <li>50 productos</li>
-                <li>Subdominio gratis</li>
-                <li>Pedidos por WhatsApp</li>
+              <hr>
+              <ul class="list-unstyled text-start mt-4">
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> Hasta 50 productos</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> Subdominio gratis</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> Pedidos por WhatsApp</li>
               </ul>
-              <a routerLink="/register" class="btn btn-outline-primary btn-lg w-100 mt-4">Empezar gratis</a>
+              <a routerLink="/register" class="btn btn-outline-primary btn-lg w-100 mt-4 rounded-pill">
+                Empezar gratis
+              </a>
             </div>
           </div>
         </div>
 
         <div class="col-md-4">
-          <div class="card border-0 shadow-lg h-100 position-relative overflow-hidden" style="border: 3px solid #0d6efd !important;">
-            <div class="position-absolute top-0 start-50 translate-middle-x bg-primary text-white px-4 py-1 rounded-bottom">
+          <div class="card border-0 shadow-lg h-100 position-relative rounded-4 border border-primary border-4">
+            <div class="position-absolute top-0 start-50 translate-middle-x bg-primary text-white px-4 py-2 rounded-bottom shadow">
               <small class="fw-bold">MÁS POPULAR</small>
             </div>
-            <div class="card-body text-center p-5 pt-6">
-              <h4>Pro</h4>
-              <h2 class="fw-bold">S/ 79</h2>
-              <p class="text-muted">por mes</p>
-              <ul class="list-unstyled mt-4 space-y-3">
-                <li>Productos ilimitados</li>
-                <li>Dominio personalizado</li>
-                <li>Sin marca StoreCollection</li>
-                <li>Estadísticas avanzadas</li>
+            <div class="card-body text-center p-5 pt-7">
+              <h4 class="fw-bold">Pro</h4>
+              <div class="display-4 fw-bold">S/ 79</div>
+              <p class="text-muted small">por mes</p>
+              <hr>
+              <ul class="list-unstyled text-start mt-4">
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> Productos ilimitados</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> Dominio personalizado</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> Sin marca StoreCollection</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> Estadísticas avanzadas</li>
               </ul>
-              <a routerLink="/register" class="btn btn-primary btn-lg w-100 mt-4">Elegir Pro</a>
+              <a routerLink="/register" class="btn btn-primary btn-lg w-100 mt-4 rounded-pill shadow">
+                Elegir Pro
+              </a>
             </div>
           </div>
         </div>
 
         <div class="col-md-4">
-          <div class="card border-0 shadow h-100">
+          <div class="card border-0 shadow h-100 rounded-4">
             <div class="card-body text-center p-5">
-              <h4>Enterprise</h4>
-              <h2 class="fw-bold">S/ 299</h2>
-              <p class="text-muted">por mes</p>
-              <ul class="list-unstyled mt-4 space-y-3">
-                <li>Todo lo del Pro</li>
-                <li>Multi-tienda</li>
-                <li>API completa</li>
-                <li>Soporte dedicado</li>
+              <h4 class="fw-bold">Enterprise</h4>
+              <div class="display-4 fw-bold">S/ 299</div>
+              <p class="text-muted small">por mes</p>
+              <hr>
+              <ul class="list-unstyled text-start mt-4">
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-dark me-2"></i> Todo lo de Pro</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-dark me-2"></i> Multi-tienda</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-dark me-2"></i> API completa</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-dark me-2"></i> Soporte 24/7</li>
               </ul>
-              <a href="https://wa.me/51987654321" class="btn btn-dark btn-lg w-100 mt-4">Contactar</a>
+              <a href="https://wa.me/51987654321" class="btn btn-dark btn-lg w-100 mt-4 rounded-pill">
+                Contactar
+              </a>
             </div>
           </div>
         </div>
@@ -181,15 +243,15 @@
   <!-- FOOTER -->
   <footer class="bg-dark text-white py-5">
     <div class="container">
-      <div class="row">
+      <div class="row align-items-center">
         <div class="col-lg-8">
-          <h4>StoreCollection</h4>
-          <p class="mb-0">La forma más fácil de tener tu tienda online en Perú.</p>
+          <h3 class="fw-bold">StoreCollection</h3>
+          <p class="lead mb-0">La forma más fácil de tener tu tienda online en Perú</p>
         </div>
         <div class="col-lg-4 text-lg-end">
           <p class="mb-1">WhatsApp: <a href="https://wa.me/51987654321" class="text-white text-decoration-underline">+51 987 654 321</a></p>
           <p class="mb-1">Email: holastorecollection.pe</p>
-          <p class="mb-0 small">© 2025 StoreCollection. Todos los derechos reservados.</p>
+          <p class="small opacity-75 mb-0">© 2025 StoreCollection · Hecho con amor en Perú</p>
         </div>
       </div>
     </div>

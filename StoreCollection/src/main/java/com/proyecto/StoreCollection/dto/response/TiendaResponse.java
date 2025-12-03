@@ -3,7 +3,7 @@ package com.proyecto.StoreCollection.dto.response;
 import lombok.Data;
 
 @Data
-public class TiendaResponse {
+public class    TiendaResponse {
     private Integer id;
     private String nombre;
     private String slug;
