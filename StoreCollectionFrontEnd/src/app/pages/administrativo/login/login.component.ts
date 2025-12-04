@@ -1,8 +1,10 @@
+// src/app/auth/login/login.component.ts
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../../../auth/auth.service';
+import { AuthService, LoginRequest } from '../../../../auth/auth.service';
+
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -11,36 +13,56 @@ import { AuthService } from '../../../../auth/auth.service';
   styleUrl: './login.component.css'
 })
 export class LoginComponent {
-  email = 'admin@storecollection.com';
-  password = '123456';
+  // Modelo para el formulario
+  credentials: LoginRequest = { email: '', password: '' };
+showPassword = false;
+  // Estado del login
   isLoading = false;
   showCredentials = false;
 
-  get currentYear(): number {
-    return new Date().getFullYear();
-  }
+  // Credenciales de prueba (para desarrollo)
+  testCredentials = {
+    admin: { email: 'admin@storecollection.com', password: '123456' },
+    owner: { email: 'owner@gmail.com', password: '123456' }
+  };
+
+  currentYear = new Date().getFullYear();
 
   constructor(
-    private auth: AuthService,
+    private authService: AuthService,
     private router: Router
   ) {}
 
-  login() {
-    if (!this.email || !this.password) return;
+  onSubmit() {
+    if (!this.credentials.email || !this.credentials.password) {
+      alert('Por favor completa todos los campos');
+      return;
+    }
 
     this.isLoading = true;
 
-    setTimeout(() => {
-      if (this.auth.login(this.email.trim(), this.password)) {
+    this.authService.login(this.credentials).subscribe({
+      next: () => {
         this.router.navigate(['/admin/dashboard']);
-      } else {
-        alert('Credenciales incorrectas');
+      },
+      error: (err) => {
+        console.error('Error de login:', err);
+        alert('Credenciales incorrectas o error del servidor');
+        this.isLoading = false;
+      },
+      complete: () => {
         this.isLoading = false;
       }
-    }, 800);
+    });
   }
 
+  // Para desarrollo: autocompletar credenciales
   toggleCredentials() {
     this.showCredentials = !this.showCredentials;
+  }
+
+  useTestCredentials(type: 'admin' | 'owner') {
+    this.credentials = { ...this.testCredentials[type] };
+    this.showCredentials = false;
   }
 }

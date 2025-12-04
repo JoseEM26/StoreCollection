@@ -1,111 +1,109 @@
-<div class="min-vh-100 d-flex align-items-center justify-content-center bg-gradient py-5">
-  <div class="container">
+<div class="min-vh-100 d-flex align-items-center justify-content-center position-relative overflow-hidden"
+     style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">
+
+  <!-- Fondo sutil con patrón geométrico (opcional, muy tenue) -->
+  <div class="position-absolute top-0 start-0 w-100 h-100 opacity-5">
+    <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+          <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#grid)" />
+    </svg>
+  </div>
+
+  <div class="container position-relative z-10">
     <div class="row justify-content-center">
-      <div class="col-11 col-sm-10 col-md-8 col-lg-5 col-xl-4">
+      <div class="col-xl-4 col-lg-5 col-md-6 col-sm-8">
 
-        <!-- Card principal -->
-        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-          
-          <!-- Header violeta bonito -->
-          <div class="bg-primary bg-gradient text-white text-center py-5">
-            <div class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-20 rounded-circle mb-4" 
-                 style="width: 90px; height: 90px;">
-              <i class="bi bi-shop-window fs-1"></i>
-            </div>
-            <h2 class="fw-bold mb-2">Store Collection</h2>
-            <p class="mb-0 opacity-90">Panel de Administración</p>
+        <!-- Logo + Título -->
+        <div class="text-center mb-5" data-aos="fade-down">
+          <div class="d-inline-flex align-items-center justify-content-center rounded-4 bg-primary bg-opacity-10 mb-4"
+               style="width: 90px; height: 90px;">
+            <i class="bi bi-buildings text-primary" style="font-size: 2.8rem;"></i>
           </div>
-
-          <!-- Body del formulario -->
-          <div class="card-body p-5">
-
-            <form (ngSubmit)="login()" novalidate>
-
-              <!-- Email -->
-              <div class="mb-4">
-                <label class="form-label fw-semibold">Correo electrónico</label>
-                <div class="input-group input-group-lg">
-                  <span class="input-group-text bg-light border-0">
-                    <i class="bi bi-envelope text-primary"></i>
-                  </span>
-                  <input 
-                    type="email" 
-                    class="form-control form-control-lg border-start-0 ps-0" 
-                    [(ngModel)]="email" 
-                    name="email"
-                    placeholder="admin@storecollection.com"
-                    required
-                    autofocus>
-                </div>
-              </div>
-
-              <!-- Contraseña -->
-              <div class="mb-4">
-                <label class="form-label fw-semibold">Contraseña</label>
-                <div class="input-group input-group-lg">
-                  <span class="input-group-text bg-light border-0">
-                    <i class="bi bi-lock text-primary"></i>
-                  </span>
-                  <input 
-                    [type]="showCredentials ? 'text' : 'password'"
-                    class="form-control form-control-lg border-start-0 ps-0" 
-                    [(ngModel)]="password" 
-                    name="password"
-                    placeholder="••••••••"
-                    required>
-                </div>
-              </div>
-
-              <!-- Botón Login -->
-              <button 
-                type="submit" 
-                class="btn btn-primary btn-lg w-100 fw-bold d-flex align-items-center justify-content-center gap-3"
-                [disabled]="isLoading">
-                
-                <span *ngIf="!isLoading">
-                  <i class="bi bi-box-arrow-in-right"></i>
-                  Iniciar Sesión
-                </span>
-
-                <span *ngIf="isLoading">
-                  <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                  Cargando...
-                </span>
-              </button>
-            </form>
-
-            <!-- Credenciales de prueba (con toggle) -->
-            <div class="mt-5 p-4 bg-light rounded-4 border">
-              <button 
-                type="button"
-                class="btn btn-link text-decoration-none text-dark fw-semibold w-100 text-start d-flex justify-content-between align-items-center"
-                (click)="toggleCredentials()">
-                <span>
-                  <i class="bi bi-shield-lock me-2"></i>
-                  Credenciales de prueba
-                </span>
-                <i [class]="showCredentials ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
-              </button>
-
-              <div class="mt-3 small text-muted" [hidden]="!showCredentials">
-                <div class="d-flex align-items-center gap-2 mb-2">
-                  <i class="bi bi-person-circle text-primary"></i>
-                  <code class="bg-white px-3 py-1 rounded">admin_storecollection.com</code>
-                </div>
-                <div class="d-flex align-items-center gap-2">
-                  <i class="bi bi-key text-primary"></i>
-                  <code class="bg-white px-3 py-1 rounded">123456</code>
-                </div>
-              </div>
-            </div>
-
-            <!-- Footer -->
-            <div class="text-center mt-5 text-secondary small">
-              © {{ currentYear }} Store Collection • Plataforma SaaS para tiendas virales
-            </div>
-
-          </div>
+          <h1 class="display-5 fw-bold text-dark mb-2">Store Collection</h1>
+          <p class="lead text-muted fw-medium">Panel de Administración Empresarial</p>
         </div>
+
+        <!-- Formulario -->
+        <form (ngSubmit)="onSubmit()" class="bg-white rounded-4 shadow-xl p-5 p-lg-6" data-aos="fade-up" data-aos-delay="100">
+
+          <!-- Email -->
+          <div class="mb-4">
+            <label for="email" class="form-label fw-semibold text-dark">
+              Correo electrónico
+            </label>
+            <div class="position-relative">
+              <i class="bi bi-envelope position-absolute top-50 start-4 translate-middle-y text-muted z-10"></i>
+              <input type="email"
+                     id="email"
+                     class="form-control form-control-lg ps-5 rounded-3 border-0 shadow-sm"
+                     [(ngModel)]="credentials.email"
+                     name="email"
+                     placeholder="nombre@empresa.com"
+                     required
+                     autofocus>
+            </div>
+          </div>
+
+          <!-- Contraseña -->
+          <div class="mb-5">
+            <label for="password" class="form-label fw-semibold text-dark">
+              Contraseña
+            </label>
+            <div class="position-relative">
+              <i class="bi bi-lock position-absolute top-50 start-4 translate-middle-y text-muted z-10"></i>
+              <input [type]="showPassword ? 'text' : 'password'"
+                     id="password"
+                     class="form-control form-control-lg ps-5 pe-5 rounded-3 border-0 shadow-sm"
+                     [(ngModel)]="credentials.password"
+                     name="password"
+                     placeholder="••••••••••••"
+                     required>
+              <button type="button"
+                      class="btn btn-link position-absolute top-50 end-0 translate-middle-y text-muted"
+                      (click)="showPassword = !showPassword">
+                <i [class]="'bi ' + (showPassword ? 'bi-eye-slash' : 'bi-eye')"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Botón principal -->
+          <button type="submit"
+                  class="btn btn-primary btn-lg w-100 fw-semibold rounded-3 py-3 d-flex align-items-center justify-content-center gap-3"
+                  [disabled]="isLoading">
+            <span *ngIf="!isLoading">
+              <i class="bi bi-box-arrow-in-right"></i>
+              Iniciar sesión
+            </span>
+            <span *ngIf="isLoading">
+              <span class="spinner-border spinner-border-sm"></span>
+              Verificando credenciales...
+            </span>
+          </button>
+
+          <!-- Footer -->
+          <div class="text-center mt-5 pt-4 border-top border-light">
+            <p class="text-muted small mb-2">
+              <i class="bi bi-shield-lock-fill text-success me-1"></i>
+              Conexión segura • Cifrado TLS 1.3
+            </p>
+            <p class="text-muted small mb-0">
+              © {{ currentYear }} Store Collection • Plataforma SaaS empresarial
+            </p>
+          </div>
+
+        </form>
+
+        <!-- Texto inferior (opcional) -->
+        <div class="text-center mt-4">
+          <small class="text-muted">
+            Gestión multimarca para empresas líderes del retail
+          </small>
+        </div>
+
       </div>
     </div>
   </div>
