@@ -14,8 +14,9 @@ public interface TiendaRepository extends JpaRepository<Tienda, Integer> {
     Optional<Tienda> findBySlug(String slug);  // Usa Optional
     Page<Tienda> findByNombreContainingIgnoreCase(String nombre, Pageable pageable);
     List<Tienda> findByUserId(Integer userId);
-    Optional<Tienda> findByUserEmail(String email);
-
+    //Optional<Tienda> findByUserEmail(String email);
+    // TiendaRepository.java
+    Page<Tienda> findByUserEmail(String email, Pageable pageable);
     Optional<Tienda> findFirstByUserEmail(String email);
 
 }

@@ -1,53 +1,100 @@
+/* Layout general */
 .public-main {
-  min-height: 100vh;
-  background: #ffffff;
-  padding-bottom: 3rem;
+  min-height: 80vh;
+  padding-bottom: 4rem;
+  background: #f8fafc;
 }
 
 /* Header */
 .public-header {
-  border-bottom: 1px solid #e2e8f0;
   background: white;
+  border-bottom: 1px solid #e2e8f0;
   position: sticky;
   top: 0;
-  z-index: 1000;
-  box-shadow: 0 2px 15px rgba(0,0,0,0.06);
+  z-index: 1050;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
 
-.logo {
-  font-size: 1.6rem;
-  font-weight: 900;
-  color: #111111;
-  text-decoration: none;
-  letter-spacing: -1px;
+.logo-img {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 2px solid #f1f5f9;
 }
 
-.nav-links a {
-  margin: 0 1.8rem;
+/* Menú Desktop */
+.nav-desktop a {
+  margin: 0 1.5rem;
   font-weight: 600;
   color: #475569;
   text-decoration: none;
-  transition: color 0.3s;
+  padding: 0.5rem 0;
   position: relative;
+  transition: all 0.3s;
 }
 
-.nav-links a:hover,
-.nav-links a.active {
+.nav-desktop a:hover,
+.nav-desktop a.active {
   color: #111111;
 }
 
-.nav-links a.active::after {
+.nav-desktop a.active::after {
   content: '';
   position: absolute;
   bottom: -12px;
   left: 0;
   width: 100%;
   height: 4px;
-  background: #10b981;
+  background: linear-gradient(90deg, #10b981, #34d399);
   border-radius: 2px;
 }
 
-/* WhatsApp flotante */
+/* Menú móvil */
+.btn-menu-mobile {
+  font-size: 1.8rem;
+  background: none;
+  border: none;
+  color: #111;
+  display: none;
+}
+
+.mobile-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  padding: 1rem 0;
+  transform: translateY(-100%);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.mobile-menu.open {
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
+}
+
+.mobile-menu a {
+  display: block;
+  padding: 0.8rem 2rem;
+  color: #333;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.mobile-menu a.active {
+  background: #f0fdf4;
+  color: #10b981;
+  font-weight: 700;
+}
+
+/* WhatsApp flotante mejorado */
 .btn-whatsapp-flotante {
   position: fixed;
   bottom: 25px;
@@ -58,8 +105,8 @@
   color: white;
   border: none;
   border-radius: 50%;
-  font-size: 2rem;
-  box-shadow: 0 10px 30px rgba(37, 211, 102, 0.4);
+  font-size: 2.2rem;
+  box-shadow: 0 10px 30px rgba(37, 211, 102, 0.5);
   z-index: 9999;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -67,11 +114,23 @@
 }
 
 .btn-whatsapp-flotante:hover {
-  transform: scale(1.15);
+  transform: scale(1.2);
   background: #128c7e;
 }
 
-.btn-whatsapp-flotante .pulse {
+.online-dot {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  width: 14px;
+  height: 14px;
+  background: #25d366;
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(37, 211, 102, 0.8);
+}
+
+.pulse {
   position: absolute;
   inset: 0;
   border-radius: 50%;
@@ -80,31 +139,27 @@
   animation: pulse 2s infinite;
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 0.6; }
-  70% { transform: scale(1.5); opacity: 0; }
-  100% { transform: scale(1.5); opacity: 0; }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
 /* Footer */
 .public-footer {
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  background: #0f172a;
+  color: #cbd5e1;
   margin-top: 6rem;
-  font-size: 0.95rem;
 }
+
+.public-footer h5 {
+  color: white;
+}
+
+.public-footer hr {
+  border-color: #334155;
+}
+
+@keyframes pulse { 0% { transform: scale(1); opacity: 0.6; } 70% { transform: scale(1.5); opacity: 0; } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .nav-links {
-    display: none; /* luego puedes agregar menú hamburguesa */
-  }
-  .logo {
-    font-size: 1.4rem;
-  }
+  .nav-desktop { display: none; }
+  .btn-menu-mobile { display: block; }
+  .logo strong { font-size: 1.3rem; }
 }

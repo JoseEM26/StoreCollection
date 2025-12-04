@@ -14,6 +14,7 @@ export interface TiendaPublic {
   planNombre: 'Gratis' | 'Básico' | 'Pro' | 'Enterprise';
   userId?: number;
   userEmail?: string;
+  activo?: boolean;
 }
 
 /** Página de tiendas públicas */

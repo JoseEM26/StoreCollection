@@ -1,91 +1,82 @@
-<!-- src/app/admin/admin-layout/admin-layout.component.html -->
 <div class="admin-layout" [class.sidebar-collapsed]="isSidebarCollapsed">
 
-  <!-- Overlay móvil (solo cuando el menú está abierto) -->
-  <div 
-    class="sidebar-overlay" 
-    *ngIf="isMobile && !isSidebarCollapsed" 
-    (click)="toggleSidebar()">
-  </div>
+  <!-- Overlay móvil -->
+  <div class="sidebar-overlay" *ngIf="isMobile && !isSidebarCollapsed" (click)="toggleSidebar()"></div>
 
-  <!-- Sidebar Premium -->
+  <!-- Sidebar -->
   <aside class="sidebar">
-    <!-- Botón colapsar fijo arriba a la derecha -->
-    <div class="collapse-btn-wrapper">
-      <button 
-        class="btn-collapse" 
-        (click)="toggleSidebar()"
-        [title]="isSidebarCollapsed ? 'Expandir menú' : 'Colapsar menú'">
-        <i class="bi" 
-           [class.bi-chevron-left]="!isSidebarCollapsed" 
-           [class.bi-chevron-right]="isSidebarCollapsed">
-        </i>
-      </button>
-    </div>
+    <div class="sidebar-inner">
 
-    <!-- Header -->
-    <div class="sidebar-header">
-      <div class="logo">
-        <i class="bi bi-shop-window text-primary"></i>
-        <span class="logo-text">Store Collection</span>
+      <!-- Logo -->
+      <div class="sidebar-header">
+        <div class="logo-wrapper">
+          <div class="logo-icon">
+            <i class="bi bi-buildings"></i>
+          </div>
+          <div class="logo-text">
+            <span class="fw-bold">Store Collection</span>
+            <small class="text-muted d-block">Panel Admin</small>
+          </div>
+        </div>
       </div>
-      <small class="text-muted">Panel Admin</small>
+
+      <!-- Navegación -->
+      <nav class="sidebar-nav mt-4">
+        <a routerLink="/admin/dashboard"   routerLinkActive="active" class="nav-link"><i class="bi bi-speedometer2"></i><span>Dashboard</span></a>
+        <a routerLink="/admin/stores"      routerLinkActive="active" class="nav-link"><i class="bi bi-shop"></i><span>Tiendas</span></a>
+        <a routerLink="/admin/categories" routerLinkActive="active" class="nav-link"><i class="bi bi-grid-3x3-gap"></i><span>Categorías</span></a>
+        <a routerLink="/admin/products"    routerLinkActive="active" class="nav-link"><i class="bi bi-box-seam"></i><span>Productos</span></a>
+        <a routerLink="/admin/usuarios"    routerLinkActive="active" class="nav-link"><i class="bi bi-people"></i><span>Usuarios</span></a>
+      </nav>
+
+      <!-- Logout -->
+      <div class="sidebar-footer">
+        <button class="nav-link logout-btn" (click)="logout()">
+          <i class="bi bi-box-arrow-right"></i>
+          <span>Cerrar sesión</span>
+        </button>
+      </div>
     </div>
 
-    <!-- Navegación -->
-    <nav class="sidebar-nav">
-      <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-item">
-        <i class="bi bi-speedometer2"></i>
-        <span>Dashboard</span>
-      </a>
-      <a routerLink="/admin/stores" routerLinkActive="active" class="nav-item">
-        <i class="bi bi-shop"></i>
-        <span>Tiendas</span>
-      </a>
-      <a routerLink="/admin/categories" routerLinkActive="active" class="nav-item">
-        <i class="bi bi-tags"></i>
-        <span>Categorías</span>
-      </a>
-      <a routerLink="/admin/products" routerLinkActive="active" class="nav-item">
-        <i class="bi bi-box-seam"></i>
-        <span>Productos</span>
-      </a>
-      <a routerLink="/admin/usuarios" routerLinkActive="active" class="nav-item">
-        <i class="bi bi-people"></i> 
-        <span>Usuarios</span>
-         </a>
-    </nav>
-
-    <!-- Footer -->
-    <div class="sidebar-footer">
-      <button (click)="logout()" class="btn-logout">
-        <i class="bi bi-box-arrow-right"></i>
-        <span>Cerrar sesión</span>
-      </button>
-    </div>
+    <!-- Botón colapsar -->
+    <button class="btn-collapse" (click)="toggleSidebar()" [title]="isSidebarCollapsed ? 'Expandir' : 'Colapsar'">
+      <i class="bi" [class.bi-chevron-left]="!isSidebarCollapsed" [class.bi-chevron-right]="isSidebarCollapsed"></i>
+    </button>
   </aside>
 
   <!-- Contenido principal -->
   <div class="main-content">
+
     <!-- Topbar -->
     <header class="topbar">
-      <div class="container-fluid d-flex align-items-center justify-content-between px-4">
-        <!-- Botón hamburguesa móvil -->
-        <button class="btn-mobile-menu d-lg-none" (click)="toggleSidebar()">
+      <div class="container-fluid d-flex align-items-center justify-content-between px-4 py-3">
+
+        <!-- Menú móvil -->
+        <button class="btn-mobile-menu d-lg-none me-3" (click)="toggleSidebar()">
           <i class="bi bi-list fs-4"></i>
         </button>
 
-        <h5 class="mb-0 fw-semibold">Bienvenido, Administrador</h5>
+        <!-- Título de página -->
+        <h5 class="mb-0 fw-semibold text-dark">{{ pageTitle }}</h5>
 
-        <div class="topbar-actions">
-          <!-- Aquí puedes poner notificaciones, avatar, etc. -->
+        <!-- Usuario + Avatar -->
+        <div class="d-flex align-items-center gap-3">
+          <div class="text-end">
+            <div class="fw-semibold text-dark">{{ auth.fullName() }}</div>
+            <small class="text-muted">{{ auth.roleDisplay() }}</small>
+          </div>
+
+          <!-- Avatar con iniciales -->
+          <div class="avatar">
+            {{ auth.initials() }}
+          </div>
         </div>
       </div>
     </header>
 
-    <!-- Contenido de la página -->
+    <!-- Contenido de la ruta -->
     <main class="page-content">
-      <router-outlet />
+      <router-outlet></router-outlet>
     </main>
   </div>
 </div>

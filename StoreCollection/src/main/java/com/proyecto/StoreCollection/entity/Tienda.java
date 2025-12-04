@@ -25,6 +25,8 @@ public class Tienda {
     private String descripcion;
     private String direccion;
     private String horarios;
+    private String mapa_url;
+    private String logo_img_url;
 
     @ManyToOne
     private Plan plan;

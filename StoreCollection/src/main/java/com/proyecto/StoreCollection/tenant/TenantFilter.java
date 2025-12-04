@@ -23,7 +23,6 @@ public class TenantFilter extends OncePerRequestFilter {
 
     private final TiendaRepository tiendaRepository;
 
-    // Detecta rutas como: /api/public/tiendas/zapatik/...
     private static final Pattern TENANT_SLUG_PATTERN = Pattern.compile("^/api/(public|owner)/tiendas/([^/]+)");
 
     @Override
@@ -32,33 +31,34 @@ public class TenantFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getRequestURI();
-        String method = request.getMethod();
 
-        // Solo procesamos GET/POST/PUT/DELETE (no OPTIONS)
-        if ("OPTIONS".equalsIgnoreCase(method)) {
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
         }
 
         Matcher matcher = TENANT_SLUG_PATTERN.matcher(path);
-        if (matcher.find()) {
+        boolean hasTenantSlug = matcher.find();
+
+        if (hasTenantSlug) {
             String slug = matcher.group(2);
+            Tienda tienda = tiendaRepository.findBySlug(slug).orElse(null);
 
-            Tienda tienda = tiendaRepository.findBySlug(slug)
-                    .orElse(null);
-
-            if (tienda != null) {
+            if (tienda == null || !tienda.getActivo()) {
+                if (path.startsWith("/api/public/")) {
+                    response.setStatus(404);
+                    response.getWriter().write("{\"error\": \"Tienda no encontrada o inactiva\"}");
+                    return;
+                }
+            } else {
                 TenantContext.setTenantId(tienda.getId());
-            } else if (path.contains("/api/public/")) {
-                response.sendError(404, "Tienda no encontrada: " + slug);
-                return;
             }
         }
 
         try {
             filterChain.doFilter(request, response);
         } finally {
-            TenantContext.clear(); // Siempre limpiar
+            TenantContext.clear();
         }
     }
 }

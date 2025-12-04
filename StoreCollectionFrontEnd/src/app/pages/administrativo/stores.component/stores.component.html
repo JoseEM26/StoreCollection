@@ -1,107 +1,156 @@
-<!-- src/app/admin/stores/stores.component.html -->
-<div class="stores-page" data-aos="fade-up">
+<div class="container-fluid py-5">
   <!-- Header -->
-  <div class="page-header mb-5">
-    <div class="container-fluid">
-      <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-4">
-        <div>
-          <h1 class="display-5 fw-bold text-dark mb-2">Gestión de Tiendas</h1>
-          <p class="text-muted lead">Administra todas las tiendas multitenant de la plataforma</p>
-        </div>
-        <button 
-          (click)="openModal()" 
-          class="btn btn-primary btn-lg fw-bold shadow-lg d-flex align-items-center gap-3 px-5 py-3 rounded-pill"
-          data-aos="fade-left" data-aos-delay="300">
-          <i class="bi bi-plus-circle-fill fs-4"></i>
-          Nueva Tienda
-        </button>
-      </div>
+  <div class="d-flex justify-content-between align-items-center mb-5">
+    <div>
+      <h1 class="display-5 fw-bold text-dark mb-1">Gestión de Tiendas</h1>
+      <p class="text-muted">Administra todas las tiendas de la plataforma</p>
+    </div>
+    <button class="btn btn-primary btn-lg px-5 shadow" (click)="openCreateModal()">
+      <i class="bi bi-plus-circle me-2"></i> Nueva Tienda
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading()" class="text-center py-5">
+    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+      <span class="visually-hidden">Cargando...</span>
     </div>
   </div>
 
-  <!-- Grid de tiendas -->
-  <div class="container-fluid">
-    <div class="row g-4">
-      <div 
-        class="col-md-6 col-lg-4" 
-        *ngFor="let store of stores(); let i = index" 
-        data-aos="fade-up" 
-        [attr.data-aos-delay]="100 + (i * 100)">
-        
-        <div class="store-card h-100 position-relative overflow-hidden rounded-4" 
-             [class.inactive]="!store.active">
-          <div class="card-border"></div>
-          
-          <div class="card-content p-5">
-            <div class="d-flex justify-content-between align-items-start mb-4">
-              <div class="store-icon">
-                <i class="bi bi-shop-window"></i>
-              </div>
-              <span class="status-badge" [class.active]="store.active">
-                {{ store.active ? 'Activa' : 'Inactiva' }}
-              </span>
-            </div>
+  <!-- Lista de tiendas -->
+  <div *ngIf="!loading() && tiendas().length > 0" class="row g-4">
+    <div class="col-md-6 col-lg-4" *ngFor="let tienda of tiendas()">
+      <div class="card h-100 border-0 shadow-sm hover-shadow-lg transition">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h5 class="card-title fw-bold mb-1">{{ tienda.nombre }}</h5>
+            <span class="badge rounded-pill" 
+                  [class.bg-success]="tienda.activo" 
+                  [class.bg-secondary]="!tienda.activo">
+              {{ tienda.activo ? 'Activa' : 'Inactiva' }}
+            </span>
+          </div>
 
-            <h3 class="store-name fw-bold mb-2">{{ store.name }}</h3>
-            <p class="store-domain text-muted mb-4">
-              <i class="bi bi-globe me-2"></i>{{ store.domain }}
-            </p>
+          <p class="text-muted small mb-2">
+            <i class="bi bi-link-45deg"></i> {{ tienda.slug }}.storecollection.com
+          </p>
+          <p class="text-muted small mb-3">
+            <i class="bi bi-tag"></i> Plan {{ tienda.planNombre }}
+          </p>
 
-            <div class="mt-auto">
-              <button 
-                (click)="toggleStore(store); $event.stopPropagation()" 
-                class="btn btn-sm fw-semibold w-100 rounded-pill"
-                [class.btn-success]="!store.active"
-                [class.btn-outline-primary]="store.active">
-                <i class="bi me-2" [class.bi-toggle-on]="store.active" [class.bi-toggle-off]="!store.active"></i>
-                {{ store.active ? 'Desactivar' : 'Activar' }}
-              </button>
-            </div>
+          <div class="d-flex gap-2 mt-auto">
+            <button class="btn btn-outline-primary btn-sm flex-fill" (click)="openEditModal(tienda)">
+              <i class="bi bi-pencil"></i> Editar
+            </button>
+            <button class="btn btn-sm flex-fill" 
+                    [class.btn-success]="!tienda.activo"
+                    [class.btn-outline-danger]="tienda.activo"
+                    (click)="toggleActive(tienda)">
+              <i class="bi" [class.bi-toggle-on]="tienda.activo" [class.bi-toggle-off]="!tienda.activo"></i>
+              {{ tienda.activo ? 'Desactivar' : 'Activar' }}
+            </button>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Modal Premium (fondo claro) -->
-  <div class="modal-backdrop" *ngIf="showModal" (click)="closeModal()"></div>
-  <div class="create-modal" *ngIf="showModal" data-aos="zoom-in">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title">
-          <i class="bi bi-plus-circle me-3"></i>
-          Crear Nueva Tienda
-        </h2>
-        <button class="btn-close" (click)="closeModal()"></button>
+  <!-- Sin tiendas -->
+  <div *ngIf="!loading() && tiendas().length === 0" class="text-center py-5">
+    <i class="bi bi-shop display-1 text-muted"></i>
+    <p class="text-muted mt-3">No hay tiendas creadas aún</p>
+  </div>
+
+  <!-- Paginación -->
+  <nav *ngIf="tiendasPage() && tiendasPage()!.totalPages > 1" class="mt-5">
+    <ul class="pagination justify-content-center">
+      <li class="page-item" [class.disabled]="currentPage() === 0">
+        <button class="page-link" (click)="goToPage(currentPage() - 1)">Anterior</button>
+      </li>
+      <li class="page-item" 
+          *ngFor="let page of [].constructor(tiendasPage()!.totalPages); let i = index"
+          [class.active]="i === currentPage()">
+        <button class="page-link" (click)="goToPage(i)">{{ i + 1 }}</button>
+      </li>
+      <li class="page-item" [class.disabled]="currentPage() === (tiendasPage()!.totalPages - 1)">
+        <button class="page-link" (click)="goToPage(currentPage() + 1)">Siguiente</button>
+      </li>
+    </ul>
+  </nav>
+</div>
+
+<!-- Modal Crear -->
+<div class="modal fade show d-block" *ngIf="showCreateModal" tabindex="-1" style="background: rgba(0,0,0,0.5)">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content rounded-4">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fs-3 fw-bold">Crear Nueva Tienda</h5>
+        <button type="button" class="btn-close" (click)="closeCreateModal()"></button>
       </div>
+      <div class="modal-body pt-3">
+        <form>
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label fw-semibold">Nombre</label>
+              <input [(ngModel)]="newStore.nombre" name="nombre" class="form-control form-control-lg" placeholder="Mi Tienda Viral">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Slug (URL)</label>
+              <input [(ngModel)]="newStore.slug" name="slug" class="form-control form-control-lg" placeholder="mitienda">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Plan</label>
+              <select [(ngModel)]="newStore.planNombre" name="plan" class="form-select form-select-lg">
+                <option value="Gratis">Gratis</option>
+                <option value="Básico">Básico</option>
+                <option value="Pro">Pro</option>
+                <option value="Enterprise">Enterprise</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">WhatsApp</label>
+              <input [(ngModel)]="newStore.whatsapp" name="whatsapp" class="form-control form-control-lg" placeholder="+51 999 999 999">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer border-0">
+        <button class="btn btn-secondary btn-lg px-5" (click)="closeCreateModal()">Cancelar</button>
+        <button class="btn btn-primary btn-lg px-5" (click)="createStore()">Crear Tienda</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-      <div class="modal-body">
-        <div class="mb-4">
-          <label class="form-label fw-medium">Nombre de la tienda</label>
-          <input 
-            [(ngModel)]="newStore.name" 
-            type="text" 
-            class="form-control form-control-lg rounded-pill"
-            placeholder="Ej: Ropita TikTok">
-        </div>
-
-        <div class="mb-5">
-          <label class="form-label fw-medium">Dominio / Subdominio</label>
-          <input 
-            [(ngModel)]="newStore.domain" 
-            type="text" 
-            class="form-control form-control-lg rounded-pill"
-            placeholder="mitienda.storecollection.com">
-        </div>
-
-        <div class="d-flex gap-3">
-          <button (click)="closeModal()" class="btn btn-outline-secondary btn-lg flex-fill rounded-pill">
-            Cancelar
-          </button>
-          <button (click)="createStore()" class="btn btn-primary btn-lg flex-fill rounded-pill fw-bold">
-            Crear Tienda
-          </button>
-        </div>
+<!-- Modal Editar -->
+<div class="modal fade show d-block" *ngIf="showEditModal && editingStore()" tabindex="-1" style="background: rgba(0,0,0,0.5)">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content rounded-4">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fs-3 fw-bold">Editar Tienda</h5>
+        <button type="button" class="btn-close" (click)="closeEditModal()"></button>
+      </div>
+      <div class="modal-body pt-3">
+        <form>
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label fw-semibold">Nombre</label>
+              <input [(ngModel)]="editingStore()!.nombre" class="form-control form-control-lg">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Slug</label>
+              <input [(ngModel)]="editingStore()!.slug" class="form-control form-control-lg" readonly>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Descripción</label>
+              <textarea [(ngModel)]="editingStore()!.descripcion" class="form-control" rows="3"></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer border-0">
+        <button class="btn btn-secondary btn-lg px-5" (click)="closeEditModal()">Cancelar</button>
+        <button class="btn btn-success btn-lg px-5" (click)="updateStore()">Guardar Cambios</button>
       </div>
     </div>
   </div>

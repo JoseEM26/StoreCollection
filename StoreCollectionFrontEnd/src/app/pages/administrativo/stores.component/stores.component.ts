@@ -1,14 +1,9 @@
-// src/app/admin/stores/stores.component.ts
-import { Component, signal } from '@angular/core';
+// src/app/pages/administrativo/stores/stores.component.ts
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-export interface Store {
-  id: number;
-  name: string;
-  domain: string;
-  active: boolean;
-}
+import { TiendaPublic, TiendaPage } from '../../../model/tienda-public.model';
+import { TiendaPublicService } from '../../../service/tienda-public.service';
 
 @Component({
   selector: 'app-stores',
@@ -17,45 +12,118 @@ export interface Store {
   templateUrl: './stores.component.html',
   styleUrl: './stores.component.css'
 })
-export class StoresComponent {
-  stores = signal<Store[]>([
-    { id: 1, name: 'Ropita TikTok', domain: 'ropita.storecollection.com', active: true },
-    { id: 2, name: 'Gadgets Pro', domain: 'gadgets.storecollection.com', active: true },
-    { id: 3, name: 'Belleza Viral', domain: 'bellezaviral.storecollection.com', active: true },
-    { id: 4, name: 'Comida Rica', domain: 'comidarica.storecollection.com', active: false },
-    { id: 5, name: 'Tech Store', domain: 'tech.storecollection.com', active: true },
-    { id: 6, name: 'Moda Joven', domain: 'modajoven.storecollection.com', active: false },
-  ]);
+export class StoresComponent implements OnInit {
+  // Datos desde API
+  tiendasPage = signal<TiendaPage | null>(null);
+  tiendas = signal<TiendaPublic[]>([]);
+  loading = signal(true);
 
-  showModal = false;
-  newStore = { name: '', domain: '' };
+  // Paginación
+  currentPage = signal(0);
+  pageSize = 12;
 
-  openModal() {
-    this.showModal = true;
+  // Modales
+  showCreateModal = false;
+  showEditModal = false;
+  editingStore = signal<TiendaPublic | null>(null);
+
+  // Formulario crear
+  newStore: Partial<TiendaPublic> = {
+    nombre: '',
+    slug: '',
+    whatsapp: '+51',
+    moneda: 'SOLES',
+    descripcion: '',
+    direccion: '',
+    horarios: 'Lun-Sáb 10am-9pm',
+    planNombre: 'Básico',
+    activo: true
+  };
+
+  constructor(private tiendaService: TiendaPublicService) {}
+
+  ngOnInit(): void {
+    this.loadTiendas();
   }
 
-  closeModal() {
-    this.showModal = false;
-    this.newStore = { name: '', domain: '' };
+  loadTiendas(page: number = 0) {
+    this.loading.set(true);
+    this.currentPage.set(page);
+
+    this.tiendaService.getAllTiendas(page, this.pageSize).subscribe({
+      next: (pageData) => {
+        this.tiendasPage.set(pageData);
+        this.tiendas.set(pageData.content);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+        alert('Error al cargar las tiendas');
+      }
+    });
+  }
+
+  // Paginación
+  goToPage(page: number) {
+    if (page >= 0 && page < (this.tiendasPage()?.totalPages || 0)) {
+      this.loadTiendas(page);
+    }
+  }
+
+  // Abrir modal crear
+  openCreateModal() {
+    this.newStore = {
+      nombre: '',
+      slug: '',
+      whatsapp: '+51',
+      moneda: 'SOLES',
+      descripcion: '',
+      direccion: '',
+      horarios: 'Lun-Sáb 10am-9pm',
+      planNombre: 'Básico',
+      activo: true
+    };
+    this.showCreateModal = true;
+  }
+
+  closeCreateModal() {
+    this.showCreateModal = false;
   }
 
   createStore() {
-    if (!this.newStore.name.trim() || !this.newStore.domain.trim()) return;
-
-    const newId = Math.max(...this.stores().map(s => s.id), 0) + 1;
-    this.stores.update(list => [...list, {
-      id: newId,
-      name: this.newStore.name,
-      domain: this.newStore.domain,
-      active: true
-    }]);
-
-    this.closeModal();
+    if (!this.newStore.nombre?.trim() || !this.newStore.slug?.trim()) {
+      alert('Nombre y slug son obligatorios');
+      return;
+    }
+    alert(`Tienda "${this.newStore.nombre}" creada correctamente (simulado)`);
+    this.closeCreateModal();
   }
 
-  toggleStore(store: Store) {
-    this.stores.update(list =>
-      list.map(s => s.id === store.id ? { ...s, active: !s.active } : s)
+  // Editar tienda
+  openEditModal(tienda: TiendaPublic) {
+    this.editingStore.set({ ...tienda });
+    this.showEditModal = true;
+  }
+
+  closeEditModal() {
+    this.showEditModal = false;
+    this.editingStore.set(null);
+  }
+
+  updateStore() {
+    const store = this.editingStore();
+    if (store) {
+      alert(`Tienda "${store.nombre}" actualizada (simulado)`);
+      this.closeEditModal();
+    }
+  }
+
+  // Toggle activo
+  toggleActive(tienda: TiendaPublic) {
+    alert(
+      tienda.activo
+        ? `Tienda "${tienda.nombre}" desactivada (simulado)`
+        : `Tienda "${tienda.nombre}" activada (simulado)`
     );
   }
 }

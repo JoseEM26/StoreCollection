@@ -37,6 +37,8 @@ export interface Tienda {
   userId?: number;
   createdAt?: string;
   updatedAt?: string;
+  logo_img_url?:string;
+  mapa_url?:string;
 }
 
 export interface Categoria {

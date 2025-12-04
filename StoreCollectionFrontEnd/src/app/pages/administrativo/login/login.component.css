@@ -1,75 +1,58 @@
-.login-wrapper {
-  min-height: 100vh;
+/* Fondo degradado sutil */
+.min-vh-100 {
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
 }
 
-.login-container {
-  width: 100%;
-  max-width: 460px;
+/* Sombra premium */
+.shadow-xl {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.12);
 }
 
-.login-card {
-  .card {
-    border-radius: 1.5rem;
-    overflow: hidden;
-  }
-
-  .logo-circle {
-    width: 90px;
-    height: 90px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white !important;
-    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-  }
-}
-
-.input-group {
-  .form-control {
-    &:focus {
-      border-color: #667eea;
-      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
-      z-index: 3;
-    }
-  }
-
-  .input-group-text {
-    background: transparent;
-  }
-}
-
+/* Botón primario elegante */
 .btn-primary {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: #1d4ed8;
   border: none;
-  border-radius: 1rem;
-  padding: 0.9rem 1.5rem;
-  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
   transition: all 0.3s ease;
-
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
-  }
-
-  &:active {
-    transform: translateY(-1px);
-  }
 }
 
-.spinner-border-sm {
-  width: 1.3rem;
-  height: 1.3rem;
+.btn-primary:hover:not(:disabled) {
+  background: #1e40af;
+  transform: translateY(-3px);
+  box-shadow: 0 15px 35px rgba(29, 78, 216, 0.3);
 }
 
-@media (max-width: 480px) {
-  .login-card .card-body {
+.btn-primary:active {
+  transform: translateY(-1px);
+}
+
+/* Inputs con ícono interno */
+.form-control {
+  background-color: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  transition: all 0.25s ease;
+}
+
+.form-control:focus {
+  background-color: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+  outline: none;
+}
+
+/* Iconos dentro del input */
+.position-relative i:not(.btn i) {
+  font-size: 1.1rem;
+  pointer-events: none;
+}
+
+/* Responsivo perfecto */
+@media (max-width: 576px) {
+  .display-5 {
+    font-size: 2.5rem;
+  }
+  .p-5.p-lg-6 {
     padding: 2rem !important;
   }
 }

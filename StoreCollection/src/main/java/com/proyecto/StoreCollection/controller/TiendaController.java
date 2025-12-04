@@ -1,20 +1,16 @@
 package com.proyecto.StoreCollection.controller;
-import com.proyecto.StoreCollection.dto.request.AtributoRequest;
-import com.proyecto.StoreCollection.dto.request.AtributoValorRequest;
-import com.proyecto.StoreCollection.dto.request.CarritoRequest;
 import com.proyecto.StoreCollection.dto.request.TiendaRequest;
 import com.proyecto.StoreCollection.dto.response.*;
-import com.proyecto.StoreCollection.service.AtributoService;
-import com.proyecto.StoreCollection.service.AtributoValorService;
-import com.proyecto.StoreCollection.service.CarritoService;
 import com.proyecto.StoreCollection.service.TiendaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -61,7 +57,45 @@ public class TiendaController {
     public ResponseEntity<TiendaResponse> publicInfo(@PathVariable String slug) {
         return ResponseEntity.ok(service.findBySlug(slug));
     }
+    // TiendaController.java
+    @GetMapping("/api/owner/tiendas/admin-list")  // o /api/tiendas/admin
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
+    public ResponseEntity<Page<TiendaResponse>> listarTiendasUsuarioOAdmin(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "nombre,asc") String sort,
+            @RequestParam(required = false) String search) {
 
+        Pageable pageable = crearPageable(page, size, sort);
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        Page<TiendaResponse> resultado;
+
+        if (esAdmin) {
+            // ADMIN → ve todas
+            resultado = search != null && !search.isBlank()
+                    ? service.buscarPorNombreContainingIgnoreCase(search.trim(), pageable)
+                    : service.findAll(pageable);
+        } else {
+            // OWNER → solo las suyas
+            resultado = service.findByUserEmail(auth.getName(), pageable);
+        }
+
+        return ResponseEntity.ok(resultado);
+    }
+    // En TiendaController.java
+    private Pageable crearPageable(int page, int size, String sort) {
+        String[] parts = sort.split(",");
+        String property = parts[0];
+        org.springframework.data.domain.Sort.Direction direction = parts.length > 1 && "desc".equalsIgnoreCase(parts[1])
+                ? org.springframework.data.domain.Sort.Direction.DESC
+                : org.springframework.data.domain.Sort.Direction.ASC;
+
+        return PageRequest.of(page, size, org.springframework.data.domain.Sort.by(direction, property));
+    }
     // PRIVADO - Mis tiendas
     @GetMapping("/api/owner/tiendas")
     public ResponseEntity<List<TiendaResponse>> misTiendas() {
@@ -84,9 +118,5 @@ public class TiendaController {
         return ResponseEntity.ok(service.save(request, id));
     }
 
-    @DeleteMapping("/api/owner/tiendas/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
-        service.deleteById(id);
-        return ResponseEntity.noContent().build();
-    }
+
 }
