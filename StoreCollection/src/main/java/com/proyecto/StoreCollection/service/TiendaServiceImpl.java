@@ -3,6 +3,7 @@ package com.proyecto.StoreCollection.service;
 
 import com.proyecto.StoreCollection.dto.request.TiendaRequest;
 import com.proyecto.StoreCollection.dto.response.TiendaResponse;
+import com.proyecto.StoreCollection.dto.special.DashboardTiendaPublicDTO;
 import com.proyecto.StoreCollection.entity.Plan;
 import com.proyecto.StoreCollection.entity.Tienda;
 import com.proyecto.StoreCollection.entity.Usuario;
@@ -149,6 +150,14 @@ public class TiendaServiceImpl implements TiendaService {
         tiendaRepository.delete(tienda);
     }
 
+    // TiendaServiceImpl.java
+    @Override
+    @Transactional(readOnly = true)
+    public Page<TiendaResponse> findByUserEmail(String email, Pageable pageable) {
+        return tiendaRepository.findByUserEmail(email, pageable)
+                .map(this::toResponse);
+    }
+
     private TiendaResponse toResponse(Tienda t) {
         TiendaResponse dto = new TiendaResponse();
         dto.setId(t.getId());
@@ -159,6 +168,9 @@ public class TiendaServiceImpl implements TiendaService {
         dto.setDescripcion(t.getDescripcion());
         dto.setDireccion(t.getDireccion());
         dto.setHorarios(t.getHorarios());
+        dto.setMapa_url(t.getMapa_url());
+        dto.setLogo_img_url(t.getLogo_img_url());
+        dto.setActivo(t.getActivo());
         if (t.getPlan() != null) {
             dto.setPlanId(t.getPlan().getId());
             dto.setPlanNombre(t.getPlan().getNombre());
@@ -167,4 +179,6 @@ public class TiendaServiceImpl implements TiendaService {
         dto.setUserEmail(t.getUser().getEmail());
         return dto;
     }
+
+
 }

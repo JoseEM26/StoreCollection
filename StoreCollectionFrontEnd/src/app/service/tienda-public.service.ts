@@ -2,9 +2,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { TiendaService } from './tienda.service';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { Tienda } from '../model';
-import { tap } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
 import { TiendaPage } from '../model/tienda-public.model';
 import { environment } from '../../../environment';
 
@@ -12,6 +12,9 @@ import { environment } from '../../../environment';
 export class TiendaPublicService {
   constructor(private http: HttpClient, private tiendaService: TiendaService) {}
  private apiUrl = `${environment.apiUrl}/api/public/tiendas`;
+
+
+ //ESTO DE ACA CONSUME TODOS LAS TIENDAS
   getAllTiendas(
     page = 0,
     size = 12,
@@ -29,6 +32,12 @@ export class TiendaPublicService {
 
     return this.http.get<TiendaPage>(this.apiUrl, { params });
   }
+
+getTiendaBySlug(slug: string): Observable<Tienda | null> {
+  return this.http.get<Tienda>(`${this.apiUrl}/${slug}`).pipe(
+    catchError(() => of(null))
+  );
+}
   cargarTiendaActual(): Observable<Tienda> {
     const url = this.tiendaService.getBaseUrl();
     return this.http

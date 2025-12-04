@@ -11,6 +11,8 @@ export class TiendaService {
   private tiendaSubject = new BehaviorSubject<Tienda | null>(null);
   currentTienda$ = this.tiendaSubject.asObservable();
 
+
+  //ESTO DE ACA ES PARA PODER NOSTROS CONSEGUIR EL SLUG O EL TENAT QUE USAMOS
   setSlug(slug: string) {
     this.slugSubject.next(slug);
   }
@@ -29,7 +31,7 @@ export class TiendaService {
     this.tiendaSubject.next(tienda);
   }
 
-  getTienda(): Tienda | null {
-    return this.tiendaSubject.value;
-  }
+  // getTienda(): Tienda | null {
+  //   return this.tiendaSubject.value;
+  // }
 }

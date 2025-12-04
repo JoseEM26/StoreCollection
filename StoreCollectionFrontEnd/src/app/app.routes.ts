@@ -1,77 +1,71 @@
 // src/app/app.routes.ts
 import { Routes } from '@angular/router';
 
-// === COMPONENTES PÚBLICOS ===
+// === PÚBLICO ===
 import { DashboardPublicComponent } from './pages/publico/dashboard-public/dashboard-public.component';
 import { PublicLayaoutComponent } from './componente/public-layaout/public-layaout.component';
 import { MainTiendaComponent } from './pages/publico/main-tienda/main-tienda.component';
 import { CatalogoComponent } from './pages/publico/catalogo/catalogo.component';
 import { ProductoUnitarioComponent } from './pages/publico/producto-unitario/producto-unitario.component';
+import { ConocenosComponent } from './pages/publico/conocenos/conocenos.component';
 
 // === ADMIN ===
 import { LoginComponent } from './pages/administrativo/login/login.component';
 import { AdminLayoutComponent } from './componente/admin-layout.component/admin-layout.component';
 import { DashboardComponent } from './pages/administrativo/dashboard/dashboard.component';
+import { UsuariosComponent } from './pages/administrativo/usuarios/usuarios.component';
+
+// === GUARDS & RESOLVERS ===
+import { TiendaResolver } from './service/tienda.resolver';
+import { authGuard } from '../auth/auth.guard';
 import { StoresComponent } from './pages/administrativo/stores.component/stores.component';
 import { CategoriesComponent } from './pages/administrativo/categories.component/categories.component';
 import { ProductsComponent } from './pages/administrativo/products.component/products.component';
-import { UsuariosComponent } from './pages/administrativo/usuarios/usuarios.component';
+import { tiendaExistsGuard } from '../auth/tienda-exists.guard';
 
-// === GUARDS Y RESOLVERS ===
-import { authGuard } from '../auth/auth.guard';
-import { TiendaResolver } from './service/tienda.resolver';
 
 export const routes: Routes = [
-  // 1. HOME → Dashboard público con todas las tiendas
-  {
-    path: '',
-    component: DashboardPublicComponent
-  },
 
-  // 2. RUTA PRINCIPAL POR SLUG DE TIENDA (LA MÁS IMPORTANTE)
-  // Ejemplos válidos:
-  // → /zapatik
-  // → /zapatik/catalogo
-  // → /zapatik/catalogo/zapatillas-hombre
-  // → /zapatik/producto/nike-air-max-90
-  {
-    path: ':tiendaSlug',
-    component: PublicLayaoutComponent,
-    resolve: { tienda: TiendaResolver },        // ← Resolve crítico para obtener la tienda
-    children: [
-      { path: '', component: MainTiendaComponent },  // página principal de la tienda
-      {
-        path: 'catalogo',
-        children: [
-          { path: '', component: CatalogoComponent },                    // /:tiendaSlug/catalogo
-          { path: ':categoriaSlug', component: CatalogoComponent }       // /:tiendaSlug/catalogo/hombre
-        ]
-      },
-      { path: 'producto/:productoSlug', component: ProductoUnitarioComponent }
-    ]
-  },
+  // 1. RUTAS ESTÁTICAS PRIMERO (IMPORTANTÍSIMO)
+  { path: '',                 component: DashboardPublicComponent, title: 'Store Collection' },
+  { path: 'login',            component: LoginComponent,           title: 'Iniciar Sesión' },
 
-  // 3. LOGIN
-  {
-    path: 'login',
-    component: LoginComponent
-  },
-
-  // 4. PANEL ADMINISTRATIVO (protegido)
+  // 2. PANEL ADMIN (protegido)
   {
     path: 'admin',
     component: AdminLayoutComponent,
     canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: DashboardComponent },
-      { path: 'stores', component: StoresComponent },
-      { path: 'categories', component: CategoriesComponent },
-      { path: 'products', component: ProductsComponent },
-      { path: 'usuarios', component: UsuariosComponent }
+      { path: 'dashboard',   component: DashboardComponent,   title: 'Dashboard' },
+      { path: 'stores',      component: StoresComponent,      title: 'Tiendas' },
+      { path: 'categories',  component: CategoriesComponent,  title: 'Categorías' },
+      { path: 'products',    component: ProductsComponent,    title: 'Productos' },
+      { path: 'usuarios',    component: UsuariosComponent,    title: 'Usuarios' },
     ]
   },
 
-  // 5. WILDCARD → siempre al final
+  // 3. RUTA DINÁMICA DE TIENDAS (SOLO AL FINAL)
+  // Ahora SÍ se aplica el guard sin molestar a /login ni /admin
+  {
+    path: ':tiendaSlug',
+    canMatch: [tiendaExistsGuard],
+    component: PublicLayaoutComponent,
+    resolve: { tienda: TiendaResolver },
+    children: [
+      { path: '', component: MainTiendaComponent },
+      { path: 'conocenos', component: ConocenosComponent },
+      {
+        path: 'catalogo',
+        children: [
+          { path: '', component: CatalogoComponent },
+          { path: ':categoriaSlug', component: CatalogoComponent }
+        ]
+      },
+      { path: 'producto/:productoSlug', component: ProductoUnitarioComponent },
+    ]
+  },
+
+  // 4. 404 → al home
   { path: '**', redirectTo: '' }
 ];
