@@ -20,11 +20,7 @@ showPassword = false;
   isLoading = false;
   showCredentials = false;
 
-  // Credenciales de prueba (para desarrollo)
-  testCredentials = {
-    admin: { email: 'admin@storecollection.com', password: '123456' },
-    owner: { email: 'owner@gmail.com', password: '123456' }
-  };
+ 
 
   currentYear = new Date().getFullYear();
 
@@ -56,13 +52,8 @@ showPassword = false;
     });
   }
 
-  // Para desarrollo: autocompletar credenciales
   toggleCredentials() {
     this.showCredentials = !this.showCredentials;
   }
 
-  useTestCredentials(type: 'admin' | 'owner') {
-    this.credentials = { ...this.testCredentials[type] };
-    this.showCredentials = false;
-  }
 }

@@ -1,21 +1,12 @@
 // src/app/core/services/auth.service.ts
-
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, effect } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { tap } from 'rxjs';
+import { environment } from '../../environment';
 
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface RegisterRequest {
-  nombre: string;
-  email: string;
-  password: string;
-  celular: string;
-}
+export interface LoginRequest { email: string; password: string; }
+export interface RegisterRequest { nombre: string; email: string; password: string; celular: string; }
 
 export interface AuthResponse {
   token: string;
@@ -30,58 +21,81 @@ export interface CurrentUser {
   nombre: string;
   email: string;
   rol: 'ADMIN' | 'OWNER' | 'CUSTOMER';
-  token: string;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class AuthService {
+  private apiUrl = environment.apiUrl + '/api/auth';
 
-  private apiUrl = 'http://localhost:8080/api/auth';
-
-  // Estado reactivo del usuario actual
   private currentUserSignal = signal<CurrentUser | null>(null);
   public currentUser = this.currentUserSignal.asReadonly();
 
-  // Computed para roles rápidos
+  // === ESTADO DE AUTENTICACIÓN ===
   public isLoggedIn = computed(() => this.currentUser() !== null);
   public isAdmin = computed(() => this.currentUser()?.rol === 'ADMIN');
   public isOwner = computed(() => this.currentUser()?.rol === 'OWNER');
   public isCustomer = computed(() => this.currentUser()?.rol === 'CUSTOMER');
 
-  constructor(
-    private http: HttpClient,
-    private router: Router
-  ) {
-    // Al iniciar la app, cargar usuario desde localStorage si existe
+  // === DATOS DEL USUARIO (100% seguros, sin errores de TS) ===
+  public fullName = computed(() => this.currentUser()?.nombre || 'Usuario Anónimo');
+  public firstName = computed(() => {
+    const name = this.currentUser()?.nombre;
+    return name ? name.trim().split(' ')[0] : 'Usuario';
+  });
+
+  public initials = computed(() => {
+    const name = this.currentUser()?.nombre;
+    if (!name) return 'US';
+    const parts = name.trim().split(' ').filter(p => p.length > 0);
+    const first = parts[0][0];
+    const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
+    return (first + last).toUpperCase() || 'US';
+  });
+
+  public roleDisplay = computed(() => {
+    const rol = this.currentUser()?.rol;
+    switch (rol) {
+      case 'ADMIN': return 'Administrador';
+      case 'OWNER': return 'Propietario';
+      case 'CUSTOMER': return 'Cliente';
+      default: return 'Usuario';
+    }
+  });
+
+  constructor(private http: HttpClient, private router: Router) {
     this.loadUserFromStorage();
+
+    // Sincroniza con localStorage (útil si hay múltiples pestañas)
+    effect(() => {
+      const user = this.currentUser();
+      if (user) {
+        localStorage.setItem('currentUser', JSON.stringify(user));
+      } else {
+        localStorage.removeItem('currentUser');
+      }
+    });
   }
 
   login(credentials: LoginRequest) {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials).pipe(
-      tap(response => this.setSession(response))
+      tap(res => this.setSession(res))
     );
   }
 
   register(data: RegisterRequest) {
     return this.http.post<AuthResponse>(`${this.apiUrl}/register`, data).pipe(
-      tap(response => this.setSession(response))
+      tap(res => this.setSession(res))
     );
   }
 
   private setSession(authResult: AuthResponse) {
     localStorage.setItem('token', authResult.token);
-
     const user: CurrentUser = {
       id: authResult.id,
       nombre: authResult.nombre,
       email: authResult.email,
-      rol: authResult.rol,
-      token: authResult.token
+      rol: authResult.rol
     };
-
-    localStorage.setItem('currentUser', JSON.stringify(user));
     this.currentUserSignal.set(user);
   }
 
@@ -95,19 +109,17 @@ export class AuthService {
   private loadUserFromStorage() {
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('currentUser');
+    if (!token || !userStr) return;
 
-    if (token && userStr) {
-      try {
-        const user = JSON.parse(userStr) as CurrentUser;
-        // Opcional: validar que el token no esté expirado
-        if (this.isTokenExpired(token)) {
-          this.logout();
-          return;
-        }
-        this.currentUserSignal.set(user);
-      } catch (e) {
+    try {
+      const user = JSON.parse(userStr) as CurrentUser;
+      if (this.isTokenExpired(token)) {
         this.logout();
+        return;
       }
+      this.currentUserSignal.set(user);
+    } catch {
+      this.logout();
     }
   }
 
@@ -115,13 +127,17 @@ export class AuthService {
     return localStorage.getItem('token');
   }
 
-  // Extra: leer datos directamente del JWT (útil si no confías en localStorage)
   private isTokenExpired(token: string): boolean {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.exp * 1000 < Date.now();
+      return Date.now() >= payload.exp * 1000;
     } catch {
       return true;
     }
+  }
+
+  getAuthHeaders() {
+    const token = this.getToken();
+    return token ? { Authorization: `Bearer ${token}` } : {};
   }
 }
