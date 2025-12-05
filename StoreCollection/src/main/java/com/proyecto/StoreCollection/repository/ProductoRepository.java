@@ -2,6 +2,8 @@
 package com.proyecto.StoreCollection.repository;
 
 import com.proyecto.StoreCollection.entity.Producto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -12,9 +14,6 @@ import java.util.Optional;
 @Repository
 public interface ProductoRepository extends TenantBaseRepository<Producto, Integer> {
 
-     // Ya no necesitas estos → los borras o los dejas por compatibilidad
-     // List<Producto> findByTiendaId(Long tiendaId);
-     // List<Producto> findByCategoriaId(Long categoriaId);
 
      // Para catálogo público: por slug de tienda + slug de producto
      @Query("SELECT p FROM Producto p WHERE p.slug = :productoSlug AND p.tienda.slug = :tiendaSlug")
@@ -27,8 +26,17 @@ public interface ProductoRepository extends TenantBaseRepository<Producto, Integ
         "LEFT JOIN FETCH p.variantes v " +
         "WHERE p.tienda.slug = :tiendaSlug")
 List<Producto> findByTiendaSlugPublic(@Param("tiendaSlug") String tiendaSlug);
+     @Query("SELECT p FROM Producto p WHERE p.tienda.id = :tenantId")
+     Page<Producto> findAllByTenantId(@Param("tenantId") Integer tenantId, Pageable pageable);
+     // ADMIN: búsqueda global
+     Page<Producto> findByNombreContainingIgnoreCase(String nombre, Pageable pageable);
 
-
+     // OWNER: búsqueda solo en su tienda
+     @Query("SELECT p FROM Producto p WHERE p.tienda.id = :tenantId AND LOWER(p.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))")
+     Page<Producto> findByNombreContainingIgnoreCaseAndTenantId(
+             @Param("nombre") String nombre,
+             @Param("tenantId") Integer tenantId,
+             Pageable pageable);
      // Por categoría (seguro con tenant)
      @Query("SELECT p FROM Producto p WHERE p.categoria.id = :categoriaId AND p.tienda.id = :tenantId")
      List<Producto> findByCategoriaIdAndTiendaId(

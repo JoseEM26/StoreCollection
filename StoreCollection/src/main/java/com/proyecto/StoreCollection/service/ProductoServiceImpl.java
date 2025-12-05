@@ -9,6 +9,7 @@ import com.proyecto.StoreCollection.entity.Categoria;
 import com.proyecto.StoreCollection.entity.Producto;
 import com.proyecto.StoreCollection.repository.CategoriaRepository;
 import com.proyecto.StoreCollection.repository.ProductoRepository;
+import com.proyecto.StoreCollection.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,12 +30,25 @@ public class ProductoServiceImpl implements ProductoService {
     private final CategoriaRepository categoriaRepository;
     private final TiendaService tiendaService;
 
-    // ===================================================================
-    // MÉTODOS PRIVADOS (ADMIN / OWNER)
-    // ===================================================================
+
 
     @Override
-    @Transactional(readOnly = true)
+    public Page<ProductoResponse> buscarPorNombreYEmailUsuario(String nombre, String email, Pageable pageable) {
+        Integer tenantId = TenantContext.getTenantId();
+        if (tenantId == null) {
+            return Page.empty(pageable);
+        }
+        return productoRepository.findByNombreContainingIgnoreCaseAndTenantId(nombre.trim(), tenantId, pageable)
+                .map(this::toResponse);
+    }
+
+    @Override
+    public Page<ProductoResponse> buscarPorNombreContainingIgnoreCase(String nombre, Pageable pageable) {
+        return productoRepository.findByNombreContainingIgnoreCase(nombre, pageable)
+                .map(this::toResponse);
+    }
+
+    @Override
     public Page<ProductoResponse> findAll(Pageable pageable) {
         return productoRepository.findAll(pageable).map(this::toResponse);
     }
@@ -93,13 +107,16 @@ public class ProductoServiceImpl implements ProductoService {
         productoRepository.delete(productoRepository.getByIdAndTenant(id));
     }
 
-    // ===================================================================
-    // MÉTODOS PÚBLICOS (CATÁLOGO Y DETALLE) ← LOS QUE IMPORTAN AHORA
-    // ===================================================================
+    @Override
+    public Page<ProductoResponse> findByUserEmail(String email, Pageable pageable) {
+        Integer tenantId = TenantContext.getTenantId();
+        if (tenantId == null) {
+            return Page.empty(pageable);
+        }
+        return productoRepository.findAllByTenantId(tenantId, pageable)
+                .map(this::toResponse);
+    }
 
-    /**
-     * Catálogo público: lista todos los productos de una tienda con precio mínimo, stock e imagen
-     */
     @Override
     @Transactional(readOnly = true)
     public List<ProductoCardResponse> findAllForPublicCatalog(String tiendaSlug) {

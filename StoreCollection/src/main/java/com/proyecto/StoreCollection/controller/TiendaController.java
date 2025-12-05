@@ -58,7 +58,7 @@ public class TiendaController {
         return ResponseEntity.ok(service.findBySlug(slug));
     }
     // TiendaController.java
-    @GetMapping("/api/owner/tiendas/admin-list")  // o /api/tiendas/admin
+    @GetMapping("/api/owner/tiendas/admin-list")
     @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     public ResponseEntity<Page<TiendaResponse>> listarTiendasUsuarioOAdmin(
             @RequestParam(defaultValue = "0") int page,
@@ -86,7 +86,6 @@ public class TiendaController {
 
         return ResponseEntity.ok(resultado);
     }
-    // En TiendaController.java
     private Pageable crearPageable(int page, int size, String sort) {
         String[] parts = sort.split(",");
         String property = parts[0];

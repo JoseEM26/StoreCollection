@@ -8,7 +8,10 @@ spring:
     username: root
     password: mysql
     driver-class-name: com.mysql.cj.jdbc.Driver
-
+  data:
+    web:
+      pageable:
+        page-serialization-mode: via-dto
   jpa:
     hibernate:
       ddl-auto: validate

@@ -1,157 +1,126 @@
-<div class="container-fluid py-5">
-  <!-- Header -->
-  <div class="d-flex justify-content-between align-items-center mb-5">
+<div class="stores-container" data-aos="fade-up">
+  <!-- Header Premium -->
+  <div class="header-section">
     <div>
-      <h1 class="display-5 fw-bold text-dark mb-1">Gestión de Tiendas</h1>
-      <p class="text-muted">Administra todas las tiendas de la plataforma</p>
+      <h1 class="page-title">
+        <i class="bi bi-shop-window me-3"></i>
+        Gestión de Tiendas
+      </h1>
+      <p class="page-subtitle">Crea y administra todas las tiendas de la plataforma</p>
     </div>
-    <button class="btn btn-primary btn-lg px-5 shadow" (click)="openCreateModal()">
-      <i class="bi bi-plus-circle me-2"></i> Nueva Tienda
+    <button class="btn-create" (click)="openCreateModal()">
+      <i class="bi bi-plus-lg"></i>
+      Nueva Tienda
     </button>
   </div>
 
-  <!-- Loading -->
-  <div *ngIf="loading()" class="text-center py-5">
-    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
-      <span class="visually-hidden">Cargando...</span>
-    </div>
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="loading-container">
+    <div class="spinner"></div>
+    <p class="loading-text">Cargando tiendas...</p>
   </div>
 
-  <!-- Lista de tiendas -->
-  <div *ngIf="!loading() && tiendas().length > 0" class="row g-4">
-    <div class="col-md-6 col-lg-4" *ngFor="let tienda of tiendas()">
-      <div class="card h-100 border-0 shadow-sm hover-shadow-lg transition">
-        <div class="card-body p-4">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <h5 class="card-title fw-bold mb-1">{{ tienda.nombre }}</h5>
-            <span class="badge rounded-pill" 
-                  [class.bg-success]="tienda.activo" 
-                  [class.bg-secondary]="!tienda.activo">
-              {{ tienda.activo ? 'Activa' : 'Inactiva' }}
-            </span>
-          </div>
+  <!-- Grid de Tiendas -->
+  <div *ngIf="!loading() && tiendas().length > 0" class="stores-grid">
+    <div 
+      class="store-card" 
+      *ngFor="let tienda of tiendas(); let i = index" 
+      [attr.data-aos]="i < 6 ? 'fade-up' : ''" 
+      [attr.data-aos-delay]="(i % 6) * 100"
+      [class.inactive]="!tienda.activo"
+    >
+      <!-- Borde degradado animado -->
+      <div class="card-glow"></div>
 
-          <p class="text-muted small mb-2">
-            <i class="bi bi-link-45deg"></i> {{ tienda.slug }}.storecollection.com
-          </p>
-          <p class="text-muted small mb-3">
-            <i class="bi bi-tag"></i> Plan {{ tienda.planNombre }}
-          </p>
-
-          <div class="d-flex gap-2 mt-auto">
-            <button class="btn btn-outline-primary btn-sm flex-fill" (click)="openEditModal(tienda)">
-              <i class="bi bi-pencil"></i> Editar
-            </button>
-            <button class="btn btn-sm flex-fill" 
-                    [class.btn-success]="!tienda.activo"
-                    [class.btn-outline-danger]="tienda.activo"
-                    (click)="toggleActive(tienda)">
-              <i class="bi" [class.bi-toggle-on]="tienda.activo" [class.bi-toggle-off]="!tienda.activo"></i>
-              {{ tienda.activo ? 'Desactivar' : 'Activar' }}
-            </button>
-          </div>
+      <div class="card-header">
+        <div class="store-avatar">
+          {{ tienda.nombre.charAt(0).toUpperCase() }}
         </div>
+        <div class="store-status">
+          <span class="status-dot" [class.active]="tienda.activo"></span>
+          {{ tienda.activo ? 'Activa' : 'Inactiva' }}
+        </div>
+      </div>
+
+      <div class="card-body">
+        <h3 class="store-name">{{ tienda.nombre }}</h3>
+        <p class="store-domain">
+          <i class="bi bi-globe"></i>
+          {{ tienda.slug }}.storecollection.com
+        </p>
+        <div class="store-meta">
+          <span class="meta-item">
+            <i class="bi bi-whatsapp"></i>
+            {{ tienda.whatsapp || 'Sin WhatsApp' }}
+          </span>
+          <span class="meta-item">
+            <i class="bi bi-currency-exchange"></i>
+            {{ tienda.moneda }}
+          </span>
+        </div>
+        <div class="plan-badge" [ngClass]="'plan-' + tienda.planNombre.toLowerCase()">
+          {{ tienda.planNombre }}
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn-edit" (click)="openEditModal(tienda)">
+          <i class="bi bi-pencil-square"></i>
+          Editar
+        </button>
+        <button 
+          class="btn-toggle" 
+          [class.active]="tienda.activo"
+          (click)="toggleActive(tienda)"
+        >
+          <i class="bi" [class.bi-toggle-on]="tienda.activo" [class.bi-toggle-off]="!tienda.activo"></i>
+          {{ tienda.activo ? 'Desactivar' : 'Activar' }}
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Sin tiendas -->
-  <div *ngIf="!loading() && tiendas().length === 0" class="text-center py-5">
-    <i class="bi bi-shop display-1 text-muted"></i>
-    <p class="text-muted mt-3">No hay tiendas creadas aún</p>
+  <!-- Empty State -->
+  <div *ngIf="!loading() && tiendas().length === 0" class="empty-state" data-aos="fade-up">
+    <i class="bi bi-shop empty-icon"></i>
+    <h3>No hay tiendas creadas</h3>
+    <p>Comienza creando tu primera tienda ahora</p>
+    <button class="btn-create mt-4" (click)="openCreateModal()">
+      <i class="bi bi-plus-lg"></i>
+      Crear primera tienda
+    </button>
   </div>
 
   <!-- Paginación -->
-  <nav *ngIf="tiendasPage() && tiendasPage()!.totalPages > 1" class="mt-5">
-    <ul class="pagination justify-content-center">
-      <li class="page-item" [class.disabled]="currentPage() === 0">
-        <button class="page-link" (click)="goToPage(currentPage() - 1)">Anterior</button>
+  <nav *ngIf="tiendasPage() && tiendasPage()!.totalPages > 1" class="pagination-container">
+    <ul class="pagination">
+      <li [class.disabled]="currentPage() === 0">
+        <button (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 0">
+          <i class="bi bi-chevron-left"></i>
+        </button>
       </li>
-      <li class="page-item" 
-          *ngFor="let page of [].constructor(tiendasPage()!.totalPages); let i = index"
+      <li *ngFor="let page of [].constructor(tiendasPage()!.totalPages); let i = index" 
           [class.active]="i === currentPage()">
-        <button class="page-link" (click)="goToPage(i)">{{ i + 1 }}</button>
+        <button (click)="goToPage(i)">{{ i + 1 }}</button>
       </li>
-      <li class="page-item" [class.disabled]="currentPage() === (tiendasPage()!.totalPages - 1)">
-        <button class="page-link" (click)="goToPage(currentPage() + 1)">Siguiente</button>
+      <li [class.disabled]="currentPage() === (tiendasPage()!.totalPages - 1)">
+        <button (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === (tiendasPage()!.totalPages - 1)">
+          <i class="bi bi-chevron-right"></i>
+        </button>
       </li>
     </ul>
   </nav>
 </div>
 
-<!-- Modal Crear -->
-<div class="modal fade show d-block" *ngIf="showCreateModal" tabindex="-1" style="background: rgba(0,0,0,0.5)">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content rounded-4">
-      <div class="modal-header border-0 pb-0">
-        <h5 class="modal-title fs-3 fw-bold">Crear Nueva Tienda</h5>
-        <button type="button" class="btn-close" (click)="closeCreateModal()"></button>
-      </div>
-      <div class="modal-body pt-3">
-        <form>
-          <div class="row g-3">
-            <div class="col-12">
-              <label class="form-label fw-semibold">Nombre</label>
-              <input [(ngModel)]="newStore.nombre" name="nombre" class="form-control form-control-lg" placeholder="Mi Tienda Viral">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Slug (URL)</label>
-              <input [(ngModel)]="newStore.slug" name="slug" class="form-control form-control-lg" placeholder="mitienda">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Plan</label>
-              <select [(ngModel)]="newStore.planNombre" name="plan" class="form-select form-select-lg">
-                <option value="Gratis">Gratis</option>
-                <option value="Básico">Básico</option>
-                <option value="Pro">Pro</option>
-                <option value="Enterprise">Enterprise</option>
-              </select>
-            </div>
-            <div class="col-12">
-              <label class="form-label fw-semibold">WhatsApp</label>
-              <input [(ngModel)]="newStore.whatsapp" name="whatsapp" class="form-control form-control-lg" placeholder="+51 999 999 999">
-            </div>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer border-0">
-        <button class="btn btn-secondary btn-lg px-5" (click)="closeCreateModal()">Cancelar</button>
-        <button class="btn btn-primary btn-lg px-5" (click)="createStore()">Crear Tienda</button>
-      </div>
+<!-- Usa este modal para crear y editar (mismo estilo) -->
+<div class="modal-overlay" *ngIf="showCreateModal || showEditModal" (click)="showCreateModal ? closeCreateModal() : closeEditModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()" data-aos="zoom-in">
+    <div class="modal-header">
+      <h2>{{ showCreateModal ? 'Crear Nueva Tienda' : 'Editar Tienda' }}</h2>
+      <button class="close-btn" (click)="showCreateModal ? closeCreateModal() : closeEditModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
     </div>
-  </div>
-</div>
-
-<!-- Modal Editar -->
-<div class="modal fade show d-block" *ngIf="showEditModal && editingStore()" tabindex="-1" style="background: rgba(0,0,0,0.5)">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content rounded-4">
-      <div class="modal-header border-0 pb-0">
-        <h5 class="modal-title fs-3 fw-bold">Editar Tienda</h5>
-        <button type="button" class="btn-close" (click)="closeEditModal()"></button>
-      </div>
-      <div class="modal-body pt-3">
-        <form>
-          <div class="row g-3">
-            <div class="col-12">
-              <label class="form-label fw-semibold">Nombre</label>
-              <input [(ngModel)]="editingStore()!.nombre" class="form-control form-control-lg">
-            </div>
-            <div class="col-12">
-              <label class="form-label fw-semibold">Slug</label>
-              <input [(ngModel)]="editingStore()!.slug" class="form-control form-control-lg" readonly>
-            </div>
-            <div class="col-12">
-              <label class="form-label fw-semibold">Descripción</label>
-              <textarea [(ngModel)]="editingStore()!.descripcion" class="form-control" rows="3"></textarea>
-            </div>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer border-0">
-        <button class="btn btn-secondary btn-lg px-5" (click)="closeEditModal()">Cancelar</button>
-        <button class="btn btn-success btn-lg px-5" (click)="updateStore()">Guardar Cambios</button>
-      </div>
-    </div>
+    <!-- Formulario aquí -->
   </div>
 </div>
