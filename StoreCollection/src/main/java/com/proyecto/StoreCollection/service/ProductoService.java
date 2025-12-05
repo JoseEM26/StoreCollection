@@ -10,8 +10,6 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface ProductoService {
-
-    // Para dueño logueado
     Page<ProductoResponse> findAll(Pageable pageable);
     List<ProductoResponse> findMisProductos();
     List<ProductoResponse> findByCategoriaId(Integer categoriaId);
@@ -22,5 +20,7 @@ public interface ProductoService {
     ProductoResponse save(ProductoRequest request);
     ProductoResponse save(ProductoRequest request, Integer id);
     void deleteById(Integer id);
-
+    Page<ProductoResponse> findByUserEmail(String email, Pageable pageable);
+    Page<ProductoResponse> buscarPorNombreContainingIgnoreCase(String nombre, Pageable pageable);
+    Page<ProductoResponse> buscarPorNombreYEmailUsuario(String nombre, String email, Pageable pageable);
 }

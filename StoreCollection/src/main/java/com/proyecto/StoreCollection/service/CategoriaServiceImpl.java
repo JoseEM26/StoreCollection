@@ -38,6 +38,26 @@ public class CategoriaServiceImpl implements CategoriaService {
                 .map(this::toResponse)
                 .toList();
     }
+    @Override
+    public Page<CategoriaResponse> findByUserEmail(String email, Pageable pageable) {
+        // OWNER: usa tenant actual
+        return categoriaRepository.findAllByTenant(pageable)
+                .map(this::toResponse);
+    }
+
+    @Override
+    public Page<CategoriaResponse> buscarPorNombreYEmailUsuario(String nombre, String email, Pageable pageable) {
+        Integer tenantId = com.proyecto.StoreCollection.tenant.TenantContext.getTenantId();
+        if (tenantId == null) throw new IllegalStateException("Tenant no establecido");
+
+        return categoriaRepository.findByNombreContainingIgnoreCaseAndTenantId(nombre.trim(), tenantId, pageable)
+                .map(this::toResponse);
+    }
+    @Override
+    public Page<CategoriaResponse> buscarPorNombreContainingIgnoreCase(String nombre, Pageable pageable) {
+        return categoriaRepository.findByNombreContainingIgnoreCase(nombre, pageable)
+                .map(this::toResponse);
+    }
 
     @Override
     @Transactional(readOnly = true)

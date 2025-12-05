@@ -21,5 +21,7 @@ public interface CategoriaService {
     CategoriaResponse save(CategoriaRequest request, Integer id);
     void deleteById(Integer id);
 
-    // ELIMINADO: findByTiendaId(Long tiendaId) → ya no se necesita nunca más
-}
+    Page<CategoriaResponse> findByUserEmail(String email, Pageable pageable);  // ← este es el que usamos
+     Page<CategoriaResponse> buscarPorNombreContainingIgnoreCase(String nombre, Pageable pageable);
+
+     Page<CategoriaResponse> buscarPorNombreYEmailUsuario(String nombre, String email, Pageable pageable);}
