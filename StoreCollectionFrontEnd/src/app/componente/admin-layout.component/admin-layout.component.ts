@@ -1,11 +1,17 @@
 // src/app/componente/admin-layout.component/admin-layout.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
+import { Router, NavigationEnd, ActivatedRoute, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../../auth/auth.service';
+
+interface MenuItem {
+  route: string;
+  icon: string;
+  label: string;
+  allowedRoles: ('ADMIN' | 'OWNER')[];
+}
 
 @Component({
   selector: 'app-admin-layout',
@@ -20,14 +26,23 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   pageTitle = 'Dashboard';
   private routerSub!: Subscription;
 
+  // Menú dinámico según rol
+  menuItems: MenuItem[] = [
+    { route: '/admin/dashboard',   icon: 'bi-speedometer2', label: 'Dashboard',   allowedRoles: ['ADMIN', 'OWNER'] },
+    { route: '/admin/stores',      icon: 'bi-shop',         label: 'Tiendas',     allowedRoles: ['ADMIN', 'OWNER'] },
+    { route: '/admin/categories',  icon: 'bi-grid-3x3-gap', label: 'Categorías',  allowedRoles: ['ADMIN', 'OWNER'] },
+    { route: '/admin/products',    icon: 'bi-box-seam',     label: 'Productos',   allowedRoles: ['ADMIN', 'OWNER'] },
+    { route: '/admin/usuarios',    icon: 'bi-people',       label: 'Usuarios',    allowedRoles: ['ADMIN'] } // ← Solo ADMIN
+  ];
+
   constructor(
-    public auth: AuthService, // public para usar en template
+    public auth: AuthService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
 
   ngOnInit() {
-    // Cargar estado del sidebar
+    // Estado del sidebar
     const saved = localStorage.getItem('adminSidebarCollapsed');
     this.isSidebarCollapsed = saved === 'true';
 
@@ -35,20 +50,25 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     this.checkIfMobile();
     window.addEventListener('resize', () => this.checkIfMobile());
 
-    // Título dinámico según ruta
+    // Título dinámico
     this.routerSub = this.router.events
       .pipe(
         filter(event => event instanceof NavigationEnd),
         map(() => {
           let child = this.route.root.firstChild;
-          while (child?.firstChild) {
-            child = child.firstChild;
-          }
+          while (child?.firstChild) child = child.firstChild;
           return child?.snapshot.data['title'] || this.getTitleFromUrl(this.router.url);
         })
       )
-      .subscribe(title => {
-        this.pageTitle = title;
+      .subscribe(title => this.pageTitle = title);
+
+    // PROTECCIÓN: Si OWNER intenta entrar a ruta prohibida → redirigir
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: NavigationEnd) => {
+        if (!this.auth.isAdmin() && this.isRestrictedRoute(event.urlAfterRedirects)) {
+          this.router.navigate(['/admin/dashboard']);
+        }
       });
   }
 
@@ -70,7 +90,12 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     this.auth.logout();
   }
 
-  // Fallback para títulos si no tienes data en rutas
+  // Verifica si la ruta actual está restringida para OWNER
+  private isRestrictedRoute(url: string): boolean {
+    return url.includes('/admin/usuarios');
+  }
+
+  // Fallback de títulos
   private getTitleFromUrl(url: string): string {
     const map: Record<string, string> = {
       '/admin/dashboard': 'Dashboard',
@@ -79,6 +104,11 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       '/admin/products': 'Productos',
       '/admin/usuarios': 'Usuarios'
     };
-    return map[url] || 'Administración';
+    return map[url.split('?')[0]] || 'Administración';
+  }
+
+  // Helper para mostrar ítem en menú
+  isMenuItemVisible(item: MenuItem): boolean {
+    return item.allowedRoles.includes(this.auth.currentUser()?.rol as any);
   }
 }

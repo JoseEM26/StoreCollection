@@ -1,6 +1,4 @@
 <div class="admin-layout" [class.sidebar-collapsed]="isSidebarCollapsed">
-
-  <!-- Overlay móvil -->
   <div class="sidebar-overlay" *ngIf="isMobile && !isSidebarCollapsed" (click)="toggleSidebar()"></div>
 
   <!-- Sidebar -->
@@ -20,13 +18,23 @@
         </div>
       </div>
 
-      <!-- Navegación -->
+      <!-- Navegación dinámica -->
       <nav class="sidebar-nav mt-4">
-        <a routerLink="/admin/dashboard"   routerLinkActive="active" class="nav-link"><i class="bi bi-speedometer2"></i><span>Dashboard</span></a>
-        <a routerLink="/admin/stores"      routerLinkActive="active" class="nav-link"><i class="bi bi-shop"></i><span>Tiendas</span></a>
-        <a routerLink="/admin/categories" routerLinkActive="active" class="nav-link"><i class="bi bi-grid-3x3-gap"></i><span>Categorías</span></a>
-        <a routerLink="/admin/products"    routerLinkActive="active" class="nav-link"><i class="bi bi-box-seam"></i><span>Productos</span></a>
-        <a routerLink="/admin/usuarios"    routerLinkActive="active" class="nav-link"><i class="bi bi-people"></i><span>Usuarios</span></a>
+        <a
+          *ngFor="let item of menuItems"
+          [routerLink]="isMenuItemVisible(item) ? item.route : null"
+          routerLinkActive="active"
+          class="nav-link"
+          [class.disabled]="!isMenuItemVisible(item)"
+          [attr.title]="!isMenuItemVisible(item) ? 'No tienes permiso' : ''"
+        >
+          <i class="bi" [class]="item.icon"></i>
+          <span>{{ item.label }}</span>
+          <!-- Badge opcional para rutas prohibidas -->
+          <small *ngIf="!isMenuItemVisible(item)" class="ms-2 text-danger">
+            <i class="bi bi-lock-fill"></i>
+          </small>
+        </a>
       </nav>
 
       <!-- Logout -->
@@ -38,43 +46,31 @@
       </div>
     </div>
 
-    <!-- Botón colapsar -->
-    <button class="btn-collapse" (click)="toggleSidebar()" [title]="isSidebarCollapsed ? 'Expandir' : 'Colapsar'">
+    <button class="btn-collapse" (click)="toggleSidebar()">
       <i class="bi" [class.bi-chevron-left]="!isSidebarCollapsed" [class.bi-chevron-right]="isSidebarCollapsed"></i>
     </button>
   </aside>
 
   <!-- Contenido principal -->
   <div class="main-content">
-
-    <!-- Topbar -->
     <header class="topbar">
       <div class="container-fluid d-flex align-items-center justify-content-between px-4 py-3">
-
-        <!-- Menú móvil -->
         <button class="btn-mobile-menu d-lg-none me-3" (click)="toggleSidebar()">
           <i class="bi bi-list fs-4"></i>
         </button>
 
-        <!-- Título de página -->
         <h5 class="mb-0 fw-semibold text-dark">{{ pageTitle }}</h5>
 
-        <!-- Usuario + Avatar -->
         <div class="d-flex align-items-center gap-3">
           <div class="text-end">
             <div class="fw-semibold text-dark">{{ auth.fullName() }}</div>
             <small class="text-muted">{{ auth.roleDisplay() }}</small>
           </div>
-
-          <!-- Avatar con iniciales -->
-          <div class="avatar">
-            {{ auth.initials() }}
-          </div>
+          <div class="avatar">{{ auth.initials() }}</div>
         </div>
       </div>
     </header>
 
-    <!-- Contenido de la ruta -->
     <main class="page-content">
       <router-outlet></router-outlet>
     </main>

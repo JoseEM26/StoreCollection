@@ -1,94 +1,81 @@
-// usuarios.component.ts
-import { Component } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+// src/app/pages/administrativo/usuarios/usuarios.component.ts
+import { Component, OnInit, signal, effect } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-export interface Usuario {
-  id: number;
-  nombre: string;
-  email: string;
-  rol: 'OWNER' | 'ADMIN' | 'CLIENTE';
-  activo: boolean;
-  creadoEn: string;
-}
+import { UsuarioAdminService } from '../../../service/service-admin/usuario-admin.service';
+import { UsuarioPage, UsuarioResponse } from '../../../model/admin/usuario-admin.model';
+import { AuthService } from '../../../../auth/auth.service';
 
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe],
+  imports: [CommonModule, FormsModule],
   templateUrl: './usuarios.component.html',
   styleUrl: './usuarios.component.css'
 })
-export class UsuariosComponent {
-  usuarios: Usuario[] = [
-    { id: 1, nombre: 'Juan Pérez', email: 'juan@store.com', rol: 'OWNER', activo: true, creadoEn: '2024-01-15' },
-    { id: 2, nombre: 'María Gómez', email: 'maria@store.com', rol: 'ADMIN', activo: true, creadoEn: '2024-03-20' },
-    { id: 3, nombre: 'Carlos López', email: 'carlos@gmail.com', rol: 'CLIENTE', activo: true, creadoEn: '2025-01-10' },
-    { id: 4, nombre: 'Ana Torres', email: 'ana@store.com', rol: 'ADMIN', activo: false, creadoEn: '2024-08-05' },
-  ];
+export class UsuariosComponent implements OnInit {
+  pageData = signal<UsuarioPage | null>(null);
+  usuarios = signal<UsuarioResponse[]>([]);
+  loading = signal(true);
 
-  busqueda = '';
-  filtroRol: string = 'TODOS';
-  modalAbierto = false;
-  esEdicion = false;
-  usuarioTemporal: Partial<Usuario> = {};
+  currentPage = signal(0);
+  pageSize = 10;
+  searchTerm = '';
 
-  get usuariosFiltrados(): Usuario[] {
-    return this.usuarios.filter(u => {
-      const porRol = this.filtroRol === 'TODOS' || u.rol === this.filtroRol;
-      const porTexto = !this.busqueda || 
-        u.nombre.toLowerCase().includes(this.busqueda.toLowerCase()) ||
-        u.email.toLowerCase().includes(this.busqueda.toLowerCase());
-      return porRol && porTexto;
-    });
+  constructor(
+    private usuarioService: UsuarioAdminService,
+    public auth: AuthService
+  ) {
+    effect(() => this.loadUsuarios());
   }
 
-  abrirModalCrear() {
-    this.esEdicion = false;
-    this.usuarioTemporal = { nombre: '', email: '', rol: 'CLIENTE', activo: true };
-    this.modalAbierto = true;
+  ngOnInit(): void {
+    this.loadUsuarios();
   }
 
-  abrirModalEditar(usuario: Usuario) {
-    this.esEdicion = true;
-    this.usuarioTemporal = { ...usuario };
-    this.modalAbierto = true;
+  loadUsuarios(): void {
+    this.loading.set(true);
+    this.usuarioService.listarUsuarios(this.currentPage(), this.pageSize, this.searchTerm)
+      .subscribe({
+        next: (data) => {
+          this.pageData.set(data);
+          this.usuarios.set(data.content);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.loading.set(false);
+          alert('Error al cargar usuarios');
+        }
+      });
   }
 
-  cerrarModal() {
-    this.modalAbierto = false;
-  }
-
-  guardarUsuario() {
-    if (!this.usuarioTemporal.nombre || !this.usuarioTemporal.email) return;
-
-    if (this.esEdicion) {
-      const index = this.usuarios.findIndex(u => u.id === (this.usuarioTemporal as Usuario).id);
-      if (index !== -1) {
-        this.usuarios[index] = { ...this.usuarios[index], ...(this.usuarioTemporal as Usuario) };
-      }
-    } else {
-      const nuevo: Usuario = {
-        id: Math.max(...this.usuarios.map(u => u.id), 0) + 1,
-        nombre: this.usuarioTemporal.nombre!,
-        email: this.usuarioTemporal.email!,
-        rol: this.usuarioTemporal.rol as 'OWNER' | 'ADMIN' | 'CLIENTE',
-        activo: this.usuarioTemporal.activo ?? true,
-        creadoEn: new Date().toISOString().split('T')[0]
-      };
-      this.usuarios.unshift(nuevo);
-    }
-
-    this.cerrarModal();
-  }
-
-  eliminarUsuario(usuario: Usuario) {
-    if (confirm(`¿Eliminar permanentemente a ${usuario.nombre}?`)) {
-      this.usuarios = this.usuarios.filter(u => u.id !== usuario.id);
+  goToPage(page: number): void {
+    if (page >= 0 && page < (this.pageData()?.totalPages || 0)) {
+      this.currentPage.set(page);
     }
   }
 
-  toggleEstado(usuario: Usuario) {
-    usuario.activo = !usuario.activo;
+  onSearch(): void {
+    this.currentPage.set(0);
+  }
+
+  getRoleBadgeClass(rol: string): string {
+    switch (rol) {
+      case 'ADMIN': return 'bg-danger';
+      case 'OWNER': return 'bg-primary';
+      case 'CUSTOMER': return 'bg-success';
+      default: return 'bg-secondary';
+    }
+  }
+
+  getPageNumbers(): number[] {
+    const total = this.pageData()?.totalPages || 0;
+    const current = this.currentPage();
+    const delta = 2;
+    const range = [];
+    for (let i = Math.max(0, current - delta); i <= Math.min(total - 1, current + delta); i++) {
+      range.push(i);
+    }
+    return range;
   }
 }

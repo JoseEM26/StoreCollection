@@ -1,73 +1,121 @@
-// src/app/admin/products/products.component.ts
-import { Component, signal } from '@angular/core';
+// src/app/pages/administrativo/products/products.component.ts
+import { Component, OnInit, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-export interface Product {
-  id: number;
-  name: string;
-  price: number;
-  description: string;
-  category: string;
-  active: boolean;
-}
+import { ProductoPage, ProductoResponse } from '../../../model/admin/producto-admin.model';
+import { ProductoAdminService } from '../../../service/service-admin/producto-admin.service';
+import { AuthService } from '../../../../auth/auth.service';
 
 @Component({
   selector: 'app-products',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './products.component.html',
-  styleUrls: ['./products.component.css']
+  styleUrl: './products.component.css'
 })
-export class ProductsComponent {
-  products = signal<Product[]>([
-    { id: 1, name: 'iPhone 15 Pro Max', price: 1599, description: 'Titanio, cámara 5x', category: 'Celulares', active: true },
-    { id: 2, name: 'Camiseta Oversize Premium', price: 39.99, description: 'Algodón 100%, tallas S-3XL', category: 'Ropa', active: true },
-    { id: 3, name: 'Hamburguesa Gourmet', price: 18.50, description: 'Carne Angus 200g + papas', category: 'Comida', active: false },
-    { id: 4, name: 'AirPods Pro 2', price: 249, description: 'Cancelación activa de ruido', category: 'Accesorios', active: true },
-    { id: 5, name: 'Zapatillas Nike Air', price: 149, description: 'Edición limitada', category: 'Ropa', active: true },
-  ]);
+export class ProductsComponent implements OnInit {
+  // Datos del backend
+  pageData = signal<ProductoPage | null>(null);
+  productos = signal<ProductoResponse[]>([]);
+  loading = signal(true);
 
-  categories = ['Ropa', 'Celulares', 'Comida', 'Accesorios', 'Hogar', 'Belleza', 'Deportes'];
+  // Filtros
+  currentPage = signal(0);
+  pageSize = 20;
+  sort = signal('nombre,asc');
+  searchTerm = '';
 
+  // Modal
   showModal = false;
-  editingProduct: Partial<Product> = {};
+  editingProduct: Partial<ProductoResponse> = {};
 
-  openModal(product?: Product) {
+  constructor(
+    private productoService: ProductoAdminService,
+    public auth: AuthService
+  ) {
+    effect(() => this.loadProductos());
+  }
+
+  ngOnInit(): void {
+    this.loadProductos();
+  }
+
+  loadProductos(): void {
+    this.loading.set(true);
+
+    this.productoService.listarProductos(
+      this.currentPage(),
+      this.pageSize,
+      this.sort(),
+      this.searchTerm.trim() || undefined
+    ).subscribe({
+      next: (data) => {
+        this.pageData.set(data);
+        this.productos.set(data.content);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+        alert('Error al cargar productos');
+      }
+    });
+  }
+
+  // Paginación
+  goToPage(page: number): void {
+    if (page >= 0 && page < (this.pageData()?.totalPages || 0)) {
+      this.currentPage.set(page);
+    }
+  }
+
+  // Búsqueda
+  onSearch(): void {
+    this.currentPage.set(0);
+  }
+
+  // Ordenación
+  setSort(campo: string): void {
+    const [actual, dir] = this.sort().split(',');
+    const nuevaDir = actual === campo && dir === 'asc' ? 'desc' : 'asc';
+    this.sort.set(`${campo},${nuevaDir}`);
+    this.currentPage.set(0);
+  }
+
+  // Modal
+  openModal(product?: ProductoResponse): void {
     this.editingProduct = product ? { ...product } : {
-      id: 0,
-      name: '',
-      price: 0,
-      description: '',
-      category: 'Ropa',
-      active: true
+      nombre: '',
+      slug: '',
+      categoriaId: 0,
+      categoriaNombre: '',
+      tiendaId: 0
     };
     this.showModal = true;
   }
 
-  closeModal() {
+  closeModal(): void {
     this.showModal = false;
   }
 
-  saveProduct() {
-    if (!this.editingProduct.name ) return;
-
-    if (this.editingProduct.id === 0) {
-      // Nuevo producto
-      const newId = Math.max(...this.products().map(p => p.id), 0) + 1;
-      this.products.update(list => [...list, { ...this.editingProduct, id: newId } as Product]);
-    } else {
-      // Editar existente
-      this.products.update(list =>
-        list.map(p => p.id === this.editingProduct.id ? this.editingProduct as Product : p)
-      );
+  saveProduct(): void {
+    if (!this.editingProduct.nombre?.trim()) {
+      alert('El nombre es obligatorio');
+      return;
     }
+    alert(`Producto "${this.editingProduct.nombre}" guardado (simulado)`);
     this.closeModal();
+    this.loadProductos();
   }
 
-  toggleProduct(product: Product) {
-    this.products.update(list =>
-      list.map(p => p.id === product.id ? { ...p, active: !p.active } : p)
-    );
+  // Paginación inteligente
+  getPageNumbers(): number[] {
+    const total = this.pageData()?.totalPages || 0;
+    const current = this.currentPage();
+    const delta = 2;
+    const range = [];
+    for (let i = Math.max(0, current - delta); i <= Math.min(total - 1, current + delta); i++) {
+      range.push(i);
+    }
+    return range;
   }
 }
