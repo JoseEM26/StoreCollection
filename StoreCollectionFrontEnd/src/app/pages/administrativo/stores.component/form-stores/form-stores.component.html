@@ -1,0 +1,218 @@
+<div class="form-stores-modal" (click)="onCancel()">
+  <div class="modal-card" (click)="$event.stopPropagation()" data-aos="zoom-in">
+    
+    <!-- Header con degradado y botón cerrar flotante -->
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title">
+          <i class="bi bi-shop-window me-3"></i>
+          {{ isEditMode ? 'Editar Tienda' : 'Crear Nueva Tienda' }}
+        </h2>
+        <p class="modal-subtitle">
+          {{ isEditMode ? 'Actualiza los datos de tu tienda' : 'Configura tu nueva tienda en segundos' }}
+        </p>
+      </div>
+      <button class="btn-close-floating" (click)="onCancel()" [disabled]="loading">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" class="modal-body">
+      
+      <!-- Logo Preview Premium -->
+      <div class="logo-section text-center mb-5">
+        <div class="logo-preview-container">
+          <img 
+            *ngIf="logoPreview" 
+            [src]="logoPreview" 
+            alt="Logo de la tienda" 
+            class="logo-img"
+          />
+          <div *ngIf="!logoPreview" class="logo-placeholder">
+            <i class="bi bi-shop fs-1"></i>
+          </div>
+        </div>
+        <small class="text-muted d-block mt-3">
+          <i class="bi bi-link-45deg"></i> URL del logo (opcional)
+        </small>
+      </div>
+
+      <div class="row g-4">
+        
+        <!-- Nombre -->
+        <div class="col-12">
+          <label class="form-label fw-bold text-primary">
+            <i class="bi bi-tag me-2"></i>Nombre de la tienda *
+          </label>
+          <input
+            [(ngModel)]="form.nombre"
+            name="nombre"
+            (input)="onNombreChange()"
+            type="text"
+            class="form-control form-control-lg custom-input"
+            placeholder="Ej: Mi Tienda Online"
+            required
+            [disabled]="loading"
+          />
+        </div>
+
+        <!-- Slug -->
+        <div class="col-12">
+          <label class="form-label fw-bold text-primary">
+            <i class="bi bi-link-45deg me-2"></i>URL de la tienda *
+          </label>
+          <div class="input-group input-group-lg">
+            <span class="input-group-text bg-light border-end-0">
+              storecollection.com/
+            </span>
+            <input
+              [(ngModel)]="form.slug"
+              name="slug"
+              type="text"
+              class="form-control border-start-0 slug-input"
+              placeholder="mi-tienda-online"
+              required
+              [disabled]="loading || isEditMode"
+            />
+          </div>
+          <small class="text-muted d-block mt-2">
+            Solo letras minúsculas, números y guiones (-)
+          </small>
+        </div>
+
+        <!-- WhatsApp & Moneda -->
+        <div class="col-md-6">
+          <label class="form-label fw-bold text-success">
+            <i class="bi bi-whatsapp me-2"></i>WhatsApp
+          </label>
+          <input
+            [(ngModel)]="form.whatsapp"
+            name="whatsapp"
+            type="text"
+            class="form-control form-control-lg custom-input"
+            placeholder="+51 999 999 999"
+            [disabled]="loading"
+          />
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-bold text-warning">
+            <i class="bi bi-currency-exchange me-2"></i>Moneda
+          </label>
+          <select [(ngModel)]="form.moneda" name="moneda" class="form-select form-select-lg custom-select" [disabled]="loading">
+            <option value="SOLES">Soles (S/)</option>
+            <option value="DOLARES">Dólares ($)</option>
+          </select>
+        </div>
+
+        <!-- Plan -->
+        <div class="col-12">
+          <label class="form-label fw-bold text-purple">
+            <i class="bi bi-gem me-2"></i>Plan de la tienda
+          </label>
+          <select [(ngModel)]="form.planId" name="planId" class="form-select form-select-lg custom-select" [disabled]="loading">
+            <option *ngFor="let p of planes" [value]="p.id">
+              {{ p.nombre }} — {{ p.id === 1 ? 'Básico' : p.id === 2 ? 'Profesional' : 'Enterprise' }}
+            </option>
+          </select>
+        </div>
+
+        <!-- URL del Logo -->
+        <div class="col-12">
+          <label class="form-label fw-bold text-info">
+            <i class="bi bi-image me-2"></i>URL del Logo
+          </label>
+          <input
+            [(ngModel)]="form.logo_img_url"
+            name="logo_img_url"
+            (input)="onLogoUrlChange()"
+            type="url"
+            class="form-control form-control-lg custom-input"
+            placeholder="https://ejemplo.com/mi-logo.png"
+            [disabled]="loading"
+          />
+        </div>
+
+        <!-- Descripción -->
+        <div class="col-12">
+          <label class="form-label fw-bold text-secondary">
+            <i class="bi bi-card-text me-2"></i>Descripción
+          </label>
+          <textarea
+            [(ngModel)]="form.descripcion"
+            name="descripcion"
+            rows="4"
+            class="form-control custom-textarea"
+            placeholder="Cuéntanos sobre tu tienda, productos destacados, historia..."
+            [disabled]="loading"
+          ></textarea>
+        </div>
+
+        <!-- Dirección & Horarios -->
+        <div class="col-md-6">
+          <label class="form-label fw-bold text-danger">
+            <i class="bi bi-geo-alt me-2"></i>Dirección física
+          </label>
+          <input
+            [(ngModel)]="form.direccion"
+            name="direccion"
+            type="text"
+            class="form-control form-control-lg custom-input"
+            placeholder="Av. Principal 123, Miraflores, Lima"
+            [disabled]="loading"
+          />
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-bold text-orange">
+            <i class="bi bi-clock me-2"></i>Horarios de atención
+          </label>
+          <input
+            [(ngModel)]="form.horarios"
+            name="horarios"
+            type="text"
+            class="form-control form-control-lg custom-input"
+            placeholder="Lun - Sáb: 9:00 - 21:00 | Dom: 10:00 - 18:00"
+            [disabled]="loading"
+          />
+        </div>
+
+        <!-- Mapa -->
+        <div class="col-12">
+          <label class="form-label fw-bold text-primary">
+            <i class="bi bi-map me-2"></i>Google Maps (URL)
+          </label>
+          <input
+            [(ngModel)]="form.mapa_url"
+            name="mapa_url"
+            type="url"
+            class="form-control form-control-lg custom-input"
+            placeholder="https://maps.google.com/maps?q=..."
+            [disabled]="loading"
+          />
+        </div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="action-buttons mt-5">
+        <button 
+          type="button" 
+          class="btn btn-cancel" 
+          (click)="onCancel()" 
+          [disabled]="loading"
+        >
+          <i class="bi bi-arrow-left me-2"></i>Cancelar
+        </button>
+        <button 
+          type="submit" 
+          class="btn btn-submit" 
+          [disabled]="loading"
+        >
+          <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+          <i class="bi" [class.bi-check-lg]="!loading" [class.bi-hourglass-split]="loading"></i>
+          {{ isEditMode ? 'Guardar Cambios' : 'Crear Tienda' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

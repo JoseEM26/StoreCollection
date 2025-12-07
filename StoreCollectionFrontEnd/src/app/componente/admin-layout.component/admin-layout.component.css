@@ -202,4 +202,14 @@
     backdrop-filter: blur(8px);
     z-index: 1020;
   }
+}.nav-link.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+  color: #94a3b8 !important;
+}
+
+.nav-link.disabled i,
+.nav-link.disabled span {
+  color: inherit !important;
 }

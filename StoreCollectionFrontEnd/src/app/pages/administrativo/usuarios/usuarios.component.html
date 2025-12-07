@@ -1,145 +1,121 @@
-<!-- usuarios.component.html -->
-<div class="usuarios-page">
-  <div class="container">
-    <!-- Header -->
-    <div class="header mb-6">
-      <h1 class="title">Gestión de Usuarios</h1>
-      <p class="subtitle">Controla roles, permisos y estado de todos los usuarios</p>
+<div class="usuarios-page" data-aos="fade-up">
+  <!-- Header -->
+  <div class="header-section">
+    <div>
+      <h1 class="page-title">
+        <i class="bi bi-people-fill me-3"></i>
+        Gestión de Usuarios
+      </h1>
+      <p class="page-subtitle">
+        Administración completa de usuarios del sistema
+        <span class="text-muted ms-2">
+          ({{ pageData()?.totalElements || 0 }} usuarios registrados)
+        </span>
+      </p>
     </div>
+  </div>
 
-    <!-- Barra de acciones -->
-    <div class="actions-bar">
-      <div class="search-box">
-        <i class="bi bi-search"></i>
-        <input type="text" placeholder="Buscar usuario..." [(ngModel)]="busqueda" class="search-input">
-      </div>
-
-      <div class="filters">
-        <select [(ngModel)]="filtroRol" class="filter-select">
-          <option value="TODOS">Todos los roles</option>
-          <option value="OWNER">Owner</option>
-          <option value="ADMIN">Admin</option>
-          <option value="CLIENTE">Cliente</option>
-        </select>
-
-        <button class="btn-primary" (click)="abrirModalCrear()">
-          <i class="bi bi-plus-lg"></i>
-          Nuevo Usuario
-        </button>
-      </div>
+  <!-- Búsqueda -->
+  <div class="filters-bar mb-4">
+    <div class="search-box">
+      <i class="bi bi-search"></i>
+      <input
+        type="text"
+        placeholder="Buscar por nombre, email o celular..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()"
+      />
     </div>
+  </div>
 
-    <!-- Tabla -->
-    <div class="table-container">
-      <table class="users-table">
-        <thead>
-          <tr>
-            <th>Usuario</th>
-            <th>Email</th>
-            <th>Rol</th>
-            <th>Estado</th>
-            <th>Registrado</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let u of usuariosFiltrados" class="user-row" [class.inactive]="!u.activo">
-            <td class="user-cell">
-              <div class="user-info">
-                <div class="avatar">{{ u.nombre.charAt(0).toUpperCase() }}</div>
-                <div>
-                  <div class="user-name">{{ u.nombre }}</div>
-                  <div class="user-id">ID: {{ u.id }}</div>
+  <!-- Loading -->
+  <div *ngIf="loading()" class="loading-container">
+    <div class="spinner"></div>
+    <p class="loading-text">Cargando usuarios...</p>
+  </div>
+
+  <!-- Tabla de usuarios -->
+  <div *ngIf="!loading() && usuarios().length > 0" class="table-container">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="bg-light">
+            <tr>
+              <th class="ps-5">Usuario</th>
+              <th>Email</th>
+              <th>Celular</th>
+              <th>Rol</th>
+              <th class="text-end pe-5">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of usuarios(); let i = index" data-aos="fade-up" [attr.data-aos-delay]="(i % 10) * 50">
+              <td class="ps-5">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="user-avatar">
+                    {{ u.nombre.charAt(0).toUpperCase() }}
+                  </div>
+                  <div>
+                    <div class="fw-semibold">{{ u.nombre }}</div>
+                    <small class="text-muted">ID: #{{ u.id }}</small>
+                  </div>
                 </div>
-              </div>
-            </td>
-            <td>
-              <a href="mailto:{{u.email}}" class="email-link">{{ u.email }}</a>
-            </td>
-            <td>
-              <span class="role-badge" [class]="'role-' + u.rol.toLowerCase()">{{ u.rol }}</span>
-            </td>
-            <td>
-              <span class="status" [class.active]="u.activo">
-                <i class="bi" [class.bi-check-circle-fill]="u.activo" [class.bi-x-circle-fill]="!u.activo"></i>
-                {{ u.activo ? 'Activo' : 'Inactivo' }}
-              </span>
-            </td>
-            <td class="date">{{ u.creadoEn | date:'dd MMM yyyy' }}</td>
-            <td class="actions">
-              <button class="action-btn edit" (click)="abrirModalEditar(u)" title="Editar">
-                <i class="bi bi-pencil-square"></i>
-              </button>
-              <button class="action-btn delete" (click)="eliminarUsuario(u)" title="Eliminar">
-                <i class="bi bi-trash3"></i>
-              </button>
-              <button class="action-btn toggle" 
-                      [class.active]="u.activo"
-                      (click)="toggleEstado(u)"
-                      [title]="u.activo ? 'Desactivar' : 'Activar'">
-                <i class="bi" [class.bi-toggle-on]="u.activo" [class.bi-toggle-off]="!u.activo"></i>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              </td>
+              <td>
+                <a href="mailto:{{ u.email }}" class="text-decoration-none">{{ u.email }}</a>
+              </td>
+              <td>
+                <a href="tel:{{ u.celular }}" class="text-decoration-none">{{ u.celular }}</a>
+              </td>
+              <td>
+                <span class="badge rounded-pill px-3 py-2 fw-bold" [ngClass]="getRoleBadgeClass(u.rol)">
+                  {{ u.rol === 'ADMIN' ? 'ADMINISTRADOR' : u.rol === 'OWNER' ? 'PROPIETARIO' : 'CLIENTE' }}
+                </span>
+              </td>
+              <td class="text-end pe-5">
+                <button class="btn btn-sm btn-outline-primary rounded-pill me-2">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger rounded-pill">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- MODAL (Crear / Editar) -->
-<div *ngIf="modalAbierto" class="modal-overlay" (click)="cerrarModal()"></div>
-<div *ngIf="modalAbierto" class="modal" role="dialog">
-  <div class="modal-card" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>{{ esEdicion ? 'Editar Usuario' : 'Crear Nuevo Usuario' }}</h2>
-      <button class="close-btn" (click)="cerrarModal()">×</button>
-    </div>
+  <!-- Empty State -->
+  <div *ngIf="!loading() && usuarios().length === 0" class="empty-state" data-aos="fade-up">
+    <i class="bi bi-person-slash empty-icon"></i>
+    <h3>No se encontraron usuarios</h3>
+    <p *ngIf="searchTerm">Intenta con otro término</p>
+    <p *ngIf="!searchTerm">No hay usuarios registrados</p>
+  </div>
 
-    <form #userForm="ngForm" (ngSubmit)="guardarUsuario()" class="modal-body">
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Nombre completo</label>
-          <input type="text" [(ngModel)]="usuarioTemporal.nombre" name="nombre" required #nombre="ngModel"
-                 [class.error]="nombre.invalid && nombre.touched">
-          <small *ngIf="nombre.invalid && nombre.touched" class="error-text">Nombre obligatorio</small>
-        </div>
-
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" [(ngModel)]="usuarioTemporal.email" name="email" required email #email="ngModel"
-                 [class.error]="email.invalid && email.touched">
-          <small *ngIf="email.invalid && email.touched" class="error-text">
-            {{ email.errors?.['required'] ? 'Email obligatorio' : 'Email inválido' }}
-          </small>
-        </div>
-
-        <div class="form-group">
-          <label>Rol</label>
-          <select [(ngModel)]="usuarioTemporal.rol" name="rol" required>
-            <option value="CLIENTE">Cliente</option>
-            <option value="ADMIN">Admin</option>
-            <option value="OWNER">Owner</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Estado</label>
-          <label class="switch">
-            <input type="checkbox" [(ngModel)]="usuarioTemporal.activo" name="activo">
-            <span class="slider"></span>
-          </label>
-          <span class="switch-label">{{ usuarioTemporal.activo ? 'Activo' : 'Inactivo' }}</span>
-        </div>
-      </div>
-
-      <div class="modal-actions">
-        <button type="button" class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
-        <button type="submit" class="btn-primary" [disabled]="userForm.invalid">
-          <i class="bi bi-check-lg"></i>
-          {{ esEdicion ? 'Guardar Cambios' : 'Crear Usuario' }}
+  <!-- Paginación -->
+  <nav *ngIf="pageData() && pageData()!.totalPages > 1" class="pagination-container">
+    <ul class="pagination">
+      <li [class.disabled]="currentPage() === 0">
+        <button (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 0">
+          <i class="bi bi-chevron-left"></i>
         </button>
-      </div>
-    </form>
-  </div>
+      </li>
+      <ng-container *ngFor="let page of getPageNumbers()">
+        <li [class.active]="page === currentPage()">
+          <button (click)="goToPage(page)">{{ page + 1 }}</button>
+        </li>
+      </ng-container>
+      <li [class.disabled]="currentPage() === (pageData()!.totalPages - 1)">
+        <button (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === (pageData()!.totalPages - 1)">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </li>
+    </ul>
+    <small class="text-muted">
+      Página {{ currentPage() + 1 }} de {{ pageData()?.totalPages }}
+    </small>
+  </nav>
 </div>

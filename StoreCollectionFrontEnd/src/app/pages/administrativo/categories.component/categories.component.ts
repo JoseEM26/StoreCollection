@@ -1,61 +1,118 @@
-// src/app/admin/categories/categories.component.ts
-import { Component, signal } from '@angular/core';
+// src/app/pages/administrativo/categories/categories.component.ts
+import { Component, OnInit, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-export interface Category {
-  id: number;
-  name: string;
-  active: boolean;
-}
+import { CategoriaPage, CategoriaResponse } from '../../../model/admin/categoria-admin.model';
+import { CategoriaAdminService } from '../../../service/service-admin/categoria-admin.service';
+import { AuthService } from '../../../../auth/auth.service';
 
 @Component({
   selector: 'app-categories',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './categories.component.html',
-  styleUrls: ['./categories.component.css']
+  styleUrl: './categories.component.css'
 })
-export class CategoriesComponent {
-  categories = signal<Category[]>([
-    { id: 1, name: 'Ropa', active: true },
-    { id: 2, name: 'Celulares', active: true },
-    { id: 3, name: 'Belleza', active: true },
-    { id: 4, name: 'Accesorios', active: true },
-    { id: 5, name: 'Hogar', active: true },
-    { id: 6, name: 'Comida', active: false },
-    { id: 7, name: 'Deportes', active: true },
-    { id: 8, name: 'Juguetes', active: false },
-  ]);
+export class CategoriesComponent implements OnInit {
+  // Datos del backend
+  pageData = signal<CategoriaPage | null>(null);
+  categorias = signal<CategoriaResponse[]>([]);
+  loading = signal(true);
 
-  showModal = false;
-  newCategory = { name: '' };
+  // Filtros
+  currentPage = signal(0);
+  pageSize = 20;
+  sort = signal('nombre,asc');
+  searchTerm = '';
 
-  openModal() {
-    this.newCategory.name = '';
-    this.showModal = true;
+  // Modal crear
+  showCreateModal = false;
+  newCategory = { nombre: '' };
+
+  constructor(
+    private categoriaService: CategoriaAdminService,
+    public auth: AuthService
+  ) {
+    // Recarga automática cuando cambien filtros
+    effect(() => this.loadCategorias());
   }
 
-  closeModal() {
-    this.showModal = false;
+  ngOnInit(): void {
+    this.loadCategorias();
   }
 
-  saveCategory() {
-    if (!this.newCategory.name.trim()) return;
+  loadCategorias(): void {
+    this.loading.set(true);
 
-    const newId = Math.max(...this.categories().map(c => c.id), 0) + 1;
-    this.categories.update(list => [...list, {
-      id: newId,
-      name: this.newCategory.name.trim(),
-      active: true
-    }]);
-
-    this.closeModal();
+    this.categoriaService.listarCategorias(
+      this.currentPage(),
+      this.pageSize,
+      this.sort(),
+      this.searchTerm.trim() || undefined
+    ).subscribe({
+      next: (data) => {
+        this.pageData.set(data);
+        this.categorias.set(data.content);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+        alert('Error al cargar categorías');
+      }
+    });
   }
 
-  toggle(cat: Category) {
-    this.categories.update(list =>
-      list.map(c => c.id === cat.id ? { ...c, active: !c.active } : c)
-    );
+  // Paginación
+  goToPage(page: number): void {
+    if (page >= 0 && page < (this.pageData()?.totalPages || 0)) {
+      this.currentPage.set(page);
+    }
+  }
+
+  // Búsqueda
+  onSearch(): void {
+    this.currentPage.set(0);
+  }
+
+  // Ordenación
+  toggleSort(): void {
+    const current = this.sort();
+    this.sort.set(current.includes('asc') ? 'nombre,desc' : 'nombre,asc');
+    this.currentPage.set(0);
+  }
+
+  // Modal
+  openCreateModal(): void {
+    this.newCategory.nombre = '';
+    this.showCreateModal = true;
+  }
+
+  closeCreateModal(): void {
+    this.showCreateModal = false;
+  }
+
+  saveCategory(): void {
+    if (!this.newCategory.nombre.trim()) {
+      alert('El nombre es obligatorio');
+      return;
+    }
+
+    // Aquí iría el POST real al backend
+    alert(`Categoría "${this.newCategory.nombre}" creada correctamente (simulado)`);
+
+    this.closeCreateModal();
+    this.loadCategorias(); // recargar lista
+  }
+
+  // Paginación inteligente
+  getPageNumbers(): number[] {
+    const total = this.pageData()?.totalPages || 0;
+    const current = this.currentPage();
+    const delta = 2;
+    const range = [];
+    for (let i = Math.max(0, current - delta); i <= Math.min(total - 1, current + delta); i++) {
+      range.push(i);
+    }
+    return range;
   }
 }

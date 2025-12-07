@@ -2,43 +2,147 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <title>Store Collection – Panel Admin Premium</title>
+  <title>Store Collection – Panel Administrativo</title>
   <base href="/">
+
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Preconnect para rendimiento -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  <!-- Bootstrap Icons – ¡¡AQUÍ ESTABA EL PROBLEMA!! -->
+  <!-- Google Fonts: Inter (la mejor para dashboards) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap Icons 1.11.3 – Íconos perfectos y ligeros -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-  <!-- AOS Animations -->
+  <!-- AOS Animations – Solo si realmente lo usas en todas las páginas -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css">
 
+  <!-- Optimización: Preload de fuentes críticas (opcional pero PRO) -->
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap">
+
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #f8fafc;
+      --text: #1e293b;
+      --text-light: #64748b;
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+    }
+
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f8fafc;
-      color: #1e293b;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
       -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* Loading suave antes de que Angular arranque */
+    app-root {
+      display: block;
+      min-height: 100vh;
+      opacity: 0;
+      animation: fadeIn 0.6s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    /* Scrollbar personalizada (opcional, queda brutal) */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
     }
   </style>
 </head>
-<body>
-  <app-root></app-root>
 
-  <!-- AOS JS -->
+<body>
+  <app-root>
+    <!-- Mensaje elegante mientras carga Angular -->
+    <div style="
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      color: white;
+      font-size: 1.5rem;
+      font-weight: 600;
+      z-index: 9999;
+    ">
+      <div style="
+        width: 60px;
+        height: 60px;
+        border: 4px solid rgba(255,255,255,0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 1.5rem;
+      "></div>
+      <div>Cargando Store Collection...</div>
+    </div>
+  </app-root>
+
+  <!-- AOS Init – Solo si usas animaciones en el 90% de las páginas -->
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', () => {
       AOS.init({
         duration: 800,
         easing: 'ease-out-quart',
         once: true,
-        offset: 80
+        offset: 80,
+        delay: 50
       });
+    });
+
+    // Spinner animation
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+
+  <!-- Opcional: Elimina el spinner cuando Angular ya cargó -->
+  <script>
+    window.addEventListener('load', () => {
+      const loader = document.querySelector('app-root > div');
+      if (loader) {
+        loader.style.transition = 'opacity 0.6s ease';
+        loader.style.opacity = '0';
+        setTimeout(() => loader.remove(), 600);
+      }
     });
   </script>
 </body>

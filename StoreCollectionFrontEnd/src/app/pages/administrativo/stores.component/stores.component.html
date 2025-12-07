@@ -1,12 +1,17 @@
 <div class="stores-container" data-aos="fade-up">
-  <!-- Header Premium -->
+  <!-- Header -->
   <div class="header-section">
     <div>
       <h1 class="page-title">
         <i class="bi bi-shop-window me-3"></i>
         Gestión de Tiendas
       </h1>
-      <p class="page-subtitle">Crea y administra todas las tiendas de la plataforma</p>
+      <p class="page-subtitle">
+        {{ auth.isAdmin() ? 'Todas las tiendas de la plataforma' : 'Tus tiendas' }}
+        <span class="text-muted ms-2">
+          ({{ tiendasPage()?.totalElements || 0 }} en total)
+        </span>
+      </p>
     </div>
     <button class="btn-create" (click)="openCreateModal()">
       <i class="bi bi-plus-lg"></i>
@@ -14,28 +19,43 @@
     </button>
   </div>
 
-  <!-- Loading State -->
+  <!-- Filtros -->
+  <div class="filters-bar mb-5">
+    <div class="search-box">
+      <i class="bi bi-search"></i>
+      <input 
+        type="text" 
+        placeholder="Buscar tienda..." 
+        [(ngModel)]="searchTerm" 
+        (input)="onSearch()"
+        [ngModelOptions]="{standalone: true}"
+      />
+    </div>
+    <button class="btn-sort" (click)="setSort('nombre')">
+      Nombre
+      <i class="bi" [class.bi-arrow-up]="sort().includes('asc')" [class.bi-arrow-down]="sort().includes('desc')"></i>
+    </button>
+  </div>
+
+  <!-- Loading -->
   <div *ngIf="loading()" class="loading-container">
     <div class="spinner"></div>
     <p class="loading-text">Cargando tiendas...</p>
   </div>
 
-  <!-- Grid de Tiendas -->
+  <!-- Grid de tiendas -->
   <div *ngIf="!loading() && tiendas().length > 0" class="stores-grid">
-    <div 
-      class="store-card" 
-      *ngFor="let tienda of tiendas(); let i = index" 
-      [attr.data-aos]="i < 6 ? 'fade-up' : ''" 
+    <div
+      class="store-card"
+      *ngFor="let tienda of tiendas(); let i = index"
+      [attr.data-aos]="i < 6 ? 'fade-up' : ''"
       [attr.data-aos-delay]="(i % 6) * 100"
       [class.inactive]="!tienda.activo"
     >
-      <!-- Borde degradado animado -->
       <div class="card-glow"></div>
 
       <div class="card-header">
-        <div class="store-avatar">
-          {{ tienda.nombre.charAt(0).toUpperCase() }}
-        </div>
+        <div class="store-avatar">{{ tienda.nombre.charAt(0).toUpperCase() }}</div>
         <div class="store-status">
           <span class="status-dot" [class.active]="tienda.activo"></span>
           {{ tienda.activo ? 'Activa' : 'Inactiva' }}
@@ -45,34 +65,23 @@
       <div class="card-body">
         <h3 class="store-name">{{ tienda.nombre }}</h3>
         <p class="store-domain">
-          <i class="bi bi-globe"></i>
-          {{ tienda.slug }}.storecollection.com
+          <i class="bi bi-globe"></i> {{ tienda.slug }}.storecollection.com
         </p>
         <div class="store-meta">
-          <span class="meta-item">
-            <i class="bi bi-whatsapp"></i>
-            {{ tienda.whatsapp || 'Sin WhatsApp' }}
-          </span>
-          <span class="meta-item">
-            <i class="bi bi-currency-exchange"></i>
-            {{ tienda.moneda }}
-          </span>
+          <span class="meta-item"><i class="bi bi-whatsapp"></i> {{ tienda.whatsapp || 'Sin WhatsApp' }}</span>
+          <span class="meta-item"><i class="bi bi-currency-exchange"></i> {{ tienda.moneda }}</span>
         </div>
-        <div class="plan-badge" [ngClass]="'plan-' + tienda.planNombre.toLowerCase()">
-          {{ tienda.planNombre }}
+        <div class="plan-badge" [ngClass]="'plan-' + ((tienda.planNombre?.toLowerCase()) ?? 'basico')">
+          {{ tienda.planNombre || 'Sin plan' }}
         </div>
+        <small class="text-muted d-block mt-3">Dueño: {{ tienda.userEmail }}</small>
       </div>
 
       <div class="card-actions">
         <button class="btn-edit" (click)="openEditModal(tienda)">
-          <i class="bi bi-pencil-square"></i>
-          Editar
+          <i class="bi bi-pencil-square"></i> Editar
         </button>
-        <button 
-          class="btn-toggle" 
-          [class.active]="tienda.activo"
-          (click)="toggleActive(tienda)"
-        >
+        <button class="btn-toggle" [class.active]="tienda.activo" (click)="toggleActive(tienda)">
           <i class="bi" [class.bi-toggle-on]="tienda.activo" [class.bi-toggle-off]="!tienda.activo"></i>
           {{ tienda.activo ? 'Desactivar' : 'Activar' }}
         </button>
@@ -81,13 +90,13 @@
   </div>
 
   <!-- Empty State -->
-  <div *ngIf="!loading() && tiendas().length === 0" class="empty-state" data-aos="fade-up">
+  <div *ngIf="!loading() && tiendas().length === 0" class="empty-state">
     <i class="bi bi-shop empty-icon"></i>
-    <h3>No hay tiendas creadas</h3>
-    <p>Comienza creando tu primera tienda ahora</p>
+    <h3>No se encontraron tiendas</h3>
+    <p *ngIf="searchTerm">Intenta con otro término</p>
+    <p *ngIf="!searchTerm">Aún no tienes tiendas creadas</p>
     <button class="btn-create mt-4" (click)="openCreateModal()">
-      <i class="bi bi-plus-lg"></i>
-      Crear primera tienda
+      <i class="bi bi-plus-lg"></i> Crear primera tienda
     </button>
   </div>
 
@@ -99,28 +108,39 @@
           <i class="bi bi-chevron-left"></i>
         </button>
       </li>
-      <li *ngFor="let page of [].constructor(tiendasPage()!.totalPages); let i = index" 
-          [class.active]="i === currentPage()">
-        <button (click)="goToPage(i)">{{ i + 1 }}</button>
-      </li>
+      <ng-container *ngFor="let page of getPageNumbers()">
+        <li [class.active]="page === currentPage()">
+          <button (click)="goToPage(page)">{{ page + 1 }}</button>
+        </li>
+      </ng-container>
       <li [class.disabled]="currentPage() === (tiendasPage()!.totalPages - 1)">
         <button (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === (tiendasPage()!.totalPages - 1)">
           <i class="bi bi-chevron-right"></i>
         </button>
       </li>
     </ul>
+    <small class="text-muted">
+      Mostrando {{ tiendas().length }} de {{ tiendasPage()?.totalElements }} tiendas
+    </small>
   </nav>
 </div>
 
-<!-- Usa este modal para crear y editar (mismo estilo) -->
-<div class="modal-overlay" *ngIf="showCreateModal || showEditModal" (click)="showCreateModal ? closeCreateModal() : closeEditModal()">
-  <div class="modal-card" (click)="$event.stopPropagation()" data-aos="zoom-in">
-    <div class="modal-header">
-      <h2>{{ showCreateModal ? 'Crear Nueva Tienda' : 'Editar Tienda' }}</h2>
-      <button class="close-btn" (click)="showCreateModal ? closeCreateModal() : closeEditModal()">
-        <i class="bi bi-x-lg"></i>
-      </button>
+<!-- MODAL CORREGIDO Y FUNCIONANDO 100% -->
+<div class="modal-overlay" *ngIf="showCreateModal || showEditModal" (click)="closeModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    
+    <!-- Botón cerrar -->
+    <button class="btn-close-modal" (click)="closeModal()" aria-label="Cerrar">
+      <i class="bi bi-x-lg"></i>
+    </button>
+
+    <!-- Contenedor con scroll -->
+    <div class="modal-content">
+      <app-form-stores
+        [tienda]="editingStore()"
+        (success)="onFormSuccess($event)"
+        (cancel)="closeModal()"
+      ></app-form-stores>
     </div>
-    <!-- Formulario aquí -->
   </div>
 </div>

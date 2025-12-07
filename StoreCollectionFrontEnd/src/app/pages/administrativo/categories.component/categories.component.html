@@ -1,95 +1,147 @@
-<!-- src/app/admin/categories/categories.component.html -->
 <div class="categories-page" data-aos="fade-up">
-  <!-- Header -->
-  <div class="page-header mb-5">
-    <div class="container-fluid">
-      <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-4">
-        <div>
-          <h1 class="display-5 fw-bold text-dark mb-2">Gestión de Categorías</h1>
-          <p class="text-muted lead">Administra las categorías disponibles en todas las tiendas</p>
+  <!-- Header Premium -->
+  <div class="header-section">
+    <div>
+      <h1 class="page-title">
+        <i class="bi bi-tags-fill me-3"></i>
+        Gestión de Categorías
+      </h1>
+      <p class="page-subtitle">
+        {{ auth.isAdmin() ? 'Todas las categorías del sistema' : 'Categorías de tu tienda' }}
+        <span class="text-muted ms-2">
+          ({{ pageData()?.totalElements || 0 }} en total)
+        </span>
+      </p>
+    </div>
+    <button class="btn-create" (click)="openCreateModal()">
+      <i class="bi bi-plus-lg"></i>
+      Nueva Categoría
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-bar mb-4">
+    <div class="search-box">
+      <i class="bi bi-search"></i>
+      <input
+        type="text"
+        placeholder="Buscar categoría..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()"
+      />
+    </div>
+    <button class="btn-sort" (click)="toggleSort()">
+      Nombre
+      <i class="bi" [class.bi-arrow-up]="sort().includes('asc')" [class.bi-arrow-down]="sort().includes('desc')"></i>
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading()" class="loading-container">
+    <div class="spinner"></div>
+    <p class="loading-text">Cargando categorías...</p>
+  </div>
+
+  <!-- Grid de categorías -->
+  <div *ngIf="!loading() && categorias().length > 0" class="categories-grid">
+    <div
+      class="category-card"
+      *ngFor="let cat of categorias(); let i = index"
+      [attr.data-aos]="i < 8 ? 'fade-up' : ''"
+      [attr.data-aos-delay]="(i % 8) * 100"
+    >
+      <div class="card-glow"></div>
+
+      <div class="card-header">
+        <div class="category-icon">
+          <i class="bi bi-tags-fill"></i>
         </div>
-        <button 
-          (click)="openModal()" 
-          class="btn btn-primary btn-lg fw-bold shadow-lg d-flex align-items-center gap-3 px-5 py-3 rounded-pill"
-          data-aos="fade-left" data-aos-delay="300">
-          <i class="bi bi-plus-circle-fill fs-4"></i>
-          Nueva Categoría
+        <div class="store-status">
+          <span class="status-dot active"></span>
+          Activa
+        </div>
+      </div>
+
+      <div class="card-body">
+        <h3 class="category-name">{{ cat.nombre }}</h3>
+        <p class="category-slug">
+          <i class="bi bi-link-45deg"></i>
+          {{ cat.slug }}
+        </p>
+        <small class="text-muted d-block">
+          Tienda ID: {{ cat.tiendaId }}
+        </small>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn-edit">
+          <i class="bi bi-pencil-square"></i> Editar
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Grid de categorías -->
-  <div class="container-fluid">
-    <div class="row g-4">
-      <div 
-        class="col-md-6 col-lg-4 col-xl-3" 
-        *ngFor="let cat of categories(); let i = index" 
-        data-aos="fade-up" 
-        [attr.data-aos-delay]="100 + (i * 100)">
-        
-        <div class="category-card h-100 position-relative overflow-hidden rounded-4" 
-             [class.inactive]="!cat.active">
-          <div class="card-border"></div>
-          
-          <div class="card-content p-5">
-            <div class="d-flex justify-content-between align-items-start mb-4">
-              <div class="category-icon">
-                <i class="bi bi-tags-fill"></i>
-              </div>
-              <span class="status-badge" [class.active]="cat.active">
-                {{ cat.active ? 'Activa' : 'Inactiva' }}
-              </span>
-            </div>
-
-            <h3 class="category-name fw-bold mb-4">{{ cat.name }}</h3>
-
-            <div class="mt-auto">
-              <button 
-                (click)="toggle(cat)" 
-                class="btn btn-sm fw-semibold w-100 rounded-pill"
-                [class.btn-success]="!cat.active"
-                [class.btn-outline-primary]="cat.active">
-                <i class="bi me-2" [class.bi-toggle-on]="cat.active" [class.bi-toggle-off]="!cat.active"></i>
-                {{ cat.active ? 'Desactivar' : 'Activar' }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+  <!-- Empty State -->
+  <div *ngIf="!loading() && categorias().length === 0" class="empty-state" data-aos="fade-up">
+    <i class="bi bi-tags empty-icon"></i>
+    <h3>No hay categorías</h3>
+    <p *ngIf="searchTerm">No se encontraron resultados</p>
+    <p *ngIf="!searchTerm">Aún no tienes categorías creadas</p>
+    <button class="btn-create mt-4" (click)="openCreateModal()">
+      <i class="bi bi-plus-lg"></i>
+      Crear primera categoría
+    </button>
   </div>
 
-  <!-- Modal Premium (igual que en Stores) -->
-  <div class="modal-backdrop" *ngIf="showModal" (click)="closeModal()"></div>
-  <div class="create-modal" *ngIf="showModal" data-aos="zoom-in">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title">
-          <i class="bi bi-tags-fill me-3"></i>
-          Crear Nueva Categoría
-        </h2>
-        <button class="btn-close" (click)="closeModal()"></button>
+  <!-- Paginación -->
+  <nav *ngIf="pageData() && pageData()!.totalPages > 1" class="pagination-container">
+    <ul class="pagination">
+      <li [class.disabled]="currentPage() === 0">
+        <button (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 0">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+      </li>
+      <ng-container *ngFor="let page of getPageNumbers()">
+        <li [class.active]="page === currentPage()">
+          <button (click)="goToPage(page)">{{ page + 1 }}</button>
+        </li>
+      </ng-container>
+      <li [class.disabled]="currentPage() === (pageData()!.totalPages - 1)">
+        <button (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === (pageData()!.totalPages - 1)">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </li>
+    </ul>
+  </nav>
+</div>
+
+<!-- Modal Crear Categoría -->
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()" data-aos="zoom-in">
+    <div class="modal-header">
+      <h2><i class="bi bi-tags-fill me-3"></i>Crear Nueva Categoría</h2>
+      <button class="close-btn" (click)="closeCreateModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="mb-4">
+        <label class="form-label fw-semibold">Nombre de la categoría</label>
+        <input
+          [(ngModel)]="newCategory.nombre"
+          type="text"
+          class="form-control form-control-lg"
+          placeholder="Ej: Ropa, Tecnología, Belleza..."
+          autofocus
+        />
       </div>
-
-      <div class="modal-body">
-        <div class="mb-5">
-          <label class="form-label fw-medium">Nombre de la categoría</label>
-          <input 
-            [(ngModel)]="newCategory.name" 
-            type="text" 
-            class="form-control form-control-lg rounded-pill"
-            placeholder="Ej: Ropa, Belleza, Tecnología...">
-        </div>
-
-        <div class="d-flex gap-3">
-          <button (click)="closeModal()" class="btn btn-outline-secondary btn-lg flex-fill rounded-pill">
-            Cancelar
-          </button>
-          <button (click)="saveCategory()" class="btn btn-primary btn-lg flex-fill rounded-pill fw-bold">
-            Crear Categoría
-          </button>
-        </div>
+      <div class="d-flex gap-3 mt-5">
+        <button class="btn btn-outline-secondary flex-fill" (click)="closeCreateModal()">
+          Cancelar
+        </button>
+        <button class="btn btn-primary flex-fill" (click)="saveCategory()">
+          Crear Categoría
+        </button>
       </div>
     </div>
   </div>

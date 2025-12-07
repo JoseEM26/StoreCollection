@@ -14,6 +14,8 @@ public class TiendaRequest {
     private String descripcion;
     private String direccion;
     private String horarios;
+    private String mapa_url;
+    private String logo_img_url;
     private Integer planId;
     private Integer userId;
 }

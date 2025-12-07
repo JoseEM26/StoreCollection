@@ -1,129 +1,127 @@
-// src/app/pages/administrativo/stores/stores.component.ts
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TiendaPublic, TiendaPage } from '../../../model/tienda-public.model';
-import { TiendaPublicService } from '../../../service/tienda-public.service';
+import { TiendaPage } from '../../../model/tienda-public.model';
+import { TiendaResponse } from '../../../model/admin/tienda-admin.model';
+import { TiendaAdminService } from '../../../service/service-admin/tienda-admin.service';
+import { AuthService } from '../../../../auth/auth.service';
+import { FormStoresComponent } from "./form-stores/form-stores.component";
 
 @Component({
   selector: 'app-stores',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FormStoresComponent],
   templateUrl: './stores.component.html',
-  styleUrl: './stores.component.css'
+  styleUrl: './stores.component.css'  // ← Apunta al archivo .css
 })
 export class StoresComponent implements OnInit {
-  // Datos desde API
   tiendasPage = signal<TiendaPage | null>(null);
-  tiendas = signal<TiendaPublic[]>([]);
+  tiendas = signal<TiendaResponse[]>([]);
   loading = signal(true);
 
-  // Paginación
   currentPage = signal(0);
   pageSize = 12;
+  sort = signal('nombre,asc');
+  searchTerm: string = '';
 
-  // Modales
   showCreateModal = false;
   showEditModal = false;
-  editingStore = signal<TiendaPublic | null>(null);
+  editingStore = signal<TiendaResponse | undefined>(undefined);
 
-  // Formulario crear
-  newStore: Partial<TiendaPublic> = {
-    nombre: '',
-    slug: '',
-    whatsapp: '+51',
-    moneda: 'SOLES',
-    descripcion: '',
-    direccion: '',
-    horarios: 'Lun-Sáb 10am-9pm',
-    planNombre: 'Básico',
-    activo: true
-  };
-
-  constructor(private tiendaService: TiendaPublicService) {}
+  constructor(
+    private tiendaService: TiendaAdminService,
+    public auth: AuthService
+  ) {
+    effect(() => {
+      this.loadTiendas();
+    });
+  }
 
   ngOnInit(): void {
     this.loadTiendas();
   }
 
-  loadTiendas(page: number = 0) {
+  loadTiendas(): void {
     this.loading.set(true);
-    this.currentPage.set(page);
-
-    this.tiendaService.getAllTiendas(page, this.pageSize).subscribe({
+    this.tiendaService.listarTiendas(
+      this.currentPage(),
+      this.pageSize,
+      this.sort(),
+      this.searchTerm.trim() || undefined
+    ).subscribe({
       next: (pageData) => {
         this.tiendasPage.set(pageData);
-        this.tiendas.set(pageData.content);
+        this.tiendas.set(pageData.content as TiendaResponse[]);
         this.loading.set(false);
       },
-      error: () => {
+      error: (err) => {
+        console.error('Error cargando tiendas:', err);
         this.loading.set(false);
         alert('Error al cargar las tiendas');
       }
     });
   }
 
-  // Paginación
-  goToPage(page: number) {
-    if (page >= 0 && page < (this.tiendasPage()?.totalPages || 0)) {
-      this.loadTiendas(page);
+  goToPage(page: number): void {
+    if (page >= 0 && (!this.tiendasPage() || page < this.tiendasPage()!.totalPages)) {
+      this.currentPage.set(page);
     }
   }
+closeModal() {
+  this.showCreateModal = false;
+  this.showEditModal = false;
+  this.editingStore.set(undefined);
+}
+  onSearch(): void {
+    this.currentPage.set(0);
+  }
 
-  // Abrir modal crear
-  openCreateModal() {
-    this.newStore = {
-      nombre: '',
-      slug: '',
-      whatsapp: '+51',
-      moneda: 'SOLES',
-      descripcion: '',
-      direccion: '',
-      horarios: 'Lun-Sáb 10am-9pm',
-      planNombre: 'Básico',
-      activo: true
-    };
+  onFormSuccess(tiendaActualizada: TiendaResponse) {
+    this.closeCreateModal();
+    this.closeEditModal();
+    this.loadTiendas();
+    alert(tiendaActualizada.id ? `Tienda "${tiendaActualizada.nombre}" actualizada` : `Tienda "${tiendaActualizada.nombre}" creada`);
+  }
+
+  setSort(campo: string): void {
+    const [actualCampo, actualDir] = this.sort().split(',');
+    const nuevaDir = actualCampo === campo && actualDir === 'asc' ? 'desc' : 'asc';
+    this.sort.set(`${campo},${nuevaDir}`);
+    this.currentPage.set(0);
+  }
+
+  getPageNumbers(): number[] {
+    const total = this.tiendasPage()?.totalPages || 0;
+    const current = this.currentPage();
+    const delta = 2;
+    const range: number[] = [];
+    for (let i = Math.max(0, current - delta); i <= Math.min(total - 1, current + delta); i++) {
+      range.push(i);
+    }
+    return range;
+  }
+
+  openCreateModal(): void {
+    this.editingStore.set(undefined);
     this.showCreateModal = true;
   }
 
-  closeCreateModal() {
+  closeCreateModal(): void {
     this.showCreateModal = false;
   }
 
-  createStore() {
-    if (!this.newStore.nombre?.trim() || !this.newStore.slug?.trim()) {
-      alert('Nombre y slug son obligatorios');
-      return;
-    }
-    alert(`Tienda "${this.newStore.nombre}" creada correctamente (simulado)`);
-    this.closeCreateModal();
-  }
-
-  // Editar tienda
-  openEditModal(tienda: TiendaPublic) {
-    this.editingStore.set({ ...tienda });
+  openEditModal(tienda: TiendaResponse): void {
+    this.editingStore.set(tienda);
     this.showEditModal = true;
   }
 
-  closeEditModal() {
+  closeEditModal(): void {
     this.showEditModal = false;
-    this.editingStore.set(null);
+    this.editingStore.set(undefined);
   }
 
-  updateStore() {
-    const store = this.editingStore();
-    if (store) {
-      alert(`Tienda "${store.nombre}" actualizada (simulado)`);
-      this.closeEditModal();
-    }
-  }
-
-  // Toggle activo
-  toggleActive(tienda: TiendaPublic) {
-    alert(
-      tienda.activo
-        ? `Tienda "${tienda.nombre}" desactivada (simulado)`
-        : `Tienda "${tienda.nombre}" activada (simulado)`
-    );
+  toggleActive(tienda: TiendaResponse): void {
+    alert(tienda.activo ? `Tienda "${tienda.nombre}" desactivada` : `Tienda "${tienda.nombre}" activada`);
+    this.loadTiendas();
   }
 }
