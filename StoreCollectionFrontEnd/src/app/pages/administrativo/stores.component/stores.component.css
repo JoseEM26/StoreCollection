@@ -149,6 +149,7 @@
   mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
   mask-composite: exclude;
   -webkit-mask-composite: xor;
+  z-index: -1; /* ¡¡¡ESTO SOLUCIONA EL BOTÓN BLOQUEADO!!! */
 }
 
 .store-card:hover {
@@ -279,6 +280,8 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  position: relative; /* Asegura que los botones estén encima */
+  z-index: 1; /* ¡¡¡ESTO AYUDA A QUE EL CLICK FUNCIONE SOBRE EL GLOW!!! */
 }
 
 .btn-edit {
@@ -302,12 +305,6 @@
 .btn-toggle.active {
   background: #f0fdf4;
   color: #16a34a;
-}
-
-.modal-card > app-form-stores {
-  flex: 1;
-  overflow-y: auto;
-  padding: 2rem;
 }
 
 .empty-icon {
@@ -406,10 +403,13 @@
   animation: modalPop 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.modal-card > app-form-stores {
+/* ¡¡¡CORREGIDO: AHORA EL FORMULARIO SE VE!!! */
+.modal-content app-form-stores {
   flex: 1;
   overflow-y: auto;
   padding: 2rem;
+  padding-top: 0; /* Evita espacio extra */
+  display: block;
 }
 
 /* Botón cerrar flotante */

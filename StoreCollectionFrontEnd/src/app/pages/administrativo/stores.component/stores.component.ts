@@ -1,8 +1,8 @@
+// src/app/components/stores/stores.component.ts
 import { Component, OnInit, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TiendaPage } from '../../../model/tienda-public.model';
-import { TiendaResponse } from '../../../model/admin/tienda-admin.model';
+import { TiendaPage, TiendaResponse } from '../../../model/admin/tienda-admin.model';
 import { TiendaAdminService } from '../../../service/service-admin/tienda-admin.service';
 import { AuthService } from '../../../../auth/auth.service';
 import { FormStoresComponent } from "./form-stores/form-stores.component";
@@ -12,7 +12,7 @@ import { FormStoresComponent } from "./form-stores/form-stores.component";
   standalone: true,
   imports: [CommonModule, FormsModule, FormStoresComponent],
   templateUrl: './stores.component.html',
-  styleUrl: './stores.component.css'  // ← Apunta al archivo .css
+  styleUrl: './stores.component.css'
 })
 export class StoresComponent implements OnInit {
   tiendasPage = signal<TiendaPage | null>(null);
@@ -22,10 +22,9 @@ export class StoresComponent implements OnInit {
   currentPage = signal(0);
   pageSize = 12;
   sort = signal('nombre,asc');
-  searchTerm: string = '';
+  searchTerm = signal<string>('');
 
-  showCreateModal = false;
-  showEditModal = false;
+  showModal = signal(false);
   editingStore = signal<TiendaResponse | undefined>(undefined);
 
   constructor(
@@ -47,7 +46,7 @@ export class StoresComponent implements OnInit {
       this.currentPage(),
       this.pageSize,
       this.sort(),
-      this.searchTerm.trim() || undefined
+      this.searchTerm().trim() || undefined
     ).subscribe({
       next: (pageData) => {
         this.tiendasPage.set(pageData);
@@ -67,18 +66,18 @@ export class StoresComponent implements OnInit {
       this.currentPage.set(page);
     }
   }
-closeModal() {
-  this.showCreateModal = false;
-  this.showEditModal = false;
-  this.editingStore.set(undefined);
-}
+
+  closeModal() {
+    this.showModal.set(false);
+    this.editingStore.set(undefined);
+  }
+
   onSearch(): void {
     this.currentPage.set(0);
   }
 
   onFormSuccess(tiendaActualizada: TiendaResponse) {
-    this.closeCreateModal();
-    this.closeEditModal();
+    this.closeModal();
     this.loadTiendas();
     alert(tiendaActualizada.id ? `Tienda "${tiendaActualizada.nombre}" actualizada` : `Tienda "${tiendaActualizada.nombre}" creada`);
   }
@@ -103,21 +102,12 @@ closeModal() {
 
   openCreateModal(): void {
     this.editingStore.set(undefined);
-    this.showCreateModal = true;
-  }
-
-  closeCreateModal(): void {
-    this.showCreateModal = false;
+    this.showModal.set(true);
   }
 
   openEditModal(tienda: TiendaResponse): void {
     this.editingStore.set(tienda);
-    this.showEditModal = true;
-  }
-
-  closeEditModal(): void {
-    this.showEditModal = false;
-    this.editingStore.set(undefined);
+    this.showModal.set(true);
   }
 
   toggleActive(tienda: TiendaResponse): void {

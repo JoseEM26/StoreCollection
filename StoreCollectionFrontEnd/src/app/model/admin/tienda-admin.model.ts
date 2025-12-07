@@ -1,10 +1,10 @@
-// src/app/model/tienda-admin.model.ts
+// src/app/model/admin/tienda-admin.model.ts
 export interface TiendaResponse {
   id: number;
   nombre: string;
   slug: string;
   whatsapp?: string;
-  moneda: string;
+  moneda: string;                    // ← string, no union → acepta cualquier valor del backend
   descripcion?: string;
   direccion?: string;
   horarios?: string;
@@ -26,5 +26,6 @@ export interface TiendaPage {
   size: number;
   first: boolean;
   last: boolean;
+  numberOfElements: number;
   empty: boolean;
 }

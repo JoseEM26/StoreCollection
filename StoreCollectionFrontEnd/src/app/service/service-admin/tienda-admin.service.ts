@@ -1,11 +1,10 @@
-// src/app/services/tienda-admin.service.ts
+// src/app/service/service-admin/tienda-admin.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../../../environment';
-import { TiendaPage } from '../../model/tienda-public.model';
-import { TiendaResponse } from '../../model/admin/tienda-admin.model';
+import { TiendaPage, TiendaResponse } from '../../model/admin/tienda-admin.model';
 
 export interface TiendaCreateRequest {
   nombre: string;
@@ -20,9 +19,7 @@ export interface TiendaCreateRequest {
   planId?: number;
 }
 
-export interface TiendaUpdateRequest extends TiendaCreateRequest {
-  id: number;
-}
+export type TiendaSaveRequest = TiendaCreateRequest & { id?: number };
 
 @Injectable({
   providedIn: 'root'
@@ -32,11 +29,24 @@ export class TiendaAdminService {
 
   constructor(private http: HttpClient) {}
 
-  // === LISTADO (ADMIN ve todas, OWNER solo las suyas) ===
+  // Un solo método: crea si no tiene id, actualiza si tiene
+  guardarTienda(request: TiendaSaveRequest): Observable<TiendaResponse> {
+    return this.http.post<TiendaResponse>(this.BASE_URL, request)
+      .pipe(catchError(this.handleError));
+  }
+
+crearTienda(request: TiendaCreateRequest): Observable<TiendaResponse> {
+  return this.http.post<TiendaResponse>(this.BASE_URL, request)
+    .pipe(catchError(this.handleError));
+}
+actualizarTienda(id: number, request: TiendaCreateRequest): Observable<TiendaResponse> {
+  return this.http.put<TiendaResponse>(`${this.BASE_URL}/${id}`, request)
+    .pipe(catchError(this.handleError));
+}
   listarTiendas(
-    page: number = 0,
-    size: number = 12,
-    sort: string = 'nombre,asc',
+    page = 0,
+    size = 12,
+    sort = 'nombre,asc',
     search?: string
   ): Observable<TiendaPage> {
     let params = new HttpParams()
@@ -52,58 +62,26 @@ export class TiendaAdminService {
       .pipe(catchError(this.handleError));
   }
 
-  // === CREAR TIENDA ===
-  crearTienda(request: TiendaCreateRequest): Observable<TiendaResponse> {
-    return this.http.post<TiendaResponse>(this.BASE_URL, request)
-      .pipe(catchError(this.handleError));
-  }
-
-  // === ACTUALIZAR TIENDA ===
-  actualizarTienda(id: number, request: Partial<TiendaCreateRequest>): Observable<TiendaResponse> {
-    return this.http.put<TiendaResponse>(`${this.BASE_URL}/${id}`, request)
-      .pipe(catchError(this.handleError));
-  }
-
-  // === ELIMINAR TIENDA (opcional) ===
-  eliminarTienda(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.BASE_URL}/${id}`)
-      .pipe(catchError(this.handleError));
-  }
-
-  // === GENERAR SLUG AUTOMÁTICO (opcional, helper en frontend) ===
   generarSlug(nombre: string): string {
     return nombre
       .toLowerCase()
       .trim()
-      .replace(/[^a-z0-9\s-]/g, '')           // Quita caracteres especiales
-      .replace(/\s+/g, '-')                   // Espacios → guiones
-      .replace(/-+/g, '-')                    // Evita guiones duplicados
-      .substring(0, 50);                      // Máx 50 caracteres
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .substring(0, 60);
   }
 
-  // === MANEJO DE ERRORES ===
   private handleError(error: HttpErrorResponse) {
     let mensaje = 'Ocurrió un error inesperado';
+    if (error.status === 400) mensaje = 'Datos inválidos';
+    else if (error.status === 403) mensaje = 'No tienes permiso';
+    else if (error.status === 409) mensaje = 'El slug ya está en uso';
+    else if (error.error?.message) mensaje = error.error.message;
 
-    if (error.error instanceof ErrorEvent) {
-      // Error del cliente
-      mensaje = error.error.message;
-    } else {
-      // Error del servidor
-      if (error.status === 400) {
-        mensaje = error.error?.message || 'Datos inválidos';
-      } else if (error.status === 403) {
-        mensaje = 'No tienes permiso para realizar esta acción';
-      } else if (error.status === 404) {
-        mensaje = 'Tienda no encontrada';
-      } else if (error.status === 409) {
-        mensaje = error.error?.message || 'El slug ya está en uso';
-      } else {
-        mensaje = error.error?.message || `Error ${error.status}`;
-      }
-    }
-
-    console.error('Error en TiendaAdminService:', error);
+    console.error('[TiendaAdminService]', error);
     return throwError(() => new Error(mensaje));
   }
 }
