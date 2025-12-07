@@ -21,6 +21,7 @@ public class TiendaController {
 
     private final TiendaService service;
 
+    //ESTO ES LA TIENDA PUBLICA DONDE TODOS ACCEDEN
     @GetMapping("/api/public/tiendas")
     public ResponseEntity<Page<TiendaResponse>> listarTodasTiendas(
             @RequestParam(defaultValue = "0") int page,
@@ -57,7 +58,7 @@ public class TiendaController {
     public ResponseEntity<TiendaResponse> publicInfo(@PathVariable String slug) {
         return ResponseEntity.ok(service.findBySlug(slug));
     }
-    // TiendaController.java
+    //ESTO ES LA TIENDA privada DONDE por roles ACCEDEN
     @GetMapping("/api/owner/tiendas/admin-list")
     @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     public ResponseEntity<Page<TiendaResponse>> listarTiendasUsuarioOAdmin(
@@ -95,6 +96,8 @@ public class TiendaController {
 
         return PageRequest.of(page, size, org.springframework.data.domain.Sort.by(direction, property));
     }
+    /// /////////////////////////////////AUN NO USADAS///////////////////////////////////////////////////////////////////////
+
     // PRIVADO - Mis tiendas
     @GetMapping("/api/owner/tiendas")
     public ResponseEntity<List<TiendaResponse>> misTiendas() {
