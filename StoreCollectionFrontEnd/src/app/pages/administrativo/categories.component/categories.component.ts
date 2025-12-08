@@ -1,15 +1,15 @@
-// src/app/pages/administrativo/categories/categories.component.ts
 import { Component, OnInit, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CategoriaPage, CategoriaResponse } from '../../../model/admin/categoria-admin.model';
 import { CategoriaAdminService } from '../../../service/service-admin/categoria-admin.service';
 import { AuthService } from '../../../../auth/auth.service';
+import { FormCategoriaComponent } from "./form-categoria/form-categoria.component";
 
 @Component({
   selector: 'app-categories',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FormCategoriaComponent],
   templateUrl: './categories.component.html',
   styleUrl: './categories.component.css'
 })
@@ -61,7 +61,11 @@ export class CategoriesComponent implements OnInit {
       }
     });
   }
-
+onCategoriaCreada(nuevaCategoria: any) {
+  alert(`Categoría "${nuevaCategoria.nombre}" creada exitosamente`);
+  this.closeCreateModal();
+  this.loadCategorias(); // recarga la lista
+}
   // Paginación
   goToPage(page: number): void {
     if (page >= 0 && page < (this.pageData()?.totalPages || 0)) {

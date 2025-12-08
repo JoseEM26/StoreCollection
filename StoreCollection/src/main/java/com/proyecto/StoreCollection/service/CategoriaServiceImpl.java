@@ -85,7 +85,7 @@ public class CategoriaServiceImpl implements CategoriaService {
 
         cat.setNombre(request.getNombre());
         cat.setSlug(request.getSlug());
-        cat.setTienda(tiendaService.getTiendaDelUsuarioActual()); // ← automático, 100% seguro
+        cat.setTienda(tiendaService.getTiendaDelUsuarioActual());
 
         return toResponse(categoriaRepository.save(cat));
     }

@@ -1,0 +1,46 @@
+<div class="p-4">
+  <h3 class="mb-4">{{ categoria?.id ? 'Editar' : 'Crear' }} Categoría</h3>
+
+  <form (ngSubmit)="onSubmit()">
+    <div class="mb-3">
+      <label class="form-label">Nombre *</label>
+      <input
+        [(ngModel)]="form.nombre"
+        (input)="onNombreChange()"
+        name="nombre"
+        type="text"
+        class="form-control"
+        placeholder="Ej: Electrónica"
+        required
+        [disabled]="loading"
+      />
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Slug (URL) *</label>
+      <div class="input-group">
+        <span class="input-group-text">/</span>
+        <input
+          [(ngModel)]="form.slug"
+          name="slug"
+          type="text"
+          class="form-control"
+          placeholder="electronica"
+          required
+          [disabled]="loading || !!categoria?.id"
+        />
+      </div>
+      <small class="text-muted">Se genera automáticamente al escribir el nombre</small>
+    </div>
+
+    <div class="d-flex gap-3 mt-4">
+      <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="loading">
+        Cancelar
+      </button>
+      <button type="submit" class="btn btn-primary" [disabled]="loading">
+        <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+        {{ categoria?.id ? 'Guardar' : 'Crear' }}
+      </button>
+    </div>
+  </form>
+</div>
