@@ -26,12 +26,11 @@ export class TiendaService {
     if (!slug) return '';
     return `/api/public/tiendas/${slug}`;
   }
+  
 
   setTienda(tienda: Tienda) {
     this.tiendaSubject.next(tienda);
   }
 
-  // getTienda(): Tienda | null {
-  //   return this.tiendaSubject.value;
-  // }
+
 }

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CategoriaPage, CategoriaResponse } from '../../../model/admin/categoria-admin.model';
 import { CategoriaAdminService } from '../../../service/service-admin/categoria-admin.service';
 import { AuthService } from '../../../../auth/auth.service';
-import { FormCategoriaComponent } from "./form-categoria/form-categoria.component";
+import { FormCategoriaComponent } from './form-categoria/form-categoria.component';
 
 @Component({
   selector: 'app-categories',
@@ -14,26 +14,23 @@ import { FormCategoriaComponent } from "./form-categoria/form-categoria.componen
   styleUrl: './categories.component.css'
 })
 export class CategoriesComponent implements OnInit {
-  // Datos del backend
   pageData = signal<CategoriaPage | null>(null);
   categorias = signal<CategoriaResponse[]>([]);
   loading = signal(true);
 
-  // Filtros
   currentPage = signal(0);
   pageSize = 20;
   sort = signal('nombre,asc');
   searchTerm = '';
 
-  // Modal crear
   showCreateModal = false;
-  newCategory = { nombre: '' };
+  showEditModal = false;
+  categoriaEditando = signal<CategoriaResponse | null>(null);
 
   constructor(
     private categoriaService: CategoriaAdminService,
     public auth: AuthService
   ) {
-    // Recarga automática cuando cambien filtros
     effect(() => this.loadCategorias());
   }
 
@@ -55,57 +52,57 @@ export class CategoriesComponent implements OnInit {
         this.categorias.set(data.content);
         this.loading.set(false);
       },
-      error: () => {
+      error: (err) => {
+        console.error('Error al cargar categorías:', err);
         this.loading.set(false);
-        alert('Error al cargar categorías');
+        alert(err.message || 'Error al cargar categorías');
       }
     });
   }
-onCategoriaCreada(nuevaCategoria: any) {
-  alert(`Categoría "${nuevaCategoria.nombre}" creada exitosamente`);
-  this.closeCreateModal();
-  this.loadCategorias(); // recarga la lista
-}
+
   // Paginación
   goToPage(page: number): void {
-    if (page >= 0 && page < (this.pageData()?.totalPages || 0)) {
+    if (page >= 0 && (!this.pageData() || page < this.pageData()!.totalPages)) {
       this.currentPage.set(page);
     }
   }
 
-  // Búsqueda
   onSearch(): void {
     this.currentPage.set(0);
   }
 
-  // Ordenación
   toggleSort(): void {
     const current = this.sort();
     this.sort.set(current.includes('asc') ? 'nombre,desc' : 'nombre,asc');
     this.currentPage.set(0);
   }
 
-  // Modal
+  // MODALES
   openCreateModal(): void {
-    this.newCategory.nombre = '';
+    this.categoriaEditando.set(null);
     this.showCreateModal = true;
   }
 
-  closeCreateModal(): void {
-    this.showCreateModal = false;
+  openEditModal(categoria: CategoriaResponse): void {
+    this.categoriaEditando.set(categoria);
+    this.showEditModal = true;
   }
 
-  saveCategory(): void {
-    if (!this.newCategory.nombre.trim()) {
-      alert('El nombre es obligatorio');
-      return;
-    }
+  closeModals(): void {
+    this.showCreateModal = false;
+    this.showEditModal = false;
+    this.categoriaEditando.set(null);
+  }
 
-    // Aquí iría el POST real al backend
-    alert(`Categoría "${this.newCategory.nombre}" creada correctamente (simulado)`);
-
-    this.closeCreateModal();
-    this.loadCategorias(); // recargar lista
+  // ÉXITO AL CREAR O EDITAR
+  onCategoriaGuardada(categoria: CategoriaResponse) {
+    alert(
+      categoria.id
+        ? `Categoría "${categoria.nombre}" actualizada correctamente`
+        : `Categoría "${categoria.nombre}" creada exitosamente`
+    );
+    this.closeModals();
+    this.loadCategorias();
   }
 
   // Paginación inteligente

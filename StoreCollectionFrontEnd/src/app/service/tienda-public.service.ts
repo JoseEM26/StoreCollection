@@ -2,19 +2,20 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { TiendaService } from './tienda.service';
-import { Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { Tienda } from '../model';
 import { catchError, tap } from 'rxjs/operators';
 import { TiendaPage } from '../model/tienda-public.model';
 import { environment } from '../../../environment';
+import { TiendaDropdown } from '../model/index.dto';
 
 @Injectable({ providedIn: 'root' })
 export class TiendaPublicService {
-  constructor(private http: HttpClient, private tiendaService: TiendaService) {}
  private apiUrl = `${environment.apiUrl}/api/public/tiendas`;
+  constructor(private http: HttpClient, private tiendaService: TiendaService) {
+    
+  }
 
-
- //ESTO DE ACA CONSUME TODOS LAS TIENDAS
   getAllTiendas(
     page = 0,
     size = 12,
@@ -43,5 +44,11 @@ getTiendaBySlug(slug: string): Observable<Tienda | null> {
     return this.http
       .get<Tienda>(url)
       .pipe(tap((tienda) => this.tiendaService.setTienda(tienda)));
+  }
+
+
+
+  obtenerTiendasDropdown(): Observable<TiendaDropdown[]> {
+    return this.http.get<TiendaDropdown[]>('/api/public/droptown');
   }
 }

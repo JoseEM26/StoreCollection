@@ -1,128 +1,114 @@
-<div class="categories-page" data-aos="fade-up">
-  <!-- Header Premium -->
-  <div class="header-section">
-    <div>
-      <h1 class="page-title">
-        <i class="bi bi-tags-fill me-3"></i>
-        Gestión de Categorías
-      </h1>
-      <p class="page-subtitle">
-        {{ auth.isAdmin() ? 'Todas las categorías del sistema' : 'Categorías de tu tienda' }}
-        <span class="text-muted ms-2">
-          ({{ pageData()?.totalElements || 0 }} en total)
-        </span>
-      </p>
+<div class="categories-wrapper">
+  <!-- Header con gradiente -->
+  <header class="page-header" data-aos="fade-down">
+    <div class="header-content">
+      <div class="title-group">
+        <h1 class="page-title">
+          <span class="gradient-text">Categorías</span>
+        </h1>
+        <p class="page-subtitle">
+          {{ auth.isAdmin() ? 'Gestión global del sistema' : 'Categorías de tu tienda' }}
+          <span class="badge-total">{{ pageData()?.totalElements || 0 }}</span>
+        </p>
+      </div>
+      <button class="btn-primary-float" (click)="openCreateModal()" [disabled]="loading()">
+        <i class="bi bi-plus-lg"></i>
+      </button>
     </div>
-    <button class="btn-create" (click)="openCreateModal()">
-      <i class="bi bi-plus-lg"></i>
-      Nueva Categoría
-    </button>
-  </div>
+  </header>
 
-  <!-- Filtros -->
-  <div class="filters-bar mb-4">
-    <div class="search-box">
+  <!-- Filtros elegantes -->
+  <section class="filters-section" data-aos="fade-up" data-aos-delay="100">
+    <div class="search-container">
       <i class="bi bi-search"></i>
       <input
         type="text"
         placeholder="Buscar categoría..."
         [(ngModel)]="searchTerm"
         (input)="onSearch()"
+        class="search-input"
       />
     </div>
-    <button class="btn-sort" (click)="toggleSort()">
-      Nombre
-      <i class="bi" [class.bi-arrow-up]="sort().includes('asc')" [class.bi-arrow-down]="sort().includes('desc')"></i>
+    <button class="btn-sort" (click)="toggleSort()" [class.active]="sort().includes('desc')">
+      <i class="bi bi-arrow-down-up"></i>
+      Ordenar
     </button>
+  </section>
+
+  <!-- Loading con estilo -->
+  <div *ngIf="loading()" class="loading-state">
+    <div class="spinner-modern"></div>
+    <p>Cargando categorías...</p>
   </div>
 
-  <!-- Loading -->
-  <div *ngIf="loading()" class="loading-container">
-    <div class="spinner"></div>
-    <p class="loading-text">Cargando categorías...</p>
-  </div>
-
-  <!-- Grid de categorías -->
+  <!-- Grid de tarjetas (diseño glassmorphism + hover brutal) -->
   <div *ngIf="!loading() && categorias().length > 0" class="categories-grid">
-    <div
-      class="category-card"
+    <article
+      class="category-card glass-card"
       *ngFor="let cat of categorias(); let i = index"
-      [attr.data-aos]="i < 8 ? 'fade-up' : ''"
-      [attr.data-aos-delay]="(i % 8) * 100"
+      data-aos="fade-up"
+      [attr.data-aos-delay]="(i % 10) * 50"
+      (click)="openEditModal(cat)"
     >
-      <div class="card-glow"></div>
-
-      <div class="card-header">
-        <div class="category-icon">
+      <div class="card-background"></div>
+      <div class="card-content">
+        <div class="card-icon">
           <i class="bi bi-tags-fill"></i>
         </div>
-        <div class="store-status">
-          <span class="status-dot active"></span>
-          Activa
+        <h3 class="card-title">{{ cat.nombre }}</h3>
+        <p class="card-slug">/{{ cat.slug }}</p>
+        <div class="card-footer">
+          <span class="badge-store">Tienda {{ cat.tiendaId }}</span>
+          <span class="badge-active">Activa</span>
         </div>
       </div>
-
-      <div class="card-body">
-        <h3 class="category-name">{{ cat.nombre }}</h3>
-        <p class="category-slug">
-          <i class="bi bi-link-45deg"></i>
-          {{ cat.slug }}
-        </p>
-        <small class="text-muted d-block">
-          Tienda ID: {{ cat.tiendaId }}
-        </small>
-      </div>
-
       <div class="card-actions">
-        <button class="btn-edit">
-          <i class="bi bi-pencil-square"></i> Editar
+        <button class="btn-edit-mini" (click)="$event.stopPropagation(); openEditModal(cat)">
+          <i class="bi bi-pencil-square"></i>
         </button>
       </div>
-    </div>
+    </article>
   </div>
 
-  <!-- Empty State -->
-  <div *ngIf="!loading() && categorias().length === 0" class="empty-state" data-aos="fade-up">
-    <i class="bi bi-tags empty-icon"></i>
-    <h3>No hay categorías</h3>
-    <p *ngIf="searchTerm">No se encontraron resultados</p>
-    <p *ngIf="!searchTerm">Aún no tienes categorías creadas</p>
-    <button class="btn-create mt-4" (click)="openCreateModal()">
-      <i class="bi bi-plus-lg"></i>
-      Crear primera categoría
+  <!-- Empty State hermoso -->
+  <div *ngIf="!loading() && categorias().length === 0" class="empty-state" data-aos="zoom-in">
+    <div class="empty-illustration">
+      <i class="bi bi-tags"></i>
+    </div>
+    <h3>Ninguna categoría encontrada</h3>
+    <p *ngIf="searchTerm">Intenta con otro término de búsqueda</p>
+    <p *ngIf="!searchTerm">Comienza creando tu primera categoría</p>
+    <button class="btn-primary" (click)="openCreateModal()">
+      <i class="bi bi-plus-lg"></i> Crear categoría
     </button>
   </div>
 
-  <!-- Paginación -->
-  <nav *ngIf="pageData() && pageData()!.totalPages > 1" class="pagination-container">
-    <ul class="pagination">
-      <li [class.disabled]="currentPage() === 0">
-        <button (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 0">
-          <i class="bi bi-chevron-left"></i>
-        </button>
-      </li>
-      <ng-container *ngFor="let page of getPageNumbers()">
-        <li [class.active]="page === currentPage()">
-          <button (click)="goToPage(page)">{{ page + 1 }}</button>
-        </li>
-      </ng-container>
-      <li [class.disabled]="currentPage() === (pageData()!.totalPages - 1)">
-        <button (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === (pageData()!.totalPages - 1)">
-          <i class="bi bi-chevron-right"></i>
-        </button>
-      </li>
-    </ul>
+  <!-- Paginación moderna -->
+  <nav *ngIf="pageData() && pageData()!.totalPages > 1" class="pagination-modern">
+    <button (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 0">
+      <i class="bi bi-chevron-left"></i>
+    </button>
+    <div class="pages">
+      <button
+        *ngFor="let page of getPageNumbers()"
+        (click)="goToPage(page)"
+        [class.active]="page === currentPage()">
+        {{ page + 1 }}
+      </button>
+    </div>
+    <button (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === (pageData()!.totalPages - 1)">
+      <i class="bi bi-chevron-right"></i>
+    </button>
   </nav>
 </div>
 
-
-
-<!-- Reemplaza tu modal actual por este -->
-<div class="modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()">
-  <div class="modal-card" (click)="$event.stopPropagation()">
+<!-- MODAL PREMIUM -->
+<div class="modal-backdrop" *ngIf="showCreateModal || showEditModal" (click)="closeModals()">
+  <div class="modal-glass" (click)="$event.stopPropagation()" data-aos="zoom-in">
     <app-form-categoria
-      (success)="onCategoriaCreada($event)"
-      (cancel)="closeCreateModal()"
+      [categoria]="categoriaEditando()"
+      (success)="onCategoriaGuardada($event)"
+      (cancel)="closeModals()"
     ></app-form-categoria>
   </div>
 </div>

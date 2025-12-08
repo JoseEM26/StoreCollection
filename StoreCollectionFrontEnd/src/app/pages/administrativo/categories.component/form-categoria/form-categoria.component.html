@@ -1,45 +1,122 @@
-<div class="p-4">
-  <h3 class="mb-4">{{ categoria?.id ? 'Editar' : 'Crear' }} Categoría</h3>
+<div class="form-categoria-glass" data-aos="fade-up">
+  <!-- Header con gradiente animado -->
+  <div class="form-header">
+    <div class="header-content">
+      <i class="bi bi-tags-fill header-icon"></i>
+      <h3 class="header-title">
+        {{ categoria?.id ? 'Editar Categoría' : 'Nueva Categoría' }}
+      </h3>
+    </div>
+    <button class="btn-close-floating" (click)="onCancel()" [disabled]="loading">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
 
-  <form (ngSubmit)="onSubmit()">
-    <div class="mb-3">
-      <label class="form-label">Nombre *</label>
+  <form (ngSubmit)="onSubmit()" class="form-body" novalidate>
+
+    <!-- Dropdown de tienda (elegante y con estado) -->
+    <div class="form-group">
+      <label class="form-label">
+        <i class="bi bi-shop"></i>
+        {{ esAdmin ? 'Tienda destino' : 'Tu tienda' }}
+        <span class="required" *ngIf="esAdmin">*</span>
+      </label>
+
+      <div class="select-wrapper" [class.disabled]="!esAdmin && tiendas.length <= 1">
+        <select 
+          [(ngModel)]="form.tiendaId"
+          name="tiendaId"
+          class="custom-select"
+          [required]="esAdmin"
+          [disabled]="loading || (!esAdmin && tiendas.length <= 1)">
+          
+          <!-- Estado vacío -->
+          <option [ngValue]="null" disabled *ngIf="tiendas.length === 0">
+            {{ dropdownCargado ? 'No tienes tiendas' : 'Cargando...' }}
+          </option>
+
+          <!-- Placeholder para admin -->
+          <option [ngValue]="null" disabled *ngIf="esAdmin && tiendas.length > 0">
+            Selecciona una tienda
+          </option>
+
+          <!-- Opciones -->
+          <option *ngFor="let tienda of tiendas" [ngValue]="tienda.id">
+            {{ tienda.nombre }}
+            <span class="owner-badge" *ngIf="!esAdmin">mi tienda</span>
+          </option>
+        </select>
+        <i class="select-arrow bi bi-chevron-down"></i>
+      </div>
+
+      <!-- Mensaje para OWNER sin tienda -->
+      <div *ngIf="!esAdmin && tiendas.length === 0 && dropdownCargado" class="empty-store-alert">
+        <i class="bi bi-info-circle-fill"></i>
+        <div>
+          <strong>Aún no tienes una tienda</strong><br>
+          <a routerLink="/admin/tienda" class="link-primary">Crea tu primera tienda aquí →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nombre -->
+    <div class="form-group">
+      <label class="form-label">
+        <i class="bi bi-tag"></i> Nombre de la categoría <span class="required">*</span>
+      </label>
       <input
         [(ngModel)]="form.nombre"
         (input)="onNombreChange()"
         name="nombre"
         type="text"
-        class="form-control"
-        placeholder="Ej: Electrónica"
+        class="form-input"
+        placeholder="Ej: Tecnología, Moda, Hogar..."
         required
         [disabled]="loading"
-      />
+        autocomplete="off"
+        autofocus />
     </div>
 
-    <div class="mb-3">
-      <label class="form-label">Slug (URL) *</label>
-      <div class="input-group">
-        <span class="input-group-text">/</span>
+    <!-- Slug -->
+    <div class="form-group">
+      <label class="form-label">
+        <i class="bi bi-link-45deg"></i> URL amigable (slug) <span class="required">*</span>
+      </label>
+      <div class="slug-input-group">
+        <span class="slug-prefix">https://storecollection.pe/</span>
         <input
           [(ngModel)]="form.slug"
           name="slug"
           type="text"
-          class="form-control"
-          placeholder="electronica"
+          class="slug-input"
+          placeholder="tecnologia"
           required
-          [disabled]="loading || !!categoria?.id"
-        />
+          [readonly]="!!categoria?.id"
+          [disabled]="loading" />
       </div>
-      <small class="text-muted">Se genera automáticamente al escribir el nombre</small>
+      <small class="help-text">
+        {{ categoria?.id 
+          ? 'El slug no se puede cambiar después de crear' 
+          : 'Se genera automáticamente al escribir el nombre' }}
+      </small>
     </div>
 
-    <div class="d-flex gap-3 mt-4">
-      <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="loading">
+    <!-- Botones con efecto glass -->
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="onCancel()"
+        [disabled]="loading">
         Cancelar
       </button>
-      <button type="submit" class="btn btn-primary" [disabled]="loading">
-        <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
-        {{ categoria?.id ? 'Guardar' : 'Crear' }}
+      <button
+        type="submit"
+        class="btn-primary-gradient"
+        [disabled]="loading || (esAdmin && !form.tiendaId) || (!esAdmin && tiendas.length === 0)">
+        <span *ngIf="loading" class="spinner"></span>
+        <i class="bi bi-check2" *ngIf="!loading"></i>
+        {{ loading ? 'Guardando...' : (categoria?.id ? 'Actualizar' : 'Crear Categoría') }}
       </button>
     </div>
   </form>

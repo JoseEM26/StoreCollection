@@ -1,11 +1,12 @@
 // src/app/service/service-admin/tienda-admin.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { environment } from '../../../../environment';
 import { TiendaPage, TiendaResponse } from '../../model/admin/tienda-admin.model';
-
+import { TiendaDropdown } from '../../model/index.dto';
+import { retry, catchError, finalize } from 'rxjs/operators';
+import { of } from 'rxjs';
 export interface TiendaCreateRequest {
   nombre: string;
   slug: string;
@@ -26,9 +27,43 @@ export type TiendaSaveRequest = TiendaCreateRequest & { id?: number };
 })
 export class TiendaAdminService {
   private readonly BASE_URL = `${environment.apiUrl}/api/owner/tiendas`;
+  private readonly DROPDOWN_URL = `${environment.apiUrl}/api/owner/droptown`;
 
-  constructor(private http: HttpClient) {}
 
+private loadingDropdown = false;
+
+  constructor(private http: HttpClient) {
+    this.cargarDropdownTiendas(); 
+  }
+  
+  
+  private tiendasDropdownSubject = new BehaviorSubject<TiendaDropdown[]>([]);
+  tiendasDropdown$ = this.tiendasDropdownSubject.asObservable(); // ← agregado
+
+
+  cargarDropdownTiendas(): void {
+  if (this.loadingDropdown) return; // evita llamadas duplicadas
+
+  this.loadingDropdown = true;
+
+  this.http.get<TiendaDropdown[]>(this.DROPDOWN_URL)
+    .pipe(
+      retry(2), // reintenta 2 veces si falla red
+      catchError(err => {
+        console.error('Error crítico cargando tiendas dropdown', err);
+        // Opcional: mostrar toast
+        return of([] as TiendaDropdown[]); // nunca romper la app
+      }),
+      finalize(() => this.loadingDropdown = false)
+    )
+    .subscribe(tiendas => {
+      this.tiendasDropdownSubject.next(tiendas);
+    });
+}
+
+  refrescarDropdown(): void {
+    this.cargarDropdownTiendas();
+  }
   // Un solo método: crea si no tiene id, actualiza si tiene
   guardarTienda(request: TiendaSaveRequest): Observable<TiendaResponse> {
     return this.http.post<TiendaResponse>(this.BASE_URL, request)

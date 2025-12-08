@@ -1,10 +1,9 @@
-// src/app/model/index.dto.ts
 export interface ProductoPublic {
   id: number;
   nombre: string;
   slug: string;
   nombreCategoria: string;
-  precioMinimo: number;        // ← viene como number (Java BigDecimal → JS number)
+  precioMinimo: number;        
   stockTotal: number;
   imagenPrincipal: string;
   variantes: {
@@ -13,4 +12,9 @@ export interface ProductoPublic {
     imagenUrl: string;
     activo: boolean;
   }[];
+}
+
+export interface TiendaDropdown {
+  id: number;
+  nombre: string;
 }

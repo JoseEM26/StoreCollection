@@ -3,6 +3,7 @@ package com.proyecto.StoreCollection.service;
 
 import com.proyecto.StoreCollection.dto.request.TiendaRequest;
 import com.proyecto.StoreCollection.dto.response.TiendaResponse;
+import com.proyecto.StoreCollection.dto.special.TiendaDropdown;
 import com.proyecto.StoreCollection.entity.Plan;
 import com.proyecto.StoreCollection.entity.Tienda;
 import com.proyecto.StoreCollection.entity.Usuario;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
@@ -30,10 +32,15 @@ public class TiendaServiceImpl implements TiendaService {
     private final PlanRepository planRepository;
     private final UsuarioRepository usuarioRepository;
 
-    // === UTILIDADES ===
     private boolean esAdmin() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        if (auth == null || !auth.isAuthenticated()) return false;
+
+        return auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role ->
+                        "ADMIN".equals(role) || "ROLE_ADMIN".equals(role)
+                );
     }
 
     private String getEmailUsuarioActual() {
@@ -44,11 +51,29 @@ public class TiendaServiceImpl implements TiendaService {
         return auth.getName();
     }
 
-    // === LISTADOS ===
     @Override
     @Transactional(readOnly = true)
     public Page<TiendaResponse> findAll(Pageable pageable) {
         return tiendaRepository.findAll(pageable).map(this::toResponse);
+    }
+
+    @Override
+    public List<TiendaDropdown> findAllDopTownList() {
+        System.out.println(esAdmin());
+        System.out.println(esAdmin());
+        System.out.println(esAdmin());
+        if (esAdmin()) {
+            return tiendaRepository.findByActivoTrueOrderByNombreAsc();
+        }
+
+        String email = getEmailUsuarioActual();
+        List<TiendaDropdown> misTiendas = tiendaRepository.findByUserEmailAndActivoTrueOrderByNombreAsc(email);
+
+        if (misTiendas.isEmpty()) {
+            throw new RuntimeException("No tienes tiendas asociadas. Crea una primero.");
+        }
+
+        return misTiendas;
     }
 
     @Override
@@ -76,8 +101,7 @@ public class TiendaServiceImpl implements TiendaService {
     @Override
     public Tienda getTiendaDelUsuarioActual() {
         String email = getEmailUsuarioActual();
-        return tiendaRepository.findFirstByUserEmail(email)
-                .orElseThrow(() -> new RuntimeException("No tienes una tienda asignada. Crea una primero."));
+        return tiendaRepository.findFirstByUserEmail(email).orElse(null);
     }
 
     @Override

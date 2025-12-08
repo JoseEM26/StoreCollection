@@ -1,6 +1,7 @@
 package com.proyecto.StoreCollection.controller;
 import com.proyecto.StoreCollection.dto.request.TiendaRequest;
 import com.proyecto.StoreCollection.dto.response.*;
+import com.proyecto.StoreCollection.dto.special.TiendaDropdown;
 import com.proyecto.StoreCollection.service.TiendaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -96,6 +97,14 @@ public class TiendaController {
 
         return PageRequest.of(page, size, org.springframework.data.domain.Sort.by(direction, property));
     }
+
+
+    @GetMapping("/api/owner/droptown")
+    public ResponseEntity<List<TiendaDropdown>> findAllDropTownList() {
+        List<TiendaDropdown>lsita=service.findAllDopTownList();
+        return ResponseEntity.ok(lsita);
+    }
+
     /// /////////////////////////////////AUN NO USADAS///////////////////////////////////////////////////////////////////////
 
     // PRIVADO - Mis tiendas
