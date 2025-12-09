@@ -6,6 +6,8 @@ import { environment } from '../../../../environment';
 
 // Modelos de respuesta
 import { ProductoPage, ProductoResponse } from '../../model/admin/producto-admin.model';
+import { CategoriaDropdown } from '../../model/admin/categoria-admin.model';
+import { AtributoConValores } from '../../model/admin/atributo-dropdown.model';
 
 export interface ProductoCreateRequest {
   id?: number;

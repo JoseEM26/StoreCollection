@@ -5,7 +5,10 @@ export interface CategoriaResponse {
   slug: string;
   tiendaId: number;
 }
-
+export interface CategoriaDropdown {
+  id: number;
+  nombre: string;
+}
 export interface CategoriaPage {
   content: CategoriaResponse[];
   pageable: any;

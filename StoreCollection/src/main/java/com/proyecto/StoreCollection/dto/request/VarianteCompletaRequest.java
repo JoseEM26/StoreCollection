@@ -6,7 +6,6 @@ import java.util.Set;
 
 @Data
 public class VarianteCompletaRequest {
-    @NotBlank
     private Integer id;
 
     @NotBlank
