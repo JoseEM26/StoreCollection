@@ -2,6 +2,7 @@ package com.proyecto.StoreCollection.service;
 
 import com.proyecto.StoreCollection.dto.request.CategoriaRequest;
 import com.proyecto.StoreCollection.dto.response.CategoriaResponse;
+import com.proyecto.StoreCollection.dto.special.CategoriaDropdown;
 import com.proyecto.StoreCollection.entity.Categoria;
 import com.proyecto.StoreCollection.entity.Tienda;
 import com.proyecto.StoreCollection.repository.CategoriaRepository;
@@ -9,6 +10,7 @@ import com.proyecto.StoreCollection.repository.TiendaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -33,6 +35,24 @@ public class CategoriaServiceImpl implements CategoriaService {
         // TenantFilter ya puso el tenantId → solo mostramos las categorías de esa tienda
         return categoriaRepository.findAllByTenant().stream()
                 .map(this::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CategoriaDropdown> findAllForDropdown() {
+        // Solo ADMIN
+        return categoriaRepository.findAll(Sort.by(Sort.Direction.ASC, "nombre")).stream()
+                .map(c -> new CategoriaDropdown(c.getId(), c.getNombre()))
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CategoriaDropdown> findByTiendaIdForDropdown(Integer tiendaId) {
+        // OWNER y ADMIN cuando filtra
+        return categoriaRepository.findByTiendaIdOrderByNombreAsc(tiendaId).stream()
+                .map(c -> new CategoriaDropdown(c.id(), c.nombre()))
                 .toList();
     }
 

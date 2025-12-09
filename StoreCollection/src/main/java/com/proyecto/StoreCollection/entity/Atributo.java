@@ -1,18 +1,30 @@
 package com.proyecto.StoreCollection.entity;
-import lombok.*;
 
+import lombok.*;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "atributo")
-@Data @NoArgsConstructor @AllArgsConstructor
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(of = "id")
 public class Atributo {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @NotBlank
+    @Column(nullable = false)
     private String nombre;
 
-    @ManyToOne @JoinColumn(nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tienda_id", nullable = false)
     private Tienda tienda;
+
+    // Relación con los valores del atributo (color, talla, etc.)
+    @OneToMany(mappedBy = "atributo", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<AtributoValor> valores = new ArrayList<>();
 }

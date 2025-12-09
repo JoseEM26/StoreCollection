@@ -43,35 +43,47 @@ public class ProductoCompletoServiceImpl {
     // ==================== MÉTODO COMÚN (CREATE O UPDATE) ====================
     private ProductoCreateResponse guardarProductoCompleto(ProductoCompletoRequest request, Integer existingId) {
         boolean esAdmin = authService.isAdmin();
-        Tienda tiendaActual;
 
-        // Determinar tienda
+        // ===== DETERMINAR LA TIENDA =====
+        Tienda tiendaDestino;
+
         if (esAdmin && request.getTiendaId() != null) {
-            tiendaActual = tiendaService.getTiendaById(request.getTiendaId())
+            // ADMIN puede especificar tienda
+            tiendaDestino = tiendaService.getTiendaById(request.getTiendaId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tienda no encontrada"));
+        } else if (esAdmin) {
+            // ADMIN no especificó tienda → usa la del usuario actual (opcional)
+            tiendaDestino = tiendaService.getTiendaDelUsuarioActual();
         } else {
-            tiendaActual = tiendaService.getTiendaDelUsuarioActual();
-            if (request.getTiendaId() != null && !request.getTiendaId().equals(tiendaActual.getId())) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No puedes operar en otra tienda");
+            // OWNER: NO puede elegir tienda → siempre la suya
+            tiendaDestino = tiendaService.getTiendaDelUsuarioActual();
+
+            // OWNER intenta meter tiendaId → RECHAZAR
+            if (request.getTiendaId() != null && !request.getTiendaId().equals(tiendaDestino.getId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No puedes crear/editar productos en otra tienda");
             }
         }
 
-        Integer tiendaId = tiendaActual.getId();
+        Integer tiendaId = tiendaDestino.getId();
+
+        // ===== VALIDACIONES =====
         validarRequest(request, tiendaId, existingId, esAdmin);
 
-        // === CATEGORÍA ===
+        // ===== CATEGORÍA =====
         Categoria categoria = esAdmin
                 ? categoriaRepository.findById(request.getCategoriaId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoría no encontrada"))
-                : categoriaRepository.findByIdAndTienda(request.getCategoriaId(), tiendaActual)
+                : categoriaRepository.findByIdAndTienda(request.getCategoriaId(), tiendaDestino)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoría no pertenece a tu tienda"));
 
-        // === PRODUCTO ===
+        // ===== PRODUCTO =====
         Producto producto;
         if (existingId == null) {
             producto = new Producto();
         } else {
             producto = productoRepository.getByIdAndTenant(existingId);
+
+            // Seguridad extra: OWNER no puede editar producto de otra tienda
             if (!esAdmin && !producto.getTienda().getId().equals(tiendaId)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para editar este producto");
             }
@@ -80,71 +92,62 @@ public class ProductoCompletoServiceImpl {
         producto.setNombre(request.getNombre());
         producto.setSlug(request.getSlug());
         producto.setCategoria(categoria);
-        producto.setTienda(tiendaActual);
+        producto.setTienda(tiendaDestino);
 
         producto = productoRepository.save(producto);
 
-        // === GESTIÓN DE VARIANTES ===
+        // ===== GESTIÓN DE VARIANTES =====
         Set<Integer> idsActuales = request.getVariantes().stream()
                 .map(VarianteCompletaRequest::getId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
-        // Eliminar variantes que ya no existen
         producto.getVariantes().removeIf(v -> v.getId() != null && !idsActuales.contains(v.getId()));
 
-        // Procesar cada variante
         for (VarianteCompletaRequest varReq : request.getVariantes()) {
             if (varReq.getId() != null && idsActuales.contains(varReq.getId())) {
-                actualizarVarianteExistente(producto, varReq, tiendaActual, esAdmin);
+                actualizarVarianteExistente(producto, varReq, tiendaDestino, esAdmin);
             } else {
-                crearNuevaVariante(producto, varReq, tiendaActual, esAdmin);
+                crearNuevaVariante(producto, varReq, tiendaDestino, esAdmin);
             }
         }
 
         return mapToResponse(producto);
     }
 
-    private void crearNuevaVariante(Producto producto, VarianteCompletaRequest varReq, Tienda tiendaActual, boolean esAdmin) {
+    private void crearNuevaVariante(Producto producto, VarianteCompletaRequest varReq, Tienda tienda, boolean esAdmin) {
         ProductoVariante variante = new ProductoVariante();
-        configurarVariante(variante, producto, varReq, tiendaActual, esAdmin);
+        configurarVariante(variante, producto, varReq, tienda, esAdmin);
         producto.getVariantes().add(variante);
     }
 
-    private void actualizarVarianteExistente(Producto producto, VarianteCompletaRequest varReq, Tienda tiendaActual, boolean esAdmin) {
+    private void actualizarVarianteExistente(Producto producto, VarianteCompletaRequest varReq, Tienda tienda, boolean esAdmin) {
         ProductoVariante variante = producto.getVariantes().stream()
                 .filter(v -> v.getId().equals(varReq.getId()))
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Variante no encontrada"));
 
-        configurarVariante(variante, producto, varReq, tiendaActual, esAdmin);
+        configurarVariante(variante, producto, varReq, tienda, esAdmin);
     }
 
-    // MÉTODO REUTILIZABLE: configura todos los campos de la variante
-    private void configurarVariante(ProductoVariante variante,
-                                    Producto producto,
-                                    VarianteCompletaRequest varReq,
-                                    Tienda tiendaActual,
-                                    boolean esAdmin) {
-
+    private void configurarVariante(ProductoVariante variante, Producto producto, VarianteCompletaRequest varReq, Tienda tienda, boolean esAdmin) {
         variante.setProducto(producto);
-        variante.setTienda(tiendaActual); // ESTO SOLUCIONA EL ERROR DE tienda_id
+        variante.setTienda(tienda);
         variante.setSku(varReq.getSku());
         variante.setPrecio(varReq.getPrecio());
         variante.setStock(varReq.getStock() != null ? varReq.getStock() : 0);
         variante.setImagenUrl(varReq.getImagenUrl());
         variante.setActivo(varReq.getActivo() != null ? varReq.getActivo() : true);
 
-        // === ATRIBUTOS ===
+        // ATRIBUTOS
         List<AtributoValor> atributos = new ArrayList<>();
         if (varReq.getAtributoValorIds() != null && !varReq.getAtributoValorIds().isEmpty()) {
             atributos = esAdmin
                     ? atributoValorRepository.findAllById(varReq.getAtributoValorIds())
-                    : atributoValorRepository.findAllByIdInAndTiendaId(varReq.getAtributoValorIds(), tiendaActual.getId());
+                    : atributoValorRepository.findAllByIdInAndTiendaId(varReq.getAtributoValorIds(), tienda.getId());
 
             if (atributos.size() != varReq.getAtributoValorIds().size()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "Algunos atributos no existen o no pertenecen a la tienda seleccionada");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Algunos valores de atributo no existen o no pertenecen a la tienda");
             }
         }
         variante.setAtributos(atributos);

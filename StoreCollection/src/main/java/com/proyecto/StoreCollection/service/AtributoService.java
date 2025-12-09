@@ -2,6 +2,7 @@ package com.proyecto.StoreCollection.service;
 
 import com.proyecto.StoreCollection.dto.request.AtributoRequest;
 import com.proyecto.StoreCollection.dto.response.AtributoResponse;
+import com.proyecto.StoreCollection.dto.special.AtributoConValores;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -13,7 +14,8 @@ public interface AtributoService {
     List<AtributoResponse> findAllByTenant();           // ← nuevo
     Page<AtributoResponse> findAll(Pageable pageable);  // ← sigue igual (solo sus atributos)
     AtributoResponse findById(Integer id);                 // ← solo si es suyo
-
+    List<AtributoConValores> findAllWithValoresForDropdown();
+    List<AtributoConValores> findByTiendaIdWithValores(Integer tiendaId);
     AtributoResponse save(AtributoRequest request);
     AtributoResponse save(AtributoRequest request, Integer id);
     void deleteById(Integer id);

@@ -2,6 +2,7 @@
 
 package com.proyecto.StoreCollection.repository;
 
+import com.proyecto.StoreCollection.dto.special.CategoriaDropdown;
 import com.proyecto.StoreCollection.entity.Categoria;
 import com.proyecto.StoreCollection.entity.Tienda;
 import org.springframework.data.domain.Page;
@@ -24,7 +25,7 @@ public interface CategoriaRepository extends JpaRepository<Categoria, Integer>, 
             @Param("nombre") String nombre,
             @Param("tenantId") Integer tenantId,
             Pageable pageable);
-
+    List<CategoriaDropdown> findByTiendaIdOrderByNombreAsc(Integer tiendaId);
     default Page<Categoria> findAllByTenant(Pageable pageable) {
         Integer tenantId = com.proyecto.StoreCollection.tenant.TenantContext.getTenantId();
         if (tenantId == null) throw new IllegalStateException("Tenant no establecido");
