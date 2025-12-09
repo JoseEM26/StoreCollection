@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface TiendaService {
     Page<TiendaResponse> findAll(Pageable pageable);
@@ -17,6 +18,7 @@ public interface TiendaService {
     List<TiendaResponse> findByUserId(Integer userId);
     Tienda getTiendaDelUsuarioActual();           // ← clave para crear productos, etc.
     TiendaResponse getMiTienda();                 // ← para el dashboard del dueño
+    Optional<Tienda> getTiendaById(Integer id);
     List<TiendaResponse> getMisTiendas();         // ← si permite varias
     Page<TiendaResponse> buscarPorNombreContainingIgnoreCase(String texto, Pageable pageable);
     TiendaResponse save(TiendaRequest request);

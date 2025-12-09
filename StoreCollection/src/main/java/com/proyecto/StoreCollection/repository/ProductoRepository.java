@@ -42,7 +42,7 @@ List<Producto> findByTiendaSlugPublic(@Param("tiendaSlug") String tiendaSlug);
      List<Producto> findByCategoriaIdAndTiendaId(
              @Param("categoriaId") Integer categoriaId,
              @Param("tenantId") Integer tenantId);
-
+     boolean existsBySlugAndTiendaId(String slug, Integer tiendaId);
      // Versión segura automática
      default List<Producto> findByCategoriaIdSafe(Integer categoriaId) {
           Integer tenantId = com.proyecto.StoreCollection.tenant.TenantContext.getTenantId();

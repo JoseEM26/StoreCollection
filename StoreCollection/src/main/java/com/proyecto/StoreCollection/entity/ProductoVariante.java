@@ -1,14 +1,14 @@
 package com.proyecto.StoreCollection.entity;
+
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 @Entity
-@Table(name = "Producto_Variante")
+@Table(name = "producto_variante")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,38 +19,34 @@ public class ProductoVariante {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
 
-    @NotBlank
-    @Column(unique = true, length = 100)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tienda_id", nullable = false) // AQUÍ ESTABA EL ERROR
+    private Tienda tienda;
+
+    @Column(nullable = false, unique = true, length = 100)
     private String sku;
 
-    @Positive
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal precio;
 
-    @PositiveOrZero
     @Column(nullable = false)
     private Integer stock = 0;
 
-
-    @Column(name = "imagenUrl")
     private String imagenUrl;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tienda_id", nullable = false, updatable = false, insertable = false)
-    private Tienda tienda;
 
     @Column(nullable = false)
     private Boolean activo = true;
 
+    // MEJOR: usa List en lugar de Set (más control y orden)
     @ManyToMany
     @JoinTable(
-            name = "Variante_Atributo",
+            name = "variante_atributo",
             joinColumns = @JoinColumn(name = "variante_id"),
             inverseJoinColumns = @JoinColumn(name = "atributo_valor_id")
     )
-    private Set<AtributoValor> atributos = new HashSet<>();
+    private List<AtributoValor> atributos = new ArrayList<>();
 }

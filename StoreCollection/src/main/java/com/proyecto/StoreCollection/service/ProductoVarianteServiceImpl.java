@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -89,12 +90,12 @@ public class ProductoVarianteServiceImpl implements ProductoVarianteService {
 
         // Atributos (colores, tallas, etc.)
         if (request.getAtributoValorIds() != null && !request.getAtributoValorIds().isEmpty()) {
-            Set<AtributoValor> attrs = atributoValorRepository.findAllById(request.getAtributoValorIds())
+            List<AtributoValor> attrs = atributoValorRepository.findAllById(request.getAtributoValorIds())
                     .stream()
-                    .collect(Collectors.toSet());
+                    .toList();
             v.setAtributos(attrs);
         } else {
-            v.setAtributos(Set.of());
+            v.setAtributos(new ArrayList<>());
         }
 
         return toResponse(varianteRepository.save(v));

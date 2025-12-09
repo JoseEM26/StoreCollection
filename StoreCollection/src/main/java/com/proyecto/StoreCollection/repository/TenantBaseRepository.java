@@ -31,7 +31,10 @@ public interface TenantBaseRepository<T, ID> extends JpaRepository<T, ID> {
 
     default T getByIdAndTenant(ID id) {
         return findByIdAndTenant(id)
-                .orElseThrow(() -> new RuntimeException("Entidad no encontrada o no pertenece al tenant"));
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND,
+                        "Recurso no encontrado"
+                ));
     }
 
     // Métodos que SÍ puedes sobrescribir con @Query si quieres más eficiencia

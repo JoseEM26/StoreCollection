@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -108,6 +109,11 @@ public class TiendaServiceImpl implements TiendaService {
     @Transactional(readOnly = true)
     public TiendaResponse getMiTienda() {
         return toResponse(getTiendaDelUsuarioActual());
+    }
+
+    @Override
+    public Optional<Tienda> getTiendaById(Integer id) {
+        return tiendaRepository.findById(id);
     }
 
     @Override
