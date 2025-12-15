@@ -50,7 +50,8 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     public Page<ProductoResponse> findAll(Pageable pageable) {
-        return productoRepository.findAll(pageable).map(this::toResponse);
+        Page<ProductoResponse> x=productoRepository.findAll(pageable).map(this::toResponse);
+        return x;
     }
 
     @Override
@@ -239,17 +240,14 @@ public class ProductoServiceImpl implements ProductoService {
                 );
     }
 
-    // ===================================================================
-    // MAPPER PRIVADO (opcional, si usas ProductoResponse en admin)
-    // ===================================================================
-
     private ProductoResponse toResponse(Producto p) {
-        // Tu mapper actual de admin → lo dejas igual
         ProductoResponse resp = new ProductoResponse();
         resp.setId(p.getId());
         resp.setNombre(p.getNombre());
         resp.setSlug(p.getSlug());
-        // ... el resto de campos
+        resp.setCategoriaId(p.getCategoria().getId());
+        resp.setTiendaId(p.getTienda().getId());
+        resp.setCategoriaNombre(p.getCategoria().getNombre());
         return resp;
     }
 }
