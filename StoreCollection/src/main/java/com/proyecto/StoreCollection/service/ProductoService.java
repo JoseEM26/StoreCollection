@@ -11,11 +11,9 @@ import java.util.List;
 
 public interface ProductoService {
     Page<ProductoResponse> findAll(Pageable pageable);
-    List<ProductoResponse> findMisProductos();
     List<ProductoResponse> findByCategoriaId(Integer categoriaId);
     ProductoResponse findById(Integer id);
     List<ProductoCardResponse> findAllForPublicCatalog(String tiendaSlug) ;    // Para público (por slug de tienda)
-    List<ProductoResponse> findByTiendaSlug(String tiendaSlug);
     ProductoCardResponse findByTiendaSlugAndProductoSlug(String tiendaSlug, String productoSlug);
     ProductoResponse save(ProductoRequest request);
     ProductoResponse save(ProductoRequest request, Integer id);

@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -91,4 +92,16 @@ public class UsuarioServiceImpl implements UsuarioService {
         dto.setRol(u.getRol().name());
         return dto;
     }
+
+    /// ///////////////////////ESTO ES PARA HASHEAR CONTRSAEÑAS
+
+    public List<Usuario> findAllRaw() {
+        return repository.findAll();
+    }
+
+    public void updatePasswordDirectly(Integer id, String nuevaPasswordHasheada) {
+        repository.updatePasswordById(id, nuevaPasswordHasheada);
+    }
+
+
 }

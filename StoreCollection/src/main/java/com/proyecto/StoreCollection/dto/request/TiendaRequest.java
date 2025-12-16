@@ -18,4 +18,5 @@ public class TiendaRequest {
     private String logo_img_url;
     private Integer planId;
     private Integer userId;
+    private Boolean activo;
 }

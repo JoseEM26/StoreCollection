@@ -13,14 +13,14 @@ public interface TiendaService {
     TiendaResponse findById(Integer id);
     TiendaResponse findBySlug(String slug);
     List<TiendaResponse> findByUserId(Integer userId);
-
+     List<Tienda> findAllActivas() ;
     Tienda getTiendaDelUsuarioActual();           // ← clave para crear productos, etc.
     TiendaResponse getMiTienda();                 // ← para el dashboard del dueño
-    List<TiendaResponse> getMisTiendas();         // ← si permite varias
+    List<TiendaResponse> getMisTiendas();
+    TiendaResponse getTiendaByIdParaEdicion(Integer id);
     Page<TiendaResponse> buscarPorNombreContainingIgnoreCase(String texto, Pageable pageable);
     TiendaResponse save(TiendaRequest request);
     TiendaResponse save(TiendaRequest request, Integer id);
     void deleteById(Integer id);
-    // TiendaService.java (agrega este método)
     Page<TiendaResponse> findByUserEmail(String email, Pageable pageable);
 }

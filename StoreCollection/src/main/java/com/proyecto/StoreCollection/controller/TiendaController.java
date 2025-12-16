@@ -96,6 +96,40 @@ public class TiendaController {
 
         return PageRequest.of(page, size, org.springframework.data.domain.Sort.by(direction, property));
     }
+    // NUEVO: Endpoint para obtener tienda específica (para edición)
+    @GetMapping("/owner/tiendas/{id}")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    public ResponseEntity<TiendaResponse> obtenerTiendaPorId(@PathVariable Integer id) {
+        // Necesitarás agregar este método en tu service
+        // return ResponseEntity.ok(service.getTiendaByIdParaEdicion(id));
+
+        // Por ahora, usa el existente (pero esto no verifica permisos)
+        // Te recomiendo implementar el método en el service como mostré antes
+        return ResponseEntity.ok(service.findById(id));
+    }
+
+    // ==================== OPERACIONES CRUD ====================
+    @PostMapping("/owner/tiendas")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    public ResponseEntity<TiendaResponse> crearTienda(@Valid @RequestBody TiendaRequest request) {
+        // IMPORTANTE: En el service, asegúrate de validar que:
+        // 1. OWNER solo pueda crear tiendas para sí mismo
+        // 2. ADMIN pueda crear tiendas para cualquier usuario
+        return ResponseEntity.ok(service.save(request));
+    }
+
+    @PutMapping("/owner/tiendas/{id}")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    public ResponseEntity<TiendaResponse> actualizarTienda(
+            @PathVariable Integer id,
+            @Valid @RequestBody TiendaRequest request) {
+
+        // IMPORTANTE: En el service.save(request, id) debes:
+        // 1. Verificar que el usuario autenticado es dueño de la tienda (si es OWNER)
+        // 2. Permitir a ADMIN editar cualquier tienda
+        // 3. No permitir cambiar el usuario propietario en edición
+        return ResponseEntity.ok(service.save(request, id));
+    }
     /// /////////////////////////////////AUN NO USADAS///////////////////////////////////////////////////////////////////////
 
     // PRIVADO - Mis tiendas
@@ -109,16 +143,9 @@ public class TiendaController {
         return ResponseEntity.ok(service.getMiTienda());
     }
 
-    @PostMapping("/api/owner/tiendas")
-    public ResponseEntity<TiendaResponse> crear(@Valid @RequestBody TiendaRequest request) {
-        return ResponseEntity.ok(service.save(request));
-    }
 
-    @PutMapping("/api/owner/tiendas/{id}")
-    public ResponseEntity<TiendaResponse> actualizar(@PathVariable Integer id,
-                                                     @Valid @RequestBody TiendaRequest request) {
-        return ResponseEntity.ok(service.save(request, id));
-    }
+
+
 
 
 }

@@ -9,10 +9,8 @@ import java.util.List;
 
 public interface CategoriaService {
 
-    // === PÚBLICO: para el menú del catálogo ===
     List<CategoriaResponse> findByTiendaSlug(String tiendaSlug);
 
-    // === PRIVADO: panel del dueño ===
     List<CategoriaResponse> findAllByTenant();           // ← nuevo
     Page<CategoriaResponse> findAll(Pageable pageable);  // ← solo sus categorías
     CategoriaResponse findById(Integer id);                 // ← solo si es suyo

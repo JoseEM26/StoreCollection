@@ -18,6 +18,7 @@ export interface TiendaCreateRequest {
   mapa_url?: string;
   logo_img_url?: string;
   planId?: number;
+  userId:number;
 }
 
 export interface TiendaUpdateRequest extends TiendaCreateRequest {
