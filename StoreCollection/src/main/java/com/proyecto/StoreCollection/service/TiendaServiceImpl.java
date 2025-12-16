@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -101,40 +102,122 @@ public class TiendaServiceImpl implements TiendaService {
 
     @Override
     public TiendaResponse save(TiendaRequest request, Integer id) {
-        Tienda t = id == null ? new Tienda() : tiendaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tienda no encontrada"));
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String emailActual = auth.getName();
 
+        Tienda t;
+
+        if (id == null) {
+            // CREACIÓN
+            t = new Tienda();
+
+            // Validar que userId sea el usuario actual (o ADMIN creando para otros)
+            boolean esAdmin = auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+            if (request.getUserId() == null) {
+                throw new RuntimeException("userId es requerido para crear una tienda");
+            }
+            if (tiendaRepository.findBySlug(request.getSlug()).isPresent()) {
+                throw new RuntimeException("Ya existe una tienda con ese slug: " + request.getSlug());
+            }
+            Usuario usuario = usuarioRepository.findById(request.getUserId())
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+            // Si no es ADMIN, solo puede crear para sí mismo
+            if (!esAdmin && !usuario.getEmail().equals(emailActual)) {
+                throw new RuntimeException("No puedes crear una tienda para otro usuario");
+            }
+
+            t.setUser(usuario);
+        } else {
+            // EDICIÓN
+            t = tiendaRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Tienda no encontrada"));
+
+            // Verificar permisos: solo el dueño o ADMIN puede editar
+            boolean esAdmin = auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            Optional<Tienda> tiendaConMismoSlug = tiendaRepository.findBySlug(request.getSlug());
+            if (tiendaConMismoSlug.isPresent() && !tiendaConMismoSlug.get().getId().equals(id)) {
+                throw new RuntimeException("Ya existe otra tienda con ese slug: " + request.getSlug());
+            }
+            if (!t.getUser().getEmail().equals(emailActual) && !esAdmin) {
+                throw new RuntimeException("No tienes permisos para editar esta tienda");
+            }
+
+            // En edición, mantener usuario existente (no cambiar dueño)
+            // Solo ADMIN podría cambiar el dueño si se necesita, pero aquí no permitimos
+        }
+
+        // Setear campos comunes
         t.setNombre(request.getNombre());
         t.setSlug(request.getSlug());
         t.setWhatsapp(request.getWhatsapp());
-        t.setMoneda(Tienda.Moneda.valueOf(request.getMoneda()));
+
+        if (request.getMoneda() != null && !request.getMoneda().isEmpty()) {
+            try {
+                t.setMoneda(Tienda.Moneda.valueOf(request.getMoneda()));
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("Moneda no válida: " + request.getMoneda());
+            }
+        }
+
         t.setDescripcion(request.getDescripcion());
         t.setDireccion(request.getDireccion());
         t.setHorarios(request.getHorarios());
         t.setMapa_url(request.getMapa_url());
         t.setLogo_img_url(request.getLogo_img_url());
 
-        // Solo asignar usuario si es creación (id == null)
-        if (id == null) {
-            if (request.getUserId() == null) {
-                throw new RuntimeException("userId es requerido para crear una tienda");
-            }
-            t.setUser(usuarioRepository.findById(request.getUserId())
-                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado")));
-        }
-        // En edición, mantener el usuario existente (no tocar)
+        // Manejar campo activo (solo ADMIN puede cambiar)
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
+        if (esAdmin && request.getActivo() != null) {
+            t.setActivo(request.getActivo());
+        }
+
+        // Manejar plan
         if (request.getPlanId() != null) {
             Plan plan = planRepository.findById(request.getPlanId())
                     .orElseThrow(() -> new RuntimeException("Plan no encontrado"));
             t.setPlan(plan);
         } else if (id != null) {
-            // Opcional: permitir quitar el plan (setear null)
+            // Permitir quitar el plan en edición
             t.setPlan(null);
         }
 
         return toResponse(tiendaRepository.save(t));
     }
+    @Override
+    @Transactional(readOnly = true)
+    public TiendaResponse getTiendaByIdParaEdicion(Integer id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String emailActual = auth.getName();
+
+        Tienda tienda = tiendaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tienda no encontrada"));
+
+        // Verificar que el usuario es dueño o es ADMIN
+        if (!tienda.getUser().getEmail().equals(emailActual) &&
+                !auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+            throw new RuntimeException("No tienes permisos para acceder a esta tienda");
+        }
+
+        return toResponse(tienda);
+    }
+    // Método auxiliar para verificar permisos
+    private boolean tienePermisoParaTienda(Integer tiendaId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String emailActual = auth.getName();
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        return tiendaRepository.findById(tiendaId)
+                .map(tienda -> esAdmin || tienda.getUser().getEmail().equals(emailActual))
+                .orElse(false);
+    }
+
     public List<Tienda> findAllActivas() {
         return tiendaRepository.findByActivoTrue();
     }
