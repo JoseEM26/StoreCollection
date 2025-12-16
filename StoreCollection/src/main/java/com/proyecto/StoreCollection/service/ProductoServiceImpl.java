@@ -56,22 +56,6 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProductoResponse> findMisProductos() {
-        return productoRepository.findAllByTenant().stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ProductoResponse> findByTiendaSlug(String tiendaSlug) {
-        return productoRepository.findAllByTenant().stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public List<ProductoResponse> findByCategoriaId(Integer categoriaId) {
         return productoRepository.findByCategoriaIdSafe(categoriaId).stream()
                 .map(this::toResponse)

@@ -111,6 +111,8 @@ public class TiendaServiceImpl implements TiendaService {
         t.setDescripcion(request.getDescripcion());
         t.setDireccion(request.getDireccion());
         t.setHorarios(request.getHorarios());
+        t.setMapa_url(request.getMapa_url());
+        t.setLogo_img_url(request.getLogo_img_url());
 
         if (request.getPlanId() != null) {
             Plan plan = planRepository.findById(request.getPlanId())

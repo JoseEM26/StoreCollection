@@ -21,6 +21,5 @@ public interface TiendaService {
     TiendaResponse save(TiendaRequest request);
     TiendaResponse save(TiendaRequest request, Integer id);
     void deleteById(Integer id);
-    // TiendaService.java (agrega este método)
     Page<TiendaResponse> findByUserEmail(String email, Pageable pageable);
 }
