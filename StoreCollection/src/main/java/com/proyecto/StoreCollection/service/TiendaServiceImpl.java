@@ -114,31 +114,30 @@ public class TiendaServiceImpl implements TiendaService {
         t.setMapa_url(request.getMapa_url());
         t.setLogo_img_url(request.getLogo_img_url());
 
+        // Solo asignar usuario si es creación (id == null)
+        if (id == null) {
+            if (request.getUserId() == null) {
+                throw new RuntimeException("userId es requerido para crear una tienda");
+            }
+            t.setUser(usuarioRepository.findById(request.getUserId())
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado")));
+        }
+        // En edición, mantener el usuario existente (no tocar)
+
         if (request.getPlanId() != null) {
             Plan plan = planRepository.findById(request.getPlanId())
                     .orElseThrow(() -> new RuntimeException("Plan no encontrado"));
             t.setPlan(plan);
-        }
-
-        // SEGURIDAD: el dueño solo puede editar su tienda
-        if (id != null) {
-            // Si es edición → verificar que sea suya
-            Tienda actual = getTiendaDelUsuarioActual();
-            if (!actual.getId().equals(id)) {
-                throw new RuntimeException("No puedes editar una tienda que no es tuya");
-            }
-        } else {
-            // Si es creación → asignar al usuario logueado automáticamente
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            String email = auth.getName();
-            Usuario usuario = usuarioRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-            t.setUser(usuario);
+        } else if (id != null) {
+            // Opcional: permitir quitar el plan (setear null)
+            t.setPlan(null);
         }
 
         return toResponse(tiendaRepository.save(t));
     }
-
+    public List<Tienda> findAllActivas() {
+        return tiendaRepository.findByActivoTrue();
+    }
     @Override
     public void deleteById(Integer id) {
         Tienda tienda = tiendaRepository.findById(id)

@@ -1,0 +1,29 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../../environment';
+export interface DropTownStandar {
+  id: number;
+  descripcion: string;
+}
+@Injectable({
+  providedIn: 'root'
+})
+export class DropTownService {
+
+  private readonly API_URL = `${environment.apiUrl}/api/public`;  // ← Usamos environment
+
+  constructor(private http: HttpClient) { }
+
+  getTiendas(): Observable<DropTownStandar[]> {
+    return this.http.get<DropTownStandar[]>(`${this.API_URL}/tiendasDropTown`);
+  }
+
+  getUsuarios(): Observable<DropTownStandar[]> {
+    return this.http.get<DropTownStandar[]>(`${this.API_URL}/usuariosDropTown`);
+  }
+
+  getAtributos(): Observable<DropTownStandar[]> {
+    return this.http.get<DropTownStandar[]>(`${this.API_URL}/atributosDropTown`);
+  }
+}
