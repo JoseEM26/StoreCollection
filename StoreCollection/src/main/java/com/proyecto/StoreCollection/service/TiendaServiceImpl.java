@@ -46,7 +46,22 @@ public class TiendaServiceImpl implements TiendaService {
         return toResponse(tiendaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tienda no encontrada: " + id)));
     }
+    @Override
+    public Tienda getEntityById(Integer id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
+        Tienda tienda = tiendaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tienda no encontrada"));
+
+        // Opcional: si quieres restringir que solo ADMIN acceda a cualquier tienda
+        if (!esAdmin && !tienda.getUser().getEmail().equals(auth.getName())) {
+            throw new AccessDeniedException("No tienes permisos para acceder a esta tienda");
+        }
+
+        return tienda;
+    }
     @Override
     @Transactional(readOnly = true)
     public TiendaResponse findBySlug(String slug) {

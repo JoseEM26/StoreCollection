@@ -14,7 +14,7 @@ import java.util.Optional;
 
 @Repository
 public interface ProductoRepository extends TenantBaseRepository<Producto, Integer> {
-
+     Optional<Producto> findBySlugAndTiendaId(String slug, Integer tiendaId);
      List<Producto> findAllByOrderByNombreAsc();
      List<Producto> findByTiendaIdOrderByNombreAsc(Integer tiendaId);
      // Para catálogo público: por slug de tienda + slug de producto

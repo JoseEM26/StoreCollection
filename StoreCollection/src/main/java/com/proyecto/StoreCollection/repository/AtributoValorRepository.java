@@ -6,10 +6,11 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AtributoValorRepository extends TenantBaseRepository<AtributoValor, Integer> {
-
+    Optional<AtributoValor> findByAtributoIdAndValor(Integer atributoId, String valor);
     default List<AtributoValor> findByAtributoIdSafe(Integer atributoId) {
         return findAllByTenant().stream()
                 .filter(v -> v.getAtributo().getId().equals(atributoId))

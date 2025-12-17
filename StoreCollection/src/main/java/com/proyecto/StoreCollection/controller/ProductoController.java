@@ -93,12 +93,20 @@ public class ProductoController {
         return ResponseEntity.ok(service.findByCategoriaId(categoriaId));
     }
 
+    @GetMapping("/api/owner/productos/{id}")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    public ResponseEntity<ProductoResponse> obtenerParaEdicion(@PathVariable Integer id) {
+        return ResponseEntity.ok(service.getProductoByIdParaEdicion(id));
+    }
+
     @PostMapping("/api/owner/productos")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<ProductoResponse> crear(@Valid @RequestBody ProductoRequest request) {
         return ResponseEntity.ok(service.save(request));
     }
 
     @PutMapping("/api/owner/productos/{id}")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<ProductoResponse> actualizar(@PathVariable Integer id,
                                                        @Valid @RequestBody ProductoRequest request) {
         return ResponseEntity.ok(service.save(request, id));

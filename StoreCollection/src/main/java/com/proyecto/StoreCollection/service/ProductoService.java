@@ -18,6 +18,7 @@ public interface ProductoService {
     List<DropDownStandard> getProductosForDropdown();
     ProductoCardResponse findByTiendaSlugAndProductoSlug(String tiendaSlug, String productoSlug);
     ProductoResponse save(ProductoRequest request);
+    ProductoResponse getProductoByIdParaEdicion(Integer id);
     ProductoResponse save(ProductoRequest request, Integer id);
     void deleteById(Integer id);
     Page<ProductoResponse> findByUserEmail(String email, Pageable pageable);

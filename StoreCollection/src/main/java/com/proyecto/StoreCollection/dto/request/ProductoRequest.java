@@ -3,6 +3,8 @@ package com.proyecto.StoreCollection.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class ProductoRequest {
     @NotBlank
@@ -11,4 +13,5 @@ public class ProductoRequest {
     private String slug;
     private Integer categoriaId;
     private Integer tiendaId;
+    private List<VarianteRequest> variantes;
 }

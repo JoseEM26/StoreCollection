@@ -12,6 +12,7 @@ import java.util.List;
 public interface TiendaService {
     Page<TiendaResponse> findAll(Pageable pageable);
     TiendaResponse findById(Integer id);
+    Tienda getEntityById(Integer id);
     TiendaResponse findBySlug(String slug);
     List<TiendaResponse> findByUserId(Integer userId);
     List<DropDownStandard> getTiendasForDropdown();
