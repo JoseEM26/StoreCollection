@@ -149,6 +149,9 @@
   mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
   mask-composite: exclude;
   -webkit-mask-composite: xor;
+  
+  pointer-events: none;   /* ← No bloquea clicks */
+  z-index: 1;             /* ← Queda debajo de los botones */
 }
 
 .store-card:hover {

@@ -67,27 +67,33 @@ export class FormStoresComponent implements OnInit, OnChanges {
   }
 
   ngOnInit(): void {
-    if (this.esAdmin) {
-      this.cargarUsuarios();
-    }
+  this.esAdmin = this.auth.isAdmin();
 
-    // Para OWNER en creación: no requerir userId
-    if (!this.esAdmin) {
-      this.form.get('userId')?.clearValidators();
-      this.form.get('userId')?.updateValueAndValidity();
-    } else {
-      this.form.get('userId')?.setValidators([Validators.min(1)]);
-      this.form.get('userId')?.updateValueAndValidity();
-    }
-
-    // Slug disabled en edición
-    this.form.get('slug')?.disable({ emitEvent: false });
+  // userId solo obligatorio si es ADMIN y estamos en creación
+  if (this.esAdmin) {
+    this.form.get('userId')?.setValidators([Validators.min(1)]);
+  } else {
+    this.form.get('userId')?.clearValidators();
   }
+  this.form.get('userId')?.updateValueAndValidity();
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['tienda'] && this.tienda) {
+  // Slug empieza habilitado (solo se deshabilita en edición vía ngOnChanges)
+  this.form.get('slug')?.enable();
+
+  if (this.esAdmin) {
+    this.cargarUsuarios();
+  }
+}
+
+  // form-stores.component.ts (solo los cambios clave)
+
+ngOnChanges(changes: SimpleChanges): void {
+  if (changes['tienda']) {
+    if (this.tienda) {
+      // === MODO EDICIÓN ===
       this.isEditMode = true;
       this.serverError = null;
+      this.logoPreview = this.tienda.logo_img_url || null;
 
       this.form.patchValue({
         nombre: this.tienda.nombre,
@@ -96,20 +102,21 @@ export class FormStoresComponent implements OnInit, OnChanges {
         moneda: this.tienda.moneda as 'SOLES' | 'DOLARES',
         descripcion: this.tienda.descripcion || '',
         direccion: this.tienda.direccion || '',
-        horarios: this.tienda.horarios || '',
+        horarios: this.tienda.horarios || 'Lun - Sáb 9:00 - 21:00',
         mapa_url: this.tienda.mapa_url || '',
         logo_img_url: this.tienda.logo_img_url || '',
-        planId: this.tienda.planId || 1,
+        planId: this.tienda.planId ?? 1,           // ← Aseguramos que nunca sea null
         userId: this.tienda.userId,
         activo: this.tienda.activo
       });
 
-      this.logoPreview = this.tienda.logo_img_url || null;
-
-      // En edición, slug no editable
-      this.form.get('slug')?.disable();
+      // Slug NO editable en edición → lo deshabilitamos
+      this.form.get('slug')?.disable({ emitEvent: false });
     } else {
+      // === MODO CREACIÓN ===
       this.isEditMode = false;
+      this.logoPreview = null;
+
       this.form.reset({
         nombre: '',
         slug: '',
@@ -124,10 +131,12 @@ export class FormStoresComponent implements OnInit, OnChanges {
         userId: 0,
         activo: true
       });
-      this.logoPreview = null;
-      this.form.get('slug')?.enable();
+
+      // Slug SÍ editable en creación
+      this.form.get('slug')?.enable({ emitEvent: false });
     }
   }
+}
 
   private cargarUsuarios() {
     this.usuariosLoading = true;
@@ -192,24 +201,24 @@ export class FormStoresComponent implements OnInit, OnChanges {
     let resultado: TiendaResponse;
 
     if (this.isEditMode && this.tienda?.id) {
-      // EDICIÓN
-      const updateRequest: TiendaUpdateRequest = {
-        nombre: this.form.value.nombre!,
-        slug: this.form.value.slug!,
-        whatsapp: this.form.value.whatsapp ?? undefined,
-        moneda: this.form.value.moneda ?? undefined,           // ← Ahora es opcional
-        descripcion: this.form.value.descripcion ?? undefined,
-        direccion: this.form.value.direccion ?? undefined,
-        horarios: this.form.value.horarios ?? undefined,
-        mapa_url: this.form.value.mapa_url ?? undefined,
-        logo_img_url: this.form.value.logo_img_url ?? undefined,
-        planId: this.form.value.planId ?? null,
-        activo: this.esAdmin ? this.form.value.activo ?? undefined : undefined
-      };
+     // EDICIÓN
+  const updateRequest: TiendaUpdateRequest = {
+    nombre: this.form.value.nombre!.trim(),
+    slug: this.form.value.slug!,
+    whatsapp: this.form.value.whatsapp?.trim() || undefined,
+    moneda: this.form.value.moneda!,
+    descripcion: this.form.value.descripcion?.trim() || undefined,
+    direccion: this.form.value.direccion?.trim() || undefined,
+    horarios: this.form.value.horarios?.trim() || undefined,
+    mapa_url: this.form.value.mapa_url?.trim() || undefined,
+    logo_img_url: this.form.value.logo_img_url?.trim() || undefined,
+    planId: this.form.value.planId ?? null,                    
+    activo: this.esAdmin ? (this.form.value.activo ?? undefined) : undefined
+  };
 
-      resultado = await lastValueFrom(
-        this.tiendaService.actualizarTienda(this.tienda.id, updateRequest)
-      );
+     resultado = await lastValueFrom(
+    this.tiendaService.actualizarTienda(this.tienda.id, updateRequest)
+  );
     } else {
       // CREACIÓN
       const createRequest: TiendaCreateRequest = {
@@ -245,7 +254,15 @@ export class FormStoresComponent implements OnInit, OnChanges {
     this.loading = false;
   }
 }
-
+// Dentro de la clase FormStoresComponent
+get nombrePlanActual(): string {
+  const planId = this.form.value.planId;
+  if (!planId || !this.planes?.length) {
+    return 'Básico';
+  }
+  const plan = this.planes.find(p => p.id === planId);
+  return plan ? plan.nombre : 'Básico';
+}
   onCancel() {
     this.cancel.emit();
   }

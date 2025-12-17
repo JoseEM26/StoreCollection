@@ -13,7 +13,7 @@
         </span>
       </p>
     </div>
-    <button class="btn-create" (click)="openCreateModal()">
+    <button class="btn-create" (click)="openCreateModal()" *ngIf="auth.isLoggedIn() && !auth.isOwner() && !auth.isCustomer()">
       <i class="bi bi-plus-lg"></i>
       Nueva Tienda
     </button>

@@ -1,8 +1,13 @@
 <div class="modal-overlay" (click)="onCancel()">
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>{{ isEditMode ? 'Editar Tienda' : 'Crear Tienda' }}</h3>
-      <button type="button" class="btn-close" (click)="onCancel()" [disabled]="loading"></button>
+      <h3>{{ isEditMode ? "Editar Tienda" : "Crear Tienda" }}</h3>
+      <button
+        type="button"
+        class="btn-close"
+        (click)="onCancel()"
+        [disabled]="loading"
+      ></button>
     </div>
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="modal-body">
@@ -14,9 +19,7 @@
           alt="Logo preview"
           class="logo-preview"
         />
-        <div *ngIf="!logoPreview" class="logo-placeholder">
-          Sin logo
-        </div>
+        <div *ngIf="!logoPreview" class="logo-placeholder">Sin logo</div>
       </div>
 
       <div class="row g-3">
@@ -29,10 +32,15 @@
             type="text"
             class="form-control"
             placeholder="Mi Tienda"
-            [class.is-invalid]="form.get('nombre')?.invalid && form.get('nombre')?.touched"
+            [class.is-invalid]="
+              form.get('nombre')?.invalid && form.get('nombre')?.touched
+            "
           />
-          <div class="invalid-feedback" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors">
-            {{ getErrorMessage('nombre') }}
+          <div
+            class="invalid-feedback"
+            *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors"
+          >
+            {{ getErrorMessage("nombre") }}
           </div>
         </div>
 
@@ -46,11 +54,16 @@
               type="text"
               class="form-control"
               placeholder="mi-tienda"
-              [class.is-invalid]="form.get('slug')?.invalid && form.get('slug')?.touched"
+              [class.is-invalid]="
+                form.get('slug')?.invalid && form.get('slug')?.touched
+              "
             />
           </div>
-          <div class="invalid-feedback" *ngIf="form.get('slug')?.touched && form.get('slug')?.errors">
-            {{ getErrorMessage('slug') }}
+          <div
+            class="invalid-feedback"
+            *ngIf="form.get('slug')?.touched && form.get('slug')?.errors"
+          >
+            {{ getErrorMessage("slug") }}
           </div>
         </div>
 
@@ -60,13 +73,20 @@
           <select
             formControlName="userId"
             class="form-select"
-            [class.is-invalid]="form.get('userId')?.invalid && form.get('userId')?.touched"
+            [class.is-invalid]="
+              form.get('userId')?.invalid && form.get('userId')?.touched
+            "
           >
             <option value="0" disabled>Seleccione un usuario</option>
-            <option *ngFor="let u of usuarios" [value]="u.id">{{ u.descripcion }}</option>
+            <option *ngFor="let u of usuarios" [value]="u.id">
+              {{ u.descripcion }}
+            </option>
           </select>
-          <div class="invalid-feedback" *ngIf="form.get('userId')?.touched && form.get('userId')?.errors">
-            {{ getErrorMessage('userId') }}
+          <div
+            class="invalid-feedback"
+            *ngIf="form.get('userId')?.touched && form.get('userId')?.errors"
+          >
+            {{ getErrorMessage("userId") }}
           </div>
         </div>
 
@@ -78,10 +98,17 @@
             type="text"
             class="form-control"
             placeholder="+51 999 999 999"
-            [class.is-invalid]="form.get('whatsapp')?.invalid && form.get('whatsapp')?.touched"
+            [class.is-invalid]="
+              form.get('whatsapp')?.invalid && form.get('whatsapp')?.touched
+            "
           />
-          <div class="invalid-feedback" *ngIf="form.get('whatsapp')?.touched && form.get('whatsapp')?.errors">
-            {{ getErrorMessage('whatsapp') }}
+          <div
+            class="invalid-feedback"
+            *ngIf="
+              form.get('whatsapp')?.touched && form.get('whatsapp')?.errors
+            "
+          >
+            {{ getErrorMessage("whatsapp") }}
           </div>
         </div>
 
@@ -91,21 +118,35 @@
           <select
             formControlName="moneda"
             class="form-select"
-            [class.is-invalid]="form.get('moneda')?.invalid && form.get('moneda')?.touched"
+            [class.is-invalid]="
+              form.get('moneda')?.invalid && form.get('moneda')?.touched
+            "
           >
             <option value="SOLES">Soles (S/)</option>
             <option value="DOLARES">Dólares ($)</option>
           </select>
         </div>
 
-        <!-- Plan -->
-        <div class="col-12">
+        <!-- En form-stores.component.html -->
+        <div class="col-12" *ngIf="esAdmin">
           <label class="form-label">Plan</label>
           <select formControlName="planId" class="form-select">
-            <option *ngFor="let p of planes" [value]="p.id">{{ p.nombre }}</option>
+            <option *ngFor="let p of planes" [value]="p.id">
+              {{ p.nombre }}
+            </option>
           </select>
         </div>
 
+        <!-- Si no es admin, mostrar solo lectura -->
+        <div class="col-12" *ngIf="!esAdmin">
+          <label class="form-label">Plan actual</label>
+          <input
+            type="text"
+            class="form-control"
+            [value]="nombrePlanActual"
+            disabled
+          />
+        </div>
         <!-- URL del Logo -->
         <div class="col-12">
           <label class="form-label">URL del Logo</label>
@@ -115,10 +156,19 @@
             type="url"
             class="form-control"
             placeholder="https://ejemplo.com/logo.png"
-            [class.is-invalid]="form.get('logo_img_url')?.invalid && form.get('logo_img_url')?.touched"
+            [class.is-invalid]="
+              form.get('logo_img_url')?.invalid &&
+              form.get('logo_img_url')?.touched
+            "
           />
-          <div class="invalid-feedback" *ngIf="form.get('logo_img_url')?.touched && form.get('logo_img_url')?.errors">
-            {{ getErrorMessage('logo_img_url') }}
+          <div
+            class="invalid-feedback"
+            *ngIf="
+              form.get('logo_img_url')?.touched &&
+              form.get('logo_img_url')?.errors
+            "
+          >
+            {{ getErrorMessage("logo_img_url") }}
           </div>
         </div>
 
@@ -136,13 +186,23 @@
         <!-- Dirección -->
         <div class="col-md-6">
           <label class="form-label">Dirección</label>
-          <input formControlName="direccion" type="text" class="form-control" placeholder="Av. Ejemplo 123" />
+          <input
+            formControlName="direccion"
+            type="text"
+            class="form-control"
+            placeholder="Av. Ejemplo 123"
+          />
         </div>
 
         <!-- Horarios -->
         <div class="col-md-6">
           <label class="form-label">Horarios</label>
-          <input formControlName="horarios" type="text" class="form-control" placeholder="Lun-Sáb 9-21h" />
+          <input
+            formControlName="horarios"
+            type="text"
+            class="form-control"
+            placeholder="Lun-Sáb 9-21h"
+          />
         </div>
 
         <!-- Mapa URL -->
@@ -153,10 +213,17 @@
             type="url"
             class="form-control"
             placeholder="https://maps.google.com/..."
-            [class.is-invalid]="form.get('mapa_url')?.invalid && form.get('mapa_url')?.touched"
+            [class.is-invalid]="
+              form.get('mapa_url')?.invalid && form.get('mapa_url')?.touched
+            "
           />
-          <div class="invalid-feedback" *ngIf="form.get('mapa_url')?.touched && form.get('mapa_url')?.errors">
-            {{ getErrorMessage('mapa_url') }}
+          <div
+            class="invalid-feedback"
+            *ngIf="
+              form.get('mapa_url')?.touched && form.get('mapa_url')?.errors
+            "
+          >
+            {{ getErrorMessage("mapa_url") }}
           </div>
         </div>
 
@@ -177,7 +244,12 @@
 
       <!-- Botones -->
       <div class="mt-4 d-flex gap-2 justify-content-end">
-        <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="loading">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="onCancel()"
+          [disabled]="loading"
+        >
           Cancelar
         </button>
         <button
@@ -185,8 +257,11 @@
           class="btn btn-primary"
           [disabled]="loading || form.invalid"
         >
-          <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
-          {{ isEditMode ? 'Guardar Cambios' : 'Crear Tienda' }}
+          <span
+            *ngIf="loading"
+            class="spinner-border spinner-border-sm me-2"
+          ></span>
+          {{ isEditMode ? "Guardar Cambios" : "Crear Tienda" }}
         </button>
       </div>
     </form>
