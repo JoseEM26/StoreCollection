@@ -29,13 +29,12 @@
   <div class="filters-bar mb-5">
     <div class="search-box">
       <i class="bi bi-search"></i>
-      <input
-        type="text"
-        placeholder="Buscar tienda..."
-        [(ngModel)]="searchTerm"
-        (input)="onSearch()"
-        [ngModelOptions]="{ standalone: true }"
-      />
+  <input
+  type="text"
+  placeholder="Buscar tienda..."
+  [value]="searchInput()"
+  (input)="searchInput.set(($any($event).target).value)"
+/>
     </div>
     <button class="btn-sort" (click)="setSort('nombre')">
       Nombre
