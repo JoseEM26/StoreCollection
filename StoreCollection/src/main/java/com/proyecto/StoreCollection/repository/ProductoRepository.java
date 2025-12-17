@@ -14,7 +14,8 @@ import java.util.Optional;
 @Repository
 public interface ProductoRepository extends TenantBaseRepository<Producto, Integer> {
 
-
+     List<Producto> findAllByOrderByNombreAsc();
+     List<Producto> findByTiendaIdOrderByNombreAsc(Integer tiendaId);
      // Para catálogo público: por slug de tienda + slug de producto
      @Query("SELECT p FROM Producto p WHERE p.slug = :productoSlug AND p.tienda.slug = :tiendaSlug")
      Optional<Producto> findByTiendaSlugAndProductoSlug(

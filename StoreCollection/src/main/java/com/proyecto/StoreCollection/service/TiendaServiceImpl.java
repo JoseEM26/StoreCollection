@@ -1,6 +1,7 @@
 // src/main/java/com/proyecto/StoreCollection/service/TiendaServiceImpl.java
 package com.proyecto.StoreCollection.service;
 
+import com.proyecto.StoreCollection.dto.DropTown.DropDownStandard;
 import com.proyecto.StoreCollection.dto.request.TiendaRequest;
 import com.proyecto.StoreCollection.dto.response.TiendaResponse;
 import com.proyecto.StoreCollection.dto.special.DashboardTiendaPublicDTO;
@@ -19,6 +20,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -207,6 +209,44 @@ public class TiendaServiceImpl implements TiendaService {
 
         return toResponse(tienda);
     }
+    @Override
+    @Transactional(readOnly = true)
+    public List<DropDownStandard> getTiendasForDropdown() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        // Si no hay usuario autenticado → lista vacía (seguridad)
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return Collections.emptyList();
+        }
+
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        List<Tienda> tiendas;
+
+        if (esAdmin) {
+            // ADMIN: ve todas las tiendas (ordenadas por nombre)
+            tiendas = tiendaRepository.findAllByOrderByNombreAsc();
+        } else {
+            // OWNER o cualquier otro rol autenticado: solo su propia tienda
+            Tienda tiendaActual = getTiendaDelUsuarioActual();
+            if (tiendaActual == null) {
+                return Collections.emptyList();
+            }
+            tiendas = Collections.singletonList(tiendaActual);
+        }
+
+        // Mapeo a DTO estándar
+        return tiendas.stream()
+                .map(t -> {
+                    DropDownStandard dto = new DropDownStandard();
+                    dto.setId(t.getId());
+                    dto.setDescripcion(t.getNombre());
+                    return dto;
+                })
+                .toList();
+    }
+
     // Método auxiliar para verificar permisos
     private boolean tienePermisoParaTienda(Integer tiendaId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -219,9 +259,7 @@ public class TiendaServiceImpl implements TiendaService {
                 .orElse(false);
     }
 
-    public List<Tienda> findAllActivas() {
-        return tiendaRepository.findByActivoTrue();
-    }
+
     @Override
     public void deleteById(Integer id) {
         Tienda tienda = tiendaRepository.findById(id)

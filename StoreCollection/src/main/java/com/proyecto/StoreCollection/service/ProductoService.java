@@ -1,6 +1,7 @@
 // src/main/java/com/proyecto/StoreCollection/service/ProductoService.java
 package com.proyecto.StoreCollection.service;
 
+import com.proyecto.StoreCollection.dto.DropTown.DropDownStandard;
 import com.proyecto.StoreCollection.dto.request.ProductoRequest;
 import com.proyecto.StoreCollection.dto.response.ProductoCardResponse;
 import com.proyecto.StoreCollection.dto.response.ProductoResponse;
@@ -14,6 +15,7 @@ public interface ProductoService {
     List<ProductoResponse> findByCategoriaId(Integer categoriaId);
     ProductoResponse findById(Integer id);
     List<ProductoCardResponse> findAllForPublicCatalog(String tiendaSlug) ;    // Para público (por slug de tienda)
+    List<DropDownStandard> getProductosForDropdown();
     ProductoCardResponse findByTiendaSlugAndProductoSlug(String tiendaSlug, String productoSlug);
     ProductoResponse save(ProductoRequest request);
     ProductoResponse save(ProductoRequest request, Integer id);

@@ -15,7 +15,9 @@ public interface AtributoValorRepository extends TenantBaseRepository<AtributoVa
                 .filter(v -> v.getAtributo().getId().equals(atributoId))
                 .toList();
     }
+    List<AtributoValor> findAllByOrderByValorAsc();
 
+    List<AtributoValor> findByTiendaIdOrderByValorAsc(Integer tiendaId);
     @Query("SELECT v FROM AtributoValor v WHERE v.atributo.id = :atributoId AND v.tienda.id = :tenantId")
     List<AtributoValor> findByAtributoIdAndTenant(
             @Param("atributoId") Long atributoId,

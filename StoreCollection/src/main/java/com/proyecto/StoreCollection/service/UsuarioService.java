@@ -1,5 +1,6 @@
 package com.proyecto.StoreCollection.service;
 
+import com.proyecto.StoreCollection.dto.DropTown.DropDownStandard;
 import com.proyecto.StoreCollection.dto.request.UsuarioRequest;
 import com.proyecto.StoreCollection.dto.response.UsuarioResponse;
 import com.proyecto.StoreCollection.entity.Usuario;
@@ -18,4 +19,5 @@ public interface UsuarioService {
     void deleteById(Integer id);
      List<Usuario> findAllRaw() ;
      void updatePasswordDirectly(Integer id, String nuevaPasswordHasheada) ;
+    List<DropDownStandard> getUsuariosForDropdown();
 }

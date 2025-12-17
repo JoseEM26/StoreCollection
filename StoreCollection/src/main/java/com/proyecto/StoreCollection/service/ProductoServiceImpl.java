@@ -2,6 +2,7 @@
 
 package com.proyecto.StoreCollection.service;
 
+import com.proyecto.StoreCollection.dto.DropTown.DropDownStandard;
 import com.proyecto.StoreCollection.dto.request.ProductoRequest;
 import com.proyecto.StoreCollection.dto.response.ProductoCardResponse;
 import com.proyecto.StoreCollection.dto.response.ProductoResponse;
@@ -14,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -223,7 +226,37 @@ public class ProductoServiceImpl implements ProductoService {
                         () -> p.setImagenPrincipal("https://placehold.co/800x800/eeeeee/999999.png?text=Sin+Imagen")
                 );
     }
+    @Override
+    @Transactional(readOnly = true)
+    public List<DropDownStandard> getProductosForDropdown() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
+        List<Producto> productos;
+
+        if (esAdmin) {
+            // ADMIN ve todos los productos
+            productos = productoRepository.findAllByOrderByNombreAsc();
+        } else {
+            // OWNER solo ve los de su tienda
+            Integer tenantId = TenantContext.getTenantId();
+            if (tenantId == null) {
+                return Collections.emptyList();
+            }
+            productos = productoRepository.findByTiendaIdOrderByNombreAsc(tenantId);
+        }
+
+        // Convertir a DTO estándar
+        return productos.stream()
+                .map(p -> {
+                    DropDownStandard dto = new DropDownStandard();
+                    dto.setId(p.getId());
+                    dto.setDescripcion(p.getNombre());
+                    return dto;
+                })
+                .toList();
+    }
     private ProductoResponse toResponse(Producto p) {
         ProductoResponse resp = new ProductoResponse();
         resp.setId(p.getId());

@@ -11,7 +11,7 @@ export interface DropTownStandar {
 })
 export class DropTownService {
 
-  private readonly API_URL = `${environment.apiUrl}/api/public`;  // ← Usamos environment
+  private readonly API_URL = `${environment.apiUrl}/api/owner`;  // ← Usamos environment
 
   constructor(private http: HttpClient) { }
 

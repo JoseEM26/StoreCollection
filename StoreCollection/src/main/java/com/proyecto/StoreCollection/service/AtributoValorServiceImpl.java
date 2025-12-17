@@ -1,18 +1,23 @@
 package com.proyecto.StoreCollection.service;
 
+import com.proyecto.StoreCollection.dto.DropTown.DropDownStandard;
 import com.proyecto.StoreCollection.dto.request.AtributoValorRequest;
 import com.proyecto.StoreCollection.dto.response.AtributoValorResponse;
 import com.proyecto.StoreCollection.entity.Atributo;
 import com.proyecto.StoreCollection.entity.AtributoValor;
 import com.proyecto.StoreCollection.repository.AtributoRepository;
 import com.proyecto.StoreCollection.repository.AtributoValorRepository;
+import com.proyecto.StoreCollection.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -31,6 +36,7 @@ public class AtributoValorServiceImpl implements AtributoValorService {
         return valorRepository.findAll(pageable).map(this::toResponse);
     }
 
+
     @Override
     @Transactional(readOnly = true)
     public List<AtributoValorResponse> findByAtributoId(Integer atributoId) {
@@ -39,7 +45,34 @@ public class AtributoValorServiceImpl implements AtributoValorService {
                 .map(this::toResponse)
                 .toList();
     }
+    @Override
+    @Transactional(readOnly = true)
+    public List<DropDownStandard> getValoresForDropdown() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
+        List<AtributoValor> valores;
+
+        if (esAdmin) {
+            valores = valorRepository.findAllByOrderByValorAsc();
+        } else {
+            Integer tenantId = TenantContext.getTenantId();
+            if (tenantId == null) {
+                return Collections.emptyList();
+            }
+            valores = valorRepository.findByTiendaIdOrderByValorAsc(tenantId);
+        }
+
+        return valores.stream()
+                .map(v -> {
+                    DropDownStandard dto = new DropDownStandard();
+                    dto.setId(v.getId());
+                    dto.setDescripcion(v.getValor());
+                    return dto;
+                })
+                .toList();
+    }
     @Override
     @Transactional(readOnly = true)
     public List<AtributoValorResponse> findByAtributoIdAndTiendaSlug(
