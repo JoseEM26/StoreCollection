@@ -7,22 +7,35 @@ import { environment } from '../../../../environment';
 import { TiendaPage } from '../../model/tienda-public.model';
 import { TiendaResponse } from '../../model/admin/tienda-admin.model';
 
+// src/app/service/service-admin/tienda-admin.service.ts (o donde tengas las interfaces)
+
 export interface TiendaCreateRequest {
   nombre: string;
   slug: string;
   whatsapp?: string;
-  moneda?: 'SOLES' | 'DOLARES';
+  moneda?: 'SOLES' | 'DOLARES';        // Opcional en creación (puede tener valor por defecto)
   descripcion?: string;
   direccion?: string;
   horarios?: string;
   mapa_url?: string;
   logo_img_url?: string;
   planId?: number;
-  userId:number;
+  userId?: number;                     
+  activo?: boolean;                    
 }
 
-export interface TiendaUpdateRequest extends TiendaCreateRequest {
-  id: number;
+export interface TiendaUpdateRequest {
+  nombre: string;
+  slug: string;
+  whatsapp?: string;
+  moneda?: 'SOLES' | 'DOLARES';       
+  descripcion?: string;
+  direccion?: string;
+  horarios?: string;
+  mapa_url?: string;
+  logo_img_url?: string;
+  planId?: number | null;
+  activo?: boolean;                   
 }
 
 @Injectable({
@@ -53,6 +66,12 @@ export class TiendaAdminService {
       .pipe(catchError(this.handleError));
   }
 
+  // === OBTENER UNA TIENDA POR ID (con verificación de permisos en backend) ===
+  obtenerTiendaPorId(id: number): Observable<TiendaResponse> {
+    return this.http.get<TiendaResponse>(`${this.BASE_URL}/${id}`)
+      .pipe(catchError(this.handleError));
+  }
+
   // === CREAR TIENDA ===
   crearTienda(request: TiendaCreateRequest): Observable<TiendaResponse> {
     return this.http.post<TiendaResponse>(this.BASE_URL, request)
@@ -60,7 +79,7 @@ export class TiendaAdminService {
   }
 
   // === ACTUALIZAR TIENDA ===
-  actualizarTienda(id: number, request: Partial<TiendaCreateRequest>): Observable<TiendaResponse> {
+  actualizarTienda(id: number, request: TiendaUpdateRequest): Observable<TiendaResponse> {
     return this.http.put<TiendaResponse>(`${this.BASE_URL}/${id}`, request)
       .pipe(catchError(this.handleError));
   }
@@ -71,7 +90,7 @@ export class TiendaAdminService {
       .pipe(catchError(this.handleError));
   }
 
-  // === GENERAR SLUG AUTOMÁTICO (opcional, helper en frontend) ===
+  // === GENERAR SLUG AUTOMÁTICO (helper en frontend) ===
   generarSlug(nombre: string): string {
     return nombre
       .toLowerCase()

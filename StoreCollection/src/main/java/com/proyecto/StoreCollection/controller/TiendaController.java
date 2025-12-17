@@ -97,7 +97,7 @@ public class TiendaController {
         return PageRequest.of(page, size, org.springframework.data.domain.Sort.by(direction, property));
     }
     // NUEVO: Endpoint para obtener tienda específica (para edición)
-    @GetMapping("/owner/tiendas/{id}")
+    @GetMapping("/api/owner/tiendas/{id}")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<TiendaResponse> obtenerTiendaPorId(@PathVariable Integer id) {
         // Necesitarás agregar este método en tu service
@@ -109,7 +109,7 @@ public class TiendaController {
     }
 
     // ==================== OPERACIONES CRUD ====================
-    @PostMapping("/owner/tiendas")
+    @PostMapping("/api/owner/tiendas")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<TiendaResponse> crearTienda(@Valid @RequestBody TiendaRequest request) {
         // IMPORTANTE: En el service, asegúrate de validar que:
@@ -118,7 +118,7 @@ public class TiendaController {
         return ResponseEntity.ok(service.save(request));
     }
 
-    @PutMapping("/owner/tiendas/{id}")
+    @PutMapping("/api/owner/tiendas/{id}")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<TiendaResponse> actualizarTienda(
             @PathVariable Integer id,

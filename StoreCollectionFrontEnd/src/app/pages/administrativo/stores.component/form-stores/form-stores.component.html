@@ -5,13 +5,13 @@
       <button type="button" class="btn-close" (click)="onCancel()" [disabled]="loading"></button>
     </div>
 
-    <form (ngSubmit)="onSubmit()" class="modal-body">
-      <!-- Preview del logo (opcional) -->
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="modal-body">
+      <!-- Preview del logo -->
       <div class="text-center mb-4">
         <img
           *ngIf="logoPreview"
           [src]="logoPreview"
-          alt="Logo"
+          alt="Logo preview"
           class="logo-preview"
         />
         <div *ngIf="!logoPreview" class="logo-placeholder">
@@ -24,15 +24,16 @@
         <div class="col-12">
           <label class="form-label">Nombre de la tienda *</label>
           <input
-            [(ngModel)]="form.nombre"
-            name="nombre"
+            formControlName="nombre"
             (input)="onNombreChange()"
             type="text"
             class="form-control"
             placeholder="Mi Tienda"
-            required
-            [disabled]="loading"
+            [class.is-invalid]="form.get('nombre')?.invalid && form.get('nombre')?.touched"
           />
+          <div class="invalid-feedback" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors">
+            {{ getErrorMessage('nombre') }}
+          </div>
         </div>
 
         <!-- Slug -->
@@ -41,50 +42,57 @@
           <div class="input-group">
             <span class="input-group-text">storecollection.com/</span>
             <input
-              [(ngModel)]="form.slug"
-              name="slug"
+              formControlName="slug"
               type="text"
               class="form-control"
               placeholder="mi-tienda"
-              required
-              [disabled]="loading || isEditMode"
+              [class.is-invalid]="form.get('slug')?.invalid && form.get('slug')?.touched"
             />
+          </div>
+          <div class="invalid-feedback" *ngIf="form.get('slug')?.touched && form.get('slug')?.errors">
+            {{ getErrorMessage('slug') }}
           </div>
         </div>
 
-        <!-- Usuario -->
-        <div class="col-12">
+        <!-- Propietario - solo para ADMIN -->
+        <div class="col-12" *ngIf="esAdmin">
           <label class="form-label">Propietario (Usuario) *</label>
           <select
-            [(ngModel)]="form.userId"
-            name="userId"
+            formControlName="userId"
             class="form-select"
-            [disabled]="loading || usuariosLoading"
-            required
+            [class.is-invalid]="form.get('userId')?.invalid && form.get('userId')?.touched"
           >
             <option value="0" disabled>Seleccione un usuario</option>
-            <option *ngFor="let u of usuarios" [value]="u.id">
-              {{ u.descripcion }}
-            </option>
+            <option *ngFor="let u of usuarios" [value]="u.id">{{ u.descripcion }}</option>
           </select>
+          <div class="invalid-feedback" *ngIf="form.get('userId')?.touched && form.get('userId')?.errors">
+            {{ getErrorMessage('userId') }}
+          </div>
         </div>
 
-        <!-- WhatsApp y Moneda -->
+        <!-- WhatsApp -->
         <div class="col-md-6">
           <label class="form-label">WhatsApp</label>
           <input
-            [(ngModel)]="form.whatsapp"
-            name="whatsapp"
+            formControlName="whatsapp"
             type="text"
             class="form-control"
             placeholder="+51 999 999 999"
-            [disabled]="loading"
+            [class.is-invalid]="form.get('whatsapp')?.invalid && form.get('whatsapp')?.touched"
           />
+          <div class="invalid-feedback" *ngIf="form.get('whatsapp')?.touched && form.get('whatsapp')?.errors">
+            {{ getErrorMessage('whatsapp') }}
+          </div>
         </div>
 
+        <!-- Moneda -->
         <div class="col-md-6">
-          <label class="form-label">Moneda</label>
-          <select [(ngModel)]="form.moneda" name="moneda" class="form-select" [disabled]="loading">
+          <label class="form-label">Moneda *</label>
+          <select
+            formControlName="moneda"
+            class="form-select"
+            [class.is-invalid]="form.get('moneda')?.invalid && form.get('moneda')?.touched"
+          >
             <option value="SOLES">Soles (S/)</option>
             <option value="DOLARES">Dólares ($)</option>
           </select>
@@ -93,7 +101,7 @@
         <!-- Plan -->
         <div class="col-12">
           <label class="form-label">Plan</label>
-          <select [(ngModel)]="form.planId" name="planId" class="form-select" [disabled]="loading">
+          <select formControlName="planId" class="form-select">
             <option *ngFor="let p of planes" [value]="p.id">{{ p.nombre }}</option>
           </select>
         </div>
@@ -102,66 +110,69 @@
         <div class="col-12">
           <label class="form-label">URL del Logo</label>
           <input
-            [(ngModel)]="form.logo_img_url"
-            name="logo_img_url"
+            formControlName="logo_img_url"
             (input)="onLogoUrlChange()"
             type="url"
             class="form-control"
             placeholder="https://ejemplo.com/logo.png"
-            [disabled]="loading"
+            [class.is-invalid]="form.get('logo_img_url')?.invalid && form.get('logo_img_url')?.touched"
           />
+          <div class="invalid-feedback" *ngIf="form.get('logo_img_url')?.touched && form.get('logo_img_url')?.errors">
+            {{ getErrorMessage('logo_img_url') }}
+          </div>
         </div>
 
         <!-- Descripción -->
         <div class="col-12">
           <label class="form-label">Descripción</label>
           <textarea
-            [(ngModel)]="form.descripcion"
-            name="descripcion"
+            formControlName="descripcion"
             rows="3"
             class="form-control"
             placeholder="Descripción de la tienda..."
-            [disabled]="loading"
           ></textarea>
         </div>
 
-        <!-- Dirección y Horarios -->
+        <!-- Dirección -->
         <div class="col-md-6">
           <label class="form-label">Dirección</label>
-          <input
-            [(ngModel)]="form.direccion"
-            name="direccion"
-            type="text"
-            class="form-control"
-            placeholder="Av. Ejemplo 123"
-            [disabled]="loading"
-          />
+          <input formControlName="direccion" type="text" class="form-control" placeholder="Av. Ejemplo 123" />
         </div>
 
+        <!-- Horarios -->
         <div class="col-md-6">
           <label class="form-label">Horarios</label>
-          <input
-            [(ngModel)]="form.horarios"
-            name="horarios"
-            type="text"
-            class="form-control"
-            placeholder="Lun-Sáb 9-21h"
-            [disabled]="loading"
-          />
+          <input formControlName="horarios" type="text" class="form-control" placeholder="Lun-Sáb 9-21h" />
         </div>
 
-        <!-- Mapa -->
+        <!-- Mapa URL -->
         <div class="col-12">
           <label class="form-label">URL de Google Maps</label>
           <input
-            [(ngModel)]="form.mapa_url"
-            name="mapa_url"
+            formControlName="mapa_url"
             type="url"
             class="form-control"
             placeholder="https://maps.google.com/..."
-            [disabled]="loading"
+            [class.is-invalid]="form.get('mapa_url')?.invalid && form.get('mapa_url')?.touched"
           />
+          <div class="invalid-feedback" *ngIf="form.get('mapa_url')?.touched && form.get('mapa_url')?.errors">
+            {{ getErrorMessage('mapa_url') }}
+          </div>
         </div>
+
+        <!-- Estado - solo ADMIN -->
+        <div class="col-12" *ngIf="esAdmin">
+          <label class="form-label">Estado</label>
+          <select formControlName="activo" class="form-select">
+            <option [value]="true">Activa</option>
+            <option [value]="false">Inactiva</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Error del servidor -->
+      <div class="alert alert-danger mt-4" *ngIf="serverError">
+        {{ serverError }}
       </div>
 
       <!-- Botones -->
@@ -169,9 +180,13 @@
         <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="loading">
           Cancelar
         </button>
-        <button type="submit" class="btn btn-primary" [disabled]="loading">
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="loading || form.invalid"
+        >
           <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
-          {{ isEditMode ? 'Guardar' : 'Crear' }}
+          {{ isEditMode ? 'Guardar Cambios' : 'Crear Tienda' }}
         </button>
       </div>
     </form>
