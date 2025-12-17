@@ -51,10 +51,17 @@ CREATE TABLE tienda (
 
 CREATE TABLE categoria (
     id INT AUTO_INCREMENT PRIMARY KEY,
+
     nombre VARCHAR(100) NOT NULL,
+
     slug VARCHAR(120) NOT NULL,
+
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
+
     tienda_id INT NOT NULL,
+
     FOREIGN KEY (tienda_id) REFERENCES tienda(id) ON DELETE CASCADE,
+
     UNIQUE KEY uq_categoria_slug_tienda (slug, tienda_id)
 );
 
@@ -64,6 +71,7 @@ CREATE TABLE producto (
     slug VARCHAR(120) NOT NULL,
     categoria_id INT NOT NULL,
     tienda_id INT NOT NULL,
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
     FOREIGN KEY (categoria_id) REFERENCES categoria(id) ON DELETE CASCADE,
     FOREIGN KEY (tienda_id) REFERENCES tienda(id) ON DELETE CASCADE,
     UNIQUE KEY uq_producto_slug_tienda (slug, tienda_id)

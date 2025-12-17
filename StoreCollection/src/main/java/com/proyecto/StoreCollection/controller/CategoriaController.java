@@ -67,6 +67,12 @@ public class CategoriaController {
 
         return ResponseEntity.ok(resultado);
     }
+    @PatchMapping("/api/owner/categorias/{id}/toggle-activo")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<CategoriaResponse> toggleActivo(@PathVariable Integer id) {
+        return ResponseEntity.ok(service.toggleActivo(id));
+    }
+
     private Pageable crearPageable(int page, int size, String sort) {
         String[] parts = sort.split(",");
         String property = parts[0];
@@ -76,19 +82,28 @@ public class CategoriaController {
 
         return PageRequest.of(page, size, Sort.by(direction, property));
     }
-
+    @GetMapping("/api/owner/categorias/{id}")
+    public ResponseEntity<CategoriaResponse> obtenerParaEdicion(@PathVariable Integer id) {
+        return ResponseEntity.ok(service.getCategoriaByIdParaEdicion(id));
+    }
+    // === CREAR ===
     @PostMapping("/api/owner/categorias")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<CategoriaResponse> crear(@Valid @RequestBody CategoriaRequest request) {
         return ResponseEntity.ok(service.save(request));
     }
 
+    // === ACTUALIZAR ===
     @PutMapping("/api/owner/categorias/{id}")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<CategoriaResponse> actualizar(@PathVariable Integer id,
                                                         @Valid @RequestBody CategoriaRequest request) {
         return ResponseEntity.ok(service.save(request, id));
     }
 
+    // === ELIMINAR ===
     @DeleteMapping("/api/owner/categorias/{id}")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
         service.deleteById(id);
         return ResponseEntity.noContent().build();

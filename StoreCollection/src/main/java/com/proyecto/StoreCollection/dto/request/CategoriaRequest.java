@@ -10,4 +10,6 @@ public class CategoriaRequest {
     @NotBlank
     private String slug;
     private Long tiendaId;
+    private boolean activo = true;
+
 }

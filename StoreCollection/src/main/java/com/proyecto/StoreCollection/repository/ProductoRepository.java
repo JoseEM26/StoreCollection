@@ -4,6 +4,7 @@ package com.proyecto.StoreCollection.repository;
 import com.proyecto.StoreCollection.entity.Producto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -31,7 +32,9 @@ List<Producto> findByTiendaSlugPublic(@Param("tiendaSlug") String tiendaSlug);
      Page<Producto> findAllByTenantId(@Param("tenantId") Integer tenantId, Pageable pageable);
      // ADMIN: búsqueda global
      Page<Producto> findByNombreContainingIgnoreCase(String nombre, Pageable pageable);
-
+     @Modifying
+     @Query("UPDATE Producto p SET p.activo = false WHERE p.categoria.id = :categoriaId")
+     void desactivarTodosPorCategoriaId(@Param("categoriaId") Integer categoriaId);
      // OWNER: búsqueda solo en su tienda
      @Query("SELECT p FROM Producto p WHERE p.tienda.id = :tenantId AND LOWER(p.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))")
      Page<Producto> findByNombreContainingIgnoreCaseAndTenantId(

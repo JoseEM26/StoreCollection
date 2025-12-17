@@ -96,6 +96,10 @@ public class TiendaController {
 
         return PageRequest.of(page, size, org.springframework.data.domain.Sort.by(direction, property));
     }
+    // ==================== OPERACIONES CRUD ====================
+    // ==================== OPERACIONES CRUD ====================
+    // ==================== OPERACIONES CRUD ====================
+
     // NUEVO: Endpoint para obtener tienda específica (para edición)
     @GetMapping("/api/owner/tiendas/{id}")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
@@ -108,7 +112,6 @@ public class TiendaController {
         return ResponseEntity.ok(service.findById(id));
     }
 
-    // ==================== OPERACIONES CRUD ====================
     @PostMapping("/api/owner/tiendas")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<TiendaResponse> crearTienda(@Valid @RequestBody TiendaRequest request) {
@@ -136,7 +139,9 @@ public class TiendaController {
         TiendaResponse response = service.toggleActivo(id);
         return ResponseEntity.ok(response);
     }
-    /// /////////////////////////////////AUN NO USADAS///////////////////////////////////////////////////////////////////////
+    // ==================== OPERACIONES CRUD ====================
+    // ==================== OPERACIONES CRUD ====================
+    // ==================== OPERACIONES CRUD ====================
 
     // PRIVADO - Mis tiendas
     @GetMapping("/api/owner/tiendas")

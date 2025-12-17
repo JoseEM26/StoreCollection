@@ -10,12 +10,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CategoriaRepository extends JpaRepository<Categoria, Integer>, TenantBaseRepository<Categoria, Integer> {
 
     Page<Categoria> findAll(Pageable pageable);
     Page<Categoria> findByNombreContainingIgnoreCase(String nombre, Pageable pageable);
-
+    Optional<Categoria> findBySlugAndTiendaId(String slug, Integer tiendaId);
     @Query("SELECT c FROM Categoria c WHERE c.tienda.id = :tenantId AND LOWER(c.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))")
     Page<Categoria> findByNombreContainingIgnoreCaseAndTenantId(
             @Param("nombre") String nombre,
