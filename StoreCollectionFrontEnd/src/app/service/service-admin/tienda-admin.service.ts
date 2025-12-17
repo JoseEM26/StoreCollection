@@ -84,9 +84,10 @@ export class TiendaAdminService {
       .pipe(catchError(this.handleError));
   }
 
-  // === ELIMINAR TIENDA (opcional) ===
-  eliminarTienda(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.BASE_URL}/${id}`)
+   // === TOGGLE ACTIVO (SOLO ADMIN) ===
+  toggleActivo(id: number): Observable<TiendaResponse> {
+    const url = `${this.BASE_URL}/${id}/toggle-activo`;
+    return this.http.patch<TiendaResponse>(url, {}) // PATCH con cuerpo vacío
       .pipe(catchError(this.handleError));
   }
 

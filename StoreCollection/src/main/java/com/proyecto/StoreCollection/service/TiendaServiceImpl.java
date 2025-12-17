@@ -13,6 +13,7 @@ import com.proyecto.StoreCollection.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -240,6 +241,30 @@ public class TiendaServiceImpl implements TiendaService {
     public Page<TiendaResponse> findByUserEmail(String email, Pageable pageable) {
         return tiendaRepository.findByUserEmail(email, pageable)
                 .map(this::toResponse);
+    }
+
+    @Override
+    @Transactional
+    public TiendaResponse toggleActivo(Integer id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        // Verificar si el usuario autenticado es ADMIN
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!esAdmin) {
+            throw new AccessDeniedException("Solo los administradores pueden activar o desactivar tiendas");
+        }
+
+        Tienda tienda = tiendaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tienda no encontrada con ID: " + id));
+
+        // Toggle del estado activo
+        tienda.setActivo(!tienda.getActivo());
+
+        Tienda saved = tiendaRepository.save(tienda);
+
+        return toResponse(saved); // tu método de mapeo a DTO
     }
 
     private TiendaResponse toResponse(Tienda t) {

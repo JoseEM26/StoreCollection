@@ -130,6 +130,12 @@ public class TiendaController {
         // 3. No permitir cambiar el usuario propietario en edición
         return ResponseEntity.ok(service.save(request, id));
     }
+    @PatchMapping("/api/owner/tiendas/{id}/toggle-activo")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<TiendaResponse> toggleActivo(@PathVariable Integer id) {
+        TiendaResponse response = service.toggleActivo(id);
+        return ResponseEntity.ok(response);
+    }
     /// /////////////////////////////////AUN NO USADAS///////////////////////////////////////////////////////////////////////
 
     // PRIVADO - Mis tiendas

@@ -121,7 +121,24 @@ closeModal() {
   }
 
   toggleActive(tienda: TiendaResponse): void {
-    alert(tienda.activo ? `Tienda "${tienda.nombre}" desactivada` : `Tienda "${tienda.nombre}" activada`);
-    this.loadTiendas();
+  if (!confirm(tienda.activo 
+      ? `¿Desactivar la tienda "${tienda.nombre}"?` 
+      : `¿Activar la tienda "${tienda.nombre}"?`)) {
+    return;
   }
+
+  this.tiendaService.toggleActivo(tienda.id).subscribe({
+    next: (updated) => {
+      // Actualiza la lista local o recarga
+      this.loadTiendas();
+      alert(updated.activo 
+        ? `Tienda "${updated.nombre}" activada correctamente` 
+        : `Tienda "${updated.nombre}" desactivada correctamente`);
+    },
+    error: (err) => {
+      console.error('Error al toggle activo:', err);
+      alert('No tienes permisos para realizar esta acción o ocurrió un error');
+    }
+  });
+}
 }
