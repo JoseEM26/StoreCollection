@@ -1,41 +1,44 @@
 .products-page {
-  padding: 2rem 1rem;
+  padding: 2rem;
+  background: #f8fafc;
   min-height: 100vh;
-  background: #f9fafb;
 }
 
 .header-section {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+  align-items: flex-start;
+  margin-bottom: 2.5rem;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .page-title {
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: 700;
-  color: #1f2937;
+  color: #111827;
   margin: 0;
 }
 
 .page-subtitle {
   color: #6b7280;
-  font-size: 1rem;
   margin: 0.5rem 0 0;
+  font-size: 1.1rem;
 }
 
 .btn-create {
   background: #2563eb;
   color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
+  padding: 0.8rem 1.8rem;
+  border-radius: 12px;
   font-weight: 600;
+  border: none;
+  transition: all 0.2s;
 }
 
 .btn-create:hover {
   background: #1d4ed8;
+  transform: translateY(-1px);
 }
 
 .filters-bar {
@@ -43,12 +46,14 @@
   gap: 1rem;
   margin-bottom: 2rem;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .search-box {
   position: relative;
   flex: 1;
-  min-width: 250px;
+  max-width: 450px;
+  min-width: 280px;
 }
 
 .search-box i {
@@ -57,194 +62,156 @@
   top: 50%;
   transform: translateY(-50%);
   color: #9ca3af;
-  pointer-events: none;
+  font-size: 1.1rem;
 }
 
 .search-box input {
   width: 100%;
-  padding: 0.75rem 1rem 0.75rem 3rem;
+  padding: 0.85rem 1rem 0.85rem 3rem;
   border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
+  border-radius: 12px;
   font-size: 1rem;
+  transition: all 0.2s;
 }
 
 .search-box input:focus {
   outline: none;
   border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
 }
 
 .btn-sort {
-  padding: 0.75rem 1.5rem;
-  background: #f3f4f6;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.btn-sort:hover {
-  background: #e5e7eb;
-}
-
-/* Tabla simple y clara */
-.table-container {
+  padding: 0.85rem 1.4rem;
   background: white;
-  border-radius: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.table-container .card {
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-.table {
-  margin-bottom: 0;
-}
-
-.table thead th {
-  background: #f9fafb;
-  font-weight: 600;
-  color: #374151;
-  font-size: 0.875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 1rem;
-  border-bottom: 2px solid #e5e7eb;
-}
-
-.table tbody tr {
-  transition: background 0.2s;
-}
-
-.table tbody tr:hover {
-  background: #f8fafc;
-}
-
-.table td {
-  padding: 1rem;
-  vertical-align: middle;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
 .product-avatar {
-  width: 48px;
-  height: 48px;
-  background: #6366f1;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
   color: white;
-  border-radius: 0.75rem;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   flex-shrink: 0;
+}
+
+.bg-soft-primary {
+  background-color: #e0e7ff !important;
+  color: #4338ca !important;
 }
 
 .status-dot {
   display: inline-block;
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  margin-right: 0.5rem;
+  margin-right: 8px;
+  vertical-align: middle;
 }
 
 .status-dot.active { background: #10b981; }
-.status-dot.inactive { background: #ef4444; }
+.status-dot:not(.active) { background: #ef4444; }
 
-/* Botones de acción */
-.btn-sm {
-  padding: 0.5rem 0.75rem;
-  font-size: 0.875rem;
-}
-
-.btn-outline-primary:hover,
-.btn-success:hover,
-.btn-danger:hover {
-  opacity: 0.9;
-}
-
-/* Estados vacíos y loading */
 .empty-state {
   text-align: center;
-  padding: 4rem 2rem;
+  padding: 6rem 2rem;
   color: #6b7280;
-}
-
-.empty-icon {
-  font-size: 4rem;
-  color: #e5e7eb;
-  margin-bottom: 1rem;
 }
 
 .loading-container {
   text-align: center;
-  padding: 4rem;
+  padding: 6rem;
 }
 
 .spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid #f3f4f6;
-  border-top: 4px solid #2563eb;
+  width: 60px;
+  height: 60px;
+  border: 6px solid #f3f4f6;
+  border-top: 6px solid #2563eb;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
+  margin: 0 auto 1.5rem;
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
-/* Paginación simple */
-.pagination-container {
-  margin-top: 2rem;
-  display: flex;
-  justify-content: center;
-}
-
-.pagination {
-  display: flex;
-  gap: 0.5rem;
-  list-style: none;
-  padding: 0;
-}
-
-.pagination button {
-  min-width: 40px;
-  height: 40px;
-  border-radius: 0.5rem;
-  border: 1px solid #d1d5db;
-  background: white;
-  color: #374151;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.pagination .active button {
-  background: #2563eb;
-  color: white;
-  border-color: #2563eb;
-}
-
-.pagination .disabled button {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.pagination button:hover:not(.disabled button) {
-  background: #f3f4f6;
-}
-
-/* Modal */
-.modal-overlay {
+/* === MODAL PERSONALIZADO CON SCROLL CONTROLADO === */
+.modal-backdrop {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  z-index: 1000;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  z-index: 1040;
+}
+
+.custom-modal-container {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 1050;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.custom-modal {
+  width: 100%;
+  max-width: 1000px;
+  max-height: 90vh;              /* Nunca más alto que el 90% de la pantalla */
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Importante: el scroll va dentro del modal, no en la página */
+.custom-modal .modal-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.custom-modal .modal-body {
+  flex: 1;
+  overflow-y: auto;              /* Aquí ocurre el scroll cuando hay muchas variantes */
+  padding: 2rem;
+  background: #f9fafb;
+}
+
+/* Opcional: mejorar scroll en webkit */
+.custom-modal .modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-modal .modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.custom-modal .modal-body::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  border-radius: 10px;
+}
+
+.custom-modal .modal-body::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }

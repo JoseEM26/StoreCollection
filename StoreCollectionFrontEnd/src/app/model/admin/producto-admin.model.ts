@@ -1,5 +1,7 @@
 // src/app/model/admin/producto-admin.model.ts
 
+import { DropTownStandar } from "../../service/droptown.service";
+
 // === Respuesta del backend ===
 export interface ProductoResponse {
   id: number;
@@ -9,44 +11,48 @@ export interface ProductoResponse {
   categoriaNombre: string;
   tiendaId: number;
   activo: boolean;
-variantes: VarianteResponse[];  
+variantes: VarianteResponse[] | null;  // ← Permite null
 }
 
-// === Para enviar al crear o actualizar ===
 export interface ProductoRequest {
   nombre: string;
   slug: string;
   categoriaId: number;
-  tiendaId?: number;           // Solo lo envía ADMIN en creación
-  variantes?: VarianteRequest[]; // Opcional si no hay variantes
+  tiendaId?: number;         // solo admin
+  variantes: VarianteRequest[];
 }
 
-// === Variante ===
 export interface VarianteResponse {
+  id: number;
+  sku: string;
+  precio: number;
+  stock: number;
+  imagenUrl?: string;
+  activo: boolean;
+  atributos: AtributoValorResponse[];
+}
+
+export interface VarianteRequest {
   id?: number;
   sku: string;
   precio: number;
   stock: number;
   imagenUrl?: string;
-  atributos: AtributoValorResponse[];
+  atributos: AtributoValorRequest[];
+  activo: Boolean;
 }
-
-export interface VarianteRequest {
-  id?: number;                 // Solo presente en edición
-  sku: string;
-  precio: number;
-  stock: number;
-  imagenUrl?: string;
-  atributos?: AtributoValorRequest[];
-}
-
 // === Atributo y Valor (para variantes) ===
 export interface AtributoValorResponse {
-  id: number;
+  id: number;                // atributoValorId
+  atributoId: number;
   atributoNombre: string;
   valor: string;
 }
-
+export interface AtributoConValores {
+  id: number;
+  nombre: string;
+  valores: DropTownStandar[];  // { id: atributoValorId, descripcion: "Rojo" }
+}
 export interface AtributoValorRequest {
   atributoNombre: string;      // Ej: "Color", "Talla"
   valor: string;               // Ej: "Rojo", "M"

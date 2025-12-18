@@ -1,54 +1,54 @@
-/* product-form.component.css */
-
 .modal-content {
-  max-width: 900px;
-  margin: 1.5rem auto;
-  border: none;
-  border-radius: 0.75rem;
+  max-width: 960px;
+  margin: 2rem auto;
+  border-radius: 16px;
   overflow: hidden;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
 }
 
 .modal-header {
-  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #0d6efd, #0d58ca);
+  color: white;
+  padding: 1.2rem 1.8rem;
 }
 
 .modal-body {
-  padding: 1.5rem;
-  background: #ffffff;
+  background: #f9fafb;
+  padding: 2rem;
 }
 
-/* Fondo sólido y bordes suaves para variantes */
-.border.rounded.bg-light {
-  background-color: #f8fafc !important;
-  border-color: #e2e8f0 !important;
+.accordion-button {
+  font-weight: 500;
+  background-color: #ffffff;
+  border: none;
+  box-shadow: none;
 }
 
-/* Inputs y selects bonitos */
-.form-control,
-.form-select {
-  border-radius: 0.5rem;
-  padding: 0.5rem 0.75rem;
+.accordion-button:not(.collapsed) {
+  background-color: #f0f4ff;
+  color: #0d6efd;
 }
 
-.form-control:focus,
-.form-select:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+.accordion-button::after {
+  filter: brightness(0) invert(0.5);
 }
 
-/* Etiquetas pequeñas */
-.small.fw-medium {
-  font-size: 0.8rem;
-  color: #4b5563;
+.accordion-item {
+  border: 1px solid #e0e4e8;
+  border-radius: 10px !important;
+  overflow: hidden;
 }
 
-/* Botones pequeños */
-.btn-sm {
-  padding: 0.4rem 0.7rem;
+.form-control, .form-select {
+  border-radius: 10px;
+  padding: 0.65rem 1rem;
 }
 
-/* Espaciado en botones finales */
-.d-flex.gap-3 button {
-  min-width: 120px;
-  font-weight: 600;
+.btn {
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.alert {
+  border-radius: 12px;
 }

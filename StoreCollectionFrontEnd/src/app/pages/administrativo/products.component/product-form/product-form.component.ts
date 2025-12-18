@@ -1,18 +1,18 @@
 // src/app/pages/administrativo/products/product-form/product-form.component.ts
 
-import { Component, EventEmitter, Input, Output, signal, OnInit, effect } from '@angular/core';
+import { Component, EventEmitter, Input, Output, signal, computed, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductoAdminService } from '../../../../service/service-admin/producto-admin.service';
 import { AuthService } from '../../../../../auth/auth.service';
 import { CategoriaAdminService } from '../../../../service/service-admin/categoria-admin.service';
+import { DropTownService, DropTownStandar } from '../../../../service/droptown.service';
 import {
   ProductoResponse,
   ProductoRequest,
   VarianteRequest,
   AtributoValorRequest
 } from '../../../../model/admin/producto-admin.model';
-import { DropTownService, DropTownStandar } from '../../../../service/droptown.service';
 
 @Component({
   selector: 'app-product-form',
@@ -21,7 +21,7 @@ import { DropTownService, DropTownStandar } from '../../../../service/droptown.s
   templateUrl: './product-form.component.html',
   styleUrl: './product-form.component.css'
 })
-export class ProductFormComponent implements OnInit {
+export class ProductFormComponent implements OnInit, OnChanges {
   @Input() isEdit = false;
   @Input() producto?: ProductoResponse;
 
@@ -33,13 +33,32 @@ export class ProductFormComponent implements OnInit {
   slug = signal<string>('');
   categoriaId = signal<number | null>(null);
   tiendaId = signal<number | null>(null);
+  activo = signal<boolean>(true);  // Nuevo: para producto activo/inactivo
 
   // Dropdowns
   tiendas = signal<DropTownStandar[]>([]);
   categorias = signal<DropTownStandar[]>([]);
 
-  // Variantes
+  // Variantes con atributos como texto
   variantes = signal<VarianteRequest[]>([]);
+
+  // Variantes ordenadas: por Talla (numérica), luego por Color
+  variantesOrdenadas = computed(() => {
+    return [...this.variantes()].sort((a, b) => {
+      const tallaA = this.getValorAtributo(a, 'Talla');
+      const tallaB = this.getValorAtributo(b, 'Talla');
+      const numA = parseInt(tallaA || '0');
+      const numB = parseInt(tallaB || '0');
+      if (!isNaN(numA) && !isNaN(numB)) {
+        if (numA !== numB) return numA - numB;
+      } else if (!isNaN(numA)) return -1;
+      else if (!isNaN(numB)) return 1;
+
+      const colorA = this.getValorAtributo(a, 'Color') || '';
+      const colorB = this.getValorAtributo(b, 'Color') || '';
+      return colorA.localeCompare(colorB);
+    });
+  });
 
   loading = signal(false);
   errorMessage = signal<string>('');
@@ -52,61 +71,64 @@ export class ProductFormComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Cargar tiendas solo si es ADMIN
     if (this.auth.isAdmin()) {
       this.dropTownService.getTiendas().subscribe({
-        next: (data) => this.tiendas.set(data),
+        next: (data: DropTownStandar[]) => this.tiendas.set(data),
         error: () => this.errorMessage.set('Error al cargar tiendas')
       });
     }
-
-    // Cargar categorías (filtradas por tienda si es necesario)
     this.loadCategorias();
   }
 
-  ngOnChanges(): void {
+  ngOnChanges(changes: SimpleChanges): void {
+    this.errorMessage.set('');
+
     if (this.isEdit && this.producto) {
-      this.nombre.set(this.producto.nombre);
-      this.slug.set(this.producto.slug);
-      this.categoriaId.set(this.producto.categoriaId);
+      this.nombre.set(this.producto.nombre || '');
+      this.slug.set(this.producto.slug || '');
+      this.categoriaId.set(this.producto.categoriaId || null);
+      this.activo.set(this.producto.activo);  // Cargar activo del producto
 
       if (this.auth.isAdmin()) {
-        this.tiendaId.set(this.producto.tiendaId);
+        this.tiendaId.set(this.producto.tiendaId || null);
       }
 
-      // Cargar variantes existentes
+      // Mapear variantes completas con fallback a array vacío
+      const variantesDelBackend = this.producto.variantes ?? [];
+
       this.variantes.set(
-        this.producto.variantes.map(v => ({
+        variantesDelBackend.map(v => ({
           id: v.id,
-          sku: v.sku,
-          precio: v.precio,
-          stock: v.stock,
+          sku: v.sku || '',
+          precio: v.precio || 0,
+          stock: v.stock || 0,
           imagenUrl: v.imagenUrl || '',
-          atributos: v.atributos.map(a => ({
-            atributoNombre: a.atributoNombre,
-            valor: a.valor
+          activo: v.activo,  // Cargar activo de cada variante
+          atributos: (v.atributos ?? []).map(a => ({
+            atributoNombre: a.atributoNombre || '',
+            valor: a.valor || ''
           }))
         }))
       );
+
+      // Si admin, recargar categorías basadas en tienda
+      if (this.auth.isAdmin() && this.tiendaId()) {
+        this.onTiendaChange();
+      }
     } else {
       this.resetForm();
     }
-    this.errorMessage.set('');
   }
 
-  // Cuando ADMIN cambia de tienda, recargar categorías de esa tienda
   onTiendaChange(): void {
     this.categoriaId.set(null);
     this.loadCategorias();
   }
 
   private loadCategorias(): void {
-    // Si tienes un endpoint que filtre categorías por tienda, úsalo
-    // Por ahora asumimos que carga todas o las del usuario
-    // Si quieres filtrar por tiendaId cuando es ADMIN, crea un método en CategoriaAdminService
     this.categoriaService.listarCategorias(0, 1000, 'nombre,asc').subscribe({
-      next: (page) => {
-        const cats = page.content.map(c => ({
+      next: (page: any) => {
+        const cats = page.content.map((c: any) => ({
           id: c.id,
           descripcion: c.nombre
         }));
@@ -115,14 +137,18 @@ export class ProductFormComponent implements OnInit {
     });
   }
 
-  // === Variantes ===
+  // === VARIANTE HELPERS ===
   agregarVariante(): void {
     this.variantes.update(vs => [...vs, {
       sku: '',
       precio: 0,
       stock: 0,
       imagenUrl: '',
-      atributos: []
+      activo: true,
+      atributos: [
+        { atributoNombre: 'Talla', valor: '' },
+        { atributoNombre: 'Color', valor: '' }
+      ]
     }]);
   }
 
@@ -133,8 +159,7 @@ export class ProductFormComponent implements OnInit {
   agregarAtributo(varianteIndex: number): void {
     this.variantes.update(vs => {
       const newVs = [...vs];
-      newVs[varianteIndex].atributos = newVs[varianteIndex].atributos || [];
-      newVs[varianteIndex].atributos!.push({ atributoNombre: '', valor: '' });
+      newVs[varianteIndex].atributos.push({ atributoNombre: '', valor: '' });
       return newVs;
     });
   }
@@ -142,12 +167,18 @@ export class ProductFormComponent implements OnInit {
   eliminarAtributo(varianteIndex: number, attrIndex: number): void {
     this.variantes.update(vs => {
       const newVs = [...vs];
-      newVs[varianteIndex].atributos!.splice(attrIndex, 1);
+      newVs[varianteIndex].atributos.splice(attrIndex, 1);
       return newVs;
     });
   }
 
-  // Generar slug automático desde nombre
+  getValorAtributo(variante: VarianteRequest, nombreAttr: string): string {
+    const attr = variante.atributos.find(a => 
+      a.atributoNombre.toLowerCase() === nombreAttr.toLowerCase()
+    );
+    return attr?.valor || '';
+  }
+
   generarSlugDesdeNombre(): void {
     const slug = this.nombre()
       .toLowerCase()
@@ -159,38 +190,33 @@ export class ProductFormComponent implements OnInit {
   }
 
   save(): void {
-    const nombre = this.nombre().trim();
-    const slug = this.slug().trim();
-
-    if (!nombre || !slug || !this.categoriaId()) {
+    if (!this.nombre().trim() || !this.slug().trim() || !this.categoriaId()) {
       this.errorMessage.set('Nombre, slug y categoría son obligatorios');
       return;
     }
-
     if (this.auth.isAdmin() && !this.tiendaId()) {
-      this.errorMessage.set('Debes seleccionar una tienda');
+      this.errorMessage.set('Selecciona una tienda');
       return;
     }
-
     if (this.variantes().length === 0) {
-      this.errorMessage.set('Debe agregar al menos una variante');
+      this.errorMessage.set('Agrega al menos una variante');
       return;
     }
 
-    // Validar variantes básicas
-    for (const v of this.variantes()) {
-      if (!v.sku.trim() || v.precio <= 0 || v.stock < 0) {
-        this.errorMessage.set('Todas las variantes deben tener SKU válido, precio > 0 y stock ≥ 0');
-        return;
-      }
+    const invalid = this.variantes().some(v =>
+      !v.sku.trim() || v.precio <= 0 || v.stock < 0 ||
+      v.atributos.some(a => !a.atributoNombre.trim() || !a.valor.trim())
+    );
+    if (invalid) {
+      this.errorMessage.set('Completa todos los campos de variantes y atributos');
+      return;
     }
 
     this.loading.set(true);
-    this.errorMessage.set('');
 
     const request: ProductoRequest = {
-      nombre,
-      slug,
+      nombre: this.nombre().trim(),
+      slug: this.slug().trim(),
       categoriaId: this.categoriaId()!,
       variantes: this.variantes()
     };
@@ -210,7 +236,7 @@ export class ProductFormComponent implements OnInit {
       },
       error: (err) => {
         this.loading.set(false);
-        this.errorMessage.set(err.error?.message || 'Error al guardar el producto');
+        this.errorMessage.set(err.error?.message || 'Error al guardar');
       }
     });
   }
@@ -220,12 +246,17 @@ export class ProductFormComponent implements OnInit {
     this.slug.set('');
     this.categoriaId.set(null);
     this.tiendaId.set(null);
+    this.activo.set(true);
     this.variantes.set([{
       sku: '',
       precio: 0,
       stock: 0,
       imagenUrl: '',
-      atributos: []
+      activo: true,
+      atributos: [
+        { atributoNombre: 'Talla', valor: '' },
+        { atributoNombre: 'Color', valor: '' }
+      ]
     }]);
   }
 

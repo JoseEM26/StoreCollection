@@ -6,8 +6,10 @@ import com.proyecto.StoreCollection.dto.DropTown.DropDownStandard;
 import com.proyecto.StoreCollection.dto.request.AtributoValorRequest;
 import com.proyecto.StoreCollection.dto.request.ProductoRequest;
 import com.proyecto.StoreCollection.dto.request.VarianteRequest;
+import com.proyecto.StoreCollection.dto.response.AtributoValorResponse;
 import com.proyecto.StoreCollection.dto.response.ProductoCardResponse;
 import com.proyecto.StoreCollection.dto.response.ProductoResponse;
+import com.proyecto.StoreCollection.dto.response.VarianteResponse;
 import com.proyecto.StoreCollection.entity.*;
 import com.proyecto.StoreCollection.repository.*;
 import com.proyecto.StoreCollection.tenant.TenantContext;
@@ -24,6 +26,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -205,7 +208,6 @@ public class ProductoServiceImpl implements ProductoService {
         }
     }
 
-    // Método para obtener producto para edición (con verificación)
     @Override
     @Transactional(readOnly = true)
     public ProductoResponse getProductoByIdParaEdicion(Integer id) {
@@ -221,7 +223,8 @@ public class ProductoServiceImpl implements ProductoService {
             throw new AccessDeniedException("No tienes permisos para acceder a este producto");
         }
 
-        return toResponse(producto);
+        // ← Aquí está la magia: devolvemos TODO
+        return toResponseProductoCreate(producto);   // ← ya incluye variantes + atributos + valores
     }
     @Override
     @Transactional
@@ -431,5 +434,45 @@ public class ProductoServiceImpl implements ProductoService {
         resp.setCategoriaNombre(p.getCategoria().getNombre());
         resp.setActivo(p.getCategoria().isActivo());
         return resp;
+    }
+    private ProductoResponse toResponseProductoCreate(Producto producto) {
+        ProductoResponse response = new ProductoResponse();
+        response.setId(producto.getId());
+        response.setNombre(producto.getNombre());
+        response.setSlug(producto.getSlug());
+        response.setCategoriaId(producto.getCategoria().getId());
+        response.setCategoriaNombre(producto.getCategoria().getNombre());
+        response.setTiendaId(producto.getTienda().getId());
+        response.setActivo(producto.isActivo());
+
+        // Variantes + atributos
+        List<VarianteResponse> variantesResponse = producto.getVariantes().stream()
+                .map(v -> {
+                    VarianteResponse vr = new VarianteResponse();
+                    vr.setId(v.getId());
+                    vr.setSku(v.getSku());
+                    vr.setPrecio(v.getPrecio());
+                    vr.setStock(v.getStock());
+                    vr.setImagenUrl(v.getImagenUrl());
+                    vr.setActivo(v.getActivo());
+
+                    // Atributos de esta variante
+                    List<AtributoValorResponse> attrs = v.getAtributos().stream()
+                            .map(av -> {
+                                AtributoValorResponse avr = new AtributoValorResponse();
+                                avr.setId(av.getId());
+                                avr.setAtributoNombre(av.getAtributo().getNombre());
+                                avr.setValor(av.getValor());
+                                return avr;
+                            })
+                            .collect(Collectors.toList());
+
+                    vr.setAtributos(attrs);
+                    return vr;
+                })
+                .collect(Collectors.toList());
+
+        response.setVariantes(variantesResponse);
+        return response;
     }
 }

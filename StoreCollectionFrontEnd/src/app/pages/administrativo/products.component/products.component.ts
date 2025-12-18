@@ -1,4 +1,5 @@
 // src/app/pages/administrativo/products/products.component.ts
+
 import { Component, OnInit, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -15,27 +16,36 @@ import { ProductFormComponent } from './product-form/product-form.component';
   styleUrl: './products.component.css'
 })
 export class ProductsComponent implements OnInit {
-  // Datos
   pageData = signal<ProductoPage | null>(null);
   productos = signal<ProductoResponse[]>([]);
   loading = signal(true);
 
   // Modal
-  showModal = false;
-  isEditMode = false;
-  selectedProducto?: ProductoResponse;
+  showModal = signal(false);
+  isEditMode = signal(false);
+  selectedProducto = signal<ProductoResponse | undefined>(undefined);
 
-  // Filtros y paginación
+  // Loading específico para edición
+  loadingEdicion = signal(false);
+getVarianteText(producto: ProductoResponse): string {
+  if (!producto.variantes || producto.variantes.length === 0) {
+    return 'Sin variantes';
+  }
+  if (producto.variantes.length === 1) {
+    return '1 variante';
+  }
+  return `${producto.variantes.length} variantes`;
+}
+  // Filtros
   currentPage = signal(0);
   pageSize = 20;
   sort = signal('nombre,asc');
-  searchTerm = '';
+  searchTerm = signal<string>('');
 
   constructor(
     private productoService: ProductoAdminService,
     public auth: AuthService
   ) {
-    // Recargar automáticamente al cambiar filtros
     effect(() => {
       this.loadProductos();
     });
@@ -52,62 +62,83 @@ export class ProductsComponent implements OnInit {
       this.currentPage(),
       this.pageSize,
       this.sort(),
-      this.searchTerm.trim() || undefined
+      this.searchTerm().trim() || undefined
     ).subscribe({
       next: (data) => {
         this.pageData.set(data);
-        this.productos.set(data.content);
+        this.productos.set(data.content || []);
         this.loading.set(false);
       },
       error: () => {
         this.loading.set(false);
-        alert('Error al cargar los productos');
+        alert('Error al cargar productos');
       }
     });
   }
 
-  // === Modal ===
+  // === CREAR ===
   openCreateModal(): void {
-    this.isEditMode = false;
-    this.selectedProducto = undefined;
-    this.showModal = true;
+    this.isEditMode.set(false);
+    this.selectedProducto.set(undefined);
+    this.showModal.set(true);
   }
 
-  openEditModal(producto: ProductoResponse): void {
-    this.isEditMode = true;
-    this.selectedProducto = producto;
-    this.showModal = true;
+  // === EDITAR: LLAMADA FRESCA AL ENDPOINT DE EDICIÓN ===
+  openEditModal(id: number): void {
+    this.loadingEdicion.set(true);
+    this.isEditMode.set(true);
+    this.showModal.set(true);
+
+    this.productoService.obtenerParaEdicion(id).subscribe({
+      next: (productoCompleto) => {
+        console.log('Producto cargado para edición:', productoCompleto); // ← Verás todo el JSON con variantes
+        this.selectedProducto.set(productoCompleto);
+        this.loadingEdicion.set(false);
+      },
+      error: (err) => {
+        console.error('Error al cargar producto para edición', err);
+        this.loadingEdicion.set(false);
+        this.showModal.set(false);
+        alert('No se pudo cargar el producto. Verifica permisos o conexión.');
+      }
+    });
   }
 
   closeModal(): void {
-    this.showModal = false;
+    this.showModal.set(false);
+    this.loadingEdicion.set(false);
   }
 
   onProductSaved(): void {
     this.closeModal();
-    this.loadProductos(); // Recargar lista
+    this.currentPage.set(0);
+    this.loadProductos();
   }
 
-  // === Toggle Activo (solo ADMIN) ===
+  // === TOGGLE ACTIVO ===
   toggleActivo(producto: ProductoResponse): void {
-    if (!this.auth.isAdmin()) {
-      alert('Solo los administradores pueden cambiar el estado');
-      return;
-    }
+    if (!this.auth.isAdmin()) return;
 
     this.productoService.toggleActivo(producto.id).subscribe({
       next: (updated) => {
-        this.productos.update(prods =>
-          prods.map(p => p.id === updated.id ? updated : p)
-        );
-      },
-      error: () => alert('Error al cambiar el estado del producto')
+        this.productos.update(list => list.map(p => p.id === updated.id ? updated : p));
+      }
     });
   }
 
-  // === Paginación ===
+  onSearch(): void {
+    this.currentPage.set(0);
+  }
+
+  setSort(campo: string): void {
+    const [actual, dir] = this.sort().split(',');
+    const nuevaDir = actual === campo && dir === 'asc' ? 'desc' : 'asc';
+    this.sort.set(`${campo},${nuevaDir}`);
+  }
+
   goToPage(page: number): void {
-    if (page >= 0 && page < (this.pageData()?.totalPages || 0)) {
+    const total = this.pageData()?.totalPages || 0;
+    if (page >= 0 && page < total) {
       this.currentPage.set(page);
     }
   }
@@ -121,17 +152,5 @@ export class ProductsComponent implements OnInit {
       range.push(i);
     }
     return range;
-  }
-
-  // === Búsqueda y orden ===
-  onSearch(): void {
-    this.currentPage.set(0);
-  }
-
-  setSort(campo: string): void {
-    const [actual, dir] = this.sort().split(',');
-    const nuevaDir = actual === campo && dir === 'asc' ? 'desc' : 'asc';
-    this.sort.set(`${campo},${nuevaDir}`);
-    this.currentPage.set(0);
   }
 }
