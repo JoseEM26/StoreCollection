@@ -33,16 +33,19 @@ export class ProductFormComponent implements OnInit, OnChanges {
   slug = signal<string>('');
   categoriaId = signal<number | null>(null);
   tiendaId = signal<number | null>(null);
-  activo = signal<boolean>(true);  // Nuevo: para producto activo/inactivo
+  activo = signal<boolean>(true);
 
   // Dropdowns
   tiendas = signal<DropTownStandar[]>([]);
   categorias = signal<DropTownStandar[]>([]);
 
-  // Variantes con atributos como texto
+  // Variantes
   variantes = signal<VarianteRequest[]>([]);
 
-  // Variantes ordenadas: por Talla (numérica), luego por Color
+  // Control de colapso de cada variante (true = cerrada, false = abierta)
+  collapsed = signal<boolean[]>([]);
+
+  // Variantes ordenadas por Talla (numérica) y luego por Color
   variantesOrdenadas = computed(() => {
     return [...this.variantes()].sort((a, b) => {
       const tallaA = this.getValorAtributo(a, 'Talla');
@@ -81,59 +84,54 @@ export class ProductFormComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-  this.errorMessage.set('');
+    this.errorMessage.set('');
 
-  // Solo actuar si hay cambios en 'producto' o 'isEdit'
-  if (changes['producto'] || changes['isEdit']) {
-    if (this.isEdit && this.producto) {
-      // === Cargar datos del producto existente ===
-      this.nombre.set(this.producto.nombre || '');
-      this.slug.set(this.producto.slug || '');
-      this.categoriaId.set(this.producto.categoriaId || null);
-      this.activo.set(this.producto.activo ?? true);
+    if (changes['producto'] || changes['isEdit']) {
+      if (this.isEdit && this.producto) {
+        this.nombre.set(this.producto.nombre || '');
+        this.slug.set(this.producto.slug || '');
+        this.categoriaId.set(this.producto.categoriaId || null);
+        this.activo.set(this.producto.activo ?? true);
 
-      if (this.auth.isAdmin()) {
-        this.tiendaId.set(this.producto.tiendaId || null);
-      }
+        if (this.auth.isAdmin()) {
+          this.tiendaId.set(this.producto.tiendaId || null);
+        }
 
-      // === Mapear variantes ===
-      const variantesDelBackend = this.producto.variantes ?? [];
-
-      this.variantes.set(
-        variantesDelBackend.map(v => ({
-          id: v.id,
-          sku: v.sku || '',
-          precio: v.precio || 0,
-          stock: v.stock || 0,
-          imagenUrl: v.imagenUrl || '',
-          activo: v.activo ?? true,
-          atributos: (v.atributos ?? []).map(a => ({
-            atributoNombre: a.atributoNombre || '',
-            valor: a.valor || ''
+        // Mapear variantes
+        const variantesDelBackend = this.producto.variantes ?? [];
+        this.variantes.set(
+          variantesDelBackend.map(v => ({
+            id: v.id,
+            sku: v.sku || '',
+            precio: v.precio || 0,
+            stock: v.stock || 0,
+            imagenUrl: v.imagenUrl || '',
+            activo: v.activo ?? true,
+            atributos: (v.atributos ?? []).map(a => ({
+              atributoNombre: a.atributoNombre || '',
+              valor: a.valor || ''
+            }))
           }))
-        }))
-      );
+        );
 
-      // === Cargar categorías solo si aún no están cargadas ===
-      // Esto evita recargas innecesarias y, lo más importante,
-      // evita llamar a onTiendaChange() que reseteaba categoriaId
-      if (this.categorias().length === 0) {
-        this.loadCategorias();
+        // Reiniciar estado de colapso
+        this.initCollapsed();
+
+        if (this.categorias().length === 0) {
+          this.loadCategorias();
+        }
+
+      } else {
+        this.resetForm();
       }
-
-      // ¡IMPORTANTE! NO llamamos a onTiendaChange() aquí
-      // Porque eso ejecutaría categoriaId.set(null) y borraría la categoría cargada
-
-    } else {
-      // === Modo creación: resetear todo ===
-      this.resetForm();
     }
   }
-}
-    onTiendaChange(): void {
+
+  onTiendaChange(): void {
     this.categoriaId.set(null);
     this.loadCategorias();
   }
+
   private loadCategorias(): void {
     this.categoriaService.listarCategorias(0, 1000, 'nombre,asc').subscribe({
       next: (page: any) => {
@@ -144,6 +142,25 @@ export class ProductFormComponent implements OnInit, OnChanges {
         this.categorias.set(cats);
       }
     });
+  }
+
+  // === GESTIÓN DE COLAPSO ===
+  toggleCollapse(index: number): void {
+    this.collapsed.update(arr => {
+      const newArr = [...arr];
+      newArr[index] = !newArr[index];
+      return newArr;
+    });
+  }
+
+  private initCollapsed(): void {
+    const length = this.variantes().length;
+    if (length === 0) {
+      this.collapsed.set([]);
+    } else {
+      // Primera variante abierta (false), las demás cerradas (true)
+      this.collapsed.set(Array(length).fill(true).map((_, i) => i !== 0));
+    }
   }
 
   // === VARIANTE HELPERS ===
@@ -159,10 +176,14 @@ export class ProductFormComponent implements OnInit, OnChanges {
         { atributoNombre: 'Color', valor: '' }
       ]
     }]);
+
+    // Nueva variante agregada cerrada
+    this.collapsed.update(arr => [...arr, true]);
   }
 
   eliminarVariante(index: number): void {
     this.variantes.update(vs => vs.filter((_, i) => i !== index));
+    this.collapsed.update(arr => arr.filter((_, i) => i !== index));
   }
 
   agregarAtributo(varianteIndex: number): void {
@@ -182,7 +203,7 @@ export class ProductFormComponent implements OnInit, OnChanges {
   }
 
   getValorAtributo(variante: VarianteRequest, nombreAttr: string): string {
-    const attr = variante.atributos.find(a => 
+    const attr = variante.atributos.find(a =>
       a.atributoNombre.toLowerCase() === nombreAttr.toLowerCase()
     );
     return attr?.valor || '';
@@ -227,7 +248,8 @@ export class ProductFormComponent implements OnInit, OnChanges {
       nombre: this.nombre().trim(),
       slug: this.slug().trim(),
       categoriaId: this.categoriaId()!,
-      variantes: this.variantes()
+      variantes: this.variantes(),
+      activo: this.activo()  // Si tu backend lo acepta en el request
     };
 
     if (this.auth.isAdmin()) {
@@ -267,6 +289,7 @@ export class ProductFormComponent implements OnInit, OnChanges {
         { atributoNombre: 'Color', valor: '' }
       ]
     }]);
+    this.collapsed.set([false]); // Primera variante abierta
   }
 
   cancel(): void {

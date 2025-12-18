@@ -1,236 +1,185 @@
-<div class="modal-content" (click)="$event.stopPropagation()">
+<div class="product-form-container">
   <!-- Header -->
-  <div class="modal-header">
-    <h5 class="modal-title">
-      {{ isEdit ? 'Editar Producto #' + (producto?.id || '') : 'Crear Nuevo Producto' }}
-    </h5>
-    <button type="button" class="btn-close" (click)="cancel()" [disabled]="loading()"></button>
+  <div class="form-header">
+    <h2 class="form-title">
+      {{ isEdit ? 'Editar Producto' : 'Crear Nuevo Producto' }}
+      <span class="text-muted fs-5 fw-normal" *ngIf="isEdit && producto?.id">
+        #{{ producto?.id }}
+      </span>
+    </h2>
+    <button type="button" class="btn-close btn-close-white" (click)="cancel()" [disabled]="loading()"></button>
   </div>
 
   <!-- Body -->
-  <div class="modal-body">
+  <div class="form-body">
     <form>
-      <!-- Datos generales -->
-      <div class="row mb-4">
-        <div class="col-lg-6">
-          <label class="form-label fw-semibold">Nombre</label>
-          <input 
-            [ngModel]="nombre()" 
-            (ngModelChange)="nombre.set($event); generarSlugDesdeNombre()"
-            name="nombre"
-            type="text"
-            class="form-control"
-            placeholder="Nike Air Max 90"
-            required />
+      <!-- Información General -->
+      <div class="section">
+        <h5 class="section-title">Información General</h5>
+        <div class="row g-3">
+          <div class="col-lg-6">
+            <label class="form-label">Nombre del producto</label>
+            <input type="text" class="form-control" placeholder="Ej: Nike Air Max 90"
+                   [ngModel]="nombre()" (ngModelChange)="nombre.set($event); generarSlugDesdeNombre()"
+                   name="nombre" required />
+          </div>
+          <div class="col-lg-6">
+            <label class="form-label">Slug (URL amigable)</label>
+            <input type="text" class="form-control" placeholder="Ej: nike-air-max-90"
+                   [ngModel]="slug()" (ngModelChange)="slug.set($event)"
+                   name="slug" required />
+          </div>
         </div>
-        <div class="col-lg-6">
-          <label class="form-label fw-semibold">Slug</label>
-          <input 
-            [ngModel]="slug()" 
-            (ngModelChange)="slug.set($event)"
-            name="slug"
-            type="text"
-            class="form-control"
-            placeholder="nike-air-max-90"
-            required />
+
+        <div class="row g-3 mt-3">
+          <div class="col-lg-6" *ngIf="auth.isAdmin()">
+            <label class="form-label">Tienda</label>
+            <select class="form-select" [ngModel]="tiendaId()"
+                    (ngModelChange)="tiendaId.set($event); onTiendaChange()"
+                    name="tiendaId" required>
+              <option [ngValue]="null" disabled>Seleccionar tienda</option>
+              <option *ngFor="let t of tiendas()" [ngValue]="t.id">{{ t.descripcion }}</option>
+            </select>
+          </div>
+          <div class="col-lg-6">
+            <label class="form-label">Categoría</label>
+            <select class="form-select" [ngModel]="categoriaId()"
+                    (ngModelChange)="categoriaId.set($event)"
+                    name="categoriaId" required>
+              <option [ngValue]="null" disabled>Seleccionar categoría</option>
+              <option *ngFor="let c of categorias()" [ngValue]="c.id">{{ c.descripcion }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-check form-switch mt-4">
+          <input class="form-check-input" type="checkbox" id="activoProducto"
+                 [ngModel]="activo()" (ngModelChange)="activo.set($event)"
+                 name="activoProducto">
+          <label class="form-check-label fw-medium" for="activoProducto">
+            Producto visible en la tienda (Activo)
+          </label>
         </div>
       </div>
 
-      <div class="row mb-4">
-        <div class="col-lg-6" *ngIf="auth.isAdmin()">
-          <label class="form-label fw-semibold">Tienda</label>
-          <select 
-            [ngModel]="tiendaId()" 
-            (ngModelChange)="tiendaId.set($event); onTiendaChange()"
-            name="tiendaId"
-            class="form-select"
-            required>
-            <option [ngValue]="null" disabled>Seleccionar tienda</option>
-            <option *ngFor="let t of tiendas()" [ngValue]="t.id">{{ t.descripcion }}</option>
-          </select>
-        </div>
-        <div class="col-lg-6">
-          <label class="form-label fw-semibold">Categoría</label>
-          <select 
-            [ngModel]="categoriaId()" 
-            (ngModelChange)="categoriaId.set($event)"
-            name="categoriaId"
-            class="form-select"
-            required>
-            <option [ngValue]="null" disabled>Seleccionar categoría</option>
-            <option *ngFor="let c of categorias()" [ngValue]="c.id">{{ c.descripcion }}</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="mb-4 form-check">
-        <input 
-          type="checkbox" 
-          class="form-check-input" 
-          id="activoProducto"
-          [ngModel]="activo()"
-          (ngModelChange)="activo.set($event)"
-          name="activoProducto">
-        <label class="form-check-label fw-medium" for="activoProducto">
-          Producto Activo
-        </label>
-      </div>
-
-      <!-- Variantes con Acordeón -->
-      <div class="mb-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="mb-0 fw-semibold">Variantes ({{ variantes().length }})</h6>
-          <button type="button" class="btn btn-success btn-sm" (click)="agregarVariante()">
-            <i class="bi bi-plus-lg me-1"></i> Agregar variante
+      <!-- Variantes -->
+      <div class="section mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h5 class="section-title mb-0">Variantes del producto ({{ variantes().length }})</h5>
+          <button type="button" class="btn btn-success btn-sm px-4" (click)="agregarVariante()">
+            <i class="bi bi-plus-lg me-2"></i>Agregar variante
           </button>
         </div>
 
-        <div class="accordion" id="variantesAccordion">
-          <div class="accordion-item mb-2 border rounded shadow-sm" 
-               *ngFor="let variante of variantesOrdenadas(); let i = index">
-            
-            <!-- Header del acordeón (siempre visible) -->
-            <h2 class="accordion-header" [id]="'heading' + i">
-              <button class="accordion-button collapsed py-3" 
-                      type="button" 
-                      data-bs-toggle="collapse" 
-                      [attr.data-bs-target]="'#collapse' + i"
-                      aria-expanded="i === 0" 
-                      [attr.aria-controls]="'collapse' + i">
-                <div class="d-flex w-100 align-items-center justify-content-between">
-                  <div class="me-3">
-                    <strong>Variante {{ i + 1 }}</strong>
-                    <span class="text-muted ms-2" *ngIf="variante.id">ID: {{ variante.id }}</span>
-                    <span class="text-muted ms-2" *ngIf="!variante.id">(Nueva)</span>
+        <div class="variants-list" *ngIf="variantes().length > 0; else noVariants">
+          <div class="variant-card" *ngFor="let variante of variantesOrdenadas(); let i = index">
+            <div class="variant-header" (click)="toggleCollapse(i)">
+              <div class="d-flex align-items-center justify-content-between w-100">
+                <div class="d-flex align-items-center gap-3">
+                  <i class="bi fs-5" [class.bi-chevron-down]="!collapsed()[i]" [class.bi-chevron-right]="collapsed()[i]"></i>
+                  <div>
+                    <strong class="variant-title">Variante {{ i + 1 }}</strong>
+                    <span class="text-muted small ms-2" *ngIf="variante.id">ID: {{ variante.id }}</span>
+                    <span class="badge bg-light text-dark small ms-2" *ngIf="!variante.id">Nueva</span>
+                  </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-4">
+                  <div class="text-end small">
+                    <div>SKU: <strong>{{ variante.sku || '—' }}</strong></div>
+                    <div>Precio: <strong>${{ variante.precio | number:'1.2-2' }}</strong></div>
+                    <div>Stock: <strong>{{ variante.stock }}</strong></div>
                   </div>
 
-                  <div class="d-flex gap-4 text-end small">
-                    <div>
-                      <span class="fw-medium">SKU:</span> 
-                      <span [class.text-danger]="!variante.sku.trim()" class="ms-1">
-                        {{ variante.sku || '—' }}
-                      </span>
-                    </div>
-                    <div>
-                      <span class="fw-medium">Precio:</span> 
-                      <span class="ms-1">${{ variante.precio | number:'1.2-2' }}</span>
-                    </div>
-                    <div>
-                      <span class="fw-medium">Stock:</span> 
-                      <span class="ms-1">{{ variante.stock }}</span>
-                    </div>
-                    <div class="form-check form-switch mb-0">
-                      <input class="form-check-input" type="checkbox" 
-                             [(ngModel)]="variante.activo" 
-                             [name]="'activoVarHeader_' + i"
-                             id="activoVarHeader{{i}}">
-                      <label class="form-check-label text-success" [for]="'activoVarHeader' + i">
-                        {{ variante.activo ? 'Activa' : 'Inactiva' }}
-                      </label>
-                    </div>
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" [(ngModel)]="variante.activo" [name]="'activoVar_' + i">
                   </div>
 
-                  <button type="button" 
-                          class="btn btn-outline-danger btn-sm ms-3" 
+                  <button type="button" class="btn btn-outline-danger btn-sm"
                           (click)="$event.stopPropagation(); eliminarVariante(i)">
                     <i class="bi bi-trash"></i>
                   </button>
                 </div>
-              </button>
-            </h2>
+              </div>
+            </div>
 
-            <!-- Contenido colapsable -->
-            <div [id]="'collapse' + i" 
-                 class="accordion-collapse collapse" 
-                 [class.show]="i === 0"
-                 [attr.aria-labelledby]="'heading' + i"
-                 data-bs-parent="#variantesAccordion">
-              <div class="accordion-body pt-3">
+            <div class="variant-body" [class.collapsed]="collapsed()[i]">
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label class="form-label small">SKU</label>
+                  <input [(ngModel)]="variante.sku" [name]="'sku_' + i" class="form-control" required />
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label small">Precio</label>
+                  <input [(ngModel)]="variante.precio" [name]="'precio_' + i" type="number" step="0.01" class="form-control" required />
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label small">Stock</label>
+                  <input [(ngModel)]="variante.stock" [name]="'stock_' + i" type="number" class="form-control" required />
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label small">Imagen URL</label>
+                  <input [(ngModel)]="variante.imagenUrl" [name]="'img_' + i" class="form-control form-control-sm" />
+                </div>
+              </div>
 
-                <!-- Campos principales -->
-                <div class="row g-3 mb-3">
-                  <div class="col-md-4">
-                    <label class="form-label small fw-medium">SKU</label>
-                    <input [(ngModel)]="variante.sku" [name]="'sku_' + i" class="form-control" required />
+              <div class="text-center my-4" *ngIf="variante.imagenUrl">
+                <img [src]="variante.imagenUrl" class="variant-preview-img" alt="Vista previa" />
+              </div>
+
+              <div class="attributes-section">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <label class="form-label mb-0">Atributos ({{ variante.atributos.length }})</label>
+                  <button type="button" class="btn btn-outline-primary btn-sm" (click)="agregarAtributo(i)">
+                    + Agregar atributo
+                  </button>
+                </div>
+
+                <div class="row g-2" *ngFor="let attr of variante.atributos; let j = index">
+                  <div class="col-5">
+                    <input [(ngModel)]="attr.atributoNombre" [name]="'attrNom_' + i + '_' + j"
+                           class="form-control form-control-sm" placeholder="Ej: Color" />
                   </div>
-                  <div class="col-md-3">
-                    <label class="form-label small fw-medium">Precio</label>
-                    <input [(ngModel)]="variante.precio" [name]="'precio_' + i" type="number" step="0.01" class="form-control" required />
+                  <div class="col-6">
+                    <input [(ngModel)]="attr.valor" [name]="'attrVal_' + i + '_' + j"
+                           class="form-control form-control-sm" placeholder="Ej: Negro" />
                   </div>
-                  <div class="col-md-3">
-                    <label class="form-label small fw-medium">Stock</label>
-                    <input [(ngModel)]="variante.stock" [name]="'stock_' + i" type="number" class="form-control" required />
-                  </div>
-                  <div class="col-md-2">
-                    <label class="form-label small fw-medium">Imagen URL</label>
-                    <input [(ngModel)]="variante.imagenUrl" [name]="'img_' + i" class="form-control form-control-sm" />
+                  <div class="col-1">
+                    <button type="button" class="btn btn-outline-danger btn-sm w-100"
+                            (click)="eliminarAtributo(i, j)">×</button>
                   </div>
                 </div>
 
-                <!-- Previsualización de imagen -->
-                <div class="text-center mb-4" *ngIf="variante.imagenUrl">
-                  <img [src]="variante.imagenUrl" 
-                       class="img-fluid rounded shadow-sm border" 
-                       style="max-height: 180px; object-fit: contain;" 
-                       alt="Preview variante" />
-                </div>
-
-                <!-- Atributos -->
-                <div>
-                  <div class="d-flex justify-content-between align-items-center mb-2">
-                    <small class="fw-semibold text-primary">Atributos ({{ variante.atributos.length }})</small>
-                    <button type="button" class="btn btn-outline-primary btn-sm" (click)="agregarAtributo(i)">
-                      + Agregar
-                    </button>
-                  </div>
-
-                  <div class="row g-2 align-items-center" *ngFor="let attr of variante.atributos; let j = index">
-                    <div class="col-5">
-                      <input [(ngModel)]="attr.atributoNombre" 
-                             [name]="'attrNom_' + i + '_' + j" 
-                             class="form-control form-control-sm" 
-                             placeholder="ej: Talla" required />
-                    </div>
-                    <div class="col-6">
-                      <input [(ngModel)]="attr.valor" 
-                             [name]="'attrVal_' + i + '_' + j" 
-                             class="form-control form-control-sm" 
-                             placeholder="ej: 42" required />
-                    </div>
-                    <div class="col-1">
-                      <button type="button" 
-                              class="btn btn-outline-danger btn-sm w-100" 
-                              (click)="eliminarAtributo(i, j)">×</button>
-                    </div>
-                  </div>
-
-                  <small class="text-muted d-block text-center mt-3" *ngIf="variante.atributos.length === 0">
-                    Sin atributos asignados
-                  </small>
-                </div>
+                <small class="text-muted text-center d-block mt-3" *ngIf="variante.atributos.length === 0">
+                  No hay atributos definidos (ej: Talla, Color)
+                </small>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="text-center py-5 text-muted fst-italic border rounded bg-light mt-4" *ngIf="variantes().length === 0">
-          No hay variantes agregadas. Agrega al menos una para continuar.
-        </div>
+        <ng-template #noVariants>
+          <div class="text-center py-5 text-muted">
+            <i class="bi bi-box display-4 opacity-50"></i>
+            <p class="mt-3">Aún no has agregado variantes.</p>
+            <p>Agrega al menos una variante para continuar.</p>
+          </div>
+        </ng-template>
       </div>
 
       <!-- Error -->
-      <div *ngIf="errorMessage()" class="alert alert-danger rounded">
+      <div *ngIf="errorMessage()" class="alert alert-danger mt-4">
         <i class="bi bi-exclamation-triangle-fill me-2"></i>
         {{ errorMessage() }}
       </div>
 
-      <!-- Botones -->
-      <div class="d-flex justify-content-end gap-3 mt-4">
-        <button type="button" class="btn btn-secondary px-4" (click)="cancel()" [disabled]="loading()">
+      <!-- Acciones -->
+      <div class="form-actions mt-5">
+        <button type="button" class="btn btn-outline-secondary px-4" (click)="cancel()" [disabled]="loading()">
           Cancelar
         </button>
         <button type="button" class="btn btn-primary px-5" (click)="save()" [disabled]="loading()">
-          <span *ngIf="loading()" class="spinner-border spinner-border-sm me-2"></span>
+          <span *ngIf="loading()" class="spinner-border spinner-border-sm me-2" role="status"></span>
           {{ isEdit ? 'Guardar Cambios' : 'Crear Producto' }}
         </button>
       </div>

@@ -20,6 +20,8 @@ export interface ProductoRequest {
   categoriaId: number;
   tiendaId?: number;         // solo admin
   variantes: VarianteRequest[];
+    activo: boolean;
+
 }
 
 export interface VarianteResponse {
