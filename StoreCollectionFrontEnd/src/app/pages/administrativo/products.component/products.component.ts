@@ -54,7 +54,9 @@ getVarianteText(producto: ProductoResponse): string {
   ngOnInit(): void {
     this.loadProductos();
   }
-
+onImageError(event: any) {
+  event.target.src = 'https://via.placeholder.com/80?text=📦';
+}
   loadProductos(): void {
     this.loading.set(true);
 

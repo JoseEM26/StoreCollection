@@ -120,10 +120,10 @@
   border-radius: 50%;
   margin-right: 8px;
   vertical-align: middle;
+  background: #ef4444;
 }
 
 .status-dot.active { background: #10b981; }
-.status-dot:not(.active) { background: #ef4444; }
 
 .empty-state {
   text-align: center;
@@ -150,12 +150,12 @@
   to { transform: rotate(360deg); }
 }
 
-/* === MODAL PERSONALIZADO CON SCROLL CONTROLADO === */
+/* ==================== MODAL MEJORADO ==================== */
 .modal-backdrop {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
   z-index: 1040;
 }
 
@@ -166,52 +166,146 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
+  padding: 1rem;
   overflow-y: auto;
 }
 
 .custom-modal {
   width: 100%;
-  max-width: 1000px;
-  max-height: 90vh;              /* Nunca más alto que el 90% de la pantalla */
+  max-width: 1100px;
+  max-height: 92vh;
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  border-radius: 20px;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  animation: modalFadeIn 0.3s ease-out;
 }
 
-/* Importante: el scroll va dentro del modal, no en la página */
-.custom-modal .modal-content {
-  flex: 1;
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-content {
   display: flex;
   flex-direction: column;
+  height: 100%;
   overflow: hidden;
 }
 
-.custom-modal .modal-body {
+.modal-header {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  padding: 1.5rem 2rem;
+  flex-shrink: 0;
+}
+
+.modal-header .modal-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.modal-header .btn-close {
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+}
+
+.modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+.modal-body {
   flex: 1;
-  overflow-y: auto;              /* Aquí ocurre el scroll cuando hay muchas variantes */
+  overflow-y: auto;
   padding: 2rem;
-  background: #f9fafb;
+  background: #f8fafc;
 }
 
-/* Opcional: mejorar scroll en webkit */
-.custom-modal .modal-body::-webkit-scrollbar {
-  width: 8px;
+/* Scroll elegante */
+.modal-body::-webkit-scrollbar {
+  width: 10px;
 }
-
-.custom-modal .modal-body::-webkit-scrollbar-track {
-  background: #f1f1f1;
+.modal-body::-webkit-scrollbar-track {
+  background: #f1f5f9;
   border-radius: 10px;
 }
-
-.custom-modal .modal-body::-webkit-scrollbar-thumb {
-  background: #c0c0c0;
+.modal-body::-webkit-scrollbar-thumb {
+  background: #94a3b8;
   border-radius: 10px;
 }
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
 
-.custom-modal .modal-body::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+.modal-footer-fixed {
+  flex-shrink: 0;
+  padding: 1.5rem 2rem;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  border: 1px solid #cbd5e1;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+}
+
+.accordion-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px !important;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s;
+}
+
+.accordion-item:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.accordion-button {
+  background: white;
+  font-weight: 600;
+  color: #1f2937;
+  padding: 1rem 1.5rem;
+}
+
+.accordion-button:not(.collapsed) {
+  background: linear-gradient(to right, #eff6ff, #dbeafe);
+  color: #1d4ed8;
+}
+
+.accordion-body {
+  background: #f8fafc;
+  padding: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .custom-modal {
+    max-width: 95vw;
+    margin: 1rem;
+  }
+  .modal-body {
+    padding: 1.5rem;
+  }
+  .header-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }

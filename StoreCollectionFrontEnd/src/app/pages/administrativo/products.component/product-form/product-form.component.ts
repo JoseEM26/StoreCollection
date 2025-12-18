@@ -81,19 +81,22 @@ export class ProductFormComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    this.errorMessage.set('');
+  this.errorMessage.set('');
 
+  // Solo actuar si hay cambios en 'producto' o 'isEdit'
+  if (changes['producto'] || changes['isEdit']) {
     if (this.isEdit && this.producto) {
+      // === Cargar datos del producto existente ===
       this.nombre.set(this.producto.nombre || '');
       this.slug.set(this.producto.slug || '');
       this.categoriaId.set(this.producto.categoriaId || null);
-      this.activo.set(this.producto.activo);  // Cargar activo del producto
+      this.activo.set(this.producto.activo ?? true);
 
       if (this.auth.isAdmin()) {
         this.tiendaId.set(this.producto.tiendaId || null);
       }
 
-      // Mapear variantes completas con fallback a array vacío
+      // === Mapear variantes ===
       const variantesDelBackend = this.producto.variantes ?? [];
 
       this.variantes.set(
@@ -103,7 +106,7 @@ export class ProductFormComponent implements OnInit, OnChanges {
           precio: v.precio || 0,
           stock: v.stock || 0,
           imagenUrl: v.imagenUrl || '',
-          activo: v.activo,  // Cargar activo de cada variante
+          activo: v.activo ?? true,
           atributos: (v.atributos ?? []).map(a => ({
             atributoNombre: a.atributoNombre || '',
             valor: a.valor || ''
@@ -111,20 +114,26 @@ export class ProductFormComponent implements OnInit, OnChanges {
         }))
       );
 
-      // Si admin, recargar categorías basadas en tienda
-      if (this.auth.isAdmin() && this.tiendaId()) {
-        this.onTiendaChange();
+      // === Cargar categorías solo si aún no están cargadas ===
+      // Esto evita recargas innecesarias y, lo más importante,
+      // evita llamar a onTiendaChange() que reseteaba categoriaId
+      if (this.categorias().length === 0) {
+        this.loadCategorias();
       }
+
+      // ¡IMPORTANTE! NO llamamos a onTiendaChange() aquí
+      // Porque eso ejecutaría categoriaId.set(null) y borraría la categoría cargada
+
     } else {
+      // === Modo creación: resetear todo ===
       this.resetForm();
     }
   }
-
-  onTiendaChange(): void {
+}
+    onTiendaChange(): void {
     this.categoriaId.set(null);
     this.loadCategorias();
   }
-
   private loadCategorias(): void {
     this.categoriaService.listarCategorias(0, 1000, 'nombre,asc').subscribe({
       next: (page: any) => {
