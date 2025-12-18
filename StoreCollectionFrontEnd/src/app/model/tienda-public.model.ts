@@ -1,4 +1,3 @@
-// src/app/model/tienda-public.model.ts
 import { Page } from './index';
 
 export interface TiendaPublic {

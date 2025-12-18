@@ -1,0 +1,17 @@
+/* category-form.component.css */
+.modal-card {
+  max-width: 500px;
+  margin: 0 auto;
+  background: white;
+  border: none;
+}
+
+.modal-header {
+  border-bottom: none;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}

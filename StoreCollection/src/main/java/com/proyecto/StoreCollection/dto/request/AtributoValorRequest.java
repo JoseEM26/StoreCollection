@@ -8,4 +8,5 @@ public class AtributoValorRequest {
     @NotBlank
     private String valor;
     private Integer atributoId;
+    private String atributoNombre;
 }

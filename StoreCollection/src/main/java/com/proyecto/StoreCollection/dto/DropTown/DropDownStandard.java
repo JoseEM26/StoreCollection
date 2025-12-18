@@ -3,7 +3,7 @@ package com.proyecto.StoreCollection.dto.DropTown;
 import lombok.Data;
 
 @Data
-public class DropTownStandar {
+public class DropDownStandard {
     private Integer id;
-    private String descripcion="";
+    private String descripcion = "";
 }

@@ -96,8 +96,12 @@ public class TiendaController {
 
         return PageRequest.of(page, size, org.springframework.data.domain.Sort.by(direction, property));
     }
+    // ==================== OPERACIONES CRUD ====================
+    // ==================== OPERACIONES CRUD ====================
+    // ==================== OPERACIONES CRUD ====================
+
     // NUEVO: Endpoint para obtener tienda específica (para edición)
-    @GetMapping("/owner/tiendas/{id}")
+    @GetMapping("/api/owner/tiendas/{id}")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<TiendaResponse> obtenerTiendaPorId(@PathVariable Integer id) {
         // Necesitarás agregar este método en tu service
@@ -108,8 +112,7 @@ public class TiendaController {
         return ResponseEntity.ok(service.findById(id));
     }
 
-    // ==================== OPERACIONES CRUD ====================
-    @PostMapping("/owner/tiendas")
+    @PostMapping("/api/owner/tiendas")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<TiendaResponse> crearTienda(@Valid @RequestBody TiendaRequest request) {
         // IMPORTANTE: En el service, asegúrate de validar que:
@@ -118,7 +121,7 @@ public class TiendaController {
         return ResponseEntity.ok(service.save(request));
     }
 
-    @PutMapping("/owner/tiendas/{id}")
+    @PutMapping("/api/owner/tiendas/{id}")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<TiendaResponse> actualizarTienda(
             @PathVariable Integer id,
@@ -130,7 +133,15 @@ public class TiendaController {
         // 3. No permitir cambiar el usuario propietario en edición
         return ResponseEntity.ok(service.save(request, id));
     }
-    /// /////////////////////////////////AUN NO USADAS///////////////////////////////////////////////////////////////////////
+    @PatchMapping("/api/owner/tiendas/{id}/toggle-activo")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<TiendaResponse> toggleActivo(@PathVariable Integer id) {
+        TiendaResponse response = service.toggleActivo(id);
+        return ResponseEntity.ok(response);
+    }
+    // ==================== OPERACIONES CRUD ====================
+    // ==================== OPERACIONES CRUD ====================
+    // ==================== OPERACIONES CRUD ====================
 
     // PRIVADO - Mis tiendas
     @GetMapping("/api/owner/tiendas")

@@ -10,10 +10,13 @@ import java.util.List;
 public interface CategoriaService {
 
     List<CategoriaResponse> findByTiendaSlug(String tiendaSlug);
+     CategoriaResponse getCategoriaByIdParaEdicion(Integer id) ;
+     CategoriaResponse toggleActivo(Integer id) ;
 
     List<CategoriaResponse> findAllByTenant();           // ← nuevo
     Page<CategoriaResponse> findAll(Pageable pageable);  // ← solo sus categorías
     CategoriaResponse findById(Integer id);                 // ← solo si es suyo
+
 
     CategoriaResponse save(CategoriaRequest request);
     CategoriaResponse save(CategoriaRequest request, Integer id);

@@ -1,5 +1,6 @@
 package com.proyecto.StoreCollection.service;
 
+import com.proyecto.StoreCollection.dto.DropTown.DropDownStandard;
 import com.proyecto.StoreCollection.dto.request.TiendaRequest;
 import com.proyecto.StoreCollection.dto.response.TiendaResponse;
 import com.proyecto.StoreCollection.entity.Tienda;
@@ -11,9 +12,10 @@ import java.util.List;
 public interface TiendaService {
     Page<TiendaResponse> findAll(Pageable pageable);
     TiendaResponse findById(Integer id);
+    Tienda getEntityById(Integer id);
     TiendaResponse findBySlug(String slug);
     List<TiendaResponse> findByUserId(Integer userId);
-     List<Tienda> findAllActivas() ;
+    List<DropDownStandard> getTiendasForDropdown();
     Tienda getTiendaDelUsuarioActual();           // ← clave para crear productos, etc.
     TiendaResponse getMiTienda();                 // ← para el dashboard del dueño
     List<TiendaResponse> getMisTiendas();
@@ -23,4 +25,5 @@ public interface TiendaService {
     TiendaResponse save(TiendaRequest request, Integer id);
     void deleteById(Integer id);
     Page<TiendaResponse> findByUserEmail(String email, Pageable pageable);
+    TiendaResponse toggleActivo(Integer id);
 }

@@ -2,24 +2,31 @@
 
 package com.proyecto.StoreCollection.service;
 
+import com.proyecto.StoreCollection.dto.DropTown.DropDownStandard;
+import com.proyecto.StoreCollection.dto.request.AtributoValorRequest;
 import com.proyecto.StoreCollection.dto.request.ProductoRequest;
+import com.proyecto.StoreCollection.dto.request.VarianteRequest;
+import com.proyecto.StoreCollection.dto.response.AtributoValorResponse;
 import com.proyecto.StoreCollection.dto.response.ProductoCardResponse;
 import com.proyecto.StoreCollection.dto.response.ProductoResponse;
-import com.proyecto.StoreCollection.entity.Categoria;
-import com.proyecto.StoreCollection.entity.Producto;
-import com.proyecto.StoreCollection.repository.CategoriaRepository;
-import com.proyecto.StoreCollection.repository.ProductoRepository;
+import com.proyecto.StoreCollection.dto.response.VarianteResponse;
+import com.proyecto.StoreCollection.entity.*;
+import com.proyecto.StoreCollection.repository.*;
 import com.proyecto.StoreCollection.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -29,7 +36,9 @@ public class ProductoServiceImpl implements ProductoService {
     private final ProductoRepository productoRepository;
     private final CategoriaRepository categoriaRepository;
     private final TiendaService tiendaService;
-
+    private final ProductoVarianteRepository varianteRepository;
+    private final AtributoRepository atributoRepository;
+    private final AtributoValorRepository atributoValorRepository;
 
 
     @Override
@@ -72,21 +81,182 @@ public class ProductoServiceImpl implements ProductoService {
     public ProductoResponse save(ProductoRequest request) {
         return save(request, null);
     }
-
     @Override
+    @Transactional
     public ProductoResponse save(ProductoRequest request, Integer id) {
-        Producto p = id == null ? new Producto() : productoRepository.getByIdAndTenant(id);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String emailActual = auth.getName();
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-        p.setNombre(request.getNombre());
-        p.setSlug(request.getSlug());
+        Producto producto;
+        Tienda tiendaAsignada;
 
-        Categoria c = categoriaRepository.getByIdAndTenant(request.getCategoriaId());
-        p.setCategoria(c);
-        p.setTienda(tiendaService.getTiendaDelUsuarioActual());
+        if (id == null) {
+            // CREACIÓN
+            producto = new Producto();
+            if (esAdmin) {
+                if (request.getTiendaId() == null) {
+                    throw new RuntimeException("tiendaId requerido para ADMIN");
+                }
+                tiendaAsignada = tiendaService.getEntityById(request.getTiendaId());
+            } else {
+                tiendaAsignada = tiendaService.getTiendaDelUsuarioActual();
+            }
+            // Validar unicidad slug en la tienda
+            if (productoRepository.findBySlugAndTiendaId(request.getSlug(), tiendaAsignada.getId()).isPresent()) {
+                throw new RuntimeException("Slug duplicado en esta tienda: " + request.getSlug());
+            }
+        } else {
+            // EDICIÓN
+            producto = productoRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+            // Verificar permisos
+            if (!esAdmin && !producto.getTienda().getUser().getEmail().equals(emailActual)) {
+                throw new AccessDeniedException("No tienes permisos para editar este producto");
+            }
+            tiendaAsignada = producto.getTienda();  // Mantener la misma tienda
+            // Validar unicidad slug excluyendo este producto
+            Optional<Producto> otroConSlug = productoRepository.findBySlugAndTiendaId(request.getSlug(), tiendaAsignada.getId());
+            if (otroConSlug.isPresent() && !otroConSlug.get().getId().equals(id)) {
+                throw new RuntimeException("Slug duplicado en esta tienda: " + request.getSlug());
+            }
+        }
 
-        return toResponse(productoRepository.save(p));
+        // Setear campos básicos
+        producto.setNombre(request.getNombre().trim());
+        producto.setSlug(request.getSlug().trim());
+        Categoria categoria = categoriaRepository.findById(request.getCategoriaId())
+                .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+        // Validar que la categoría pertenezca a la misma tienda
+        if (!categoria.getTienda().getId().equals(tiendaAsignada.getId())) {
+            throw new RuntimeException("Categoría no pertenece a esta tienda");
+        }
+        producto.setCategoria(categoria);
+        producto.setTienda(tiendaAsignada);
+
+        // Manejar variantes (crear/editar/eliminar)
+        manejarVariantes(producto, request.getVariantes(), tiendaAsignada);
+
+        // Guardar y retornar
+        return toResponse(productoRepository.save(producto));
+    }
+    private void manejarVariantes(Producto producto, List<VarianteRequest> variantesRequests, Tienda tienda) {
+        if (variantesRequests == null) return;
+
+        // Mapear variantes existentes para edición/eliminación
+        Set<ProductoVariante> variantesExistentes = new HashSet<>(producto.getVariantes());
+        producto.getVariantes().clear();
+
+        for (VarianteRequest req : variantesRequests) {
+            ProductoVariante variante;
+            if (req.getId() != null) {
+                // Edición: buscar existente
+                variante = variantesExistentes.stream()
+                        .filter(v -> v.getId().equals(req.getId()))
+                        .findFirst()
+                        .orElseThrow(() -> new RuntimeException("Variante no encontrada: " + req.getId()));
+                variantesExistentes.remove(variante);  // Quitar de existentes (no se elimina)
+            } else {
+                // Creación
+                variante = new ProductoVariante();
+            }
+
+            variante.setSku(req.getSku().trim());
+            variante.setPrecio(req.getPrecio());
+            variante.setStock(req.getStock());
+            variante.setImagenUrl(req.getImagenUrl());
+            variante.setProducto(producto);
+            variante.setTienda(tienda);  // Asignar tienda
+
+            // Manejar atributos/valores
+            manejarAtributosValores(variante, req.getAtributos(), tienda);
+
+            producto.getVariantes().add(variante);
+        }
+
+        // Eliminar variantes que no vinieron en el request
+        variantesExistentes.forEach(varianteRepository::delete);
     }
 
+    private void manejarAtributosValores(ProductoVariante variante, List<AtributoValorRequest> atributosRequests, Tienda tienda) {
+        if (atributosRequests == null) return;
+
+        variante.getAtributos().clear();
+
+        for (AtributoValorRequest req : atributosRequests) {
+            // Buscar o crear Atributo
+            Atributo atributo = atributoRepository.findByNombreAndTiendaId(req.getAtributoNombre().trim(), tienda.getId())
+                    .orElseGet(() -> {
+                        Atributo nuevo = new Atributo();
+                        nuevo.setNombre(req.getAtributoNombre().trim());
+                        nuevo.setTienda(tienda);
+                        return atributoRepository.save(nuevo);
+                    });
+
+            // Buscar o crear AtributoValor
+            AtributoValor valor = atributoValorRepository.findByAtributoIdAndValor(atributo.getId(), req.getValor().trim())
+                    .orElseGet(() -> {
+                        AtributoValor nuevo = new AtributoValor();
+                        nuevo.setAtributo(atributo);
+                        nuevo.setTienda(tienda);
+                        nuevo.setValor(req.getValor().trim());
+                        return atributoValorRepository.save(nuevo);
+                    });
+
+            variante.getAtributos().add(valor);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProductoResponse getProductoByIdParaEdicion(Integer id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String emailActual = auth.getName();
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+
+        if (!esAdmin && !producto.getTienda().getUser().getEmail().equals(emailActual)) {
+            throw new AccessDeniedException("No tienes permisos para acceder a este producto");
+        }
+
+        // ← Aquí está la magia: devolvemos TODO
+        return toResponseProductoCreate(producto);   // ← ya incluye variantes + atributos + valores
+    }
+    @Override
+    @Transactional
+    public ProductoResponse toggleActivo(Integer id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        // Solo ADMIN puede togglear el estado activo
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!esAdmin) {
+            throw new AccessDeniedException("Solo los administradores pueden activar o desactivar productos");
+        }
+
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
+
+        // Toggle del estado activo del producto
+        boolean nuevoEstado = !producto.isActivo();
+        producto.setActivo(nuevoEstado);
+
+        // Si se DESACTIVA el producto → desactivar todas sus variantes
+        if (!nuevoEstado) {
+            varianteRepository.desactivarTodasPorProductoId(id);
+        }
+        // Nota: No reactivamos variantes automáticamente al activar el producto
+        // (el owner podría haber desactivado alguna variante manualmente)
+
+        Producto saved = productoRepository.save(producto);
+
+        return toResponse(saved);
+    }
     @Override
     public void deleteById(Integer id) {
         productoRepository.delete(productoRepository.getByIdAndTenant(id));
@@ -223,7 +393,37 @@ public class ProductoServiceImpl implements ProductoService {
                         () -> p.setImagenPrincipal("https://placehold.co/800x800/eeeeee/999999.png?text=Sin+Imagen")
                 );
     }
+    @Override
+    @Transactional(readOnly = true)
+    public List<DropDownStandard> getProductosForDropdown() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
+        List<Producto> productos;
+
+        if (esAdmin) {
+            // ADMIN ve todos los productos
+            productos = productoRepository.findAllByOrderByNombreAsc();
+        } else {
+            // OWNER solo ve los de su tienda
+            Integer tenantId = TenantContext.getTenantId();
+            if (tenantId == null) {
+                return Collections.emptyList();
+            }
+            productos = productoRepository.findByTiendaIdOrderByNombreAsc(tenantId);
+        }
+
+        // Convertir a DTO estándar
+        return productos.stream()
+                .map(p -> {
+                    DropDownStandard dto = new DropDownStandard();
+                    dto.setId(p.getId());
+                    dto.setDescripcion(p.getNombre());
+                    return dto;
+                })
+                .toList();
+    }
     private ProductoResponse toResponse(Producto p) {
         ProductoResponse resp = new ProductoResponse();
         resp.setId(p.getId());
@@ -232,6 +432,47 @@ public class ProductoServiceImpl implements ProductoService {
         resp.setCategoriaId(p.getCategoria().getId());
         resp.setTiendaId(p.getTienda().getId());
         resp.setCategoriaNombre(p.getCategoria().getNombre());
+        resp.setActivo(p.getCategoria().isActivo());
         return resp;
+    }
+    private ProductoResponse toResponseProductoCreate(Producto producto) {
+        ProductoResponse response = new ProductoResponse();
+        response.setId(producto.getId());
+        response.setNombre(producto.getNombre());
+        response.setSlug(producto.getSlug());
+        response.setCategoriaId(producto.getCategoria().getId());
+        response.setCategoriaNombre(producto.getCategoria().getNombre());
+        response.setTiendaId(producto.getTienda().getId());
+        response.setActivo(producto.isActivo());
+
+        // Variantes + atributos
+        List<VarianteResponse> variantesResponse = producto.getVariantes().stream()
+                .map(v -> {
+                    VarianteResponse vr = new VarianteResponse();
+                    vr.setId(v.getId());
+                    vr.setSku(v.getSku());
+                    vr.setPrecio(v.getPrecio());
+                    vr.setStock(v.getStock());
+                    vr.setImagenUrl(v.getImagenUrl());
+                    vr.setActivo(v.getActivo());
+
+                    // Atributos de esta variante
+                    List<AtributoValorResponse> attrs = v.getAtributos().stream()
+                            .map(av -> {
+                                AtributoValorResponse avr = new AtributoValorResponse();
+                                avr.setId(av.getId());
+                                avr.setAtributoNombre(av.getAtributo().getNombre());
+                                avr.setValor(av.getValor());
+                                return avr;
+                            })
+                            .collect(Collectors.toList());
+
+                    vr.setAtributos(attrs);
+                    return vr;
+                })
+                .collect(Collectors.toList());
+
+        response.setVariantes(variantesResponse);
+        return response;
     }
 }

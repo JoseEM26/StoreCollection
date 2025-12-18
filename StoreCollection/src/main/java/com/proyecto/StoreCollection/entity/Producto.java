@@ -30,7 +30,8 @@ public class Producto {
 
     @ManyToOne @JoinColumn(nullable = false)
     private Tienda tienda;
-
+    @Column(nullable = false)
+    private boolean activo = true;  // por defecto activo
     @OneToMany(mappedBy = "producto", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ProductoVariante> variantes = new HashSet<>();
 }

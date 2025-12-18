@@ -3,10 +3,15 @@ package com.proyecto.StoreCollection.service;
 import com.proyecto.StoreCollection.dto.request.CategoriaRequest;
 import com.proyecto.StoreCollection.dto.response.CategoriaResponse;
 import com.proyecto.StoreCollection.entity.Categoria;
+import com.proyecto.StoreCollection.entity.Tienda;
 import com.proyecto.StoreCollection.repository.CategoriaRepository;
+import com.proyecto.StoreCollection.repository.ProductoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +24,7 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     private final CategoriaRepository categoriaRepository;
     private final TiendaService tiendaService; // ← para asignar automáticamente la tienda
+    private final ProductoRepository productoRepository; // ← para asignar automáticamente la tienda
 
     // === PÚBLICO: para el menú y filtros del catálogo ===
     @Override
@@ -72,28 +78,140 @@ public class CategoriaServiceImpl implements CategoriaService {
         return toResponse(categoria);
     }
 
+
+
+    // === NUEVO: Para obtener categoría específica en edición (con verificación de permisos) ===
+    @Override
+    @Transactional(readOnly = true)
+    public CategoriaResponse getCategoriaByIdParaEdicion(Integer id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String emailActual = auth.getName();
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        Categoria categoria = categoriaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+
+        // Solo el dueño de la tienda o ADMIN puede acceder para edición
+        if (!esAdmin && !categoria.getTienda().getUser().getEmail().equals(emailActual)) {
+            throw new AccessDeniedException("No tienes permisos para acceder a esta categoría");
+        }
+
+        return toResponse(categoria);
+    }
     @Override
     public CategoriaResponse save(CategoriaRequest request) {
         return save(request, null);
     }
-
     @Override
+    @Transactional
     public CategoriaResponse save(CategoriaRequest request, Integer id) {
-        Categoria cat = id == null
-                ? new Categoria()
-                : categoriaRepository.getByIdAndTenant(id); // ← seguridad: solo puede editar las suyas
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String emailActual = auth.getName();
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-        cat.setNombre(request.getNombre());
-        cat.setSlug(request.getSlug());
-        cat.setTienda(tiendaService.getTiendaDelUsuarioActual()); // ← automático, 100% seguro
+        Categoria categoria;
+        Tienda tiendaAsignada;
 
-        return toResponse(categoriaRepository.save(cat));
+        if (id == null) {
+            // ==================== CREACIÓN ====================
+            categoria = new Categoria();
+
+            if (esAdmin) {
+                // ADMIN: debe proporcionar tiendaId obligatoriamente
+                if (request.getTiendaId() == null) {
+                    throw new RuntimeException("El campo tiendaId es obligatorio para administradores al crear una categoría");
+                }
+                tiendaAsignada = tiendaService.getEntityById(request.getTiendaId());
+            } else {
+                // OWNER: asignación automática
+                tiendaAsignada = tiendaService.getTiendaDelUsuarioActual();
+            }
+
+        } else {
+            // ==================== EDICIÓN ====================
+            categoria = categoriaRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+
+            // Verificación de permisos
+            if (!esAdmin && !categoria.getTienda().getUser().getEmail().equals(emailActual)) {
+                throw new AccessDeniedException("No tienes permisos para editar esta categoría");
+            }
+
+            if (esAdmin && request.getTiendaId() != null) {
+                // ADMIN puede cambiar la tienda en edición
+                tiendaAsignada = tiendaService.getEntityById(request.getTiendaId());
+            } else {
+                // OWNER o ADMIN sin cambiar tienda → mantiene la original
+                tiendaAsignada = categoria.getTienda();
+            }
+        }
+
+        // Validación de unicidad del slug DENTRO de la tienda asignada
+        categoriaRepository.findBySlugAndTiendaId(request.getSlug().trim(), tiendaAsignada.getId())
+                .ifPresent(c -> {
+                    if (id == null || !c.getId().equals(id)) {
+                        throw new RuntimeException("Ya existe una categoría con el slug '" + request.getSlug() + "' en esta tienda");
+                    }
+                });
+
+        // Asignar datos
+        categoria.setNombre(request.getNombre().trim());
+        categoria.setSlug(request.getSlug().trim());
+        categoria.setTienda(tiendaAsignada);
+
+        Categoria saved = categoriaRepository.save(categoria);
+        return toResponse(saved);
     }
+    @Override
+    @Transactional
+    public CategoriaResponse toggleActivo(Integer id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
+        // Solo ADMIN puede togglear el estado activo
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!esAdmin) {
+            throw new AccessDeniedException("Solo los administradores pueden activar o desactivar categorías");
+        }
+
+        Categoria categoria = categoriaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + id));
+
+        // Toggle del estado activo
+        boolean nuevoEstado = !categoria.isActivo();
+        categoria.setActivo(nuevoEstado);
+
+        // Si se DESACTIVA la categoría → desactivar todos sus productos
+        if (!nuevoEstado) {
+            productoRepository.desactivarTodosPorCategoriaId(id);
+        }
+        // Nota: No reactivamos productos automáticamente al activar la categoría
+        // (para no interferir con desactivaciones manuales que haya hecho el owner)
+
+        Categoria saved = categoriaRepository.save(categoria);
+
+        return toResponse(saved);
+    }
+    // === MODIFICADO: deleteById (agrega verificación de permisos) ===
     @Override
     public void deleteById(Integer id) {
-        Categoria cat = categoriaRepository.getByIdAndTenant(id);
-        categoriaRepository.delete(cat);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String emailActual = auth.getName();
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        Categoria categoria = categoriaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+
+        // Verificación: solo dueño o ADMIN
+        if (!esAdmin && !categoria.getTienda().getUser().getEmail().equals(emailActual)) {
+            throw new AccessDeniedException("No tienes permisos para eliminar esta categoría");
+        }
+
+        categoriaRepository.delete(categoria);
     }
 
     private CategoriaResponse toResponse(Categoria c) {
@@ -101,6 +219,7 @@ public class CategoriaServiceImpl implements CategoriaService {
                 c.getId(),
                 c.getNombre(),
                 c.getSlug(),
+                c.isActivo(),
                 c.getTienda().getId()
         );
     }

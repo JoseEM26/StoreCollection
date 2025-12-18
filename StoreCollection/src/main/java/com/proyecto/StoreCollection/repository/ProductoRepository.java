@@ -4,6 +4,7 @@ package com.proyecto.StoreCollection.repository;
 import com.proyecto.StoreCollection.entity.Producto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -14,7 +15,9 @@ import java.util.Optional;
 @Repository
 public interface ProductoRepository extends TenantBaseRepository<Producto, Integer> {
 
-
+     Optional<Producto> findBySlugAndTiendaId(String slug, Integer tiendaId);
+     List<Producto> findAllByOrderByNombreAsc();
+     List<Producto> findByTiendaIdOrderByNombreAsc(Integer tiendaId);
      // Para catálogo público: por slug de tienda + slug de producto
      @Query("SELECT p FROM Producto p WHERE p.slug = :productoSlug AND p.tienda.slug = :tiendaSlug")
      Optional<Producto> findByTiendaSlugAndProductoSlug(
@@ -30,7 +33,9 @@ List<Producto> findByTiendaSlugPublic(@Param("tiendaSlug") String tiendaSlug);
      Page<Producto> findAllByTenantId(@Param("tenantId") Integer tenantId, Pageable pageable);
      // ADMIN: búsqueda global
      Page<Producto> findByNombreContainingIgnoreCase(String nombre, Pageable pageable);
-
+     @Modifying
+     @Query("UPDATE Producto p SET p.activo = false WHERE p.categoria.id = :categoriaId")
+     void desactivarTodosPorCategoriaId(@Param("categoriaId") Integer categoriaId);
      // OWNER: búsqueda solo en su tienda
      @Query("SELECT p FROM Producto p WHERE p.tienda.id = :tenantId AND LOWER(p.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))")
      Page<Producto> findByNombreContainingIgnoreCaseAndTenantId(

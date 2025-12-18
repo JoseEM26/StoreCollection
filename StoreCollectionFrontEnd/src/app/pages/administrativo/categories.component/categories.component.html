@@ -1,5 +1,5 @@
 <div class="categories-page" data-aos="fade-up">
-  <!-- Header Premium -->
+  <!-- Header -->
   <div class="header-section">
     <div>
       <h1 class="page-title">
@@ -32,7 +32,7 @@
     </div>
     <button class="btn-sort" (click)="toggleSort()">
       Nombre
-      <i class="bi" [class.bi-arrow-up]="sort().includes('asc')" [class.bi-arrow-down]="sort().includes('desc')"></i>
+      <i class="bi" [ngClass]="{'bi-arrow-up': sort().includes('asc'), 'bi-arrow-down': sort().includes('desc')}"></i>
     </button>
   </div>
 
@@ -42,7 +42,7 @@
     <p class="loading-text">Cargando categorías...</p>
   </div>
 
-  <!-- Grid de categorías -->
+  <!-- Lista de categorías -->
   <div *ngIf="!loading() && categorias().length > 0" class="categories-grid">
     <div
       class="category-card"
@@ -57,8 +57,8 @@
           <i class="bi bi-tags-fill"></i>
         </div>
         <div class="store-status">
-          <span class="status-dot active"></span>
-          Activa
+          <span class="status-dot" [class.active]="cat.activo" [class.inactive]="!cat.activo"></span>
+          {{ cat.activo ? 'Activa' : 'Inactiva' }}
         </div>
       </div>
 
@@ -74,8 +74,19 @@
       </div>
 
       <div class="card-actions">
-        <button class="btn-edit">
+        <button class="btn-edit me-2" (click)="openEditModal(cat)">
           <i class="bi bi-pencil-square"></i> Editar
+        </button>
+
+        <!-- Toggle solo para ADMIN -->
+        <button
+          *ngIf="auth.isAdmin()"
+          class="btn-toggle"
+          [class.btn-success]="cat.activo"
+          [class.btn-danger]="!cat.activo"
+          (click)="toggleActivo(cat)"
+        >
+          {{ cat.activo ? 'Desactivar' : 'Activar' }}
         </button>
       </div>
     </div>
@@ -85,7 +96,7 @@
   <div *ngIf="!loading() && categorias().length === 0" class="empty-state" data-aos="fade-up">
     <i class="bi bi-tags empty-icon"></i>
     <h3>No hay categorías</h3>
-    <p *ngIf="searchTerm">No se encontraron resultados</p>
+    <p *ngIf="searchTerm">No se encontraron resultados para "{{ searchTerm }}"</p>
     <p *ngIf="!searchTerm">Aún no tienes categorías creadas</p>
     <button class="btn-create mt-4" (click)="openCreateModal()">
       <i class="bi bi-plus-lg"></i>
@@ -101,11 +112,13 @@
           <i class="bi bi-chevron-left"></i>
         </button>
       </li>
+
       <ng-container *ngFor="let page of getPageNumbers()">
         <li [class.active]="page === currentPage()">
           <button (click)="goToPage(page)">{{ page + 1 }}</button>
         </li>
       </ng-container>
+
       <li [class.disabled]="currentPage() === (pageData()!.totalPages - 1)">
         <button (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === (pageData()!.totalPages - 1)">
           <i class="bi bi-chevron-right"></i>
@@ -115,34 +128,12 @@
   </nav>
 </div>
 
-<!-- Modal Crear Categoría -->
-<div class="modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()">
-  <div class="modal-card" (click)="$event.stopPropagation()" data-aos="zoom-in">
-    <div class="modal-header">
-      <h2><i class="bi bi-tags-fill me-3"></i>Crear Nueva Categoría</h2>
-      <button class="close-btn" (click)="closeCreateModal()">
-        <i class="bi bi-x-lg"></i>
-      </button>
-    </div>
-    <div class="modal-body">
-      <div class="mb-4">
-        <label class="form-label fw-semibold">Nombre de la categoría</label>
-        <input
-          [(ngModel)]="newCategory.nombre"
-          type="text"
-          class="form-control form-control-lg"
-          placeholder="Ej: Ropa, Tecnología, Belleza..."
-          autofocus
-        />
-      </div>
-      <div class="d-flex gap-3 mt-5">
-        <button class="btn btn-outline-secondary flex-fill" (click)="closeCreateModal()">
-          Cancelar
-        </button>
-        <button class="btn btn-primary flex-fill" (click)="saveCategory()">
-          Crear Categoría
-        </button>
-      </div>
-    </div>
-  </div>
+<!-- Modal Formulario -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <app-category-form
+    [isEdit]="isEditMode"
+    [categoria]="selectedCategoria"
+    (saved)="onCategorySaved()"
+    (closed)="closeModal()"
+  ></app-category-form>
 </div>
