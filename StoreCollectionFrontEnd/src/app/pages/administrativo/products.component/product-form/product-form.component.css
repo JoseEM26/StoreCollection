@@ -1,0 +1,54 @@
+/* product-form.component.css */
+
+.modal-content {
+  max-width: 900px;
+  margin: 1.5rem auto;
+  border: none;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 1rem 1.5rem;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  background: #ffffff;
+}
+
+/* Fondo sólido y bordes suaves para variantes */
+.border.rounded.bg-light {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Inputs y selects bonitos */
+.form-control,
+.form-select {
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+}
+
+/* Etiquetas pequeñas */
+.small.fw-medium {
+  font-size: 0.8rem;
+  color: #4b5563;
+}
+
+/* Botones pequeños */
+.btn-sm {
+  padding: 0.4rem 0.7rem;
+}
+
+/* Espaciado en botones finales */
+.d-flex.gap-3 button {
+  min-width: 120px;
+  font-weight: 600;
+}

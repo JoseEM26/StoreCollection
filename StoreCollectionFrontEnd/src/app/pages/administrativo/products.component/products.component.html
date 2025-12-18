@@ -13,7 +13,7 @@
         </span>
       </p>
     </div>
-    <button class="btn-create" (click)="openModal()">
+    <button class="btn-create" (click)="openCreateModal()">
       <i class="bi bi-plus-lg"></i>
       Nuevo Producto
     </button>
@@ -32,7 +32,7 @@
     </div>
     <button class="btn-sort" (click)="setSort('nombre')">
       Nombre
-      <i class="bi" [class.bi-arrow-up]="sort().includes('asc')" [class.bi-arrow-down]="sort().includes('desc')"></i>
+      <i class="bi" [ngClass]="{'bi-arrow-up': sort().includes('asc'), 'bi-arrow-down': sort().includes('desc')}"></i>
     </button>
   </div>
 
@@ -52,6 +52,8 @@
               <th class="ps-5">Producto</th>
               <th>Categoría</th>
               <th>Tienda ID</th>
+              <th>Variantes</th>
+              <th>Estado</th>
               <th class="text-end pe-5">Acciones</th>
             </tr>
           </thead>
@@ -79,9 +81,22 @@
               <td>
                 <code>#{{ p.tiendaId }}</code>
               </td>
+         <td>
+  <span class="badge bg-secondary">
+    {{ (p.variantes || []).length }} 
+    variante{{ (p.variantes || []).length !== 1 ? 's' : '' }}
+  </span>
+</td>
+              <td>
+                <span class="status-dot" [class.active]="p.activo" [class.inactive]="!p.activo"></span>
+                {{ p.activo ? 'Activo' : 'Inactivo' }}
+              </td>
               <td class="text-end pe-5">
-                <button class="btn btn-sm btn-outline-primary rounded-pill me-2" (click)="openModal(p)">
-                  <i class="bi bi-pencil"></i>
+                <button class="btn btn-sm btn-outline-primary rounded-pill me-2" (click)="openEditModal(p)">
+                  <i class="bi bi-pencil"></i> Editar
+                </button>
+                <button *ngIf="auth.isAdmin()" class="btn btn-sm rounded-pill me-2" [class.btn-success]="p.activo" [class.btn-danger]="!p.activo" (click)="toggleActivo(p)">
+                  {{ p.activo ? 'Desactivar' : 'Activar' }}
                 </button>
                 <button class="btn btn-sm btn-outline-secondary rounded-pill">
                   <i class="bi bi-three-dots"></i>
@@ -100,7 +115,7 @@
     <h3>No hay productos</h3>
     <p *ngIf="searchTerm">No se encontraron resultados</p>
     <p *ngIf="!searchTerm">Aún no tienes productos creados</p>
-    <button class="btn-create mt-4" (click)="openModal()">
+    <button class="btn-create mt-4" (click)="openCreateModal()">
       <i class="bi bi-plus-lg"></i>
       Crear primer producto
     </button>
@@ -128,36 +143,12 @@
   </nav>
 </div>
 
-<!-- Modal Crear/Editar -->
+<!-- Modal Formulario -->
 <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
-  <div class="modal-card" (click)="$event.stopPropagation()" data-aos="zoom-in">
-    <div class="modal-header">
-      <h2><i class="bi bi-box-seam me-3"></i>{{ editingProduct.id ? 'Editar' : 'Nuevo' }} Producto</h2>
-      <button class="close-btn" (click)="closeModal()">
-        <i class="bi bi-x-lg"></i>
-      </button>
-    </div>
-    <div class="modal-body">
-      <div class="row g-4">
-        <div class="col-12">
-          <label class="form-label fw-semibold">Nombre</label>
-          <input [(ngModel)]="editingProduct.nombre" type="text" class="form-control form-control-lg" placeholder="Ej: iPhone 15 Pro Max" />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Slug</label>
-          <input [(ngModel)]="editingProduct.slug" type="text" class="form-control" placeholder="iphone-15-pro-max" />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Categoría</label>
-          <input [(ngModel)]="editingProduct.categoriaNombre" type="text" class="form-control" placeholder="Ej: Celulares" />
-        </div>
-      </div>
-      <div class="d-flex gap-3 mt-5">
-        <button class="btn btn-outline-secondary flex-fill" (click)="closeModal()">Cancelar</button>
-        <button class="btn btn-primary flex-fill" (click)="saveProduct()">
-          {{ editingProduct.id ? 'Guardar Cambios' : 'Crear Producto' }}
-        </button>
-      </div>
-    </div>
-  </div>
+  <app-product-form
+    [isEdit]="isEditMode"
+    [producto]="selectedProducto"
+    (saved)="onProductSaved()"
+    (closed)="closeModal()"
+  ></app-product-form>
 </div>

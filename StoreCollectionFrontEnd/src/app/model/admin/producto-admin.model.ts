@@ -9,7 +9,7 @@ export interface ProductoResponse {
   categoriaNombre: string;
   tiendaId: number;
   activo: boolean;
-  variantes: VarianteResponse[];
+variantes: VarianteResponse[];  
 }
 
 // === Para enviar al crear o actualizar ===

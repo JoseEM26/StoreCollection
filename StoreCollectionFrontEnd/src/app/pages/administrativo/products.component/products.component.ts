@@ -5,35 +5,40 @@ import { FormsModule } from '@angular/forms';
 import { ProductoPage, ProductoResponse } from '../../../model/admin/producto-admin.model';
 import { ProductoAdminService } from '../../../service/service-admin/producto-admin.service';
 import { AuthService } from '../../../../auth/auth.service';
+import { ProductFormComponent } from './product-form/product-form.component';
 
 @Component({
   selector: 'app-products',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ProductFormComponent],
   templateUrl: './products.component.html',
   styleUrl: './products.component.css'
 })
 export class ProductsComponent implements OnInit {
-  // Datos del backend
+  // Datos
   pageData = signal<ProductoPage | null>(null);
   productos = signal<ProductoResponse[]>([]);
   loading = signal(true);
 
-  // Filtros
+  // Modal
+  showModal = false;
+  isEditMode = false;
+  selectedProducto?: ProductoResponse;
+
+  // Filtros y paginación
   currentPage = signal(0);
   pageSize = 20;
   sort = signal('nombre,asc');
   searchTerm = '';
 
-  // Modal
-  showModal = false;
-  editingProduct: Partial<ProductoResponse> = {};
-
   constructor(
     private productoService: ProductoAdminService,
     public auth: AuthService
   ) {
-    effect(() => this.loadProductos());
+    // Recargar automáticamente al cambiar filtros
+    effect(() => {
+      this.loadProductos();
+    });
   }
 
   ngOnInit(): void {
@@ -56,40 +61,21 @@ export class ProductsComponent implements OnInit {
       },
       error: () => {
         this.loading.set(false);
-        alert('Error al cargar productos');
+        alert('Error al cargar los productos');
       }
     });
   }
 
-  // Paginación
-  goToPage(page: number): void {
-    if (page >= 0 && page < (this.pageData()?.totalPages || 0)) {
-      this.currentPage.set(page);
-    }
+  // === Modal ===
+  openCreateModal(): void {
+    this.isEditMode = false;
+    this.selectedProducto = undefined;
+    this.showModal = true;
   }
 
-  // Búsqueda
-  onSearch(): void {
-    this.currentPage.set(0);
-  }
-
-  // Ordenación
-  setSort(campo: string): void {
-    const [actual, dir] = this.sort().split(',');
-    const nuevaDir = actual === campo && dir === 'asc' ? 'desc' : 'asc';
-    this.sort.set(`${campo},${nuevaDir}`);
-    this.currentPage.set(0);
-  }
-
-  // Modal
-  openModal(product?: ProductoResponse): void {
-    this.editingProduct = product ? { ...product } : {
-      nombre: '',
-      slug: '',
-      categoriaId: 0,
-      categoriaNombre: '',
-      tiendaId: 0
-    };
+  openEditModal(producto: ProductoResponse): void {
+    this.isEditMode = true;
+    this.selectedProducto = producto;
     this.showModal = true;
   }
 
@@ -97,17 +83,35 @@ export class ProductsComponent implements OnInit {
     this.showModal = false;
   }
 
-  saveProduct(): void {
-    if (!this.editingProduct.nombre?.trim()) {
-      alert('El nombre es obligatorio');
-      return;
-    }
-    alert(`Producto "${this.editingProduct.nombre}" guardado (simulado)`);
+  onProductSaved(): void {
     this.closeModal();
-    this.loadProductos();
+    this.loadProductos(); // Recargar lista
   }
 
-  // Paginación inteligente
+  // === Toggle Activo (solo ADMIN) ===
+  toggleActivo(producto: ProductoResponse): void {
+    if (!this.auth.isAdmin()) {
+      alert('Solo los administradores pueden cambiar el estado');
+      return;
+    }
+
+    this.productoService.toggleActivo(producto.id).subscribe({
+      next: (updated) => {
+        this.productos.update(prods =>
+          prods.map(p => p.id === updated.id ? updated : p)
+        );
+      },
+      error: () => alert('Error al cambiar el estado del producto')
+    });
+  }
+
+  // === Paginación ===
+  goToPage(page: number): void {
+    if (page >= 0 && page < (this.pageData()?.totalPages || 0)) {
+      this.currentPage.set(page);
+    }
+  }
+
   getPageNumbers(): number[] {
     const total = this.pageData()?.totalPages || 0;
     const current = this.currentPage();
@@ -117,5 +121,17 @@ export class ProductsComponent implements OnInit {
       range.push(i);
     }
     return range;
+  }
+
+  // === Búsqueda y orden ===
+  onSearch(): void {
+    this.currentPage.set(0);
+  }
+
+  setSort(campo: string): void {
+    const [actual, dir] = this.sort().split(',');
+    const nuevaDir = actual === campo && dir === 'asc' ? 'desc' : 'asc';
+    this.sort.set(`${campo},${nuevaDir}`);
+    this.currentPage.set(0);
   }
 }

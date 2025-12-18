@@ -1,0 +1,146 @@
+<!-- product-form.component.html -->
+<div class="modal-content bg-white shadow-lg rounded-3" (click)="$event.stopPropagation()">
+  <!-- Header -->
+  <div class="modal-header bg-primary text-white rounded-top-3">
+    <h5 class="modal-title fw-bold">
+      <i class="bi bi-box-seam me-2"></i>
+      {{ isEdit ? 'Editar Producto' : 'Crear Nuevo Producto' }}
+    </h5>
+    <button type="button" class="btn-close btn-close-white" (click)="cancel()" [disabled]="loading()"></button>
+  </div>
+
+  <!-- Body -->
+  <div class="modal-body p-4" style="max-height: 70vh; overflow-y: auto;">
+    <form>
+      <!-- Nombre -->
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Nombre del producto</label>
+        <input
+          [(ngModel)]="nombre"
+          (input)="generarSlugDesdeNombre()"
+          name="nombre"
+          type="text"
+          class="form-control"
+          placeholder="Ej: Camiseta Básica"
+          required
+        />
+      </div>
+
+      <!-- Slug -->
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Slug (URL amigable)</label>
+        <input
+          [(ngModel)]="slug"
+          name="slug"
+          type="text"
+          class="form-control"
+          placeholder="camiseta-basica"
+          required
+        />
+      </div>
+
+      <!-- Tienda (solo ADMIN) -->
+      <div class="mb-3" *ngIf="auth.isAdmin()">
+        <label class="form-label fw-semibold">Tienda</label>
+        <select [(ngModel)]="tiendaId" (change)="onTiendaChange()" name="tiendaId" class="form-select" required>
+          <option [ngValue]="null" disabled>Seleccionar tienda</option>
+          <option *ngFor="let t of tiendas()" [ngValue]="t.id">{{ t.descripcion }}</option>
+        </select>
+      </div>
+
+      <!-- Categoría -->
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Categoría</label>
+        <select [(ngModel)]="categoriaId" name="categoriaId" class="form-select" required>
+          <option [ngValue]="null" disabled>Seleccionar categoría</option>
+          <option *ngFor="let c of categorias()" [ngValue]="c.id">{{ c.descripcion }}</option>
+        </select>
+      </div>
+
+      <!-- Variantes -->
+      <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="fw-semibold mb-0 text-dark">Variantes del producto</h6>
+          <button type="button" class="btn btn-success btn-sm" (click)="agregarVariante()">
+            <i class="bi bi-plus-lg"></i> Agregar
+          </button>
+        </div>
+
+        <div class="border rounded-3 p-4 mb-3 bg-light" *ngFor="let variante of variantes(); let i = index">
+          <div class="row g-3">
+            <div class="col-lg-3 col-md-6">
+              <label class="form-label small fw-medium text-muted">SKU</label>
+              <input [(ngModel)]="variante.sku" [name]="'sku_' + i" class="form-control form-control-sm" placeholder="SKU123" />
+            </div>
+            <div class="col-lg-2 col-md-6">
+              <label class="form-label small fw-medium text-muted">Precio</label>
+              <input [(ngModel)]="variante.precio" [name]="'precio_' + i" type="number" step="0.01" class="form-control form-control-sm" />
+            </div>
+            <div class="col-lg-2 col-md-6">
+              <label class="form-label small fw-medium text-muted">Stock</label>
+              <input [(ngModel)]="variante.stock" [name]="'stock_' + i" type="number" class="form-control form-control-sm" />
+            </div>
+            <div class="col-lg-4 col-md-6">
+              <label class="form-label small fw-medium text-muted">Imagen URL (opcional)</label>
+              <input [(ngModel)]="variante.imagenUrl" [name]="'imagen_' + i" class="form-control form-control-sm" placeholder="https://..." />
+            </div>
+            <div class="col-lg-1 col-md-12 text-lg-end">
+              <button type="button" class="btn btn-danger btn-sm mt-4 mt-lg-0" (click)="eliminarVariante(i)">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Atributos -->
+          <div class="mt-4 pt-3 border-top">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <small class="fw-medium text-dark">Atributos (ej: Color, Talla)</small>
+              <button type="button" class="btn btn-outline-secondary btn-sm" (click)="agregarAtributo(i)">
+                <i class="bi bi-plus"></i> Atributo
+              </button>
+            </div>
+
+            <div class="row g-2" *ngFor="let attr of variante.atributos || []; let j = index">
+              <div class="col-5">
+                <input [(ngModel)]="attr.atributoNombre" [name]="'attrNom_' + i + '_' + j" class="form-control form-control-sm" placeholder="Nombre (ej: Color)" />
+              </div>
+              <div class="col-6">
+                <input [(ngModel)]="attr.valor" [name]="'attrVal_' + i + '_' + j" class="form-control form-control-sm" placeholder="Valor (ej: Rojo)" />
+              </div>
+              <div class="col-1 text-end">
+                <button type="button" class="btn btn-outline-danger btn-sm" (click)="eliminarAtributo(i, j)">
+                  <i class="bi bi-x"></i>
+                </button>
+              </div>
+            </div>
+
+            <small class="text-muted d-block text-center mt-3" *ngIf="(variante.atributos || []).length === 0">
+              Sin atributos
+            </small>
+          </div>
+        </div>
+
+        <div class="text-center py-4 text-muted fst-italic" *ngIf="variantes().length === 0">
+          No hay variantes agregadas
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="errorMessage()" class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        {{ errorMessage() }}
+      </div>
+
+      <!-- Botones -->
+      <div class="d-flex justify-content-end gap-3 mt-4">
+        <button type="button" class="btn btn-secondary px-4" (click)="cancel()" [disabled]="loading()">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-primary px-4" (click)="save()" [disabled]="loading()">
+          <span *ngIf="loading()" class="spinner-border spinner-border-sm me-2"></span>
+          {{ isEdit ? 'Guardar Cambios' : 'Crear Producto' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

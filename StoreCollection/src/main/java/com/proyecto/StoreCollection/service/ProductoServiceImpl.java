@@ -96,7 +96,7 @@ public class ProductoServiceImpl implements ProductoService {
                 if (request.getTiendaId() == null) {
                     throw new RuntimeException("tiendaId requerido para ADMIN");
                 }
-                tiendaAsignada = tiendaService.getEntityById(request.getTiendaId());  // Asumiendo método en TiendaService
+                tiendaAsignada = tiendaService.getEntityById(request.getTiendaId());
             } else {
                 tiendaAsignada = tiendaService.getTiendaDelUsuarioActual();
             }
