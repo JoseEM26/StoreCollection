@@ -20,7 +20,7 @@ public class VarianteRequest {
 
     @PositiveOrZero
     private Integer stock = 0;
-
+    private Boolean activo = true;
     private String imagenUrl;
 
     private List<AtributoValorRequest> atributos;

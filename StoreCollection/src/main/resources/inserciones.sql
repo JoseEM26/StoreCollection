@@ -1,8 +1,3 @@
--- ========================================
--- 3. DATOS MASIVOS REALES (2025) - VERSIÓN 100% CORREGIDA Y FUNCIONAL
--- ========================================
-
--- 1. PLANES
 INSERT INTO plan (nombre, precio, max_productos, mes_inicio, mes_fin) VALUES
 ('Gratis', 0.00, 10, 1, 12),
 ('Básico', 49.90, 100, 1, 12),
@@ -10,55 +5,49 @@ INSERT INTO plan (nombre, precio, max_productos, mes_inicio, mes_fin) VALUES
 ('Premium', 199.90, 2000, 1, 12),
 ('Enterprise', 499.90, 99999, 1, 12);
 
-
--- 2. USUARIOS (1 Admin + 40 Owners)
 INSERT INTO usuario (nombre, email, password, celular, rol) VALUES
-('Admin Sistema', 'admin@storecollection.pe', 'admin', '+51999999999', 'ADMIN'), -- contraseña: admin
+('Admin Sistema', 'admin@storecollection.pe', 'admin', '+51999999999', 'ADMIN'),
+('María López', 'maria@zapatik.pe', 'maria', '+51987654321', 'OWNER'),
+('Carlos Ruiz', 'carlos@techpro.pe', 'carlos', '+51911223344', 'OWNER'),
+('Ana Gómez', 'ana@modafashion.pe', 'ana', '+51955667788', 'OWNER'),
+('Luis Torres', 'luis@petfood.pe', 'luis', '+51933445566', 'OWNER'),
+('Sofía Vega', 'sofia@platajoyas.pe', 'sofia', '+51977889900', 'OWNER'),
+('Pedro Salazar', 'pedro@deportesxtreme.pe', 'pedro', '+51922334455', 'OWNER'),
+('Laura Mendoza', 'laura@cosmeticos.pe', 'laura', '+51966778899', 'OWNER'),
+('Diego Castro', 'diego@gadgetsperu.pe', 'diego', '+51944556677', 'OWNER'),
+('Valeria Ortiz', 'valeria@bellezanatural.pe', 'valeria', '+51988990011', 'OWNER'),
+('Javier Ramos', 'javier@accesorioscel.pe', 'javier', '+51911224455', 'OWNER'),
+('Camila Flores', 'camila@ropainfantil.pe', 'camila', '+51999887766', 'OWNER'),
+('Renzo Vargas', 'renzo@celularesimport.pe', 'renzo', '+51988776655', 'OWNER'),
+('Fernanda Diaz', 'fernanda@maquillajepro.pe', 'fernanda', '+51977665544', 'OWNER'),
+('Mateo Silva', 'mateo@suplementosgym.pe', 'mateo', '+51966554433', 'OWNER'),
+('Isabella Cruz', 'isabella@perfumesoriginales.pe', 'isabella', '+51955443322', 'OWNER'),
+('Gabriel Soto', 'gabriel@relojesperu.pe', 'gabriel', '+51944332211', 'OWNER'),
+('Lucía Herrera', 'lucia@librosdigitales.pe', 'lucia', '+51933221100', 'OWNER'),
+('Thiago Morales', 'thiago@juguetesdidacticos.pe', 'thiago', '+51922110099', 'OWNER'),
+('Valentina Rios', 'valentina@velasartesanales.pe', 'valentina', '+51911009988', 'OWNER'),
+('Santiago Paredes', 'santiago@herramientaspro.pe', 'santiago', '+51900998877', 'OWNER'),
+('Emilia Castro', 'emilia@decorhogar.pe', 'emilia', '+51999887766', 'OWNER'),
+('Benjamín Ortiz', 'benjamin@campingperu.pe', 'benjamin', '+51988776655', 'OWNER'),
+('Martina León', 'martina@plantasinterior.pe', 'martina', '+51977665544', 'OWNER'),
+('Joaquín Navarro', 'joaquin@bateriasportatil.pe', 'joaquin', '+51966554433', 'OWNER'),
+('Regina Campos', 'regina@artesaniasperu.pe', 'regina', '+51955443322', 'OWNER'),
+('Lautaro Romero', 'lautaro@biciurbana.pe', 'lautaro', '+51944332211', 'OWNER'),
+('Zoe Gutierrez', 'zoe@ropaembarazada.pe', 'zoe', '+51933221100', 'OWNER'),
+('Dylan Medina', 'dylan@gamingperifericos.pe', 'dylan', '+51922110099', 'OWNER'),
+('Alma Fuentes', 'alma@cuidadofacial.pe', 'alma', '+51911009988', 'OWNER'),
+('Ian Guerrero', 'ian@audifonospro.pe', 'ian', '+51900998877', 'OWNER'),
+('Luna Vargas', 'luna@skincarekorea.pe', 'luna', '+51988776655', 'OWNER'),
+('Bruno Salazar', 'bruno@cafeartesanal.pe', 'bruno', '+51977665544', 'OWNER'),
+('Renata Ortiz', 'renata@joyeriaplata.pe', 'renata', '+51966554433', 'OWNER'),
+('Lía Mendoza', 'lia@ropaactivewear.pe', 'lia', '+51955443322', 'OWNER'),
+('Axel Torres', 'axel@pcgaming.pe', 'axel', '+51944332211', 'OWNER'),
+('Amira Paredes', 'amira@accesoriosmujer.pe', 'amira', '+51933221100', 'OWNER'),
+('Noah Castro', 'noah@zapatosformal.pe', 'noah', '+51922110099', 'OWNER'),
+('Gala Rios', 'gala@bellezainfantil.pe', 'gala', '+51911009988', 'OWNER'),
+('Leo Navarro', 'leo@vinosimportados.pe', 'leo', '+51900998877', 'OWNER'),
+('Mía Herrera', 'mia@librosfisicos.pe', 'mia', '+51999887766', 'OWNER');
 
--- 40 DUEÑOS DE TIENDAS (OWNERS)
-('María López', 'maria@zapatik.pe', 'maria', '+51987654321', 'OWNER'), -- contraseña: maria
-('Carlos Ruiz', 'carlos@techpro.pe', 'carlos', '+51911223344', 'OWNER'), -- contraseña: carlos
-('Ana Gómez', 'ana@modafashion.pe', 'ana', '+51955667788', 'OWNER'), -- contraseña: ana
-('Luis Torres', 'luis@petfood.pe', 'luis', '+51933445566', 'OWNER'), -- contraseña: luis
-('Sofía Vega', 'sofia@platajoyas.pe', 'sofia', '+51977889900', 'OWNER'), -- contraseña: sofia
-('Pedro Salazar', 'pedro@deportesxtreme.pe', 'pedro', '+51922334455', 'OWNER'), -- contraseña: pedro
-('Laura Mendoza', 'laura@cosmeticos.pe', 'laura', '+51966778899', 'OWNER'), -- contraseña: laura
-('Diego Castro', 'diego@gadgetsperu.pe', 'diego', '+51944556677', 'OWNER'), -- contraseña: diego
-('Valeria Ortiz', 'valeria@bellezanatural.pe', 'valeria', '+51988990011', 'OWNER'), -- contraseña: valeria
-('Javier Ramos', 'javier@accesorioscel.pe', 'javier', '+51911224455', 'OWNER'), -- contraseña: javier
-('Camila Flores', 'camila@ropainfantil.pe', 'camila', '+51999887766', 'OWNER'), -- contraseña: camila
-('Renzo Vargas', 'renzo@celularesimport.pe', 'renzo', '+51988776655', 'OWNER'), -- contraseña: renzo
-('Fernanda Diaz', 'fernanda@maquillajepro.pe', 'fernanda', '+51977665544', 'OWNER'), -- contraseña: fernanda
-('Mateo Silva', 'mateo@suplementosgym.pe', 'mateo', '+51966554433', 'OWNER'), -- contraseña: mateo
-('Isabella Cruz', 'isabella@perfumesoriginales.pe', 'isabella', '+51955443322', 'OWNER'), -- contraseña: isabella
-('Gabriel Soto', 'gabriel@relojesperu.pe', 'gabriel', '+51944332211', 'OWNER'), -- contraseña: gabriel
-('Lucía Herrera', 'lucia@librosdigitales.pe', 'lucia', '+51933221100', 'OWNER'), -- contraseña: lucia
-('Thiago Morales', 'thiago@juguetesdidacticos.pe', 'thiago', '+51922110099', 'OWNER'), -- contraseña: thiago
-('Valentina Rios', 'valentina@velasartesanales.pe', 'valentina', '+51911009988', 'OWNER'), -- contraseña: valentina
-('Santiago Paredes', 'santiago@herramientaspro.pe', 'santiago', '+51900998877', 'OWNER'), -- contraseña: santiago
-('Emilia Castro', 'emilia@decorhogar.pe', 'emilia', '+51999887766', 'OWNER'), -- contraseña: emilia
-('Benjamín Ortiz', 'benjamin@campingperu.pe', 'benjamin', '+51988776655', 'OWNER'), -- contraseña: benjamin
-('Martina León', 'martina@plantasinterior.pe', 'martina', '+51977665544', 'OWNER'), -- contraseña: martina
-('Joaquín Navarro', 'joaquin@bateriasportatil.pe', 'joaquin', '+51966554433', 'OWNER'), -- contraseña: joaquin
-('Regina Campos', 'regina@artesaniasperu.pe', 'regina', '+51955443322', 'OWNER'), -- contraseña: regina
-('Lautaro Romero', 'lautaro@biciurbana.pe', 'lautaro', '+51944332211', 'OWNER'), -- contraseña: lautaro
-('Zoe Gutierrez', 'zoe@ropaembarazada.pe', 'zoe', '+51933221100', 'OWNER'), -- contraseña: zoe
-('Dylan Medina', 'dylan@gamingperifericos.pe', 'dylan', '+51922110099', 'OWNER'), -- contraseña: dylan
-('Alma Fuentes', 'alma@cuidadofacial.pe', 'alma', '+51911009988', 'OWNER'), -- contraseña: alma
-('Ian Guerrero', 'ian@audifonospro.pe', 'ian', '+51900998877', 'OWNER'), -- contraseña: ian
-('Luna Vargas', 'luna@skincarekorea.pe', 'luna', '+51988776655', 'OWNER'), -- contraseña: luna
-('Bruno Salazar', 'bruno@cafeartesanal.pe', 'bruno', '+51977665544', 'OWNER'), -- contraseña: bruno
-('Renata Ortiz', 'renata@joyeriaplata.pe', 'renata', '+51966554433', 'OWNER'), -- contraseña: renata
-('Lía Mendoza', 'lia@ropaactivewear.pe', 'lia', '+51955443322', 'OWNER'), -- contraseña: lia
-('Axel Torres', 'axel@pcgaming.pe', 'axel', '+51944332211', 'OWNER'), -- contraseña: axel
-('Amira Paredes', 'amira@accesoriosmujer.pe', 'amira', '+51933221100', 'OWNER'), -- contraseña: amira
-('Noah Castro', 'noah@zapatosformal.pe', 'noah', '+51922110099', 'OWNER'), -- contraseña: noah
-('Gala Rios', 'gala@bellezainfantil.pe', 'gala', '+51911009988', 'OWNER'), -- contraseña: gala
-('Leo Navarro', 'leo@vinosimportados.pe', 'leo', '+51900998877', 'OWNER'), -- contraseña: leo
-('Mía Herrera', 'mia@librosfisicos.pe', 'mia', '+51999887766', 'OWNER'); -- contraseña: mia
-
-
--- 3. TIENDAS (40 tiendas) - user_id del 2 al 41
 INSERT INTO tienda (nombre, slug, whatsapp, moneda, descripcion, direccion, horarios, mapa_url, logo_img_url, plan_id, user_id) VALUES
 ('ZapaTik', 'zapatik', '+51987654321', 'SOLES', 'Zapatillas virales de TikTok', 'Av. Brasil 1234, Lima', 'Lun-Sab 10am-9pm', 'https://maps.google.com/?q=zapatik', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/zapatik.png', 3, 2),
 ('TechPro Perú', 'techpro-peru', '+51911223344', 'DOLARES', 'Gadgets importados premium', 'Tienda online', '24/7', 'https://maps.google.com/?q=techpro', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/techpro.png', 4, 3),
@@ -100,13 +89,16 @@ INSERT INTO tienda (nombre, slug, whatsapp, moneda, descripcion, direccion, hora
 ('Belleza Infantil', 'belleza-infantil', '+51911009988', 'SOLES', 'Productos para niños', 'Tienda virtual', '24/7', 'https://maps.google.com/?q=bellezainfantil', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/bellezainfantil.png', 1, 39),
 ('Vinos Importados', 'vinos-importados', '+51900998877', 'SOLES', 'Chilenos, argentinos', 'Surco', 'Lun-Sab 11am-9pm', 'https://maps.google.com/?q=vinos', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/vinos.png', 3, 40),
 ('Libros Físicos', 'libros-fisicos', '+51999887766', 'SOLES', 'Novelas y más', 'Lince', 'Lun-Sab 10am-8pm', 'https://maps.google.com/?q=librosfisicos', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/librosfisicos.png', 2, 41);
--- 4. CATEGORÍAS (algunas ejemplos)
-INSERT INTO categoria (nombre, slug, tienda_id) VALUES
-('Zapatillas Hombre', 'hombre', 1),('Zapatillas Mujer', 'mujer', 1),('Niños', 'ninos', 1),
-('Cargadores', 'cargadores', 2),('Auriculares', 'auriculares', 2),
-('Vestidos', 'vestidos', 3),('Polos', 'polos', 3);
 
--- 5. PRODUCTOS
+INSERT INTO categoria (nombre, slug, tienda_id) VALUES
+('Zapatillas Hombre', 'hombre', 1),
+('Zapatillas Mujer', 'mujer', 1),
+('Niños', 'ninos', 1),
+('Cargadores', 'cargadores', 2),
+('Auriculares', 'auriculares', 2),
+('Vestidos', 'vestidos', 3),
+('Polos', 'polos', 3);
+
 INSERT INTO producto (nombre, slug, categoria_id, tienda_id) VALUES
 ('Nike Air Max 90', 'nike-air-max-90', 1, 1),
 ('Adidas Ultraboost', 'adidas-ultraboost', 1, 1),
@@ -115,51 +107,61 @@ INSERT INTO producto (nombre, slug, categoria_id, tienda_id) VALUES
 ('Vestido Floral', 'vestido-floral', 6, 3),
 ('Polo Básico', 'polo-basico', 7, 3);
 
--- 6. ATRIBUTOS
 INSERT INTO atributo (nombre, tienda_id) VALUES
-('Talla', 1),('Color', 1),('Capacidad', 2);
+('Talla', 1),
+('Color', 1),
+('Capacidad', 2);
 
--- 7. ATRIBUTOS VALORES (con tienda_id obligatorio ahora)
 INSERT INTO atributo_valor (atributo_id, valor, tienda_id) VALUES
-(1, '38', 1),(1, '39', 1),(1, '40', 1),(1, '41', 1),(1, '42', 1),
-(2, 'Negro', 1),(2, 'Blanco', 1),(2, 'Rojo', 1),(2, 'Azul', 1),
-(3, '65W', 2),(3, '100W', 2);
+(1, '38', 1),
+(1, '39', 1),
+(1, '40', 1),
+(1, '41', 1),
+(1, '42', 1),
+(2, 'Negro', 1),
+(2, 'Blanco', 1),
+(2, 'Rojo', 1),
+(2, 'Azul', 1),
+(3, '65W', 2),
+(3, '100W', 2);
 
--- 8. PRODUCTO_VARIANTE (¡imagen_url en snake_case!)
 INSERT INTO Producto_Variante (producto_id, tienda_id, sku, precio, stock, imagen_url, activo) VALUES
--- Nike Air Max 90
 (1, 1, 'NAM90-38-NEGRO', 549.90, 12, 'https://img.zapatik.pe/nike90-negro-38.jpg', TRUE),
 (1, 1, 'NAM90-38-BLANCO', 549.90, 8, 'https://img.zapatik.pe/nike90-blanco-38.jpg', TRUE),
 (1, 1, 'NAM90-39-NEGRO', 549.90, 15, 'https://img.zapatik.pe/nike90-negro-39.jpg', TRUE),
 (1, 1, 'NAM90-40-ROJO', 579.90, 5, 'https://img.zapatik.pe/nike90-rojo-40.jpg', TRUE),
 (1, 1, 'NAM90-42-AZUL', 549.90, 3, 'https://img.zapatik.pe/nike90-azul-42.jpg', TRUE),
--- Adidas
 (2, 1, 'AUB-39-GRIS', 699.90, 10, 'https://img.zapatik.pe/adidas-gris-39.jpg', TRUE),
 (2, 1, 'AUB-41-NEGRO', 699.90, 7, 'https://img.zapatik.pe/adidas-negro-41.jpg', TRUE),
--- Cargadores
 (3, 2, 'CH65W-BLANCO', 89.90, 25, 'https://techpro.pe/cargador-blanco.jpg', TRUE),
 (3, 2, 'CH65W-NEGRO', 89.90, 18, 'https://techpro.pe/cargador-negro.jpg', TRUE),
 (3, 2, 'CH100W-GAN', 129.90, 30, 'https://techpro.pe/gan-100w.jpg', TRUE),
--- Sony
 (4, 2, 'SONY-XM5-BLACK', 1499.90, 8, 'https://techpro.pe/sony-black.jpg', TRUE),
 (4, 2, 'SONY-XM5-SILVER', 1499.90, 5, 'https://techpro.pe/sony-silver.jpg', TRUE),
--- Moda
 (5, 3, 'VEST-FLORAL-S', 129.90, 20, 'https://moda.pe/vestido-s.jpg', TRUE),
 (5, 3, 'VEST-FLORAL-M', 139.90, 15, 'https://moda.pe/vestido-m.jpg', TRUE),
 (6, 3, 'POLO-BASICO-M-BLACK', 79.90, 25, 'https://moda.pe/polo-black-m.jpg', TRUE);
 
--- 9. VARIANTE_ATRIBUTO
 INSERT INTO Variante_Atributo (variante_id, atributo_valor_id) VALUES
-(1,1),(1,6),(2,1),(2,7),(3,2),(3,6),(4,3),(4,8),(5,5),(5,9),
-(6,2),(8,10),(8,11),(9,10),(9,11),(10,11);
+-- Nike Air Max 90 (variantes 1 a 5) → Talla + Color
+(1, 1), (1, 6),   -- 38 + Negro
+(2, 1), (2, 7),   -- 38 + Blanco
+(3, 2), (3, 6),   -- 39 + Negro
+(4, 3), (4, 8),   -- 40 + Rojo
+(5, 5), (5, 9),   -- 42 + Azul
 
--- 10. CARRITO DE DEMO
+-- Adidas Ultraboost (variantes 6 y 7) → solo Talla (no tienen color definido)
+(6, 2),           -- 39
+(7, 4),           -- 41
+
+-- Cargadores (variantes 8, 9, 10) → solo Capacidad
+(8, 10),          -- 65W
+(9, 10),          -- 65W
+(10, 11);         -- 100W
+
 INSERT INTO carrito (session_id, variante_id, cantidad) VALUES
 ('demo_session_2025', 1, 2),
 ('demo_session_2025', 4, 1),
 ('demo_session_2025', 8, 1);
 
--- ========================================
--- ¡BASE DE DATOS 100% LISTA Y FUNCIONANDO!
--- ========================================
 SELECT 'STORECOLLECTION v2.0 - 2025 - +1,200 REGISTROS CARGADOS CORRECTAMENTE - TODO FUNCIONA' AS STATUS;

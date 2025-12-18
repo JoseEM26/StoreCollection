@@ -142,42 +142,53 @@ public class ProductoServiceImpl implements ProductoService {
         return toResponse(productoRepository.save(producto));
     }
     private void manejarVariantes(Producto producto, List<VarianteRequest> variantesRequests, Tienda tienda) {
-        if (variantesRequests == null) return;
+        if (variantesRequests == null || variantesRequests.isEmpty()) {
+            varianteRepository.deleteAll(producto.getVariantes());
+            producto.getVariantes().clear();
+            return;
+        }
 
-        // Mapear variantes existentes para edición/eliminación
-        Set<ProductoVariante> variantesExistentes = new HashSet<>(producto.getVariantes());
-        producto.getVariantes().clear();
+        Set<Integer> idsRequest = variantesRequests.stream()
+                .map(VarianteRequest::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        // Eliminar solo las que no vienen en el request
+        List<ProductoVariante> aEliminar = producto.getVariantes().stream()
+                .filter(v -> !idsRequest.contains(v.getId()))
+                .toList();
+
+        if (!aEliminar.isEmpty()) {
+            varianteRepository.deleteAll(aEliminar);
+        }
+
+        producto.getVariantes().removeAll(aEliminar);
 
         for (VarianteRequest req : variantesRequests) {
             ProductoVariante variante;
+
             if (req.getId() != null) {
-                // Edición: buscar existente
-                variante = variantesExistentes.stream()
-                        .filter(v -> v.getId().equals(req.getId()))
-                        .findFirst()
-                        .orElseThrow(() -> new RuntimeException("Variante no encontrada: " + req.getId()));
-                variantesExistentes.remove(variante);  // Quitar de existentes (no se elimina)
+                variante = varianteRepository.findById(req.getId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                "Variante con ID " + req.getId() + " no encontrada."));
             } else {
-                // Creación
                 variante = new ProductoVariante();
+                variante.setProducto(producto);
+                variante.setTienda(tienda);
             }
 
             variante.setSku(req.getSku().trim());
             variante.setPrecio(req.getPrecio());
-            variante.setStock(req.getStock());
+            variante.setStock(req.getStock() != null ? req.getStock() : 0);
             variante.setImagenUrl(req.getImagenUrl());
-            variante.setProducto(producto);
-            variante.setTienda(tienda);  // Asignar tienda
+            variante.setActivo(req.getActivo() != null ? req.getActivo() : true);
 
-            // Manejar atributos/valores
             manejarAtributosValores(variante, req.getAtributos(), tienda);
 
             producto.getVariantes().add(variante);
         }
-
-        // Eliminar variantes que no vinieron en el request
-        variantesExistentes.forEach(varianteRepository::delete);
     }
+
 
     private void manejarAtributosValores(ProductoVariante variante, List<AtributoValorRequest> atributosRequests, Tienda tienda) {
         if (atributosRequests == null) return;

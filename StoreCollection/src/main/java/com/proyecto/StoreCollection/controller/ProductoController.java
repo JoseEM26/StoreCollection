@@ -104,18 +104,18 @@ public class ProductoController {
     public ResponseEntity<ProductoResponse> crear(@Valid @RequestBody ProductoRequest request) {
         return ResponseEntity.ok(service.save(request));
     }
-    @PatchMapping("/api/owner/productos/{id}/toggle-activo")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ProductoResponse> toggleActivo(@PathVariable Integer id) {
-        return ResponseEntity.ok(service.toggleActivo(id));
-    }
+
     @PutMapping("/api/owner/productos/{id}")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<ProductoResponse> actualizar(@PathVariable Integer id,
                                                        @Valid @RequestBody ProductoRequest request) {
         return ResponseEntity.ok(service.save(request, id));
     }
-
+    @PatchMapping("/api/owner/productos/{id}/toggle-activo")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProductoResponse> toggleActivo(@PathVariable Integer id) {
+        return ResponseEntity.ok(service.toggleActivo(id));
+    }
     @DeleteMapping("/api/owner/productos/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
         service.deleteById(id);
