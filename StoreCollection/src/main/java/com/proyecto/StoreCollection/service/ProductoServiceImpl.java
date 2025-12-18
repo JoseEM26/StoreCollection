@@ -224,6 +224,37 @@ public class ProductoServiceImpl implements ProductoService {
         return toResponse(producto);
     }
     @Override
+    @Transactional
+    public ProductoResponse toggleActivo(Integer id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        // Solo ADMIN puede togglear el estado activo
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!esAdmin) {
+            throw new AccessDeniedException("Solo los administradores pueden activar o desactivar productos");
+        }
+
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
+
+        // Toggle del estado activo del producto
+        boolean nuevoEstado = !producto.isActivo();
+        producto.setActivo(nuevoEstado);
+
+        // Si se DESACTIVA el producto → desactivar todas sus variantes
+        if (!nuevoEstado) {
+            varianteRepository.desactivarTodasPorProductoId(id);
+        }
+        // Nota: No reactivamos variantes automáticamente al activar el producto
+        // (el owner podría haber desactivado alguna variante manualmente)
+
+        Producto saved = productoRepository.save(producto);
+
+        return toResponse(saved);
+    }
+    @Override
     public void deleteById(Integer id) {
         productoRepository.delete(productoRepository.getByIdAndTenant(id));
     }

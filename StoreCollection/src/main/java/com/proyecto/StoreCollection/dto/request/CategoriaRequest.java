@@ -9,7 +9,7 @@ public class CategoriaRequest {
     private String nombre;
     @NotBlank
     private String slug;
-    private Long tiendaId;
+    private Integer tiendaId;
     private boolean activo = true;
 
 }

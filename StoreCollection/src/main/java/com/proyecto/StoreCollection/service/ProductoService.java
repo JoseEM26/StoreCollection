@@ -14,6 +14,7 @@ public interface ProductoService {
     Page<ProductoResponse> findAll(Pageable pageable);
     List<ProductoResponse> findByCategoriaId(Integer categoriaId);
     ProductoResponse findById(Integer id);
+    ProductoResponse toggleActivo(Integer id);
     List<ProductoCardResponse> findAllForPublicCatalog(String tiendaSlug) ;    // Para público (por slug de tienda)
     List<DropDownStandard> getProductosForDropdown();
     ProductoCardResponse findByTiendaSlugAndProductoSlug(String tiendaSlug, String productoSlug);

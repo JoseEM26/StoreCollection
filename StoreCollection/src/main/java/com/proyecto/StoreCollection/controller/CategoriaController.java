@@ -32,7 +32,6 @@ public class CategoriaController {
     // CategoriaController.java
 
     @GetMapping("/api/owner/categorias/admin-list")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     public ResponseEntity<Page<CategoriaResponse>> listarCategoriasUsuarioOAdmin(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -68,7 +67,6 @@ public class CategoriaController {
         return ResponseEntity.ok(resultado);
     }
     @PatchMapping("/api/owner/categorias/{id}/toggle-activo")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CategoriaResponse> toggleActivo(@PathVariable Integer id) {
         return ResponseEntity.ok(service.toggleActivo(id));
     }
@@ -88,14 +86,12 @@ public class CategoriaController {
     }
     // === CREAR ===
     @PostMapping("/api/owner/categorias")
-    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<CategoriaResponse> crear(@Valid @RequestBody CategoriaRequest request) {
         return ResponseEntity.ok(service.save(request));
     }
 
     // === ACTUALIZAR ===
     @PutMapping("/api/owner/categorias/{id}")
-    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<CategoriaResponse> actualizar(@PathVariable Integer id,
                                                         @Valid @RequestBody CategoriaRequest request) {
         return ResponseEntity.ok(service.save(request, id));
@@ -103,7 +99,6 @@ public class CategoriaController {
 
     // === ELIMINAR ===
     @DeleteMapping("/api/owner/categorias/{id}")
-    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
         service.deleteById(id);
         return ResponseEntity.noContent().build();

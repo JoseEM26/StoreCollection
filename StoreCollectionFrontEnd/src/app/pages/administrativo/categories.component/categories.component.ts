@@ -1,40 +1,46 @@
 // src/app/pages/administrativo/categories/categories.component.ts
+
 import { Component, OnInit, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+
 import { CategoriaPage, CategoriaResponse } from '../../../model/admin/categoria-admin.model';
 import { CategoriaAdminService } from '../../../service/service-admin/categoria-admin.service';
 import { AuthService } from '../../../../auth/auth.service';
+import { CategoryFormComponent } from './category-form/category-form.component';
 
 @Component({
   selector: 'app-categories',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CategoryFormComponent],
   templateUrl: './categories.component.html',
   styleUrl: './categories.component.css'
 })
 export class CategoriesComponent implements OnInit {
-  // Datos del backend
+  // Datos
   pageData = signal<CategoriaPage | null>(null);
   categorias = signal<CategoriaResponse[]>([]);
   loading = signal(true);
 
-  // Filtros
+  // Modal
+  showModal = false;
+  isEditMode = false;
+  selectedCategoria?: CategoriaResponse;
+
+  // Filtros y paginación
   currentPage = signal(0);
   pageSize = 20;
   sort = signal('nombre,asc');
   searchTerm = '';
 
-  // Modal crear
-  showCreateModal = false;
-  newCategory = { nombre: '' };
-
   constructor(
     private categoriaService: CategoriaAdminService,
     public auth: AuthService
   ) {
-    // Recarga automática cuando cambien filtros
-    effect(() => this.loadCategorias());
+    // Recargar automáticamente al cambiar página, orden o búsqueda
+    effect(() => {
+      this.loadCategorias();
+    });
   }
 
   ngOnInit(): void {
@@ -57,54 +63,57 @@ export class CategoriesComponent implements OnInit {
       },
       error: () => {
         this.loading.set(false);
-        alert('Error al cargar categorías');
+        alert('Error al cargar las categorías');
       }
     });
   }
 
-  // Paginación
+  // === Modal ===
+  openCreateModal(): void {
+    this.isEditMode = false;
+    this.selectedCategoria = undefined;
+    this.showModal = true;
+  }
+
+  openEditModal(categoria: CategoriaResponse): void {
+    this.isEditMode = true;
+    this.selectedCategoria = categoria;
+    this.showModal = true;
+  }
+
+  closeModal(): void {
+    this.showModal = false;
+  }
+
+  onCategorySaved(): void {
+    this.closeModal();
+    this.loadCategorias(); // Recargar lista tras crear/editar
+  }
+
+  // === Toggle Activo (solo ADMIN) ===
+  toggleActivo(categoria: CategoriaResponse): void {
+    if (!this.auth.isAdmin()) {
+      alert('Solo los administradores pueden cambiar el estado');
+      return;
+    }
+
+    this.categoriaService.toggleActivo(categoria.id).subscribe({
+      next: (updated) => {
+        this.categorias.update(cats =>
+          cats.map(c => c.id === updated.id ? updated : c)
+        );
+      },
+      error: () => alert('Error al cambiar el estado de la categoría')
+    });
+  }
+
+  // === Paginación ===
   goToPage(page: number): void {
     if (page >= 0 && page < (this.pageData()?.totalPages || 0)) {
       this.currentPage.set(page);
     }
   }
 
-  // Búsqueda
-  onSearch(): void {
-    this.currentPage.set(0);
-  }
-
-  // Ordenación
-  toggleSort(): void {
-    const current = this.sort();
-    this.sort.set(current.includes('asc') ? 'nombre,desc' : 'nombre,asc');
-    this.currentPage.set(0);
-  }
-
-  // Modal
-  openCreateModal(): void {
-    this.newCategory.nombre = '';
-    this.showCreateModal = true;
-  }
-
-  closeCreateModal(): void {
-    this.showCreateModal = false;
-  }
-
-  saveCategory(): void {
-    if (!this.newCategory.nombre.trim()) {
-      alert('El nombre es obligatorio');
-      return;
-    }
-
-    // Aquí iría el POST real al backend
-    alert(`Categoría "${this.newCategory.nombre}" creada correctamente (simulado)`);
-
-    this.closeCreateModal();
-    this.loadCategorias(); // recargar lista
-  }
-
-  // Paginación inteligente
   getPageNumbers(): number[] {
     const total = this.pageData()?.totalPages || 0;
     const current = this.currentPage();
@@ -114,5 +123,16 @@ export class CategoriesComponent implements OnInit {
       range.push(i);
     }
     return range;
+  }
+
+  // === Búsqueda y orden ===
+  onSearch(): void {
+    this.currentPage.set(0);
+  }
+
+  toggleSort(): void {
+    const current = this.sort();
+    this.sort.set(current.includes('asc') ? 'nombre,desc' : 'nombre,asc');
+    this.currentPage.set(0);
   }
 }

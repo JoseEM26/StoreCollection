@@ -1,15 +1,18 @@
-// src/app/services/producto-admin.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environment';
-import { ProductoPage } from '../../model/admin/producto-admin.model';
+import {
+  ProductoPage,
+  ProductoResponse,
+  ProductoRequest
+} from '../../model/admin/producto-admin.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProductoAdminService {
-  private apiUrl = `${environment.apiUrl}/api/owner/productos/admin-list`;
+    private baseUrl = `${environment.apiUrl}/api/owner/productos`;
 
   constructor(private http: HttpClient) {}
 
@@ -28,6 +31,26 @@ export class ProductoAdminService {
       params = params.set('search', search.trim());
     }
 
-    return this.http.get<ProductoPage>(this.apiUrl, { params });
+    return this.http.get<ProductoPage>(this.baseUrl+"/admin-list", { params });
+  }
+
+  // === CREAR PRODUCTO ===
+  crearProducto(request: ProductoRequest): Observable<ProductoResponse> {
+    return this.http.post<ProductoResponse>(this.baseUrl, request);
+  }
+
+  // === OBTENER PRODUCTO PARA EDICIÓN (con verificación de permisos) ===
+  obtenerParaEdicion(id: number): Observable<ProductoResponse> {
+    return this.http.get<ProductoResponse>(`${this.baseUrl}/${id}`);
+  }
+
+  // === ACTUALIZAR PRODUCTO ===
+  actualizarProducto(id: number, request: ProductoRequest): Observable<ProductoResponse> {
+    return this.http.put<ProductoResponse>(`${this.baseUrl}/${id}`, request);
+  }
+
+  // === TOGGLE ACTIVO / INACTIVO (solo ADMIN) ===
+  toggleActivo(id: number): Observable<ProductoResponse> {
+    return this.http.patch<ProductoResponse>(`${this.baseUrl}/${id}/toggle-activo`, null);
   }
 }

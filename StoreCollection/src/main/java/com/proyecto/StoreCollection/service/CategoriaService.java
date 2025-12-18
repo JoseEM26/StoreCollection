@@ -17,6 +17,7 @@ public interface CategoriaService {
     Page<CategoriaResponse> findAll(Pageable pageable);  // ← solo sus categorías
     CategoriaResponse findById(Integer id);                 // ← solo si es suyo
 
+
     CategoriaResponse save(CategoriaRequest request);
     CategoriaResponse save(CategoriaRequest request, Integer id);
     void deleteById(Integer id);
