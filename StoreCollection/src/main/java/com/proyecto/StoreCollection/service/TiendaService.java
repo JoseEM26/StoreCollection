@@ -1,6 +1,6 @@
 package com.proyecto.StoreCollection.service;
 
-import com.proyecto.StoreCollection.dto.DropTown.DropDownStandard;
+import com.proyecto.StoreCollection.dto.DropTown.DropTownStandar;
 import com.proyecto.StoreCollection.dto.request.TiendaRequest;
 import com.proyecto.StoreCollection.dto.response.TiendaResponse;
 import com.proyecto.StoreCollection.entity.Tienda;
@@ -15,7 +15,7 @@ public interface TiendaService {
     Tienda getEntityById(Integer id);
     TiendaResponse findBySlug(String slug);
     List<TiendaResponse> findByUserId(Integer userId);
-    List<DropDownStandard> getTiendasForDropdown();
+    List<DropTownStandar> getTiendasForDropdown();
     Tienda getTiendaDelUsuarioActual();           // ← clave para crear productos, etc.
     TiendaResponse getMiTienda();                 // ← para el dashboard del dueño
     List<TiendaResponse> getMisTiendas();

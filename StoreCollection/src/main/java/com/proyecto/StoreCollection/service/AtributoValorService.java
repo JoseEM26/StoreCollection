@@ -1,6 +1,6 @@
 package com.proyecto.StoreCollection.service;
 
-import com.proyecto.StoreCollection.dto.DropTown.DropDownStandard;
+import com.proyecto.StoreCollection.dto.DropTown.DropTownStandar;
 import com.proyecto.StoreCollection.dto.request.AtributoValorRequest;
 import com.proyecto.StoreCollection.dto.response.AtributoValorResponse;
 import org.springframework.data.domain.Page;
@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface AtributoValorService {
     Page<AtributoValorResponse> findAll(Pageable pageable);
-    List<DropDownStandard> getValoresForDropdown();
+    List<DropTownStandar> getValoresForDropdown();
     AtributoValorResponse findById(Integer id);
     AtributoValorResponse save(AtributoValorRequest request);
     AtributoValorResponse save(AtributoValorRequest request, Integer id);

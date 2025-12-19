@@ -2,7 +2,7 @@
 
 package com.proyecto.StoreCollection.service;
 
-import com.proyecto.StoreCollection.dto.DropTown.DropDownStandard;
+import com.proyecto.StoreCollection.dto.DropTown.DropTownStandar;
 import com.proyecto.StoreCollection.dto.request.AtributoValorRequest;
 import com.proyecto.StoreCollection.dto.request.ProductoRequest;
 import com.proyecto.StoreCollection.dto.request.VarianteRequest;
@@ -417,7 +417,7 @@ public class ProductoServiceImpl implements ProductoService {
     }
     @Override
     @Transactional(readOnly = true)
-    public List<DropDownStandard> getProductosForDropdown() {
+    public List<DropTownStandar> getProductosForDropdown() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean esAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
@@ -439,7 +439,7 @@ public class ProductoServiceImpl implements ProductoService {
         // Convertir a DTO estándar
         return productos.stream()
                 .map(p -> {
-                    DropDownStandard dto = new DropDownStandard();
+                    DropTownStandar dto = new DropTownStandar();
                     dto.setId(p.getId());
                     dto.setDescripcion(p.getNombre());
                     return dto;

@@ -1,6 +1,6 @@
 package com.proyecto.StoreCollection.service;
 
-import com.proyecto.StoreCollection.dto.DropTown.DropDownStandard;
+import com.proyecto.StoreCollection.dto.DropTown.DropTownStandar;
 import com.proyecto.StoreCollection.dto.request.UsuarioRequest;
 import com.proyecto.StoreCollection.dto.response.UsuarioResponse;
 import com.proyecto.StoreCollection.entity.Tienda;
@@ -9,7 +9,6 @@ import com.proyecto.StoreCollection.repository.UsuarioRepository;
 import com.proyecto.StoreCollection.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -62,7 +61,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
     @Override
     @Transactional(readOnly = true)
-    public List<DropDownStandard> getUsuariosForDropdown() {
+    public List<DropTownStandar> getUsuariosForDropdown() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean esAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
@@ -85,7 +84,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         // Convertir a DTO
         return usuarios.stream()
                 .map(u -> {
-                    DropDownStandard dto = new DropDownStandard();
+                    DropTownStandar dto = new DropTownStandar();
                     dto.setId(u.getId());
                     dto.setDescripcion(StringUtils.defaultIfBlank(u.getNombre(), u.getEmail())); // Usa nombre o email
                     return dto;

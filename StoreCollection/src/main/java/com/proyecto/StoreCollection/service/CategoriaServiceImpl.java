@@ -1,6 +1,6 @@
 package com.proyecto.StoreCollection.service;
 
-import com.proyecto.StoreCollection.dto.DropTown.DropDownStandard;
+import com.proyecto.StoreCollection.dto.DropTown.DropTownStandar;
 import com.proyecto.StoreCollection.dto.request.CategoriaRequest;
 import com.proyecto.StoreCollection.dto.response.CategoriaResponse;
 import com.proyecto.StoreCollection.entity.Categoria;
@@ -84,7 +84,7 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<DropDownStandard> getCategoriasForDropdown() {
+    public List<DropTownStandar> getCategoriasForDropdown() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean esAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
@@ -104,7 +104,7 @@ public class CategoriaServiceImpl implements CategoriaService {
         return categorias.stream()
                 .filter(Categoria::isActivo)  // Opcional: solo categorías activas
                 .map(c -> {
-                    DropDownStandard dto = new DropDownStandard();
+                    DropTownStandar dto = new DropTownStandar();
                     dto.setId(c.getId());
                     dto.setDescripcion(c.getNombre());
                     return dto;
