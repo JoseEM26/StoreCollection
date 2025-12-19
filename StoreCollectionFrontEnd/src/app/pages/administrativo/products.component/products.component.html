@@ -14,7 +14,9 @@
             <span class="ms-2">( {{ pageData()?.totalElements || 0 }} en total )</span>
           </p>
         </div>
-        <button class="btn btn-primary btn-lg shadow-sm" (click)="openCreateModal()">
+        <button class="btn btn-primary btn-lg shadow-sm" (click)="openCreateModal()"
+        *ngIf="auth.isLoggedIn() && !auth.isAdmin() && !auth.isCustomer()"
+        >
           <i class="bi bi-plus-lg me-2"></i>
           Nuevo Producto
         </button>
@@ -107,7 +109,7 @@
                   </td>
                   <td class="text-end pe-4">
                     <button class="btn btn-outline-primary btn-sm me-2" 
-                            (click)="openEditModal(p.id)" 
+                            (click)="openEditModal(p.id)"  
                             title="Editar">
                       <i class="bi bi-pencil"></i>
                     </button>

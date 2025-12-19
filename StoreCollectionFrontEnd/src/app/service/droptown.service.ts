@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environment';
+import { AtributoConValores } from '../model/admin/producto-admin.model';
 export interface DropTownStandar {
   id: number;
   descripcion: string;
@@ -26,7 +27,18 @@ export class DropTownService {
     return this.http.get<DropTownStandar[]>(`${this.API_URL}/usuariosDropTown`);
   }
 
-  getAtributos(): Observable<DropTownStandar[]> {
-    return this.http.get<DropTownStandar[]>(`${this.API_URL}/atributosDropTown`);
-  }
+  // getAtributos(): Observable<DropTownStandar[]> {
+  //   return this.http.get<DropTownStandar[]>(`${this.API_URL}/atributosDropTown`);
+  // }
+
+ getAtributosConValores(): Observable<AtributoConValores[]> {
+  const x = this.http.get<AtributoConValores[]>(`${this.API_URL}/atributosDropTown`);
+
+  x.subscribe(data => {
+    console.log("DATA QUE LLEGA 👉", data);
+  });
+
+  return x;
+}
+
 }

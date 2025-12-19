@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ProductoRequest, ProductoResponse, VarianteRequest } from '../../../../model/admin/producto-admin.model';
+import { AtributoConValores, ProductoRequest, ProductoResponse, VarianteRequest, AtributoValorRequest } from '../../../../model/admin/producto-admin.model';
 import { DropTownService, DropTownStandar } from '../../../../service/droptown.service';
 import { ProductoAdminService } from '../../../../service/service-admin/producto-admin.service';
 import { AuthService } from '../../../../../auth/auth.service';
@@ -25,7 +25,7 @@ export class ProductFormComponent implements OnChanges {
   categoriaId = signal<number | null>(null);
   tiendaId = signal<number | null>(null);
   activo = signal<boolean>(true);
-atributosDisponibles = signal<DropTownStandar[]>([]);
+  atributosDisponibles = signal<AtributoConValores[]>([]);
 
   // Variantes
   variantes = signal<VarianteRequest[]>([]);
@@ -34,7 +34,6 @@ atributosDisponibles = signal<DropTownStandar[]>([]);
   // Dropdowns
   categorias = signal<DropTownStandar[]>([]);
   tiendas = signal<DropTownStandar[]>([]);
-
   // Tienda actual del owner (solo lectura)
   tiendaActual = signal<DropTownStandar | null>(null);
 
@@ -47,29 +46,79 @@ atributosDisponibles = signal<DropTownStandar[]>([]);
     public auth: AuthService,
     private dropTownService: DropTownService
   ) {
-    this.loadAtributos();
+    this.loadAtributosConValores();
   }
-private loadAtributos() {
-  this.dropTownService.getAtributos().subscribe(atributos => {
-    this.atributosDisponibles.set(atributos);
-    console.log('Atributos disponibles cargados:', atributos);
-  });
-}
-agregarAtributoDesdeDropdown(varianteIndex: number, atributoId: number | null) {
-  if (!atributoId) return;
 
-  const atributo = this.atributosDisponibles().find(a => a.id === atributoId);
-  if (atributo) {
+  // Cargar atributos con valores
+  private loadAtributosConValores() {
+    this.dropTownService.getAtributosConValores().subscribe(atributos => {
+      this.atributosDisponibles.set(atributos);
+      console.log('Atributos con valores cargados:', atributos);
+    });
+  }
+
+  // Método manual para agregar atributo vacío
+  agregarAtributo(varianteIndex: number): void {
     this.variantes.update(v => {
       const copy = [...v];
       copy[varianteIndex].atributos.push({
-        atributoNombre: atributo.descripcion,
-        valor: ''  // El usuario completa el valor (ej: "Rojo", "38")
+        atributoNombre: '',
+        valor: ''
       });
       return copy;
     });
   }
-}
+
+  // Obtener valores para un atributo específico
+  getValoresForAtributo(nombre: string): DropTownStandar[] {
+    const attr = this.atributosDisponibles().find(a => a.descripcion === nombre);
+    return attr ? attr.valores : [];
+  }
+
+  // Verificar si es nuevo atributo
+  isNewAtributo(attr: AtributoValorRequest): boolean {
+    return attr.atributoNombre === '__new__';
+  }
+
+  // Verificar si es nuevo valor
+  isNewValor(attr: AtributoValorRequest): boolean {
+    return attr.valor === '__new__';
+  }
+
+  // Cambio en selección de atributo
+  onAtributoChange(varianteIndex: number, attrIndex: number, value: string): void {
+    this.variantes.update(v => {
+      const copy = [...v];
+      const attr = copy[varianteIndex].atributos[attrIndex] as AtributoValorRequest & { tempNombre?: string; tempValor?: string };
+      if (value === '__new__') {
+        attr.tempNombre = '';
+        attr.atributoNombre = '__new__';
+      } else {
+        attr.atributoNombre = value;
+        delete attr.tempNombre;
+      }
+      attr.valor = ''; // Resetear valor
+      delete attr.tempValor;
+      return copy;
+    });
+  }
+
+  // Cambio en selección de valor
+  onValorChange(varianteIndex: number, attrIndex: number, value: string): void {
+    this.variantes.update(v => {
+      const copy = [...v];
+      const attr = copy[varianteIndex].atributos[attrIndex] as AtributoValorRequest & { tempNombre?: string; tempValor?: string };
+      if (value === '__new__') {
+        attr.tempValor = '';
+        attr.valor = '__new__';
+      } else {
+        attr.valor = value;
+        delete attr.tempValor;
+      }
+      return copy;
+    });
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['producto'] && this.producto) {
       console.log('Producto recibido para edición:', this.producto);
@@ -121,8 +170,9 @@ agregarAtributoDesdeDropdown(varianteIndex: number, atributoId: number | null) {
       this.tiendaActual.set(null);
     }
 
-    this.loadDropdowns();
-  }
+// ← AÑADE ESTO
+  this.loadAtributosConValores();  // Garantiza que siempre estén cargados
+  this.loadDropdowns();  }
 
   private loadDropdowns() {
     this.dropTownService.getCategorias().subscribe(cats => {
@@ -181,14 +231,6 @@ agregarAtributoDesdeDropdown(varianteIndex: number, atributoId: number | null) {
     this.collapsed.update(c => c.map((val, i) => i === index ? !val : val));
   }
 
-  agregarAtributo(varianteIndex: number): void {
-    this.variantes.update(v => {
-      const copy = [...v];
-      copy[varianteIndex].atributos.push({ atributoNombre: '', valor: '' });
-      return copy;
-    });
-  }
-
   eliminarAtributo(varianteIndex: number, attrIndex: number): void {
     this.variantes.update(v => {
       const copy = [...v];
@@ -202,109 +244,118 @@ agregarAtributoDesdeDropdown(varianteIndex: number, atributoId: number | null) {
   });
 
   save(): void {
-  this.errorMessage.set(null);
-  this.loading.set(true);
+    this.errorMessage.set(null);
+    this.loading.set(true);
 
-  if (!this.nombre().trim() || !this.slug().trim() || !this.categoriaId()) {
-    this.errorMessage.set('Completa nombre, slug y categoría.');
-    this.loading.set(false);
-    return;
-  }
-
-  if (this.variantes().length === 0) {
-    this.errorMessage.set('Debes agregar al menos una variante.');
-    this.loading.set(false);
-    return;
-  }
-
-  const request: ProductoRequest = {
-    nombre: this.nombre().trim(),
-    slug: this.slug().trim(),
-    categoriaId: this.categoriaId()!,
-    activo: this.activo(),
-    variantes: this.variantes().map(v => ({
-      id: v.id,
-      sku: v.sku.trim(),
-      precio: v.precio,
-      stock: v.stock,
-      imagenUrl: v.imagenUrl?.trim() || undefined,
-      activo: v.activo,
-      atributos: v.atributos.filter(a => a.atributoNombre.trim() && a.valor.trim())
-    }))
-  };
-
-  // =================== LÓGICA DE TIENDAID ===================
-
-  // 1. Si es EDICIÓN → siempre enviar la tienda del producto original
-  if (this.isEdit) {
-    request.tiendaId = this.producto!.tiendaId;
-    console.log('EDICIÓN → tiendaId enviado:', request.tiendaId);
-    this.enviarRequest(request);
-    return;
-  }
-
-  // 2. Si es ADMIN → usar el dropdown seleccionado
-  if (this.auth.isAdmin()) {
-    if (!this.tiendaId()) {
-      this.errorMessage.set('ADMIN: Debes seleccionar una tienda.');
+    if (!this.nombre().trim() || !this.slug().trim() || !this.categoriaId()) {
+      this.errorMessage.set('Completa nombre, slug y categoría.');
       this.loading.set(false);
       return;
     }
-    request.tiendaId = this.tiendaId()!;
-    console.log('ADMIN CREACIÓN → tiendaId seleccionado:', request.tiendaId);
-    this.enviarRequest(request);
-    return;
-  }
 
-  // 3. Si es OWNER y es CREACIÓN → obtener automáticamente su tienda
-  // (tu backend ya filtra y devuelve solo su tienda)
-  this.dropTownService.getTiendas().subscribe({
-    next: (tiendas) => {
-      if (tiendas.length === 0) {
-        this.errorMessage.set('No tienes ninguna tienda asignada.');
+    if (this.variantes().length === 0) {
+      this.errorMessage.set('Debes agregar al menos una variante.');
+      this.loading.set(false);
+      return;
+    }
+
+    // Limpiar marcadores '__new__' si no se completaron
+    this.variantes().forEach(v => {
+      v.atributos = v.atributos.map(a => {
+        if (a.atributoNombre === '__new__') a.atributoNombre = '';
+        if (a.valor === '__new__') a.valor = '';
+        return a;
+      }).filter(a => a.atributoNombre.trim() && a.valor.trim());
+    });
+
+    const request: ProductoRequest = {
+      nombre: this.nombre().trim(),
+      slug: this.slug().trim(),
+      categoriaId: this.categoriaId()!,
+      activo: this.activo(),
+      variantes: this.variantes().map(v => ({
+        id: v.id,
+        sku: v.sku.trim(),
+        precio: v.precio,
+        stock: v.stock,
+        imagenUrl: v.imagenUrl?.trim() || undefined,
+        activo: v.activo,
+        atributos: v.atributos
+      }))
+    };
+
+    // =================== LÓGICA DE TIENDAID ===================
+
+    // 1. Si es EDICIÓN → siempre enviar la tienda del producto original
+    if (this.isEdit) {
+      request.tiendaId = this.producto!.tiendaId;
+      console.log('EDICIÓN → tiendaId enviado:', request.tiendaId);
+      this.enviarRequest(request);
+      return;
+    }
+
+    // 2. Si es ADMIN → usar el dropdown seleccionado
+    if (this.auth.isAdmin()) {
+      if (!this.tiendaId()) {
+        this.errorMessage.set('ADMIN: Debes seleccionar una tienda.');
         this.loading.set(false);
         return;
       }
-      // OWNER solo tiene una tienda → tomamos la primera (o única)
-      request.tiendaId = tiendas[0].id;
-      console.log('OWNER CREACIÓN → tiendaId automático:', request.tiendaId);
-
+      request.tiendaId = this.tiendaId()!;
+      console.log('ADMIN CREACIÓN → tiendaId seleccionado:', request.tiendaId);
       this.enviarRequest(request);
-    },
-    error: (err) => {
-      console.error('Error al cargar tiendas del OWNER', err);
-      this.errorMessage.set('No se pudo obtener tu tienda.');
-      this.loading.set(false);
+      return;
     }
-  });
-}
 
-// Método auxiliar para enviar la petición
-private enviarRequest(request: ProductoRequest) {
-  console.log('REQUEST FINAL enviado al backend:', {
-    ...request,
-    tiendaId: request.tiendaId ?? 'ERROR: undefined',
-    isEdit: this.isEdit,
-    isAdmin: this.auth.isAdmin()
-  });
+    // 3. Si es OWNER y es CREACIÓN → obtener automáticamente su tienda
+    // (tu backend ya filtra y devuelve solo su tienda)
+    this.dropTownService.getTiendas().subscribe({
+      next: (tiendas) => {
+        if (tiendas.length === 0) {
+          this.errorMessage.set('No tienes ninguna tienda asignada.');
+          this.loading.set(false);
+          return;
+        }
+        // OWNER solo tiene una tienda → tomamos la primera (o única)
+        request.tiendaId = tiendas[0].id;
+        console.log('OWNER CREACIÓN → tiendaId automático:', request.tiendaId);
 
-  const obs = this.isEdit
-    ? this.productoService.actualizarProducto(this.producto!.id, request)
-    : this.productoService.crearProducto(request);
+        this.enviarRequest(request);
+      },
+      error: (err) => {
+        console.error('Error al cargar tiendas del OWNER', err);
+        this.errorMessage.set('No se pudo obtener tu tienda.');
+        this.loading.set(false);
+      }
+    });
+  }
 
-  obs.subscribe({
-    next: (res) => {
-      console.log('Producto guardado exitosamente:', res);
-      this.loading.set(false);
-      this.saved.emit();
-    },
-    error: (err) => {
-      console.error('Error del backend:', err);
-      this.errorMessage.set(err.error?.message || 'Error al guardar el producto');
-      this.loading.set(false);
-    }
-  });
-}
+  // Método auxiliar para enviar la petición
+  private enviarRequest(request: ProductoRequest) {
+    console.log('REQUEST FINAL enviado al backend:', {
+      ...request,
+      tiendaId: request.tiendaId ?? 'ERROR: undefined',
+      isEdit: this.isEdit,
+      isAdmin: this.auth.isAdmin()
+    });
+
+    const obs = this.isEdit
+      ? this.productoService.actualizarProducto(this.producto!.id, request)
+      : this.productoService.crearProducto(request);
+
+    obs.subscribe({
+      next: (res) => {
+        console.log('Producto guardado exitosamente:', res);
+        this.loading.set(false);
+        this.saved.emit();
+      },
+      error: (err) => {
+        console.error('Error del backend:', err);
+        this.errorMessage.set(err.error?.message || 'Error al guardar el producto');
+        this.loading.set(false);
+      }
+    });
+  }
 
   cancel(): void {
     console.log('Formulario cancelado');

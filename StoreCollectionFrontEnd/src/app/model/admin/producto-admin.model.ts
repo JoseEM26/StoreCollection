@@ -54,7 +54,7 @@ export interface AtributoValorResponse {
 // Para dropdowns de atributos (si en el futuro lo necesitas)
 export interface AtributoConValores {
   id: number;
-  nombre: string;
+  descripcion: string;
   valores: DropTownStandar[]; // { id: atributoValorId, descripcion: "Rojo" }
 }
 
