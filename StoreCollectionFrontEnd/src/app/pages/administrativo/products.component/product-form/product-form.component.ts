@@ -1,18 +1,10 @@
-// src/app/pages/administrativo/products/product-form/product-form.component.ts
-
-import { Component, EventEmitter, Input, Output, signal, computed, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ProductoRequest, ProductoResponse, VarianteRequest } from '../../../../model/admin/producto-admin.model';
+import { DropTownService, DropTownStandar } from '../../../../service/droptown.service';
 import { ProductoAdminService } from '../../../../service/service-admin/producto-admin.service';
 import { AuthService } from '../../../../../auth/auth.service';
-import { CategoriaAdminService } from '../../../../service/service-admin/categoria-admin.service';
-import { DropTownService, DropTownStandar } from '../../../../service/droptown.service';
-import {
-  ProductoResponse,
-  ProductoRequest,
-  VarianteRequest,
-  AtributoValorRequest
-} from '../../../../model/admin/producto-admin.model';
 
 @Component({
   selector: 'app-product-form',
@@ -21,278 +13,301 @@ import {
   templateUrl: './product-form.component.html',
   styleUrl: './product-form.component.css'
 })
-export class ProductFormComponent implements OnInit, OnChanges {
+export class ProductFormComponent implements OnChanges {
   @Input() isEdit = false;
   @Input() producto?: ProductoResponse;
-
   @Output() saved = new EventEmitter<void>();
   @Output() closed = new EventEmitter<void>();
 
-  // Datos principales
+  // Señales del formulario
   nombre = signal<string>('');
   slug = signal<string>('');
   categoriaId = signal<number | null>(null);
   tiendaId = signal<number | null>(null);
   activo = signal<boolean>(true);
-
-  // Dropdowns
-  tiendas = signal<DropTownStandar[]>([]);
-  categorias = signal<DropTownStandar[]>([]);
+atributosDisponibles = signal<DropTownStandar[]>([]);
 
   // Variantes
   variantes = signal<VarianteRequest[]>([]);
-
-  // Control de colapso de cada variante (true = cerrada, false = abierta)
   collapsed = signal<boolean[]>([]);
 
-  // Variantes ordenadas por Talla (numérica) y luego por Color
-  variantesOrdenadas = computed(() => {
-    return [...this.variantes()].sort((a, b) => {
-      const tallaA = this.getValorAtributo(a, 'Talla');
-      const tallaB = this.getValorAtributo(b, 'Talla');
-      const numA = parseInt(tallaA || '0');
-      const numB = parseInt(tallaB || '0');
-      if (!isNaN(numA) && !isNaN(numB)) {
-        if (numA !== numB) return numA - numB;
-      } else if (!isNaN(numA)) return -1;
-      else if (!isNaN(numB)) return 1;
+  // Dropdowns
+  categorias = signal<DropTownStandar[]>([]);
+  tiendas = signal<DropTownStandar[]>([]);
 
-      const colorA = this.getValorAtributo(a, 'Color') || '';
-      const colorB = this.getValorAtributo(b, 'Color') || '';
-      return colorA.localeCompare(colorB);
-    });
-  });
+  // Tienda actual del owner (solo lectura)
+  tiendaActual = signal<DropTownStandar | null>(null);
 
-  loading = signal(false);
-  errorMessage = signal<string>('');
+  // Estados
+  loading = signal<boolean>(false);
+  errorMessage = signal<string | null>(null);
 
   constructor(
     private productoService: ProductoAdminService,
     public auth: AuthService,
-    private dropTownService: DropTownService,
-    private categoriaService: CategoriaAdminService
-  ) {}
+    private dropTownService: DropTownService
+  ) {
+    this.loadAtributos();
+  }
+private loadAtributos() {
+  this.dropTownService.getAtributos().subscribe(atributos => {
+    this.atributosDisponibles.set(atributos);
+    console.log('Atributos disponibles cargados:', atributos);
+  });
+}
+agregarAtributoDesdeDropdown(varianteIndex: number, atributoId: number | null) {
+  if (!atributoId) return;
 
-  ngOnInit(): void {
+  const atributo = this.atributosDisponibles().find(a => a.id === atributoId);
+  if (atributo) {
+    this.variantes.update(v => {
+      const copy = [...v];
+      copy[varianteIndex].atributos.push({
+        atributoNombre: atributo.descripcion,
+        valor: ''  // El usuario completa el valor (ej: "Rojo", "38")
+      });
+      return copy;
+    });
+  }
+}
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['producto'] && this.producto) {
+      console.log('Producto recibido para edición:', this.producto);
+
+      this.nombre.set(this.producto.nombre);
+      this.slug.set(this.producto.slug);
+      this.categoriaId.set(this.producto.categoriaId);
+
+      // CLAVE: Siempre seteamos tiendaId desde el producto original (igual que en categorías)
+      this.tiendaId.set(this.producto.tiendaId);
+      console.log('tiendaId seteado desde producto:', this.producto.tiendaId);
+
+      this.activo.set(this.producto.activo);
+
+      // Mapeo de variantes
+      const vars = this.producto.variantes?.map(v => ({
+        id: v.id,
+        sku: v.sku,
+        precio: v.precio,
+        stock: v.stock,
+        imagenUrl: v.imagenUrl ?? '',
+        activo: v.activo,
+        atributos: v.atributos.map(a => ({
+          atributoNombre: a.atributoNombre,
+          valor: a.valor
+        }))
+      })) || [];
+
+      this.variantes.set(vars);
+      this.collapsed.set(vars.map(() => true));
+
+      // Cargar nombre de tienda para OWNER (solo lectura)
+      if (!this.auth.isAdmin() && this.producto.tiendaId) {
+        this.dropTownService.getTiendas().subscribe(tiendas => {
+          const miTienda = tiendas.find(t => t.id === this.producto!.tiendaId);
+          this.tiendaActual.set(miTienda || null);
+          console.log('Tienda del OWNER cargada:', miTienda);
+        });
+      }
+    } else {
+      // Modo creación: limpiar todo
+      this.nombre.set('');
+      this.slug.set('');
+      this.categoriaId.set(null);
+      this.tiendaId.set(null);
+      this.activo.set(true);
+      this.variantes.set([]);
+      this.collapsed.set([]);
+      this.tiendaActual.set(null);
+    }
+
+    this.loadDropdowns();
+  }
+
+  private loadDropdowns() {
+    this.dropTownService.getCategorias().subscribe(cats => {
+      this.categorias.set(cats);
+      console.log('Categorías cargadas:', cats.length);
+    });
+
     if (this.auth.isAdmin()) {
-      this.dropTownService.getTiendas().subscribe({
-        next: (data: DropTownStandar[]) => this.tiendas.set(data),
-        error: () => this.errorMessage.set('Error al cargar tiendas')
+      this.dropTownService.getTiendas().subscribe(tiendas => {
+        this.tiendas.set(tiendas);
+        console.log('Tiendas cargadas para ADMIN:', tiendas);
       });
     }
-    this.loadCategorias();
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    this.errorMessage.set('');
-
-    if (changes['producto'] || changes['isEdit']) {
-      if (this.isEdit && this.producto) {
-        this.nombre.set(this.producto.nombre || '');
-        this.slug.set(this.producto.slug || '');
-        this.categoriaId.set(this.producto.categoriaId || null);
-        this.activo.set(this.producto.activo ?? true);
-
-        if (this.auth.isAdmin()) {
-          this.tiendaId.set(this.producto.tiendaId || null);
-        }
-
-        // Mapear variantes
-        const variantesDelBackend = this.producto.variantes ?? [];
-        this.variantes.set(
-          variantesDelBackend.map(v => ({
-            id: v.id,
-            sku: v.sku || '',
-            precio: v.precio || 0,
-            stock: v.stock || 0,
-            imagenUrl: v.imagenUrl || '',
-            activo: v.activo ?? true,
-            atributos: (v.atributos ?? []).map(a => ({
-              atributoNombre: a.atributoNombre || '',
-              valor: a.valor || ''
-            }))
-          }))
-        );
-
-        // Reiniciar estado de colapso
-        this.initCollapsed();
-
-        if (this.categorias().length === 0) {
-          this.loadCategorias();
-        }
-
-      } else {
-        this.resetForm();
-      }
-    }
+  // TrackBy
+  trackByVarianteIndex(index: number, item: { variante: VarianteRequest; index: number }): any {
+    return item.variante.id || index;
   }
 
-  onTiendaChange(): void {
-    this.categoriaId.set(null);
-    this.loadCategorias();
+  trackByAtributoIndex(index: number): any {
+    return index;
   }
 
-  private loadCategorias(): void {
-    this.categoriaService.listarCategorias(0, 1000, 'nombre,asc').subscribe({
-      next: (page: any) => {
-        const cats = page.content.map((c: any) => ({
-          id: c.id,
-          descripcion: c.nombre
-        }));
-        this.categorias.set(cats);
-      }
-    });
+  generarSlugDesdeNombre(): void {
+    const nombreNormalizado = this.nombre().trim().toLowerCase()
+      .replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i')
+      .replace(/ó/g, 'o').replace(/ú/g, 'u').replace(/ñ/g, 'n')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+
+    this.slug.set(nombreNormalizado);
   }
 
-  // === GESTIÓN DE COLAPSO ===
-  toggleCollapse(index: number): void {
-    this.collapsed.update(arr => {
-      const newArr = [...arr];
-      newArr[index] = !newArr[index];
-      return newArr;
-    });
-  }
-
-  private initCollapsed(): void {
-    const length = this.variantes().length;
-    if (length === 0) {
-      this.collapsed.set([]);
-    } else {
-      // Primera variante abierta (false), las demás cerradas (true)
-      this.collapsed.set(Array(length).fill(true).map((_, i) => i !== 0));
-    }
-  }
-
-  // === VARIANTE HELPERS ===
   agregarVariante(): void {
-    this.variantes.update(vs => [...vs, {
+    const nueva: VarianteRequest = {
       sku: '',
       precio: 0,
       stock: 0,
       imagenUrl: '',
       activo: true,
-      atributos: [
-        { atributoNombre: 'Talla', valor: '' },
-        { atributoNombre: 'Color', valor: '' }
-      ]
-    }]);
-
-    // Nueva variante agregada cerrada
-    this.collapsed.update(arr => [...arr, true]);
+      atributos: []
+    };
+    this.variantes.update(v => [...v, nueva]);
+    this.collapsed.update(c => [...c, false]);
   }
 
   eliminarVariante(index: number): void {
-    this.variantes.update(vs => vs.filter((_, i) => i !== index));
-    this.collapsed.update(arr => arr.filter((_, i) => i !== index));
+    this.variantes.update(v => v.filter((_, i) => i !== index));
+    this.collapsed.update(c => c.filter((_, i) => i !== index));
+  }
+
+  toggleCollapse(index: number): void {
+    this.collapsed.update(c => c.map((val, i) => i === index ? !val : val));
   }
 
   agregarAtributo(varianteIndex: number): void {
-    this.variantes.update(vs => {
-      const newVs = [...vs];
-      newVs[varianteIndex].atributos.push({ atributoNombre: '', valor: '' });
-      return newVs;
+    this.variantes.update(v => {
+      const copy = [...v];
+      copy[varianteIndex].atributos.push({ atributoNombre: '', valor: '' });
+      return copy;
     });
   }
 
   eliminarAtributo(varianteIndex: number, attrIndex: number): void {
-    this.variantes.update(vs => {
-      const newVs = [...vs];
-      newVs[varianteIndex].atributos.splice(attrIndex, 1);
-      return newVs;
+    this.variantes.update(v => {
+      const copy = [...v];
+      copy[varianteIndex].atributos.splice(attrIndex, 1);
+      return copy;
     });
   }
 
-  getValorAtributo(variante: VarianteRequest, nombreAttr: string): string {
-    const attr = variante.atributos.find(a =>
-      a.atributoNombre.toLowerCase() === nombreAttr.toLowerCase()
-    );
-    return attr?.valor || '';
-  }
-
-  generarSlugDesdeNombre(): void {
-    const slug = this.nombre()
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-    this.slug.set(slug);
-  }
+  variantesOrdenadas = computed(() => {
+    return this.variantes().map((v, i) => ({ variante: v, index: i }));
+  });
 
   save(): void {
-    if (!this.nombre().trim() || !this.slug().trim() || !this.categoriaId()) {
-      this.errorMessage.set('Nombre, slug y categoría son obligatorios');
+  this.errorMessage.set(null);
+  this.loading.set(true);
+
+  if (!this.nombre().trim() || !this.slug().trim() || !this.categoriaId()) {
+    this.errorMessage.set('Completa nombre, slug y categoría.');
+    this.loading.set(false);
+    return;
+  }
+
+  if (this.variantes().length === 0) {
+    this.errorMessage.set('Debes agregar al menos una variante.');
+    this.loading.set(false);
+    return;
+  }
+
+  const request: ProductoRequest = {
+    nombre: this.nombre().trim(),
+    slug: this.slug().trim(),
+    categoriaId: this.categoriaId()!,
+    activo: this.activo(),
+    variantes: this.variantes().map(v => ({
+      id: v.id,
+      sku: v.sku.trim(),
+      precio: v.precio,
+      stock: v.stock,
+      imagenUrl: v.imagenUrl?.trim() || undefined,
+      activo: v.activo,
+      atributos: v.atributos.filter(a => a.atributoNombre.trim() && a.valor.trim())
+    }))
+  };
+
+  // =================== LÓGICA DE TIENDAID ===================
+
+  // 1. Si es EDICIÓN → siempre enviar la tienda del producto original
+  if (this.isEdit) {
+    request.tiendaId = this.producto!.tiendaId;
+    console.log('EDICIÓN → tiendaId enviado:', request.tiendaId);
+    this.enviarRequest(request);
+    return;
+  }
+
+  // 2. Si es ADMIN → usar el dropdown seleccionado
+  if (this.auth.isAdmin()) {
+    if (!this.tiendaId()) {
+      this.errorMessage.set('ADMIN: Debes seleccionar una tienda.');
+      this.loading.set(false);
       return;
     }
-    if (this.auth.isAdmin() && !this.tiendaId()) {
-      this.errorMessage.set('Selecciona una tienda');
-      return;
-    }
-    if (this.variantes().length === 0) {
-      this.errorMessage.set('Agrega al menos una variante');
-      return;
-    }
+    request.tiendaId = this.tiendaId()!;
+    console.log('ADMIN CREACIÓN → tiendaId seleccionado:', request.tiendaId);
+    this.enviarRequest(request);
+    return;
+  }
 
-    const invalid = this.variantes().some(v =>
-      !v.sku.trim() || v.precio <= 0 || v.stock < 0 ||
-      v.atributos.some(a => !a.atributoNombre.trim() || !a.valor.trim())
-    );
-    if (invalid) {
-      this.errorMessage.set('Completa todos los campos de variantes y atributos');
-      return;
-    }
-
-    this.loading.set(true);
-
-    const request: ProductoRequest = {
-      nombre: this.nombre().trim(),
-      slug: this.slug().trim(),
-      categoriaId: this.categoriaId()!,
-      variantes: this.variantes(),
-      activo: this.activo()  // Si tu backend lo acepta en el request
-    };
-
-    if (this.auth.isAdmin()) {
-      request.tiendaId = this.tiendaId()!;
-    }
-
-    const obs = this.isEdit && this.producto
-      ? this.productoService.actualizarProducto(this.producto.id, request)
-      : this.productoService.crearProducto(request);
-
-    obs.subscribe({
-      next: () => {
+  // 3. Si es OWNER y es CREACIÓN → obtener automáticamente su tienda
+  // (tu backend ya filtra y devuelve solo su tienda)
+  this.dropTownService.getTiendas().subscribe({
+    next: (tiendas) => {
+      if (tiendas.length === 0) {
+        this.errorMessage.set('No tienes ninguna tienda asignada.');
         this.loading.set(false);
-        this.saved.emit();
-      },
-      error: (err) => {
-        this.loading.set(false);
-        this.errorMessage.set(err.error?.message || 'Error al guardar');
+        return;
       }
-    });
-  }
+      // OWNER solo tiene una tienda → tomamos la primera (o única)
+      request.tiendaId = tiendas[0].id;
+      console.log('OWNER CREACIÓN → tiendaId automático:', request.tiendaId);
 
-  private resetForm(): void {
-    this.nombre.set('');
-    this.slug.set('');
-    this.categoriaId.set(null);
-    this.tiendaId.set(null);
-    this.activo.set(true);
-    this.variantes.set([{
-      sku: '',
-      precio: 0,
-      stock: 0,
-      imagenUrl: '',
-      activo: true,
-      atributos: [
-        { atributoNombre: 'Talla', valor: '' },
-        { atributoNombre: 'Color', valor: '' }
-      ]
-    }]);
-    this.collapsed.set([false]); // Primera variante abierta
-  }
+      this.enviarRequest(request);
+    },
+    error: (err) => {
+      console.error('Error al cargar tiendas del OWNER', err);
+      this.errorMessage.set('No se pudo obtener tu tienda.');
+      this.loading.set(false);
+    }
+  });
+}
+
+// Método auxiliar para enviar la petición
+private enviarRequest(request: ProductoRequest) {
+  console.log('REQUEST FINAL enviado al backend:', {
+    ...request,
+    tiendaId: request.tiendaId ?? 'ERROR: undefined',
+    isEdit: this.isEdit,
+    isAdmin: this.auth.isAdmin()
+  });
+
+  const obs = this.isEdit
+    ? this.productoService.actualizarProducto(this.producto!.id, request)
+    : this.productoService.crearProducto(request);
+
+  obs.subscribe({
+    next: (res) => {
+      console.log('Producto guardado exitosamente:', res);
+      this.loading.set(false);
+      this.saved.emit();
+    },
+    error: (err) => {
+      console.error('Error del backend:', err);
+      this.errorMessage.set(err.error?.message || 'Error al guardar el producto');
+      this.loading.set(false);
+    }
+  });
+}
 
   cancel(): void {
+    console.log('Formulario cancelado');
     this.closed.emit();
   }
 }

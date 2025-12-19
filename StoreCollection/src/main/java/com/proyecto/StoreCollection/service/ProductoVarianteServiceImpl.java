@@ -121,7 +121,7 @@ public class ProductoVarianteServiceImpl implements ProductoVarianteService {
         dto.setPrecio(v.getPrecio());
         dto.setStock(v.getStock());
         dto.setImagenUrl(v.getImagenUrl());
-        dto.setActivo(v.getActivo());
+        dto.setActivo(v.isActivo());
         dto.setProductoId(v.getProducto().getId());
 
         Set<AtributoValorResponse> attrs = v.getAtributos().stream()

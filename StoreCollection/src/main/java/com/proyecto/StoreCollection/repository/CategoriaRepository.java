@@ -22,7 +22,9 @@ public interface CategoriaRepository extends JpaRepository<Categoria, Integer>, 
             @Param("nombre") String nombre,
             @Param("tenantId") Integer tenantId,
             Pageable pageable);
+    List<Categoria> findAllByOrderByNombreAsc();
 
+    List<Categoria> findByTiendaIdOrderByNombreAsc(Integer tiendaId);
     default Page<Categoria> findAllByTenant(Pageable pageable) {
         Integer tenantId = com.proyecto.StoreCollection.tenant.TenantContext.getTenantId();
         if (tenantId == null) throw new IllegalStateException("Tenant no establecido");

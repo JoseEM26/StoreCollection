@@ -1,5 +1,6 @@
 package com.proyecto.StoreCollection.service;
 
+import com.proyecto.StoreCollection.dto.DropTown.DropDownStandard;
 import com.proyecto.StoreCollection.dto.request.CategoriaRequest;
 import com.proyecto.StoreCollection.dto.response.CategoriaResponse;
 import org.springframework.data.domain.Page;
@@ -12,7 +13,7 @@ public interface CategoriaService {
     List<CategoriaResponse> findByTiendaSlug(String tiendaSlug);
      CategoriaResponse getCategoriaByIdParaEdicion(Integer id) ;
      CategoriaResponse toggleActivo(Integer id) ;
-
+    List<DropDownStandard> getCategoriasForDropdown();
     List<CategoriaResponse> findAllByTenant();           // ← nuevo
     Page<CategoriaResponse> findAll(Pageable pageable);  // ← solo sus categorías
     CategoriaResponse findById(Integer id);                 // ← solo si es suyo

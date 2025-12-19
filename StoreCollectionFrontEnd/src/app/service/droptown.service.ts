@@ -18,6 +18,9 @@ export class DropTownService {
   getTiendas(): Observable<DropTownStandar[]> {
     return this.http.get<DropTownStandar[]>(`${this.API_URL}/tiendasDropTown`);
   }
+  getCategorias(): Observable<DropTownStandar[]> {
+    return this.http.get<DropTownStandar[]>(`${this.API_URL}/categoriasDropTown`);
+  }
 
   getUsuarios(): Observable<DropTownStandar[]> {
     return this.http.get<DropTownStandar[]>(`${this.API_URL}/usuariosDropTown`);

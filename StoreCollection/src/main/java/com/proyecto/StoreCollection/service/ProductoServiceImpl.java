@@ -174,8 +174,10 @@ public class ProductoServiceImpl implements ProductoService {
             } else {
                 variante = new ProductoVariante();
                 variante.setProducto(producto);
-                variante.setTienda(tienda);
             }
+
+            // === FORZAR SIEMPRE LA TIENDA (esta es la línea mágica) ===
+            variante.setTienda(tienda);
 
             variante.setSku(req.getSku().trim());
             variante.setPrecio(req.getPrecio());
@@ -188,34 +190,43 @@ public class ProductoServiceImpl implements ProductoService {
             producto.getVariantes().add(variante);
         }
     }
-
-
     private void manejarAtributosValores(ProductoVariante variante, List<AtributoValorRequest> atributosRequests, Tienda tienda) {
-        if (atributosRequests == null) return;
+        if (atributosRequests == null || atributosRequests.isEmpty()) {
+            variante.getAtributos().clear();
+            return;
+        }
 
         variante.getAtributos().clear();
 
         for (AtributoValorRequest req : atributosRequests) {
+            String nombreAtributo = req.getAtributoNombre().trim();
+            String valorStr = req.getValor().trim();
+
+            if (nombreAtributo.isEmpty() || valorStr.isEmpty()) {
+                continue; // o throw si prefieres validar fuerte
+            }
+
             // Buscar o crear Atributo
-            Atributo atributo = atributoRepository.findByNombreAndTiendaId(req.getAtributoNombre().trim(), tienda.getId())
+            Atributo atributo = atributoRepository.findByNombreAndTiendaId(nombreAtributo, tienda.getId())
                     .orElseGet(() -> {
                         Atributo nuevo = new Atributo();
-                        nuevo.setNombre(req.getAtributoNombre().trim());
+                        nuevo.setNombre(nombreAtributo);
                         nuevo.setTienda(tienda);
                         return atributoRepository.save(nuevo);
                     });
 
-            // Buscar o crear AtributoValor
-            AtributoValor valor = atributoValorRepository.findByAtributoIdAndValor(atributo.getId(), req.getValor().trim())
+            // REUTILIZAR AtributoValor si ya existe (evita duplicados y errores de tienda_id)
+            AtributoValor atributoValor = atributoValorRepository
+                    .findByAtributoIdAndValor(atributo.getId(), valorStr)
                     .orElseGet(() -> {
                         AtributoValor nuevo = new AtributoValor();
                         nuevo.setAtributo(atributo);
                         nuevo.setTienda(tienda);
-                        nuevo.setValor(req.getValor().trim());
+                        nuevo.setValor(valorStr);
                         return atributoValorRepository.save(nuevo);
                     });
 
-            variante.getAtributos().add(valor);
+            variante.getAtributos().add(atributoValor);
         }
     }
 
@@ -465,7 +476,7 @@ public class ProductoServiceImpl implements ProductoService {
                     vr.setPrecio(v.getPrecio());
                     vr.setStock(v.getStock());
                     vr.setImagenUrl(v.getImagenUrl());
-                    vr.setActivo(v.getActivo());
+                    vr.setActivo(v.isActivo());
 
                     // Atributos de esta variante
                     List<AtributoValorResponse> attrs = v.getAtributos().stream()

@@ -22,6 +22,7 @@ public class DropTownController {
 
     private final ProductoService productoService;
     private final UsuarioService usuarioService;
+    private final CategoriaService categoriaService;
     private final TiendaService tiendaService;
     private final AtributoValorService atributoValorService;
 
@@ -36,6 +37,11 @@ public class DropTownController {
     @GetMapping("/usuariosDropTown")
     public ResponseEntity<List<DropDownStandard>> getUsuariosDropdown() {
         List<DropDownStandard> lista = usuarioService.getUsuariosForDropdown();
+        return ResponseEntity.ok(lista);
+    }
+    @GetMapping("/categoriasDropTown")
+    public ResponseEntity<List<DropDownStandard>> getCategoriasDropdown() {
+        List<DropDownStandard> lista = categoriaService.getCategoriasForDropdown();
         return ResponseEntity.ok(lista);
     }
 

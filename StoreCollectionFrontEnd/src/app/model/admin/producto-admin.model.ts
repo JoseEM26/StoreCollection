@@ -11,25 +11,26 @@ export interface ProductoResponse {
   categoriaNombre: string;
   tiendaId: number;
   activo: boolean;
-variantes: VarianteResponse[] | null;  // ← Permite null
+  variantes: VarianteResponse[] | null; // Permite null si no hay variantes
 }
 
+// === Request para crear o actualizar ===
 export interface ProductoRequest {
   nombre: string;
   slug: string;
   categoriaId: number;
-  tiendaId?: number;         // solo admin
+  tiendaId?: number;     // Opcional: solo lo envía el ADMIN
+  activo: boolean;
   variantes: VarianteRequest[];
-    activo: boolean;
-
 }
 
+// === Variante ===
 export interface VarianteResponse {
   id: number;
   sku: string;
   precio: number;
   stock: number;
-  imagenUrl?: string;
+  imagenUrl?: string;           // también aquí usa undefined, no null
   activo: boolean;
   atributos: AtributoValorResponse[];
 }
@@ -39,27 +40,28 @@ export interface VarianteRequest {
   sku: string;
   precio: number;
   stock: number;
-  imagenUrl?: string;
+  imagenUrl?: string;           // sigue siendo opcional → string | undefined
+  activo?: boolean;
   atributos: AtributoValorRequest[];
-  activo: Boolean;
 }
 // === Atributo y Valor (para variantes) ===
 export interface AtributoValorResponse {
-  id: number;                // atributoValorId
-  atributoId: number;
-  atributoNombre: string;
-  valor: string;
+  id: number;              // ID del AtributoValor
+  atributoNombre: string;  // Nombre del atributo (ej: "Color")
+  valor: string;           // Valor (ej: "Rojo")
 }
+
+// Para dropdowns de atributos (si en el futuro lo necesitas)
 export interface AtributoConValores {
   id: number;
   nombre: string;
-  valores: DropTownStandar[];  // { id: atributoValorId, descripcion: "Rojo" }
-}
-export interface AtributoValorRequest {
-  atributoNombre: string;      // Ej: "Color", "Talla"
-  valor: string;               // Ej: "Rojo", "M"
+  valores: DropTownStandar[]; // { id: atributoValorId, descripcion: "Rojo" }
 }
 
+export interface AtributoValorRequest {
+  atributoNombre: string; // Ej: "Color", "Talla"
+  valor: string;          // Ej: "Rojo", "38"
+}
 // === Paginación ===
 export interface ProductoPage {
   content: ProductoResponse[];

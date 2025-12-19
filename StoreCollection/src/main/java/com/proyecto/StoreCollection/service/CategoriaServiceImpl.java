@@ -1,11 +1,13 @@
 package com.proyecto.StoreCollection.service;
 
+import com.proyecto.StoreCollection.dto.DropTown.DropDownStandard;
 import com.proyecto.StoreCollection.dto.request.CategoriaRequest;
 import com.proyecto.StoreCollection.dto.response.CategoriaResponse;
 import com.proyecto.StoreCollection.entity.Categoria;
 import com.proyecto.StoreCollection.entity.Tienda;
 import com.proyecto.StoreCollection.repository.CategoriaRepository;
 import com.proyecto.StoreCollection.repository.ProductoRepository;
+import com.proyecto.StoreCollection.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -79,7 +82,35 @@ public class CategoriaServiceImpl implements CategoriaService {
     }
 
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<DropDownStandard> getCategoriasForDropdown() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
+        List<Categoria> categorias;
+
+        if (esAdmin) {
+            categorias = categoriaRepository.findAllByOrderByNombreAsc();
+        } else {
+            Integer tenantId = TenantContext.getTenantId();
+            if (tenantId == null) {
+                return Collections.emptyList();
+            }
+            categorias = categoriaRepository.findByTiendaIdOrderByNombreAsc(tenantId);
+        }
+
+        return categorias.stream()
+                .filter(Categoria::isActivo)  // Opcional: solo categorías activas
+                .map(c -> {
+                    DropDownStandard dto = new DropDownStandard();
+                    dto.setId(c.getId());
+                    dto.setDescripcion(c.getNombre());
+                    return dto;
+                })
+                .toList();
+    }
     // === NUEVO: Para obtener categoría específica en edición (con verificación de permisos) ===
     @Override
     @Transactional(readOnly = true)
