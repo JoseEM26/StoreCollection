@@ -32,6 +32,6 @@ public class Producto {
     private Tienda tienda;
     @Column(nullable = false)
     private boolean activo = true;  // por defecto activo
-    @OneToMany(mappedBy = "producto", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ProductoVariante> variantes = new HashSet<>();
 }

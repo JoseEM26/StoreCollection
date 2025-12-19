@@ -1,5 +1,6 @@
 package com.proyecto.StoreCollection.service;
 
+import com.proyecto.StoreCollection.dto.DropTown.AtributoDropdownDTO;
 import com.proyecto.StoreCollection.dto.request.AtributoRequest;
 import com.proyecto.StoreCollection.dto.response.AtributoResponse;
 import org.springframework.data.domain.Page;
@@ -17,4 +18,7 @@ public interface AtributoService {
     AtributoResponse save(AtributoRequest request);
     AtributoResponse save(AtributoRequest request, Integer id);
     void deleteById(Integer id);
+
+    List<AtributoDropdownDTO> getAtributosConValores();
+
 }

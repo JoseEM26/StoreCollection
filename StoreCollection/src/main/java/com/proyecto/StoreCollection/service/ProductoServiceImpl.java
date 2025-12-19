@@ -2,7 +2,7 @@
 
 package com.proyecto.StoreCollection.service;
 
-import com.proyecto.StoreCollection.dto.DropTown.DropDownStandard;
+import com.proyecto.StoreCollection.dto.DropTown.DropTownStandar;
 import com.proyecto.StoreCollection.dto.request.AtributoValorRequest;
 import com.proyecto.StoreCollection.dto.request.ProductoRequest;
 import com.proyecto.StoreCollection.dto.request.VarianteRequest;
@@ -142,69 +142,91 @@ public class ProductoServiceImpl implements ProductoService {
         return toResponse(productoRepository.save(producto));
     }
     private void manejarVariantes(Producto producto, List<VarianteRequest> variantesRequests, Tienda tienda) {
-        if (variantesRequests == null) return;
+        if (variantesRequests == null || variantesRequests.isEmpty()) {
+            varianteRepository.deleteAll(producto.getVariantes());
+            producto.getVariantes().clear();
+            return;
+        }
 
-        // Mapear variantes existentes para edición/eliminación
-        Set<ProductoVariante> variantesExistentes = new HashSet<>(producto.getVariantes());
-        producto.getVariantes().clear();
+        Set<Integer> idsRequest = variantesRequests.stream()
+                .map(VarianteRequest::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        // Eliminar solo las que no vienen en el request
+        List<ProductoVariante> aEliminar = producto.getVariantes().stream()
+                .filter(v -> !idsRequest.contains(v.getId()))
+                .toList();
+
+        if (!aEliminar.isEmpty()) {
+            varianteRepository.deleteAll(aEliminar);
+        }
+
+        producto.getVariantes().removeAll(aEliminar);
 
         for (VarianteRequest req : variantesRequests) {
             ProductoVariante variante;
+
             if (req.getId() != null) {
-                // Edición: buscar existente
-                variante = variantesExistentes.stream()
-                        .filter(v -> v.getId().equals(req.getId()))
-                        .findFirst()
-                        .orElseThrow(() -> new RuntimeException("Variante no encontrada: " + req.getId()));
-                variantesExistentes.remove(variante);  // Quitar de existentes (no se elimina)
+                variante = varianteRepository.findById(req.getId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                "Variante con ID " + req.getId() + " no encontrada."));
             } else {
-                // Creación
                 variante = new ProductoVariante();
+                variante.setProducto(producto);
             }
+
+            // === FORZAR SIEMPRE LA TIENDA (esta es la línea mágica) ===
+            variante.setTienda(tienda);
 
             variante.setSku(req.getSku().trim());
             variante.setPrecio(req.getPrecio());
-            variante.setStock(req.getStock());
+            variante.setStock(req.getStock() != null ? req.getStock() : 0);
             variante.setImagenUrl(req.getImagenUrl());
-            variante.setProducto(producto);
-            variante.setTienda(tienda);  // Asignar tienda
+            variante.setActivo(req.getActivo() != null ? req.getActivo() : true);
 
-            // Manejar atributos/valores
             manejarAtributosValores(variante, req.getAtributos(), tienda);
 
             producto.getVariantes().add(variante);
         }
-
-        // Eliminar variantes que no vinieron en el request
-        variantesExistentes.forEach(varianteRepository::delete);
     }
-
     private void manejarAtributosValores(ProductoVariante variante, List<AtributoValorRequest> atributosRequests, Tienda tienda) {
-        if (atributosRequests == null) return;
+        if (atributosRequests == null || atributosRequests.isEmpty()) {
+            variante.getAtributos().clear();
+            return;
+        }
 
         variante.getAtributos().clear();
 
         for (AtributoValorRequest req : atributosRequests) {
+            String nombreAtributo = req.getAtributoNombre().trim();
+            String valorStr = req.getValor().trim();
+
+            if (nombreAtributo.isEmpty() || valorStr.isEmpty()) {
+                continue; // o throw si prefieres validar fuerte
+            }
+
             // Buscar o crear Atributo
-            Atributo atributo = atributoRepository.findByNombreAndTiendaId(req.getAtributoNombre().trim(), tienda.getId())
+            Atributo atributo = atributoRepository.findByNombreAndTiendaId(nombreAtributo, tienda.getId())
                     .orElseGet(() -> {
                         Atributo nuevo = new Atributo();
-                        nuevo.setNombre(req.getAtributoNombre().trim());
+                        nuevo.setNombre(nombreAtributo);
                         nuevo.setTienda(tienda);
                         return atributoRepository.save(nuevo);
                     });
 
-            // Buscar o crear AtributoValor
-            AtributoValor valor = atributoValorRepository.findByAtributoIdAndValor(atributo.getId(), req.getValor().trim())
+            // REUTILIZAR AtributoValor si ya existe (evita duplicados y errores de tienda_id)
+            AtributoValor atributoValor = atributoValorRepository
+                    .findByAtributoIdAndValor(atributo.getId(), valorStr)
                     .orElseGet(() -> {
                         AtributoValor nuevo = new AtributoValor();
                         nuevo.setAtributo(atributo);
                         nuevo.setTienda(tienda);
-                        nuevo.setValor(req.getValor().trim());
+                        nuevo.setValor(valorStr);
                         return atributoValorRepository.save(nuevo);
                     });
 
-            variante.getAtributos().add(valor);
+            variante.getAtributos().add(atributoValor);
         }
     }
 
@@ -395,7 +417,7 @@ public class ProductoServiceImpl implements ProductoService {
     }
     @Override
     @Transactional(readOnly = true)
-    public List<DropDownStandard> getProductosForDropdown() {
+    public List<DropTownStandar> getProductosForDropdown() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean esAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
@@ -417,7 +439,7 @@ public class ProductoServiceImpl implements ProductoService {
         // Convertir a DTO estándar
         return productos.stream()
                 .map(p -> {
-                    DropDownStandard dto = new DropDownStandard();
+                    DropTownStandar dto = new DropTownStandar();
                     dto.setId(p.getId());
                     dto.setDescripcion(p.getNombre());
                     return dto;
@@ -454,7 +476,7 @@ public class ProductoServiceImpl implements ProductoService {
                     vr.setPrecio(v.getPrecio());
                     vr.setStock(v.getStock());
                     vr.setImagenUrl(v.getImagenUrl());
-                    vr.setActivo(v.getActivo());
+                    vr.setActivo(v.isActivo());
 
                     // Atributos de esta variante
                     List<AtributoValorResponse> attrs = v.getAtributos().stream()

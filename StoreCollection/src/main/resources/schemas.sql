@@ -77,26 +77,30 @@ CREATE TABLE producto (
     UNIQUE KEY uq_producto_slug_tienda (slug, tienda_id)
 );
 
--- NUEVA TABLA Producto_Variante (ahora compatible 100% con producto y tienda)
-CREATE TABLE Producto_Variante (
+CREATE TABLE producto_variante (
     id INT AUTO_INCREMENT PRIMARY KEY,
+
     producto_id INT NOT NULL,
     tienda_id INT NOT NULL,
-    sku VARCHAR(100) UNIQUE NOT NULL,
+
+    sku VARCHAR(100) NOT NULL,
     precio DECIMAL(10,2) NOT NULL CHECK (precio > 0),
     stock INT NOT NULL DEFAULT 0 CHECK (stock >= 0),
-    imagen_url TEXT,
+    imagen_url VARCHAR(500),
     activo BOOLEAN NOT NULL DEFAULT TRUE,
 
-    FOREIGN KEY (producto_id) REFERENCES producto(id) ON DELETE CASCADE,
-    FOREIGN KEY (tienda_id) REFERENCES tienda(id) ON DELETE CASCADE,
+    CONSTRAINT fk_variante_producto
+        FOREIGN KEY (producto_id) REFERENCES producto(id) ON DELETE CASCADE,
+
+    CONSTRAINT fk_variante_tienda
+        FOREIGN KEY (tienda_id) REFERENCES tienda(id) ON DELETE CASCADE,
 
     INDEX idx_producto (producto_id),
-    INDEX idx_tienda (tienda_id),
-    INDEX idx_sku (sku),
-    INDEX idx_activo (activo)
-);
-
+    INDEX idx_tienda (tienda_id),               -- Muy útil para filtros por tenant
+    UNIQUE INDEX uq_sku (sku),                  -- SKU único global
+    INDEX idx_activo (activo),
+    INDEX idx_precio_stock (precio, stock)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE atributo (
     id INT AUTO_INCREMENT PRIMARY KEY,

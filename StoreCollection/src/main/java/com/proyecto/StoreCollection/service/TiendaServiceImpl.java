@@ -1,10 +1,9 @@
 // src/main/java/com/proyecto/StoreCollection/service/TiendaServiceImpl.java
 package com.proyecto.StoreCollection.service;
 
-import com.proyecto.StoreCollection.dto.DropTown.DropDownStandard;
+import com.proyecto.StoreCollection.dto.DropTown.DropTownStandar;
 import com.proyecto.StoreCollection.dto.request.TiendaRequest;
 import com.proyecto.StoreCollection.dto.response.TiendaResponse;
-import com.proyecto.StoreCollection.dto.special.DashboardTiendaPublicDTO;
 import com.proyecto.StoreCollection.entity.Plan;
 import com.proyecto.StoreCollection.entity.Tienda;
 import com.proyecto.StoreCollection.entity.Usuario;
@@ -226,7 +225,7 @@ public class TiendaServiceImpl implements TiendaService {
     }
     @Override
     @Transactional(readOnly = true)
-    public List<DropDownStandard> getTiendasForDropdown() {
+    public List<DropTownStandar> getTiendasForDropdown() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         // Si no hay usuario autenticado → lista vacía (seguridad)
@@ -254,7 +253,7 @@ public class TiendaServiceImpl implements TiendaService {
         // Mapeo a DTO estándar
         return tiendas.stream()
                 .map(t -> {
-                    DropDownStandard dto = new DropDownStandard();
+                    DropTownStandar dto = new DropTownStandar();
                     dto.setId(t.getId());
                     dto.setDescripcion(t.getNombre());
                     return dto;

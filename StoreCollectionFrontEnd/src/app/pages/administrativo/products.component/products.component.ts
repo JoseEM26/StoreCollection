@@ -1,6 +1,6 @@
 // src/app/pages/administrativo/products/products.component.ts
 
-import { Component, OnInit, signal, effect } from '@angular/core';
+import { Component, OnInit, signal, effect, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductoPage, ProductoResponse } from '../../../model/admin/producto-admin.model';
@@ -24,18 +24,8 @@ export class ProductsComponent implements OnInit {
   showModal = signal(false);
   isEditMode = signal(false);
   selectedProducto = signal<ProductoResponse | undefined>(undefined);
-
-  // Loading específico para edición
   loadingEdicion = signal(false);
-getVarianteText(producto: ProductoResponse): string {
-  if (!producto.variantes || producto.variantes.length === 0) {
-    return 'Sin variantes';
-  }
-  if (producto.variantes.length === 1) {
-    return '1 variante';
-  }
-  return `${producto.variantes.length} variantes`;
-}
+
   // Filtros
   currentPage = signal(0);
   pageSize = 20;
@@ -53,6 +43,16 @@ getVarianteText(producto: ProductoResponse): string {
 
   ngOnInit(): void {
     this.loadProductos();
+  }
+
+  getVarianteText(producto: ProductoResponse): string {
+    if (!producto.variantes || producto.variantes.length === 0) {
+      return 'Sin variantes';
+    }
+    if (producto.variantes.length === 1) {
+      return '1 variante';
+    }
+    return `${producto.variantes.length} variantes`;
   }
 
   loadProductos(): void {
@@ -76,14 +76,12 @@ getVarianteText(producto: ProductoResponse): string {
     });
   }
 
-  // === CREAR ===
   openCreateModal(): void {
     this.isEditMode.set(false);
     this.selectedProducto.set(undefined);
     this.showModal.set(true);
   }
 
-  // === EDITAR: LLAMADA FRESCA AL ENDPOINT DE EDICIÓN ===
   openEditModal(id: number): void {
     this.loadingEdicion.set(true);
     this.isEditMode.set(true);
@@ -91,7 +89,6 @@ getVarianteText(producto: ProductoResponse): string {
 
     this.productoService.obtenerParaEdicion(id).subscribe({
       next: (productoCompleto) => {
-        console.log('Producto cargado para edición:', productoCompleto); // ← Verás todo el JSON con variantes
         this.selectedProducto.set(productoCompleto);
         this.loadingEdicion.set(false);
       },
@@ -99,7 +96,7 @@ getVarianteText(producto: ProductoResponse): string {
         console.error('Error al cargar producto para edición', err);
         this.loadingEdicion.set(false);
         this.showModal.set(false);
-        alert('No se pudo cargar el producto. Verifica permisos o conexión.');
+        alert('No se pudo cargar el producto.');
       }
     });
   }
@@ -115,17 +112,55 @@ getVarianteText(producto: ProductoResponse): string {
     this.loadProductos();
   }
 
-  // === TOGGLE ACTIVO ===
-  toggleActivo(producto: ProductoResponse): void {
-    if (!this.auth.isAdmin()) return;
+ // ... el resto del código permanece igual
 
-    this.productoService.toggleActivo(producto.id).subscribe({
-      next: (updated) => {
-        this.productos.update(list => list.map(p => p.id === updated.id ? updated : p));
-      }
-    });
-  }
+toggleActivo(producto: ProductoResponse): void {
+  if (!this.auth.isAdmin()) return;
 
+  const nuevoEstado = !producto.activo;
+
+  // Optimistic update: cambio inmediato en UI
+  this.productos.update(list =>
+    list.map(p =>
+      p.id === producto.id
+        ? { ...p, activo: nuevoEstado }
+        : p
+    )
+  );
+
+  // Llamada al backend
+  this.productoService.toggleActivo(producto.id).subscribe({
+    next: (updated) => {
+      // ¡NO sobreescribas con 'updated'!
+      // El servidor probablemente te devolvió el estado viejo.
+      // Si quieres ser precavido y el servidor sí devuelve el nuevo estado correcto,
+      // entonces sí puedes actualizar, pero en tu caso parece que no.
+      // Opción segura: no hacer nada aquí, el optimistic ya es el estado final correcto.
+
+      // Si en el futuro el backend devuelve el objeto actualizado correctamente,
+      // descomenta esto:
+      // this.productos.update(list =>
+      //   list.map(p => p.id === updated.id ? { ...updated } : p)
+      // );
+    },
+    error: (err) => {
+      console.error('Error al cambiar estado', err);
+      alert('Error al cambiar el estado del producto');
+
+      // Revertir si falla
+      this.productos.update(list =>
+        list.map(p =>
+          p.id === producto.id
+            ? { ...p, activo: !nuevoEstado }
+            : p
+        )
+      );
+    }
+  });
+}
+trackByProductoId(index: number, producto: ProductoResponse): number {
+  return producto.id;
+}
   onSearch(): void {
     this.currentPage.set(0);
   }
@@ -152,5 +187,13 @@ getVarianteText(producto: ProductoResponse): string {
       range.push(i);
     }
     return range;
+  }
+
+  // Cierre con tecla Escape
+  @HostListener('document:keydown.escape')
+  onEscape() {
+    if (this.showModal()) {
+      this.closeModal();
+    }
   }
 }

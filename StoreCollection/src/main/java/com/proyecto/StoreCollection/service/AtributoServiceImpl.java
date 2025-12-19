@@ -1,15 +1,22 @@
 package com.proyecto.StoreCollection.service;
 
+import com.proyecto.StoreCollection.dto.DropTown.AtributoDropdownDTO;
+import com.proyecto.StoreCollection.dto.DropTown.DropTownStandar;
 import com.proyecto.StoreCollection.dto.request.AtributoRequest;
 import com.proyecto.StoreCollection.dto.response.AtributoResponse;
 import com.proyecto.StoreCollection.entity.Atributo;
 import com.proyecto.StoreCollection.repository.AtributoRepository;
+import com.proyecto.StoreCollection.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -19,6 +26,7 @@ public class AtributoServiceImpl implements AtributoService {
 
     private final AtributoRepository repository;
     private final TiendaService tiendaService; // ← clave para obtener la tienda del usuario
+    private final AtributoRepository atributoRepository; // ← clave para obtener la tienda del usuario
 
     // === PÚBLICO: para filtros en catálogo ===
     @Override
@@ -29,7 +37,48 @@ public class AtributoServiceImpl implements AtributoService {
                 .map(this::toResponse)
                 .toList();
     }
+// En tu clase AtributoServiceImpl.java
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<AtributoDropdownDTO> getAtributosConValores() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        List<Atributo> atributos;
+
+        if (esAdmin) {
+            atributos = atributoRepository.findAllWithValores();  // ← Usa el método con FETCH
+        } else {
+            Integer tenantId = TenantContext.getTenantId();
+            if (tenantId == null) {
+                return Collections.emptyList();
+            }
+            atributos = atributoRepository.findByTiendaIdWithValores(tenantId);
+        }
+
+        return atributos.stream()
+                .map(attr -> {
+                    AtributoDropdownDTO dto = new AtributoDropdownDTO();
+                    dto.setId(attr.getId());
+                    dto.setDescripcion(attr.getNombre());
+
+                    List<DropTownStandar> valoresDto = attr.getValores().stream()
+                            .map(val -> {
+                                DropTownStandar v = new DropTownStandar();
+                                v.setId(val.getId());
+                                v.setDescripcion(val.getValor());
+                                return v;
+                            })
+                            .sorted(Comparator.comparing(DropTownStandar::getDescripcion))
+                            .toList();
+
+                    dto.setValores(valoresDto);
+                    return dto;
+                })
+                .toList();
+    }
     // === PRIVADO: dueño logueado ===
     @Override
     @Transactional(readOnly = true)

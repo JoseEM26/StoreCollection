@@ -1,6 +1,6 @@
 package com.proyecto.StoreCollection.service;
 
-import com.proyecto.StoreCollection.dto.DropTown.DropDownStandard;
+import com.proyecto.StoreCollection.dto.DropTown.DropTownStandar;
 import com.proyecto.StoreCollection.dto.request.AtributoValorRequest;
 import com.proyecto.StoreCollection.dto.response.AtributoValorResponse;
 import com.proyecto.StoreCollection.entity.Atributo;
@@ -9,7 +9,6 @@ import com.proyecto.StoreCollection.repository.AtributoRepository;
 import com.proyecto.StoreCollection.repository.AtributoValorRepository;
 import com.proyecto.StoreCollection.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -47,7 +46,7 @@ public class AtributoValorServiceImpl implements AtributoValorService {
     }
     @Override
     @Transactional(readOnly = true)
-    public List<DropDownStandard> getValoresForDropdown() {
+    public List<DropTownStandar> getValoresForDropdown() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean esAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
@@ -66,7 +65,7 @@ public class AtributoValorServiceImpl implements AtributoValorService {
 
         return valores.stream()
                 .map(v -> {
-                    DropDownStandard dto = new DropDownStandard();
+                    DropTownStandar dto = new DropTownStandar();
                     dto.setId(v.getId());
                     dto.setDescripcion(v.getValor());
                     return dto;
