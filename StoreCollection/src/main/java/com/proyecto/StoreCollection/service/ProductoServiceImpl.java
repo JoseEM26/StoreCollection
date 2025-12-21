@@ -253,7 +253,6 @@ public class ProductoServiceImpl implements ProductoService {
     public ProductoResponse toggleActivo(Integer id) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        // Solo ADMIN puede togglear el estado activo
         boolean esAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
@@ -264,19 +263,18 @@ public class ProductoServiceImpl implements ProductoService {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
 
-        // Toggle del estado activo del producto
         boolean nuevoEstado = !producto.isActivo();
         producto.setActivo(nuevoEstado);
 
-        // Si se DESACTIVA el producto → desactivar todas sus variantes
-        if (!nuevoEstado) {
+        if (nuevoEstado) {
+            // ← NUEVO: Al activar el producto, reactivar todas sus variantes
+            varianteRepository.activarTodasPorProductoId(id);
+        } else {
+            // Al desactivar, desactivar todas las variantes
             varianteRepository.desactivarTodasPorProductoId(id);
         }
-        // Nota: No reactivamos variantes automáticamente al activar el producto
-        // (el owner podría haber desactivado alguna variante manualmente)
 
         Producto saved = productoRepository.save(producto);
-
         return toResponse(saved);
     }
     @Override
@@ -303,6 +301,12 @@ public class ProductoServiceImpl implements ProductoService {
 
         for (Object[] row : rows) {
             Integer id = (Integer) row[0];
+            Boolean productoActivo = (Boolean) row[8]; // Asegúrate de que tu query incluya producto.activo
+
+            // ← NUEVO: Filtrar productos inactivos desde el principio
+            if (productoActivo == null || !productoActivo) {
+                continue; // Saltar todo el producto si está inactivo
+            }
 
             ProductoCardResponse p = map.computeIfAbsent(id, k -> {
                 ProductoCardResponse dto = new ProductoCardResponse();
@@ -310,7 +314,7 @@ public class ProductoServiceImpl implements ProductoService {
                 dto.setNombre((String) row[1]);
                 dto.setSlug((String) row[2]);
                 dto.setNombreCategoria((String) row[3]);
-                dto.setVariantes(new ArrayList<>()); // importante inicializar
+                dto.setVariantes(new ArrayList<>());
                 return dto;
             });
 
@@ -331,11 +335,10 @@ public class ProductoServiceImpl implements ProductoService {
 
         return map.values().stream()
                 .peek(this::calcularCamposDerivados)
-                .filter(p -> p.getStockTotal() > 0) // solo productos con stock
+                .filter(p -> p.getStockTotal() > 0)
                 .sorted(Comparator.comparingInt(ProductoCardResponse::getStockTotal).reversed())
                 .toList();
     }
-
     /**
      * Detalle público de un producto por slug
      */
@@ -347,7 +350,10 @@ public class ProductoServiceImpl implements ProductoService {
         if (rows.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado o tienda inactiva");
         }
-
+        Boolean productoActivo = (Boolean) rows.get(0)[8]; // Ajusta el índice según tu query
+        if (productoActivo == null || !productoActivo) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "El producto no está disponible en este momento.");
+        }
         Map<Integer, ProductoCardResponse> map = new LinkedHashMap<>();
 
         for (Object[] row : rows) {
@@ -380,6 +386,11 @@ public class ProductoServiceImpl implements ProductoService {
 
         ProductoCardResponse resultado = map.values().iterator().next();
         calcularCamposDerivados(resultado);
+
+        // Verificación final: si no tiene variantes activas con stock
+        if (resultado.getStockTotal() <= 0) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "El producto no tiene stock disponible.");
+        }
         return resultado;
     }
 

@@ -23,7 +23,8 @@ public interface CategoriaRepository extends JpaRepository<Categoria, Integer>, 
             @Param("tenantId") Integer tenantId,
             Pageable pageable);
     List<Categoria> findAllByOrderByNombreAsc();
-
+    @Query("SELECT c FROM Categoria c WHERE c.tienda.id = :tiendaId AND c.activo = true ORDER BY c.nombre")
+    List<Categoria> findByTiendaIdAndActivoTrue(@Param("tiendaId") Integer tiendaId);
     List<Categoria> findByTiendaIdOrderByNombreAsc(Integer tiendaId);
     default Page<Categoria> findAllByTenant(Pageable pageable) {
         Integer tenantId = com.proyecto.StoreCollection.tenant.TenantContext.getTenantId();

@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 public class TiendaController {
 
     private final TiendaService service;
-// En tu controlador (probablemente TiendaPublicController o el que tenga el endpoint)
 
     @GetMapping("/api/public/tiendas")
     public ResponseEntity<Page<TiendaResponse>> listarTodasTiendas(

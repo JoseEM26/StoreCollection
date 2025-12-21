@@ -15,13 +15,18 @@ import java.util.Optional;
 public interface ProductoVarianteRepository
         extends TenantBaseRepository<ProductoVariante, Integer> {
      @Modifying
-     @Query("UPDATE ProductoVariante v SET v.activo = false WHERE v.producto.id = :productoId")
+     @Query("UPDATE ProductoVariante pv SET pv.activo = false WHERE pv.producto.id = :productoId")
      void desactivarTodasPorProductoId(@Param("productoId") Integer productoId);
+
      default List<ProductoVariante> findByProductoIdSafe(Integer productoId) {
           return findAllByTenant().stream()
                   .filter(v -> v.getProducto().getId().equals(productoId))
                   .toList();
      }
+     @Modifying
+     @Query("UPDATE ProductoVariante pv SET pv.activo = true WHERE pv.producto.id = :productoId")
+     void activarTodasPorProductoId(@Param("productoId") Integer productoId);
+
 
      @Query("SELECT v FROM ProductoVariante v WHERE v.producto.slug = :productoSlug AND v.tienda.slug = :tiendaSlug")
      List<ProductoVariante> findByTiendaSlugAndProductoSlug(
