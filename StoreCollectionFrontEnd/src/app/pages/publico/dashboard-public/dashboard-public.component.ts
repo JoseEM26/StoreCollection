@@ -5,6 +5,8 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TiendaPage, TiendaPublic } from '../../../model/tienda-public.model';
 import { TiendaPublicService } from '../../../service/tienda-public.service';
+import { PlanPublicService } from '../../../service/plan-public.service';  // ← NUEVO
+import { PlanResponse } from '../../../model/admin/plan-admin.model';
 
 @Component({
   selector: 'app-public-dashboard',
@@ -18,11 +20,60 @@ export class DashboardPublicComponent implements OnInit {
   searchTerm = '';
   currentPage = 0;
   loading = true;
+  loadingPlanes = true;
+  planes: PlanResponse[] = [];  // ← NUEVO: planes dinámicos
 
-  constructor(private tiendaService: TiendaPublicService) {}
+  constructor(
+    private tiendaService: TiendaPublicService,
+    private planService: PlanPublicService  // ← NUEVO
+  ) {}
 
   ngOnInit(): void {
     this.loadTiendas();
+    this.loadPlanes();  // ← NUEVO
+  }
+// Dentro de src/app/pages/public-dashboard/public-dashboard.component.ts
+
+getMesesTexto(mesInicio: number, mesFin: number): string {
+  const meses = [
+    'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+  ];
+
+  // Validación por si vienen valores fuera de rango (seguridad extra)
+  const inicio = meses[mesInicio - 1] || 'Ene';
+  const fin = meses[mesFin - 1] || 'Dic';
+
+  return `${inicio} - ${fin}`;
+}
+  // NUEVO: Cargar planes públicos vigentes
+  loadPlanes(): void {
+    this.loadingPlanes = true;
+    this.planService.listarVigentes(0, 10).subscribe({
+      next: (data) => {
+        // Filtrar solo activos y vigentes en frontend (por seguridad extra)
+        this.planes = data.content.filter(plan => 
+          plan.activo && this.isPlanVigente(plan.mesInicio, plan.mesFin)
+        );
+        this.loadingPlanes = false;
+      },
+      error: (err) => {
+        console.error('Error al cargar planes', err);
+        this.planes = [];
+        this.loadingPlanes = false;
+      }
+    });
+  }
+
+  // NUEVO: Verificar vigencia basado en mes actual (diciembre = 12)
+  private isPlanVigente(mesInicio: number, mesFin: number): boolean {
+    const mesActual = new Date().getMonth() + 1;  // 1-12
+    if (mesInicio <= mesFin) {
+      return mesActual >= mesInicio && mesActual <= mesFin;
+    } else {
+      // Rango que cruza fin de año
+      return mesActual >= mesInicio || mesActual <= mesFin;
+    }
   }
 
   loadTiendas(page = 0): void {
@@ -56,20 +107,22 @@ export class DashboardPublicComponent implements OnInit {
   search(): void {
     this.loadTiendas(0);
   }
-getPageRange(): number[] {
-  if (!this.page) return [];
-  const total = this.page.totalPages;
-  const current = this.currentPage;
-  const range = [];
 
-  const start = Math.max(0, current - 2);
-  const end = Math.min(total, current + 3);
+  getPageRange(): number[] {
+    if (!this.page) return [];
+    const total = this.page.totalPages;
+    const current = this.currentPage;
+    const range = [];
 
-  for (let i = start; i < end; i++) {
-    range.push(i);
+    const start = Math.max(0, current - 2);
+    const end = Math.min(total, current + 3);
+
+    for (let i = start; i < end; i++) {
+      range.push(i);
+    }
+    return range;
   }
-  return range;
-}
+
   goToPage(page: number): void {
     if (this.page && page >= 0 && page < this.page.totalPages) {
       this.loadTiendas(page);

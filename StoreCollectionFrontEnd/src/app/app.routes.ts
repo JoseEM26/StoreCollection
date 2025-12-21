@@ -23,13 +23,22 @@ import { CategoriesComponent } from './pages/administrativo/categories.component
 import { ProductsComponent } from './pages/administrativo/products.component/products.component';
 import { tiendaExistsGuard } from '../auth/tienda-exists.guard';
 import { PlanesComponent } from './pages/administrativo/planes/planes.component';
+import { SuscripcionExpiradaComponentComponent } from './componente/suscripcion-expirada-component/suscripcion-expirada-component.component';
 
+// === NUEVA PÁGINA: Suscripción Expirada ===
 
 export const routes: Routes = [
 
-  // 1. RUTAS ESTÁTICAS PRIMERO (IMPORTANTÍSIMO)
+  // 1. RUTAS ESTÁTICAS PRIMERO
   { path: '',                 component: DashboardPublicComponent, title: 'Store Collection' },
   { path: 'login',            component: LoginComponent,           title: 'Iniciar Sesión' },
+
+  // NUEVA RUTA: Suscripción expirada o tienda inactiva
+  {
+    path: 'suscripcion-expirada',
+    component: SuscripcionExpiradaComponentComponent,
+    title: 'Suscripción Expirada'
+  },
 
   // 2. PANEL ADMIN (protegido)
   {
@@ -42,13 +51,12 @@ export const routes: Routes = [
       { path: 'stores',      component: StoresComponent,      title: 'Tiendas' },
       { path: 'categories',  component: CategoriesComponent,  title: 'Categorías' },
       { path: 'products',    component: ProductsComponent,    title: 'Productos' },
-      { path: 'planes',    component: PlanesComponent,    title: 'planes' },
+      { path: 'planes',      component: PlanesComponent,      title: 'Planes' },
       { path: 'usuarios',    component: UsuariosComponent,    title: 'Usuarios' },
     ]
   },
 
-  // 3. RUTA DINÁMICA DE TIENDAS (SOLO AL FINAL)
-  // Ahora SÍ se aplica el guard sin molestar a /login ni /admin
+  // 3. RUTA DINÁMICA DE TIENDAS (AL FINAL, como debe ser)
   {
     path: ':tiendaSlug',
     canMatch: [tiendaExistsGuard],

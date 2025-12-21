@@ -22,8 +22,15 @@ public class PlanController {
     @Autowired
     private PlanService service;
 
-    @GetMapping("/public/planes")
+    @GetMapping("/admin/planes")
     public ResponseEntity<PageResponse<PlanResponse>> listar(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<PlanResponse> pagina = service.findAll(PageRequest.of(page, size));
+        return ResponseEntity.ok(toPageResponse(pagina));
+    }
+    @GetMapping("/public/planes")
+    public ResponseEntity<PageResponse<PlanResponse>> listarpublicos(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Page<PlanResponse> pagina = service.findAll(PageRequest.of(page, size));

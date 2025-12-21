@@ -1,0 +1,90 @@
+<!-- src/app/componente/suscripcion-expirada-component/suscripcion-expirada-component.component.html -->
+<div class="min-vh-100 d-flex align-items-center bg-light py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 col-xl-6">
+
+        <!-- Icono de advertencia grande -->
+        <div class="text-center mb-5">
+          <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 5.5rem;"></i>
+        </div>
+
+        <!-- Tarjeta principal -->
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+          <div class="card-header bg-gradient-primary text-white text-center py-4">
+            <h2 class="h3 fw-bold mb-0">
+              <i class="bi bi-shield-lock me-3"></i>
+              Acceso temporalmente restringido
+            </h2>
+          </div>
+
+          <div class="card-body p-5 p-lg-6 text-center">
+
+            <h1 class="display-6 fw-bold text-dark mb-4">
+              Tu suscripción ha expirado o está inactiva
+            </h1>
+
+            <p class="lead text-muted mb-5">
+              No puedes acceder a tu tienda en este momento. Esto puede deberse a una de las siguientes razones:
+            </p>
+
+            <div class="bg-light rounded-4 p-4 mb-5 mx-auto" style="max-width: 560px;">
+              <ul class="text-start fs-5 text-muted mb-0">
+                <li class="mb-3">
+                  <i class="bi bi-x-circle text-danger me-2"></i>
+                  Tu plan actual no está activo
+                </li>
+                <li class="mb-3">
+                  <i class="bi bi-calendar-x text-danger me-2"></i>
+                  El plan no es vigente en el mes actual
+                </li>
+                <li class="mb-3">
+                  <i class="bi bi-shop text-danger me-2"></i>
+                  Tu tienda ha sido desactivada temporalmente
+                </li>
+              </ul>
+            </div>
+
+            <p class="text-muted mb-5 fs-5">
+              Para reactivar tu tienda, elige o renueva un plan de suscripción activo.
+            </p>
+
+            <!-- Botones de acción -->
+            <div class="d-grid d-sm-flex gap-3 justify-content-center">
+              <a routerLink="/"
+                 class="btn btn-outline-secondary btn-lg px-5 rounded-pill"
+                 style="min-width: 200px;">
+                <i class="bi bi-house-door me-2"></i>
+                Volver al Inicio
+              </a>
+            </div>
+
+            <!-- Soporte -->
+            <div class="mt-5 pt-4 border-top">
+              <p class="text-muted mb-2">
+                ¿Necesitas ayuda inmediata?
+              </p>
+              <p class="mb-0">
+                <i class="bi bi-envelope me-2"></i>
+                Escríbenos a:
+                <a href="mailto:soporte@tutienda.com" class="fw-semibold text-primary">
+                  soportetutienda.com
+                </a>
+              </p>
+              <small class="text-muted d-block mt-2">
+                Te responderemos en menos de 24 horas.
+              </small>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Footer pequeño -->
+        <div class="text-center mt-5 text-muted small">
+          Store Collection © 2025 • Todos los derechos reservados
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

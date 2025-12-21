@@ -1,58 +1,64 @@
 <!-- src/app/pages/public-dashboard/public-dashboard.component.html -->
 <div class="min-vh-100">
 
-  <!-- HERO con gradiente hermoso -->
+  <!-- HERO mejorado: más dinámico con partículas o gradiente animado (usa CSS) -->
   <section class="hero-section text-white py-5 position-relative overflow-hidden">
     <div class="container py-5 text-center position-relative z-3">
-      <h1 class="display-2 fw-bold mb-4">
+      <h1 class="display-2 fw-bold mb-4 animate__animated animate__fadeInDown">
         Store<span class="text-warning">Collection</span>
       </h1>
-      <p class="lead fs-3 mb-4">Tu catálogo digital profesional en minutos</p>
-      <p class="fs-5 mb-5 opacity-90">
+      <p class="lead fs-3 mb-4 animate__animated animate__fadeInUp">Tu catálogo digital profesional en minutos</p>
+      <p class="fs-5 mb-5 opacity-90 animate__animated animate__fadeInUp animate__delay-1s">
         Sin tarjetas, sin contratos, sin complicaciones.<br>
         <strong class="text-warning">Empieza gratis hoy y crece cuando quieras.</strong>
       </p>
       <div class="d-flex gap-3 justify-content-center flex-wrap">
-        <a routerLink="/register" class="btn btn-warning btn-lg px-5 shadow-lg fw-bold">
+        <a routerLink="/register" class="btn btn-warning btn-lg px-5 shadow-lg fw-bold animate__animated animate__bounceIn">
           Crear mi tienda GRATIS
         </a>
-        <a href="#precios" class="btn btn-outline-light btn-lg px-5 border-2">
+        <a href="#precios" class="btn btn-outline-light btn-lg px-5 border-2 animate__animated animate__bounceIn animate__delay-1s">
           Ver planes
         </a>
       </div>
     </div>
   </section>
 
-  <!-- BENEFICIOS -->
+  <!-- BENEFICIOS mejorados: con hover effects -->
   <section class="py-5 bg-white">
     <div class="container py-5">
       <div class="row text-center g-5">
         <div class="col-md-4">
-          <div class="text-primary mb-4">
-            <i class="bi bi-lightning-charge-fill display-1"></i>
+          <div class="benefit-card">
+            <div class="text-primary mb-4 icon-hover">
+              <i class="bi bi-lightning-charge-fill display-1"></i>
+            </div>
+            <h4 class="fw-bold">Lista en 2 minutos</h4>
+            <p class="text-muted">Sin programación, sin hosting</p>
           </div>
-          <h4 class="fw-bold">Lista en 2 minutos</h4>
-          <p class="text-muted">Sin programación, sin hosting</p>
         </div>
         <div class="col-md-4">
-          <div class="text-success mb-4">
-            <i class="bi bi-gift-fill display-1"></i>
+          <div class="benefit-card">
+            <div class="text-success mb-4 icon-hover">
+              <i class="bi bi-gift-fill display-1"></i>
+            </div>
+            <h4 class="fw-bold">Plan gratis para siempre</h4>
+            <p class="text-muted">Crece sin pagar hasta que quieras</p>
           </div>
-          <h4 class="fw-bold">Plan gratis para siempre</h4>
-          <p class="text-muted">Crece sin pagar hasta que quieras</p>
         </div>
         <div class="col-md-4">
-          <div class="text-warning mb-4">
-            <i class="bi bi-whatsapp display-1"></i>
+          <div class="benefit-card">
+            <div class="text-warning mb-4 icon-hover">
+              <i class="bi bi-whatsapp display-1"></i>
+            </div>
+            <h4 class="fw-bold">Pedidos por WhatsApp</h4>
+            <p class="text-muted">Tus clientes te escriben directo</p>
           </div>
-          <h4 class="fw-bold">Pedidos por WhatsApp</h4>
-          <p class="text-muted">Tus clientes te escriben directo</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- TIENDAS -->
+  <!-- TIENDAS (mantenido, con mejoras menores en responsive) -->
   <section class="py-5 bg-light">
     <div class="container py-5">
       <div class="text-center mb-5">
@@ -84,7 +90,7 @@
 
       <!-- Lista de tiendas -->
       <div *ngIf="!loading && page?.content?.length">
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">  <!-- Mejor responsive -->
           <div class="col" *ngFor="let tienda of page?.content">
             <div class="card h-100 border-0 shadow-sm card-hover rounded-4 overflow-hidden">
               <div class="card-body text-center p-4 d-flex flex-column">
@@ -130,12 +136,14 @@
           </div>
         </div>
 
-        <!-- Paginación -->
+        <!-- Paginación mejorada: más elegante -->
         <div class="d-flex justify-content-center mt-5" *ngIf="page && page.totalPages > 1">
           <nav>
             <ul class="pagination pagination-lg">
               <li class="page-item" [class.disabled]="!page || page.first">
-                <button class="page-link rounded-pill" (click)="goToPage(currentPage - 1)">Anterior</button>
+                <button class="page-link rounded-pill px-4" (click)="goToPage(currentPage - 1)">
+                  <i class="bi bi-chevron-left"></i>
+                </button>
               </li>
               <li class="page-item" 
                   *ngFor="let i of getPageRange()" 
@@ -145,7 +153,9 @@
                 </button>
               </li>
               <li class="page-item" [class.disabled]="!page || page.last">
-                <button class="page-link rounded-pill" (click)="goToPage(currentPage + 1)">Siguiente</button>
+                <button class="page-link rounded-pill px-4" (click)="goToPage(currentPage + 1)">
+                  <i class="bi bi-chevron-right"></i>
+                </button>
               </li>
             </ul>
           </nav>
@@ -158,99 +168,89 @@
 
       <!-- Sin resultados -->
       <div class="text-center py-5" *ngIf="!loading && page && page.content.length === 0">
-        <i class="bi bi-search display-1 text-muted"></i>
+        <i class="bi bi-search display-1 text-muted opacity-50"></i>
         <p class="lead mt-4">No se encontraron tiendas con ese nombre</p>
-        <button class="btn btn-outline-primary rounded-pill" (click)="searchTerm = ''; loadTiendas(0)">
+        <button class="btn btn-outline-primary rounded-pill px-5" (click)="searchTerm = ''; loadTiendas(0)">
           Ver todas las tiendas
         </button>
       </div>
     </div>
   </section>
 
-  <!-- PRECIOS -->
+  <!-- PRECIOS DINÁMICOS: ahora carga desde API y filtra vigentes -->
   <section id="precios" class="py-5 bg-white">
     <div class="container py-5">
       <div class="text-center mb-5">
         <h2 class="display-5 fw-bold">Elige tu plan ideal</h2>
         <p class="lead text-muted">Crece a tu ritmo, sin presiones</p>
       </div>
-      <div class="row g-5 justify-content-center">
-        <div class="col-md-4">
-          <div class="card border-0 shadow h-100 rounded-4">
-            <div class="card-body text-center p-5">
-              <h4 class="fw-bold">Gratis</h4>
-              <div class="display-4 fw-bold text-primary">S/ 0</div>
-              <p class="text-muted">Para siempre</p>
-              <hr>
-              <ul class="list-unstyled text-start mt-4">
-                <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> Hasta 50 productos</li>
-                <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> Subdominio gratis</li>
-                <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> Pedidos por WhatsApp</li>
-              </ul>
-              <a routerLink="/register" class="btn btn-outline-primary btn-lg w-100 mt-4 rounded-pill">
-                Empezar gratis
-              </a>
-            </div>
-          </div>
-        </div>
 
-        <div class="col-md-4">
-          <div class="card border-0 shadow-lg h-100 position-relative rounded-4 border border-primary border-4">
-            <div class="position-absolute top-0 start-50 translate-middle-x bg-primary text-white px-4 py-2 rounded-bottom shadow">
+      <!-- Loading planes -->
+      <div class="text-center py-5" *ngIf="loadingPlanes">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
+        <p class="mt-3 text-muted">Cargando planes disponibles...</p>
+      </div>
+
+      <!-- Planes dinámicos -->
+      <div class="row g-5 justify-content-center" *ngIf="!loadingPlanes && planes.length > 0">
+        <div class="col-md-4" *ngFor="let plan of planes; let i = index">
+          <div class="card border-0 shadow h-100 rounded-4 position-relative plan-card-hover"
+               [ngClass]="{'border-primary border-3 shadow-lg': plan.nombre.toLowerCase().includes('pro')}">
+            <div *ngIf="plan.nombre.toLowerCase().includes('pro')" 
+                 class="position-absolute top-0 start-50 translate-middle-x bg-primary text-white px-4 py-2 rounded-bottom shadow-sm">
               <small class="fw-bold">MÁS POPULAR</small>
             </div>
-            <div class="card-body text-center p-5 pt-7">
-              <h4 class="fw-bold">Pro</h4>
-              <div class="display-4 fw-bold">S/ 79</div>
-              <p class="text-muted small">por mes</p>
-              <hr>
-              <ul class="list-unstyled text-start mt-4">
-                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> Productos ilimitados</li>
-                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> Dominio personalizado</li>
-                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> Sin marca StoreCollection</li>
-                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> Estadísticas avanzadas</li>
+            <div class="card-body text-center p-5 pt-6">
+              <h4 class="fw-bold mb-3">{{ plan.nombre }}</h4>
+              <div class="display-4 fw-bold text-primary">
+                S/ {{ plan.precio | number:'1.0-0' }}
+              </div>
+              <p class="text-muted small mb-4">por mes</p>
+              <hr class="my-4">
+              <ul class="list-unstyled text-start mt-4 fs-6">
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> Hasta {{ plan.maxProductos }} productos</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> Vigente: {{ getMesesTexto(plan.mesInicio, plan.mesFin) }}</li>
+                <!-- Agrega más features dinámicas si tienes en el modelo -->
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> Soporte básico</li>
+                <li class="mb-3" *ngIf="plan.precio > 0"><i class="bi bi-check-circle-fill text-primary me-2"></i> Dominio personalizado</li>
               </ul>
-              <a routerLink="/register" class="btn btn-primary btn-lg w-100 mt-4 rounded-pill shadow">
-                Elegir Pro
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-4">
-          <div class="card border-0 shadow h-100 rounded-4">
-            <div class="card-body text-center p-5">
-              <h4 class="fw-bold">Enterprise</h4>
-              <div class="display-4 fw-bold">S/ 299</div>
-              <p class="text-muted small">por mes</p>
-              <hr>
-              <ul class="list-unstyled text-start mt-4">
-                <li class="mb-3"><i class="bi bi-check-circle-fill text-dark me-2"></i> Todo lo de Pro</li>
-                <li class="mb-3"><i class="bi bi-check-circle-fill text-dark me-2"></i> Multi-tienda</li>
-                <li class="mb-3"><i class="bi bi-check-circle-fill text-dark me-2"></i> API completa</li>
-                <li class="mb-3"><i class="bi bi-check-circle-fill text-dark me-2"></i> Soporte 24/7</li>
-              </ul>
-              <a href="https://wa.me/51987654321" class="btn btn-dark btn-lg w-100 mt-4 rounded-pill">
-                Contactar
+              <a [routerLink]="plan.precio === 0 ? '/register' : '/contacto'" 
+                 class="btn btn-lg w-100 mt-auto rounded-pill shadow-sm"
+                 [ngClass]="{'btn-outline-primary': plan.precio === 0, 'btn-primary': plan.precio > 0 && !plan.nombre.toLowerCase().includes('enterprise'), 'btn-dark': plan.nombre.toLowerCase().includes('enterprise')}">
+                {{ plan.precio === 0 ? 'Empezar gratis' : (plan.nombre.toLowerCase().includes('enterprise') ? 'Contactar' : 'Elegir ' + plan.nombre) }}
               </a>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Sin planes disponibles -->
+      <div class="text-center py-5" *ngIf="!loadingPlanes && planes.length === 0">
+        <i class="bi bi-info-circle display-1 text-warning opacity-50"></i>
+        <p class="lead mt-4">No hay planes disponibles en este momento</p>
+        <a href="mailto:soporte@storecollection.pe" class="btn btn-outline-primary rounded-pill px-5">
+          Contactar soporte
+        </a>
+      </div>
     </div>
   </section>
 
-  <!-- FOOTER -->
+  <!-- FOOTER mejorado: con social links -->
   <footer class="bg-dark text-white py-5">
     <div class="container">
       <div class="row align-items-center">
-        <div class="col-lg-8">
+        <div class="col-lg-6">
           <h3 class="fw-bold">StoreCollection</h3>
-          <p class="lead mb-0">La forma más fácil de tener tu tienda online en Perú</p>
+          <p class="lead mb-3">La forma más fácil de tener tu tienda online en Perú</p>
+          <div class="d-flex gap-3">
+            <a href="https://facebook.com/storecollection" class="text-white fs-3"><i class="bi bi-facebook"></i></a>
+            <a href="https://instagram.com/storecollection" class="text-white fs-3"><i class="bi bi-instagram"></i></a>
+            <a href="https://wa.me/51987654321" class="text-white fs-3"><i class="bi bi-whatsapp"></i></a>
+          </div>
         </div>
-        <div class="col-lg-4 text-lg-end">
+        <div class="col-lg-6 text-lg-end mt-4 mt-lg-0">
           <p class="mb-1">WhatsApp: <a href="https://wa.me/51987654321" class="text-white text-decoration-underline">+51 987 654 321</a></p>
-          <p class="mb-1">Email: holastorecollection.pe</p>
+          <p class="mb-1">Email: <a href="mailto:soporte@storecollection.pe" class="text-white text-decoration-underline">soportestorecollection.pe</a></p>
           <p class="small opacity-75 mb-0">© 2025 StoreCollection · Hecho con amor en Perú</p>
         </div>
       </div>

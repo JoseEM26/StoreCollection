@@ -10,7 +10,6 @@ import { environment } from '../../../../environment';
 })
 export class PlanAdminService {
   private adminUrl = `${environment.apiUrl}/api/admin/planes`;
-  private publicUrl = `${environment.apiUrl}/api/public/planes`;
 
   constructor(private http: HttpClient) {}
 
@@ -24,7 +23,7 @@ export class PlanAdminService {
       params = params.set('search', search.trim());
     }
 
-    return this.http.get<PlanPage>(this.publicUrl, { params });
+    return this.http.get<PlanPage>(this.adminUrl, { params });
   }
 
   obtenerPorId(id: number): Observable<PlanResponse> {
