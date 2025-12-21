@@ -10,6 +10,7 @@ import com.proyecto.StoreCollection.entity.Usuario;
 import com.proyecto.StoreCollection.repository.PlanRepository;
 import com.proyecto.StoreCollection.repository.TiendaRepository;
 import com.proyecto.StoreCollection.repository.UsuarioRepository;
+import com.proyecto.StoreCollection.service.Cloudinary.CloudinaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;

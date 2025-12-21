@@ -1,4 +1,4 @@
-package com.proyecto.StoreCollection.service;
+package com.proyecto.StoreCollection.service.Cloudinary;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.Transformation;

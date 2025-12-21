@@ -1,6 +1,6 @@
 package com.proyecto.StoreCollection.controller;
 
-import com.proyecto.StoreCollection.service.CloudinaryService;
+import com.proyecto.StoreCollection.service.Cloudinary.CloudinaryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
