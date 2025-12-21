@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Repository
 public interface TiendaRepository extends JpaRepository<Tienda, Integer> {
-     List<Tienda> findByActivoTrue() ;
+    Page<Tienda> findByActivoTrue(Pageable pageable) ;
     List<Tienda> findAllByOrderByNombreAsc();
     Optional<Tienda> findBySlug(String slug);
 

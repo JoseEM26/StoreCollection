@@ -5,6 +5,7 @@ import com.proyecto.StoreCollection.service.TiendaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -14,18 +15,19 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
 public class TiendaController {
 
     private final TiendaService service;
+// En tu controlador (probablemente TiendaPublicController o el que tenga el endpoint)
 
-    //ESTO ES LA TIENDA PUBLICA DONDE TODOS ACCEDEN
     @GetMapping("/api/public/tiendas")
     public ResponseEntity<Page<TiendaResponse>> listarTodasTiendas(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "12") int size,  // Puedes mantener 12 como en frontend
             @RequestParam(defaultValue = "nombre,asc") String sort,
             @RequestParam(required = false) String search) {
 
@@ -34,9 +36,7 @@ public class TiendaController {
 
         if (sort != null && !sort.trim().isEmpty()) {
             String[] parts = sort.split(",");
-            if (parts.length >= 1) {
-                property = parts[0].trim();
-            }
+            if (parts.length >= 1) property = parts[0].trim();
             if (parts.length >= 2) {
                 direction = "desc".equalsIgnoreCase(parts[1].trim())
                         ? org.springframework.data.domain.Sort.Direction.DESC
@@ -47,9 +47,22 @@ public class TiendaController {
         org.springframework.data.domain.Sort sortObj = org.springframework.data.domain.Sort.by(direction, property);
         Pageable pageable = PageRequest.of(page, size, sortObj);
 
-        Page<TiendaResponse> resultado = search != null && !search.trim().isEmpty()
-                ? service.buscarPorNombreContainingIgnoreCase(search.trim(), pageable)
-                : service.findAll(pageable);
+        Page<TiendaResponse> resultado;
+
+        if (search != null && !search.trim().isEmpty()) {
+            // Búsqueda solo entre tiendas activas con plan vigente
+            Page<TiendaResponse> todasActivas = service.findAllPublicasActivas(pageable);
+            resultado = todasActivas.getContent().stream()
+                    .filter(t -> t.getNombre().toLowerCase().contains(search.trim().toLowerCase()))
+                    .collect(Collectors.toList())
+                    .stream()
+                    .collect(Collectors.collectingAndThen(
+                            Collectors.toList(),
+                            list -> new PageImpl(list, pageable, list.size())
+                    ));
+        } else {
+            resultado = service.findAllPublicasActivas(pageable);
+        }
 
         return ResponseEntity.ok(resultado);
     }

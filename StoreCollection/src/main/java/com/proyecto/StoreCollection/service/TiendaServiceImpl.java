@@ -12,6 +12,7 @@ import com.proyecto.StoreCollection.repository.TiendaRepository;
 import com.proyecto.StoreCollection.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -38,7 +39,37 @@ public class TiendaServiceImpl implements TiendaService {
     public Page<TiendaResponse> findAll(Pageable pageable) {
         return tiendaRepository.findAll(pageable).map(this::toResponse);
     }
+// En TiendaServiceImpl.java
 
+    @Override
+    @Transactional(readOnly = true)
+    public Page<TiendaResponse> findAllPublicasActivas(Pageable pageable) {
+        Page<Tienda> tiendas = tiendaRepository.findByActivoTrue(pageable);
+
+        // Filtrar en memoria las que tienen plan válido y vigente
+        List<TiendaResponse> filtradas = tiendas.getContent().stream()
+                .filter(tienda -> {
+                    Plan plan = tienda.getPlan();
+                    if (plan == null) return false;
+                    if (!plan.getActivo()) return false;
+
+                    int mesActual = java.time.LocalDate.now().getMonthValue(); // 1-12
+                    int inicio = plan.getMesInicio();
+                    int fin = plan.getMesFin();
+
+                    if (inicio <= fin) {
+                        return mesActual >= inicio && mesActual <= fin;
+                    } else {
+                        // Cruza fin de año (ej: Nov(11) - Feb(2))
+                        return mesActual >= inicio || mesActual <= fin;
+                    }
+                })
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+
+        // Reconstruir Page con los elementos filtrados
+        return new PageImpl<>(filtradas, pageable, filtradas.size());
+    }
     @Override
     @Transactional(readOnly = true)
     public TiendaResponse findById(Integer id) {
