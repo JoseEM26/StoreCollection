@@ -14,5 +14,6 @@ public class UsuarioRequest {
     @NotBlank
     private String password;
     private String celular;
+    private Boolean activo;
     private String rol;
 }

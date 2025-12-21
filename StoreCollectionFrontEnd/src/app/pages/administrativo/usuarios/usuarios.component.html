@@ -1,84 +1,111 @@
-<div class="usuarios-page" data-aos="fade-up">
+<div class="usuarios-container">
   <!-- Header -->
   <div class="header-section">
-    <div>
+    <div class="header-content">
       <h1 class="page-title">
         <i class="bi bi-people-fill me-3"></i>
         Gestión de Usuarios
       </h1>
       <p class="page-subtitle">
         Administración completa de usuarios del sistema
-        <span class="text-muted ms-2">
-          ({{ pageData()?.totalElements || 0 }} usuarios registrados)
+        <span class="badge bg-primary ms-2">
+          {{ pageData()?.totalElements || 0 }} usuarios
         </span>
       </p>
     </div>
+    <button class="btn btn-primary rounded-pill px-4 py-2 fs-6 fw-semibold" (click)="abrirCrear()">
+      <i class="bi bi-plus-circle me-2"></i>
+      Nuevo Usuario
+    </button>
   </div>
 
-  <!-- Búsqueda -->
-  <div class="filters-bar mb-4">
-    <div class="search-box">
-      <i class="bi bi-search"></i>
+  <!-- Search Bar -->
+  <div class="search-section mb-4">
+    <div class="search-container">
+      <i class="bi bi-search search-icon"></i>
       <input
         type="text"
+        class="search-input"
         placeholder="Buscar por nombre, email o celular..."
         [(ngModel)]="searchTerm"
-        (input)="onSearch()"
+        (keyup)="onSearch()"
       />
     </div>
   </div>
 
   <!-- Loading -->
   <div *ngIf="loading()" class="loading-container">
-    <div class="spinner"></div>
+    <div class="spinner-border text-primary spinner-lg mb-3" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
     <p class="loading-text">Cargando usuarios...</p>
   </div>
 
-  <!-- Tabla de usuarios -->
-  <div *ngIf="!loading() && usuarios().length > 0" class="table-container">
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="bg-light">
+  <!-- Table -->
+  <div *ngIf="!loading() && usuarios().length > 0" class="table-section">
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table class="usuarios-table">
+          <thead>
             <tr>
-              <th class="ps-5">Usuario</th>
+              <th>Usuario</th>
               <th>Email</th>
               <th>Celular</th>
               <th>Rol</th>
-              <th class="text-end pe-5">Acciones</th>
+              <th>Estado</th>
+              <th class="text-end">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let u of usuarios(); let i = index" data-aos="fade-up" [attr.data-aos-delay]="(i % 10) * 50">
-              <td class="ps-5">
-                <div class="d-flex align-items-center gap-3">
+            <tr *ngFor="let u of usuarios(); trackBy: trackById" class="table-row">
+              <td>
+                <div class="user-info">
                   <div class="user-avatar">
                     {{ u.nombre.charAt(0).toUpperCase() }}
                   </div>
-                  <div>
-                    <div class="fw-semibold">{{ u.nombre }}</div>
-                    <small class="text-muted">ID: #{{ u.id }}</small>
+                  <div class="user-details">
+                    <div class="user-name">{{ u.nombre }}</div>
+                    <div class="user-id">ID: #{{ u.id }}</div>
                   </div>
                 </div>
               </td>
               <td>
-                <a href="mailto:{{ u.email }}" class="text-decoration-none">{{ u.email }}</a>
+                <a href="mailto:{{ u.email }}" class="email-link">{{ u.email }}</a>
               </td>
               <td>
-                <a href="tel:{{ u.celular }}" class="text-decoration-none">{{ u.celular }}</a>
+                <span class="phone-text">{{ u.celular || 'No registrado' }}</span>
               </td>
               <td>
-                <span class="badge rounded-pill px-3 py-2 fw-bold" [ngClass]="getRoleBadgeClass(u.rol)">
+                <span class="role-badge rounded-pill px-3 py-2 fw-semibold" [ngClass]="getRoleBadgeClass(u.rol)">
                   {{ u.rol === 'ADMIN' ? 'ADMINISTRADOR' : u.rol === 'OWNER' ? 'PROPIETARIO' : 'CLIENTE' }}
                 </span>
               </td>
-              <td class="text-end pe-5">
-                <button class="btn btn-sm btn-outline-primary rounded-pill me-2">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-danger rounded-pill">
-                  <i class="bi bi-trash"></i>
-                </button>
+              <td>
+                <span class="status-badge rounded-pill px-3 py-2 fw-semibold" [ngClass]="getEstadoBadgeClass(u.activo)">
+                  {{ u.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td class="action-cell">
+                <div class="action-buttons">
+                  <button class="btn-edit" (click)="abrirEditar(u)" title="Editar usuario">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button
+  class="btn-toggle"
+  (click)="toggleActivo(u)"
+  [disabled]="!canToggle(u)"
+  [title]="!canToggle(u) ? 'Administradores no pueden ser desactivados' : (u.activo ? 'Desactivar' : 'Activar')"
+>
+  <i class="bi fs-4"
+     [ngClass]="{
+       'bi-toggle-on': u.activo,
+       'bi-toggle-off': !u.activo,
+       'text-success': u.activo,
+       'text-danger': !u.activo
+     }">
+  </i>
+</button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -88,34 +115,69 @@
   </div>
 
   <!-- Empty State -->
-  <div *ngIf="!loading() && usuarios().length === 0" class="empty-state" data-aos="fade-up">
-    <i class="bi bi-person-slash empty-icon"></i>
-    <h3>No se encontraron usuarios</h3>
-    <p *ngIf="searchTerm">Intenta con otro término</p>
-    <p *ngIf="!searchTerm">No hay usuarios registrados</p>
+  <div *ngIf="!loading() && usuarios().length === 0" class="empty-state">
+    <div class="empty-icon">
+      <i class="bi bi-people-slash"></i>
+    </div>
+    <h3 class="empty-title">No se encontraron usuarios</h3>
+    <p class="empty-text" *ngIf="searchTerm">
+      No hay usuarios que coincidan con "{{ searchTerm }}"
+    </p>
+    <p class="empty-text" *ngIf="!searchTerm">
+      Aún no hay usuarios registrados en el sistema
+    </p>
+    <button class="btn btn-primary rounded-pill px-4 mt-3" (click)="abrirCrear()">
+      <i class="bi bi-plus-circle me-2"></i>
+      Crear primer usuario
+    </button>
   </div>
 
-  <!-- Paginación -->
-  <nav *ngIf="pageData() && pageData()!.totalPages > 1" class="pagination-container">
-    <ul class="pagination">
-      <li [class.disabled]="currentPage() === 0">
-        <button (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 0">
-          <i class="bi bi-chevron-left"></i>
-        </button>
-      </li>
-      <ng-container *ngFor="let page of getPageNumbers()">
-        <li [class.active]="page === currentPage()">
-          <button (click)="goToPage(page)">{{ page + 1 }}</button>
-        </li>
-      </ng-container>
-      <li [class.disabled]="currentPage() === (pageData()!.totalPages - 1)">
-        <button (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === (pageData()!.totalPages - 1)">
-          <i class="bi bi-chevron-right"></i>
-        </button>
-      </li>
-    </ul>
-    <small class="text-muted">
-      Página {{ currentPage() + 1 }} de {{ pageData()?.totalPages }}
-    </small>
-  </nav>
+  <!-- Pagination -->
+  <div *ngIf="pageData() && pageData()!.totalPages > 1" class="pagination-section">
+    <div class="pagination-info">
+      Mostrando {{ startItem }} - {{ endItem }} de {{ pageData()?.totalElements || 0 }} usuarios
+    </div>
+    <div class="pagination-container">
+      <button 
+        class="pagination-btn" 
+        (click)="goToPage(currentPage() - 1)" 
+        [disabled]="currentPage() === 0"
+      >
+        <i class="bi bi-chevron-left"></i>
+      </button>
+
+      <button 
+        *ngFor="let page of getPageNumbers()"
+        class="pagination-btn"
+        [class.active]="page === currentPage()"
+        (click)="goToPage(page)"
+      >
+        {{ page + 1 }}
+      </button>
+
+      <button 
+        class="pagination-btn" 
+        (click)="goToPage(currentPage() + 1)" 
+        [disabled]="currentPage() === (pageData()!.totalPages - 1)"
+      >
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal-overlay" *ngIf="showModal()" (click)="closeModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <button class="btn-close-modal" (click)="closeModal()" aria-label="Cerrar">
+        <i class="bi bi-x-lg"></i>
+      </button>
+      <div class="modal-content">
+        <app-usuarios-form
+          [usuario]="editingUsuario()"
+          (success)="onFormSuccess($event)"
+          (cancel)="closeModal()"
+        ></app-usuarios-form>
+      </div>
+    </div>
+  </div>
 </div>

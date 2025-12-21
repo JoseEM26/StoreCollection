@@ -2,15 +2,18 @@ package com.proyecto.StoreCollection.service;
 
 import com.proyecto.StoreCollection.dto.DropTown.DropTownStandar;
 import com.proyecto.StoreCollection.dto.request.UsuarioRequest;
+import com.proyecto.StoreCollection.dto.response.PageResponse;
 import com.proyecto.StoreCollection.dto.response.UsuarioResponse;
 import com.proyecto.StoreCollection.entity.Tienda;
 import com.proyecto.StoreCollection.entity.Usuario;
 import com.proyecto.StoreCollection.repository.UsuarioRepository;
 import com.proyecto.StoreCollection.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -69,32 +72,58 @@ public class UsuarioServiceImpl implements UsuarioService {
         List<Usuario> usuarios;
 
         if (esAdmin) {
-            // ADMIN ve todos los usuarios, ordenados por nombre
             usuarios = repository.findAllByOrderByNombreAsc();
         } else {
-            // OWNER ve solo su propio usuario (de su tienda actual)
             Integer tenantId = TenantContext.getTenantId();
             if (tenantId == null) {
                 return Collections.emptyList();
             }
-            Tienda tiendaActual = tiendaService.getTiendaDelUsuarioActual(); // Asume que tienes este método
+            Tienda tiendaActual = tiendaService.getTiendaDelUsuarioActual();
+            if (tiendaActual == null || tiendaActual.getUser() == null) {
+                return Collections.emptyList();
+            }
             usuarios = Collections.singletonList(tiendaActual.getUser());
         }
 
-        // Convertir a DTO
         return usuarios.stream()
                 .map(u -> {
                     DropTownStandar dto = new DropTownStandar();
                     dto.setId(u.getId());
-                    dto.setDescripcion(StringUtils.defaultIfBlank(u.getNombre(), u.getEmail())); // Usa nombre o email
+
+                    // Prioriza nombre, si está vacío usa email
+                    String nombre = u.getNombre();
+                    String descripcion = (nombre != null && !nombre.trim().isEmpty())
+                            ? nombre
+                            : u.getEmail();
+
+                    dto.setDescripcion(descripcion);
                     return dto;
                 })
                 .toList();
     }
     @Override
     @Transactional(readOnly = true)
-    public Page<UsuarioResponse> findAll(Pageable pageable) {
-        return repository.findAll(pageable).map(this::toResponse);
+    public PageResponse<UsuarioResponse> findAll(int page, int size, String search) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+
+        Page<Usuario> paginaEntity;
+
+        if (StringUtils.hasText(search)) {
+            search = "%" + search.trim().toLowerCase() + "%";
+            paginaEntity = repository.findBySearchTerm(search, pageable);
+        } else {
+            paginaEntity = repository.findAll(pageable);
+        }
+
+        Page<UsuarioResponse> paginaDto = paginaEntity.map(this::toResponse);
+
+        return new PageResponse<>(
+                paginaDto.getContent(),
+                paginaDto.getNumber(),
+                paginaDto.getSize(),
+                paginaDto.getTotalElements(),
+                paginaDto.getTotalPages()
+        );
     }
 
     @Override
@@ -123,12 +152,24 @@ public class UsuarioServiceImpl implements UsuarioService {
         UsuarioResponse dto = new UsuarioResponse();
         dto.setId(u.getId());
         dto.setNombre(u.getNombre());
+        dto.setActivo(u.isActivo());
         dto.setEmail(u.getEmail());
         dto.setCelular(u.getCelular());
         dto.setRol(u.getRol().name());
         return dto;
     }
+    @Override
+    public UsuarioResponse toggleActivarUsuario(Integer id) {
+        Usuario usuario = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + id));
 
+        // Toggle: cambiar el estado actual
+        usuario.setActivo(!usuario.isActivo());
+
+        usuario = repository.save(usuario);
+
+        return toResponse(usuario);
+    }
     /// ///////////////////////ESTO ES PARA HASHEAR CONTRSAEÑAS
 
     public List<Usuario> findAllRaw() {
