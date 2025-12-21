@@ -31,4 +31,8 @@ public class Plan {
     @Min(1) @Max(12)
     @Column(name = "mes_fin", nullable = false)
     private Integer mesFin;
+
+    // NUEVO CAMPO: estado activo/inactivo
+    @Column(nullable = false)
+    private Boolean activo = true;  // Por defecto activo
 }

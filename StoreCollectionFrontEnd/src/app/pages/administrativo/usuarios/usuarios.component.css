@@ -426,7 +426,8 @@
   .pagination-container {
     justify-content: center;
   }
-.btn-toggle i {
+}.btn-toggle i {
   color: inherit !important;
   font-size: 1.8rem;
 }
+

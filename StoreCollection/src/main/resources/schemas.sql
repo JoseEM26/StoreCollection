@@ -17,6 +17,8 @@ CREATE TABLE plan (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(50) NOT NULL,
     precio DECIMAL(10,2) DEFAULT 0.00,
+        activo BOOLEAN DEFAULT true NOT NULL,
+
     max_productos INT DEFAULT 100,
     mes_inicio INT NOT NULL CHECK (mes_inicio BETWEEN 1 AND 12),
     mes_fin INT NOT NULL CHECK (mes_fin BETWEEN 1 AND 12)

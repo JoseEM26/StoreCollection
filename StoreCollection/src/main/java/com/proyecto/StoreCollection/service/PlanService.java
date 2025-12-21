@@ -11,4 +11,5 @@ public interface PlanService {
     PlanResponse save(PlanRequest request);
     PlanResponse save(PlanRequest request, Integer id);
     void deleteById(Integer id);
+    PlanResponse toggleActivo(Integer id);
 }

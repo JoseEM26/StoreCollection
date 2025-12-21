@@ -48,7 +48,15 @@ public class PlanServiceImpl implements PlanService {
 
         return toResponse(repository.save(plan));
     }
+    @Override
+    @Transactional
+    public PlanResponse toggleActivo(Integer id) {
+        Plan plan = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Plan no encontrado: " + id));
 
+        plan.setActivo(!plan.getActivo());
+        return toResponse(repository.save(plan));
+    }
     @Override
     public void deleteById(Integer id) {
         if (!repository.existsById(id)) {
@@ -64,6 +72,7 @@ public class PlanServiceImpl implements PlanService {
         dto.setPrecio(p.getPrecio());
         dto.setMaxProductos(p.getMaxProductos());
         dto.setMesInicio(p.getMesInicio());
+        dto.setActivo(p.getActivo());
         dto.setMesFin(p.getMesFin());
         return dto;
     }

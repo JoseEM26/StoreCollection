@@ -16,4 +16,6 @@ public class PlanRequest {
     private Integer mesInicio;
     @Min(1) @Max(12)
     private Integer mesFin;
+    private Boolean activo = true;  // Por defecto activo
+
 }

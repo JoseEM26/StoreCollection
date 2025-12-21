@@ -22,6 +22,7 @@ import { StoresComponent } from './pages/administrativo/stores.component/stores.
 import { CategoriesComponent } from './pages/administrativo/categories.component/categories.component';
 import { ProductsComponent } from './pages/administrativo/products.component/products.component';
 import { tiendaExistsGuard } from '../auth/tienda-exists.guard';
+import { PlanesComponent } from './pages/administrativo/planes/planes.component';
 
 
 export const routes: Routes = [
@@ -41,6 +42,7 @@ export const routes: Routes = [
       { path: 'stores',      component: StoresComponent,      title: 'Tiendas' },
       { path: 'categories',  component: CategoriesComponent,  title: 'Categorías' },
       { path: 'products',    component: ProductsComponent,    title: 'Productos' },
+      { path: 'planes',    component: PlanesComponent,    title: 'planes' },
       { path: 'usuarios',    component: UsuariosComponent,    title: 'Usuarios' },
     ]
   },
