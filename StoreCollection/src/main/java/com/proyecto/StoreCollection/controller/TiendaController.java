@@ -13,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -126,23 +127,21 @@ public class TiendaController {
 
     @PostMapping("/api/owner/tiendas")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
-    public ResponseEntity<TiendaResponse> crearTienda(@Valid @RequestBody TiendaRequest request) {
-        // IMPORTANTE: En el service, asegúrate de validar que:
-        // 1. OWNER solo pueda crear tiendas para sí mismo
-        // 2. ADMIN pueda crear tiendas para cualquier usuario
-        return ResponseEntity.ok(service.save(request));
-    }
+    public ResponseEntity<TiendaResponse> crearTienda(
+            @RequestPart("data") @Valid TiendaRequest request,
+            @RequestPart(value = "logoImg", required = false) MultipartFile logoImg) {
 
+        request.setLogoImg(logoImg); // Asignamos el archivo al DTO
+        return ResponseEntity.ok(service.save(request, null));
+    }
     @PutMapping("/api/owner/tiendas/{id}")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<TiendaResponse> actualizarTienda(
             @PathVariable Integer id,
-            @Valid @RequestBody TiendaRequest request) {
+            @RequestPart("data") @Valid TiendaRequest request,
+            @RequestPart(value = "logoImg", required = false) MultipartFile logoImg) {
 
-        // IMPORTANTE: En el service.save(request, id) debes:
-        // 1. Verificar que el usuario autenticado es dueño de la tienda (si es OWNER)
-        // 2. Permitir a ADMIN editar cualquier tienda
-        // 3. No permitir cambiar el usuario propietario en edición
+        request.setLogoImg(logoImg);
         return ResponseEntity.ok(service.save(request, id));
     }
     @PatchMapping("/api/owner/tiendas/{id}/toggle-activo")

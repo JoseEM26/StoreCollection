@@ -13,6 +13,7 @@ export interface TiendaPublic {
   planNombre: 'Gratis' | 'Básico' | 'Pro' | 'Enterprise';
   userId?: number;
   userEmail?: string;
+  logo_img_url?:string;
   activo?: boolean;
 }
 

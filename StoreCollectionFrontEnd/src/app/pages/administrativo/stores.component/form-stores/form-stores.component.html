@@ -127,7 +127,7 @@
           </select>
         </div>
 
-        <!-- En form-stores.component.html -->
+        <!-- Plan -->
         <div class="col-12" *ngIf="esAdmin">
           <label class="form-label">Plan</label>
           <select formControlName="planId" class="form-select">
@@ -147,29 +147,31 @@
             disabled
           />
         </div>
-        <!-- URL del Logo -->
+
+        <!-- Logo - Input de archivo -->
         <div class="col-12">
-          <label class="form-label">URL del Logo</label>
+          <label class="form-label">Logo de la tienda</label>
           <input
-            formControlName="logo_img_url"
-            (input)="onLogoUrlChange()"
-            type="url"
+            id="logoInput"
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp"
             class="form-control"
-            placeholder="https://ejemplo.com/logo.png"
-            [class.is-invalid]="
-              form.get('logo_img_url')?.invalid &&
-              form.get('logo_img_url')?.touched
-            "
+            (change)="onFileSelected($event)"
           />
-          <div
-            class="invalid-feedback"
-            *ngIf="
-              form.get('logo_img_url')?.touched &&
-              form.get('logo_img_url')?.errors
-            "
-          >
-            {{ getErrorMessage("logo_img_url") }}
+          <div class="form-text">
+            Formatos: JPG, PNG, GIF, WebP. Máximo 5MB.
           </div>
+          <div class="alert alert-danger mt-2" *ngIf="fileError">
+            {{ fileError }}
+          </div>
+          <button
+            *ngIf="logoPreview"
+            type="button"
+            class="btn btn-sm btn-outline-danger mt-2"
+            (click)="removeLogo()"
+          >
+            Remover logo
+          </button>
         </div>
 
         <!-- Descripción -->
@@ -255,7 +257,7 @@
         <button
           type="submit"
           class="btn btn-primary"
-          [disabled]="loading || form.invalid"
+          [disabled]="loading || form.invalid || !!fileError"
         >
           <span
             *ngIf="loading"

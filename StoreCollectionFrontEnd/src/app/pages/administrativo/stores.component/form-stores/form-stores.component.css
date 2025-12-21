@@ -42,16 +42,16 @@
 }
 
 .logo-preview {
-  width: 100px;
-  height: 100px;
+  width: 150px;
+  height: 150px;
   object-fit: contain;
   border: 1px solid #dee2e6;
   border-radius: 0.375rem;
 }
 
 .logo-placeholder {
-  width: 100px;
-  height: 100px;
+  width: 150px;
+  height: 150px;
   background: #f8f9fa;
   border: 1px dashed #adb5bd;
   border-radius: 0.375rem;
@@ -61,6 +61,7 @@
   color: #6c757d;
   font-size: 0.9rem;
   margin: 0 auto;
+  text-align: center;
 }
 
 /* Responsive */
