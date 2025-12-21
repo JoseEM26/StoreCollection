@@ -18,7 +18,7 @@ export class PublicLayaoutComponent implements OnInit, OnDestroy {
   tienda: any = null;
   menuOpen = false;
   currentYear = new Date().getFullYear();
-
+isScrolled = false;
   constructor(
     private tiendaService: TiendaService,
     private titleService: Title
@@ -33,12 +33,17 @@ export class PublicLayaoutComponent implements OnInit, OnDestroy {
           this.titleService.setTitle(`${tienda.nombre} - Tienda Online`);
         }
       });
+      window.addEventListener('scroll', this.onScroll.bind(this));
   }
 
   toggleMenu() {
     this.menuOpen = !this.menuOpen;
   }
+onScroll(): void {
+    this.isScrolled = window.scrollY > 20;
+  }
 
+  
   closeMenu() {
     this.menuOpen = false;
   }
@@ -52,8 +57,9 @@ export class PublicLayaoutComponent implements OnInit, OnDestroy {
     window.open(`https://wa.me/${numero}?text=${mensaje}`, '_blank');
   }
 
-  ngOnDestroy(): void {
+ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    window.removeEventListener('scroll', this.onScroll.bind(this));
   }
 }

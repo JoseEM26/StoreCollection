@@ -204,7 +204,6 @@ public class CategoriaServiceImpl implements CategoriaService {
     public CategoriaResponse toggleActivo(Integer id) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        // Solo ADMIN puede togglear el estado activo
         boolean esAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
@@ -215,22 +214,20 @@ public class CategoriaServiceImpl implements CategoriaService {
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + id));
 
-        // Toggle del estado activo
         boolean nuevoEstado = !categoria.isActivo();
         categoria.setActivo(nuevoEstado);
 
-        // Si se DESACTIVA la categoría → desactivar todos sus productos
-        if (!nuevoEstado) {
+        if (nuevoEstado) {
+            // ← NUEVO: Al activar la categoría, reactivar todos sus productos
+            productoRepository.activarTodosPorCategoriaId(id);
+        } else {
+            // Al desactivar la categoría, desactivar todos sus productos
             productoRepository.desactivarTodosPorCategoriaId(id);
         }
-        // Nota: No reactivamos productos automáticamente al activar la categoría
-        // (para no interferir con desactivaciones manuales que haya hecho el owner)
 
         Categoria saved = categoriaRepository.save(categoria);
-
         return toResponse(saved);
     }
-    // === MODIFICADO: deleteById (agrega verificación de permisos) ===
     @Override
     public void deleteById(Integer id) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

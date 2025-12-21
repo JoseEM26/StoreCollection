@@ -31,7 +31,6 @@ public class ProductoController {
 
     private final ProductoService service;
 
-    //PUBLIC PARA LA PAGINA WEB DONDE TODO ES PUBLICO
     @GetMapping("/api/public/tiendas/{tiendaSlug}/productos")
     public ResponseEntity<List<ProductoCardResponse>> publicList(@PathVariable String tiendaSlug) {
         return ResponseEntity.ok(service.findAllForPublicCatalog(tiendaSlug));

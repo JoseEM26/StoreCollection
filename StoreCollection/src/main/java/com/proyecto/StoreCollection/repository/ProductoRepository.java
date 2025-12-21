@@ -89,16 +89,23 @@ List<Producto> findByTiendaSlugPublic(@Param("tiendaSlug") String tiendaSlug);
         pv.precio,
         pv.stock,
         pv.imagenUrl,
-        pv.activo
+        pv.activo,
+        p.activo               
     FROM Producto p
     JOIN p.categoria c
     LEFT JOIN p.variantes pv WITH pv.activo = true
     WHERE p.tienda.slug = :tiendaSlug 
       AND p.slug = :productoSlug
       AND p.tienda.activo = true
+      AND p.activo = true              
+      AND c.activo = true               
     ORDER BY p.id, pv.id
     """)
      List<Object[]> findRawDetailBySlugs(
              @Param("tiendaSlug") String tiendaSlug,
              @Param("productoSlug") String productoSlug);
+
+     @Modifying
+     @Query("UPDATE Producto p SET p.activo = true WHERE p.categoria.id = :categoriaId")
+     void activarTodosPorCategoriaId(@Param("categoriaId") Integer categoriaId);
 }

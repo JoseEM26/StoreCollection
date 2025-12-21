@@ -1,75 +1,70 @@
-<!-- src/app/componente/public-layout/public-layout.component.html -->
-
-<header class="public-header">
+<!-- Header con efecto sticky y sombra al hacer scroll -->
+<header class="public-header" [class.scrolled]="isScrolled">
   <div class="container d-flex align-items-center justify-content-between py-3">
 
-<!-- Logo corregido -->
-<a [routerLink]="['/', tienda?.slug]" class="logo d-flex align-items-center gap-3 text-decoration-none">
-  @if (tienda?.logo_img_url) {
-    <img [src]="tienda.logo_img_url" alt="Logo {{ tienda.nombre }}" class="logo-img">
-  }
-  <div>
-    <strong class="d-block">{{ tienda?.nombre || 'STORE COLLECTION' }}</strong>
-    @if (tienda?.planNombre) {
-      <small class="badge bg-success text-white">{{ tienda.planNombre }}</small>
-    }
-  </div>
-</a>
+    <!-- Logo + Nombre Tienda -->
+    <a [routerLink]="['/', tienda?.slug]" class="logo d-flex align-items-center gap-3 text-decoration-none">
+      @if (tienda?.logo_img_url) {
+        <img [src]="tienda.logo_img_url" 
+             alt="Logo {{ tienda.nombre }}" 
+             class="logo-img">
+      } @else {
+        <div class="logo-placeholder">
+          <i class="bi bi-shop fs-3"></i>
+        </div>
+      }
+      <div>
+        <strong class="tienda-nombre">{{ tienda?.nombre || 'STORE COLLECTION' }}</strong>
+        @if (tienda?.planNombre) {
+          <small class="badge bg-success text-white ms-2">{{ tienda.planNombre }}</small>
+        }
+      </div>
+    </a>
 
     <!-- Menú Desktop -->
-    <!-- ENLACES CORREGIDOS - NUNCA SALEN DEL TENANT -->
-<nav class="nav-desktop">
-  <!-- "Inicio" ahora lleva a la página principal de la tienda actual -->
-  <a [routerLink]="['/', tienda?.slug]" 
-     routerLinkActive="active" 
-     [routerLinkActiveOptions]="{exact: true}">
-    <i class="bi bi-house-door me-1"></i> Inicio
-  </a>
+    <nav class="nav-desktop d-none d-lg-flex align-items-center gap-5">
+      <a [routerLink]="['/', tienda?.slug]" 
+         routerLinkActive="active" 
+         [routerLinkActiveOptions]="{exact: true}">
+        <i class="bi bi-house-door-fill me-2"></i> Inicio
+      </a>
+      <a [routerLink]="['/', tienda?.slug, 'catalogo']" 
+         routerLinkActive="active">
+        <i class="bi bi-grid-3x3-gap-fill me-2"></i> Catálogo
+      </a>
+      <a [routerLink]="['/', tienda?.slug, 'conocenos']" 
+         routerLinkActive="active">
+        <i class="bi bi-heart-fill me-2"></i> Conócenos
+      </a>
+    </nav>
 
-  <a [routerLink]="['/', tienda?.slug, 'catalogo']" 
-     routerLinkActive="active">
-    <i class="bi bi-grid-3x3-gap me-1"></i> Catálogo
-  </a>
-
-  <a [routerLink]="['/', tienda?.slug, 'conocenos']" 
-     routerLinkActive="active">
-    <i class="bi bi-heart-fill me-1"></i> Conócenos
-  </a>
-</nav>
-
-<!-- Menú móvil también corregido -->
-<div class="mobile-menu" [class.open]="menuOpen">
-  <a [routerLink]="['/', tienda?.slug]" 
-     (click)="closeMenu()" 
-     routerLinkActive="active" 
-     [routerLinkActiveOptions]="{exact: true}">
-    Inicio
-  </a>
-  <a [routerLink]="['/', tienda?.slug, 'catalogo']" (click)="closeMenu()" routerLinkActive="active">
-    Catálogo
-  </a>
-  <a [routerLink]="['/', tienda?.slug, 'conocenos']" (click)="closeMenu()" routerLinkActive="active">
-    Conócenos
-  </a>
-</div>
-
-    <!-- Botón menú móvil -->
-    <button class="btn-menu-mobile" (click)="toggleMenu()" aria-label="Menú">
-      <i class="bi" [class.bi-list]="!menuOpen" [class.bi-x]="menuOpen"></i>
+    <!-- Botón Menú Móvil -->
+    <button class="btn-menu-mobile d-lg-none" (click)="toggleMenu()" aria-label="Abrir menú">
+      <i class="bi bi-list fs-3" *ngIf="!menuOpen"></i>
+      <i class="bi bi-x-lg fs-3" *ngIf="menuOpen"></i>
     </button>
   </div>
 
-  <!-- Menú móvil (slide down) -->
-  <div class="mobile-menu" [class.open]="menuOpen">
-    <a routerLink="/" (click)="closeMenu()" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-      Inicio
-    </a>
-    <a [routerLink]="['/', tienda?.slug || '', 'catalogo']" (click)="closeMenu()" routerLinkActive="active">
-      Catálogo
-    </a>
-    <a [routerLink]="['/', tienda?.slug || '', 'conocenos']" (click)="closeMenu()" routerLinkActive="active">
-      Conócenos
-    </a>
+  <!-- Menú Móvil (solo uno, corregido) -->
+  <div class="mobile-menu-container" [class.open]="menuOpen">
+    <nav class="mobile-menu">
+      <a [routerLink]="['/', tienda?.slug]" 
+         (click)="closeMenu()" 
+         routerLinkActive="active" 
+         [routerLinkActiveOptions]="{exact: true}">
+        <i class="bi bi-house-door-fill me-3"></i> Inicio
+      </a>
+      <a [routerLink]="['/', tienda?.slug, 'catalogo']" 
+         (click)="closeMenu()" 
+         routerLinkActive="active">
+        <i class="bi bi-grid-3x3-gap-fill me-3"></i> Catálogo
+      </a>
+      <a [routerLink]="['/', tienda?.slug, 'conocenos']" 
+         (click)="closeMenu()" 
+         routerLinkActive="active">
+        <i class="bi bi-heart-fill me-3"></i> Conócenos
+      </a>
+    </nav>
   </div>
 </header>
 
@@ -78,45 +73,52 @@
   <router-outlet></router-outlet>
 </main>
 
-<!-- WhatsApp Flotante -->
+<!-- Botón WhatsApp Flotante (mejorado) -->
 @if (tienda?.whatsapp) {
   <button class="btn-whatsapp-flotante" 
           (click)="abrirWhatsApp()" 
-          title="¡Chatea con {{ tienda.nombre }}!"
-          aria-label="WhatsApp">
+          aria-label="Chatear por WhatsApp">
     <i class="bi bi-whatsapp"></i>
-    <span class="pulse"></span>
+    <span class="pulse-ring"></span>
     <span class="online-dot"></span>
   </button>
 }
 
-<!-- Footer -->
+<!-- Footer mejorado -->
 <footer class="public-footer">
   <div class="container py-5">
-    <div class="row text-center text-md-start">
-      <div class="col-md-6 mb-4">
-        <h5 class="fw-bold">{{ tienda?.nombre || 'STORE COLLECTION' }}</h5>
+    <div class="row g-5">
+      <div class="col-lg-6">
+        <h5 class="fw-bold text-white mb-3">{{ tienda?.nombre || 'STORE COLLECTION' }}</h5>
         @if (tienda?.descripcion) {
-          <p class="text-muted small">{{ tienda.descripcion }}</p>
+          <p class="text-muted small lh-lg">{{ tienda.descripcion }}</p>
         }
       </div>
-      <div class="col-md-6">
-        <p class="mb-1">
-          <i class="bi bi-geo-alt-fill text-primary"></i>
-          {{ tienda?.direccion || 'Lima, Perú' }}
-        </p>
-        <p class="mb-1">
-          <i class="bi bi-clock-fill text-primary"></i>
-          {{ tienda?.horarios || 'Lun-Sáb 10am-9pm' }}
-        </p>
-        <p class="mb-0">
-          <i class="bi bi-whatsapp text-success"></i>
-          {{ tienda?.whatsapp }}
-        </p>
+      <div class="col-lg-6">
+        <div class="footer-info">
+          @if (tienda?.direccion) {
+            <p class="mb-3">
+              <i class="bi bi-geo-alt-fill text-success me-2"></i>
+              {{ tienda.direccion }}
+            </p>
+          }
+          @if (tienda?.horarios) {
+            <p class="mb-3">
+              <i class="bi bi-clock-fill text-primary me-2"></i>
+              {{ tienda.horarios }}
+            </p>
+          }
+          @if (tienda?.whatsapp) {
+            <p class="mb-0">
+              <i class="bi bi-whatsapp text-success me-2"></i>
+              {{ tienda.whatsapp }}
+            </p>
+          }
+        </div>
       </div>
     </div>
-    <hr class="my-4">
-    <p class="text-center text-muted mb-0">
+    <hr class="my-5 border-secondary">
+    <p class="text-center text-muted small mb-0">
       © {{ currentYear }} <strong>{{ tienda?.nombre || 'STORE COLLECTION' }}</strong> • Todos los derechos reservados
     </p>
   </div>
