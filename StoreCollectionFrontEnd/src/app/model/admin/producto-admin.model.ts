@@ -59,8 +59,12 @@ export interface AtributoConValores {
 }
 
 export interface AtributoValorRequest {
-  atributoNombre: string; // Ej: "Color", "Talla"
-  valor: string;          // Ej: "Rojo", "38"
+  atributoNombre: string;
+  valor: string;
+
+  // Campos temporales para crear nuevos atributos/valores (NO se envían al backend)
+  atributoNombreTemp?: string;
+  valorTemp?: string;
 }
 // === Paginación ===
 export interface ProductoPage {

@@ -10,11 +10,19 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate    # No crea nada, solo valida tus tablas
+      ddl-auto: validate    # Solo valida las tablas
     show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
+
+  # === CONFIGURACIÓN PARA SUBIDA DE ARCHIVOS (IMÁGENES) ===
+  servlet:
+    multipart:
+      enabled: true                 # Asegura que multipart esté activado
+      max-file-size: 15MB           # Máximo por imagen (ajusta si quieres más/menos)
+      max-request-size: 50MB        # Máximo total del request (para varias imágenes)
+      file-size-threshold: 2MB      # Opcional: escribe en disco temporal si >2MB
 
 jwt:
   secret: 8f9e2a7c1d5b3e6f4a9d8c7b6e5f4d3c2b1a0f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2910

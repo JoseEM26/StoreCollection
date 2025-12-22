@@ -149,67 +149,96 @@
                    class="file-input" />
           </div>
         </div>
+<!-- Atributos -->
+<h5 class="mt-4 mb-3 fw-bold">Atributos de la variante ({{ item.variante.atributos.length }})</h5>
 
-        <!-- Atributos -->
-        <h4 class="subsection-title">Atributos ({{ item.variante.atributos.length }})</h4>
+<div class="mb-3">
+  <button type="button" class="btn btn-primary btn-sm" (click)="agregarAtributo(i)">
+    + Agregar atributo
+  </button>
+</div>
 
-        <button type="button" class="btn-add-small mb-3" (click)="agregarAtributo(i)">
-          + Agregar atributo
-        </button>
+<div *ngIf="item.variante.atributos.length === 0" class="text-muted text-center py-4 bg-light rounded">
+  No hay atributos definidos para esta variante.
+</div>
 
-        <div *ngIf="item.variante.atributos.length === 0" class="text-muted italic">
-          No hay atributos aún.
-        </div>
+<div class="row g-3" *ngFor="let attr of item.variante.atributos; let j = index">
+  <!-- Columna: Nombre del atributo -->
+  <div class="col-md-5">
+    <select class="form-select form-select-sm"
+            [(ngModel)]="attr.atributoNombre"
+            (ngModelChange)="onAtributoChange(i, j, $event)"
+            [name]="'attrNom_' + i + '_' + j">
+      <option value="" disabled>Seleccionar atributo</option>
+      
+      <!-- ✅ Atributo personalizado (no existe en backend) -->
+      <option *ngIf="isAtributoPersonalizado(attr)" [value]="attr.atributoNombre">
+        {{ attr.atributoNombre }} (personalizado)
+      </option>
+      
+      <!-- Atributos del backend -->
+      <option *ngFor="let a of atributosDisponibles()" [value]="a.descripcion">
+        {{ a.descripcion }}
+      </option>
+      
+      <option value="__new__" class="fw-bold text-primary">+ Crear nuevo atributo</option>
+    </select>
 
-        <div *ngFor="let attr of item.variante.atributos; let j = index" class="atributo-row">
+    <!-- Input para NUEVO atributo -->
+    <input *ngIf="attr.atributoNombre === '__new__'"
+           type="text"
+           [(ngModel)]="attr.atributoNombreTemp!"
+           [name]="'newAttr_' + i + '_' + j"
+           placeholder="Nombre del nuevo atributo (ej: Talla)"
+           class="form-control form-control-sm mt-2"
+           (blur)="finalizarNuevoAtributo(i, j)"
+           autofocus />
+  </div>
 
-          <div class="form-group attr-select">
-            <select [(ngModel)]="attr.atributoNombre"
-                    (ngModelChange)="onAtributoChange(i, j, $event)"
-                    [name]="'attrNom_' + i + '_' + j"
-                    class="form-control">
-              <option value="" disabled>Seleccionar atributo</option>
-              <option *ngFor="let a of atributosDisponibles()" [value]="a.descripcion">
-                {{ a.descripcion }}
-              </option>
-              <option value="__new__">+ Nuevo atributo</option>
-            </select>
-
-            <input *ngIf="attr.atributoNombre === '__new__'"
-                   [(ngModel)]="attr.atributoNombre"
-                   [name]="'newAttr_' + i + '_' + j"
-                   placeholder="Nombre del nuevo atributo"
-                   class="form-control mt-2" />
-          </div>
-
-          <div class="form-group attr-select">
-            <select *ngIf="attr.atributoNombre && attr.atributoNombre !== '__new__'"
-                    [(ngModel)]="attr.valor"
-                    (ngModelChange)="onValorChange(i, j, $event)"
-                    [name]="'attrVal_' + i + '_' + j"
-                    [disabled]="!attr.atributoNombre"
-                    class="form-control">
-              <option value="" disabled>Seleccionar valor</option>
-              <option *ngFor="let v of getValoresForAtributo(attr.atributoNombre)" [value]="v.descripcion">
-                {{ v.descripcion }}
-              </option>
-              <option value="__new__">+ Nuevo valor</option>
-            </select>
-
-            <input *ngIf="attr.atributoNombre === '__new__' || attr.valor === '__new__'"
-                   [(ngModel)]="attr.valor"
-                   [name]="'val_' + i + '_' + j"
-                   placeholder="Valor del atributo"
-                   class="form-control mt-2" />
-          </div>
-
-          <div class="delete-attr-btn">
-            <button type="button" (click)="eliminarAtributo(i, j)" class="btn-delete-small">×</button>
-          </div>
-        </div>
-
-      </div>
+  <!-- Columna: Valor -->
+  <div class="col-md-5">
+    <!-- Select de valores SOLO si hay atributo válido -->
+    <div *ngIf="attr.atributoNombre && attr.atributoNombre !== '__new__'">
+      <select class="form-select form-select-sm"
+              [(ngModel)]="attr.valor"
+              (ngModelChange)="onValorChange(i, j, $event)"
+              [name]="'attrVal_' + i + '_' + j">
+        <option value="" disabled>Seleccionar valor</option>
+        
+        <!-- ✅ Valor personalizado (no existe en valores del atributo) -->
+        <option *ngIf="isValorPersonalizado(attr)" [value]="attr.valor">
+          {{ attr.valor }} (personalizado)
+        </option>
+        
+        <!-- Valores del backend para este atributo -->
+        <option *ngFor="let v of getValoresForAtributo(attr.atributoNombre)" [value]="v.descripcion">
+          {{ v.descripcion }}
+        </option>
+        
+        <option value="__new__" class="fw-bold text-primary">+ Crear nuevo valor</option>
+      </select>
     </div>
+
+    <!-- Input para NUEVO valor -->
+    <input *ngIf="attr.valor === '__new__'"
+           type="text"
+           [(ngModel)]="attr.valorTemp!"
+           [name]="'newVal_' + i + '_' + j"
+           placeholder="Escribe el valor (ej: 38, Rojo, M)"
+           class="form-control form-control-sm mt-2"
+           (blur)="finalizarNuevoValor(i, j)"
+           autofocus />
+  </div>
+
+  <!-- Columna: Eliminar -->
+  <div class="col-md-2 d-flex align-items-end">
+    <button type="button"
+            class="btn btn-danger btn-sm w-100"
+            (click)="eliminarAtributo(i, j)">
+      Eliminar
+    </button>
+  </div>
+</div>
 
     <!-- Mensaje de error -->
     <div *ngIf="errorMessage()" class="alert-error">

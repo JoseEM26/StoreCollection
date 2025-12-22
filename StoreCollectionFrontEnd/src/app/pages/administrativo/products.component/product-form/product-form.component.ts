@@ -1,7 +1,12 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AtributoConValores, ProductoRequest, ProductoResponse, VarianteRequest, AtributoValorRequest } from '../../../../model/admin/producto-admin.model';
+import {
+  AtributoConValores,
+  ProductoResponse,
+  VarianteRequest,
+  AtributoValorRequest
+} from '../../../../model/admin/producto-admin.model';
 import { DropTownService, DropTownStandar } from '../../../../service/droptown.service';
 import { ProductoAdminService } from '../../../../service/service-admin/producto-admin.service';
 import { AuthService } from '../../../../../auth/auth.service';
@@ -19,6 +24,7 @@ export class ProductFormComponent implements OnChanges {
   @Output() saved = new EventEmitter<void>();
   @Output() closed = new EventEmitter<void>();
 
+  // Señales principales
   nombre = signal<string>('');
   slug = signal<string>('');
   categoriaId = signal<number | null>(null);
@@ -29,7 +35,6 @@ export class ProductFormComponent implements OnChanges {
   variantes = signal<VarianteRequest[]>([]);
   collapsed = signal<boolean[]>([]);
 
-  // Preview de imágenes (para mostrar antes de guardar)
   imagenPreviews = signal<Map<number, string>>(new Map());
 
   categorias = signal<DropTownStandar[]>([]);
@@ -50,7 +55,6 @@ export class ProductFormComponent implements OnChanges {
 
   private loadDropdowns() {
     this.dropTownService.getCategorias().subscribe(cats => this.categorias.set(cats));
-
     if (this.auth.isAdmin()) {
       this.dropTownService.getTiendas().subscribe(tiendas => this.tiendas.set(tiendas));
     }
@@ -79,12 +83,10 @@ export class ProductFormComponent implements OnChanges {
           imagenUrl: v.imagenUrl,
           activo: v.activo,
           atributos: v.atributos.map(a => ({
-            atributoNombre: a.atributoNombre,
-            valor: a.valor
+            atributoNombre: a.atributoNombre || '',
+            valor: a.valor || ''
           }))
         };
-
-        // Guardar preview si ya tiene imagen
         if (v.imagenUrl) {
           this.imagenPreviews.update(map => map.set(index, v.imagenUrl!));
         }
@@ -152,13 +154,11 @@ export class ProductFormComponent implements OnChanges {
     this.collapsed.update(c => c.map((val, i) => i === index ? !val : val));
   }
 
-  // === MANEJO DE IMAGEN ===
+  // === IMÁGENES ===
   onImagenChange(event: Event, index: number): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       const file = input.files[0];
-
-      // Validación básica
       if (!file.type.startsWith('image/')) {
         alert('Solo se permiten imágenes');
         return;
@@ -168,15 +168,13 @@ export class ProductFormComponent implements OnChanges {
         return;
       }
 
-      // Guardar archivo en variante
       this.variantes.update(v => {
         const copy = [...v];
         copy[index].imagen = file;
-        copy[index].imagenUrl = undefined; // Limpiar URL anterior
+        copy[index].imagenUrl = undefined;
         return copy;
       });
 
-      // Generar preview
       const reader = new FileReader();
       reader.onload = (e) => {
         this.imagenPreviews.update(map => map.set(index, e.target?.result as string));
@@ -198,11 +196,16 @@ export class ProductFormComponent implements OnChanges {
     });
   }
 
-  // === ATRIBUTOS (igual que antes) ===
+  // === ATRIBUTOS ===
   agregarAtributo(varianteIndex: number): void {
     this.variantes.update(v => {
       const copy = [...v];
-      copy[varianteIndex].atributos.push({ atributoNombre: '', valor: '' });
+      copy[varianteIndex].atributos.push({
+        atributoNombre: '',
+        valor: '',
+        atributoNombreTemp: '',
+        valorTemp: ''
+      });
       return copy;
     });
   }
@@ -215,6 +218,90 @@ export class ProductFormComponent implements OnChanges {
     });
   }
 
+  onAtributoChange(varianteIndex: number, attrIndex: number, value: string): void {
+    this.variantes.update(v => {
+      const copy = [...v];
+      const attr = copy[varianteIndex].atributos[attrIndex];
+
+      if (value === '__new__') {
+        attr.atributoNombre = '__new__';
+        attr.atributoNombreTemp = '';
+        attr.valor = '';
+        attr.valorTemp = undefined;
+      } else {
+        attr.atributoNombre = value;
+        delete (attr as any).atributoNombreTemp;
+        attr.valor = '';
+        attr.valorTemp = undefined;
+      }
+      return copy;
+    });
+  }
+
+  finalizarNuevoAtributo(varianteIndex: number, attrIndex: number): void {
+    this.variantes.update(v => {
+      const copy = [...v];
+      const attr = copy[varianteIndex].atributos[attrIndex];
+      const texto = attr.atributoNombreTemp?.trim();
+      if (texto && texto.length > 0) {
+        attr.atributoNombre = texto;
+        delete (attr as any).atributoNombreTemp;
+        attr.valor = '';
+        attr.valorTemp = undefined;
+      } else {
+        attr.atributoNombre = '';
+        attr.valor = '';
+      }
+      return copy;
+    });
+  }
+
+  onValorChange(varianteIndex: number, attrIndex: number, value: string): void {
+    this.variantes.update(v => {
+      const copy = [...v];
+      const attr = copy[varianteIndex].atributos[attrIndex];
+
+      if (value === '__new__') {
+        attr.valor = '__new__';
+        attr.valorTemp = '';
+      } else {
+        attr.valor = value;
+        delete (attr as any).valorTemp;
+      }
+      return copy;
+    });
+  }
+
+  finalizarNuevoValor(varianteIndex: number, attrIndex: number): void {
+    this.variantes.update(v => {
+      const copy = [...v];
+      const attr = copy[varianteIndex].atributos[attrIndex];
+      const texto = attr.valorTemp?.trim();
+      if (texto && texto.length > 0) {
+        attr.valor = texto;
+        delete (attr as any).valorTemp;
+      } else {
+        attr.valor = '';
+      }
+      return copy;
+    });
+  }
+
+  // ✅ MÉTODOS NUEVOS PARA EVITAR ERRORES DE COMPILACIÓN
+  isAtributoPersonalizado(attr: any): boolean {
+    return !!attr.atributoNombre && 
+           attr.atributoNombre !== '__new__' &&
+           !this.atributosDisponibles().some(a => a.descripcion === attr.atributoNombre);
+  }
+
+  isValorPersonalizado(attr: any): boolean {
+    if (!attr.atributoNombre || attr.atributoNombre === '__new__' || attr.valor === '__new__') {
+      return false;
+    }
+    const valoresExistentes = this.getValoresForAtributo(attr.atributoNombre);
+    return !!attr.valor && !valoresExistentes.some(v => v.descripcion === attr.valor);
+  }
+
   getValoresForAtributo(nombre: string): DropTownStandar[] {
     const attr = this.atributosDisponibles().find(a => a.descripcion === nombre);
     return attr ? attr.valores : [];
@@ -224,6 +311,7 @@ export class ProductFormComponent implements OnChanges {
     return this.variantes().map((v, i) => ({ variante: v, index: i }));
   });
 
+  // === GUARDAR ===
   save(): void {
     this.errorMessage.set(null);
     this.loading.set(true);
@@ -240,16 +328,12 @@ export class ProductFormComponent implements OnChanges {
       return;
     }
 
-    // Construir FormData
     const formData = new FormData();
-
-    // Campos básicos
     formData.append('nombre', this.nombre().trim());
     formData.append('slug', this.slug().trim());
     formData.append('categoriaId', this.categoriaId()!.toString());
     formData.append('activo', this.activo().toString());
 
-    // TiendaId (igual lógica que antes)
     if (this.isEdit) {
       formData.append('tiendaId', this.producto!.tiendaId.toString());
     } else if (this.auth.isAdmin()) {
@@ -260,9 +344,7 @@ export class ProductFormComponent implements OnChanges {
       }
       formData.append('tiendaId', this.tiendaId()!.toString());
     }
-    // OWNER: backend lo asigna automáticamente
 
-    // Variantes
     this.variantes().forEach((v, i) => {
       if (v.id) formData.append(`variantes[${i}].id`, v.id.toString());
       formData.append(`variantes[${i}].sku`, v.sku.trim());
@@ -270,16 +352,14 @@ export class ProductFormComponent implements OnChanges {
       formData.append(`variantes[${i}].stock`, v.stock.toString());
       formData.append(`variantes[${i}].activo`, (v.activo ?? true).toString());
 
-      // Imagen
       if (v.imagen) {
         formData.append(`variantes[${i}].imagen`, v.imagen, v.imagen.name);
       } else if (v.imagenUrl) {
         formData.append(`variantes[${i}].imagenUrl`, v.imagenUrl);
       }
 
-      // Atributos
       v.atributos.forEach((a, j) => {
-        if (a.atributoNombre.trim() && a.valor.trim()) {
+        if (a.atributoNombre.trim() && a.valor.trim() && a.atributoNombre !== '__new__') {
           formData.append(`variantes[${i}].atributos[${j}].atributoNombre`, a.atributoNombre.trim());
           formData.append(`variantes[${i}].atributos[${j}].valor`, a.valor.trim());
         }
@@ -302,22 +382,7 @@ export class ProductFormComponent implements OnChanges {
       }
     });
   }
-  onAtributoChange(varianteIndex: number, attrIndex: number, value: string): void {
-    this.variantes.update(v => {
-      const copy = [...v];
-      copy[varianteIndex].atributos[attrIndex].atributoNombre = value === '__new__' ? '__new__' : value;
-      copy[varianteIndex].atributos[attrIndex].valor = ''; // siempre resetear valor
-      return copy;
-    });
-  }
 
-  onValorChange(varianteIndex: number, attrIndex: number, value: string): void {
-    this.variantes.update(v => {
-      const copy = [...v];
-      copy[varianteIndex].atributos[attrIndex].valor = value === '__new__' ? '__new__' : value;
-      return copy;
-    });
-  }
   cancel(): void {
     this.closed.emit();
   }

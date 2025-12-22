@@ -115,7 +115,6 @@ export class ProductsComponent implements OnInit {
  // ... el resto del código permanece igual
 
 toggleActivo(producto: ProductoResponse): void {
-  if (!this.auth.isAdmin()) return;
 
   const nuevoEstado = !producto.activo;
 
@@ -131,17 +130,6 @@ toggleActivo(producto: ProductoResponse): void {
   // Llamada al backend
   this.productoService.toggleActivo(producto.id).subscribe({
     next: (updated) => {
-      // ¡NO sobreescribas con 'updated'!
-      // El servidor probablemente te devolvió el estado viejo.
-      // Si quieres ser precavido y el servidor sí devuelve el nuevo estado correcto,
-      // entonces sí puedes actualizar, pero en tu caso parece que no.
-      // Opción segura: no hacer nada aquí, el optimistic ya es el estado final correcto.
-
-      // Si en el futuro el backend devuelve el objeto actualizado correctamente,
-      // descomenta esto:
-      // this.productos.update(list =>
-      //   list.map(p => p.id === updated.id ? { ...updated } : p)
-      // );
     },
     error: (err) => {
       console.error('Error al cambiar estado', err);

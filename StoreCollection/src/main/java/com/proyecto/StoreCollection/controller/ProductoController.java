@@ -44,7 +44,6 @@ public class ProductoController {
     //PRIVADO PARA LA PARTE ADMIN
 
     @GetMapping("/api/owner/productos/admin-list")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
     public ResponseEntity<Page<ProductoResponse>> listarProductosUsuarioOAdmin(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -93,27 +92,23 @@ public class ProductoController {
     }
 
     @GetMapping("/api/owner/productos/{id}")
-    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<ProductoResponse> obtenerParaEdicion(@PathVariable Integer id) {
         return ResponseEntity.ok(service.getProductoByIdParaEdicion(id));
     }
 
     @PostMapping(value = "/api/owner/productos", consumes = "multipart/form-data")
-    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<ProductoResponse> crear(
             @Valid @ModelAttribute ProductoRequest request) {
         return ResponseEntity.ok(service.save(request));
     }
 
     @PutMapping(value = "/api/owner/productos/{id}", consumes = "multipart/form-data")
-    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<ProductoResponse> actualizar(
             @PathVariable Integer id,
             @Valid @ModelAttribute ProductoRequest request) {  // ← @ModelAttribute en vez de @RequestBody
         return ResponseEntity.ok(service.save(request, id));
     }
     @PatchMapping("/api/owner/productos/{id}/toggle-activo")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductoResponse> toggleActivo(@PathVariable Integer id) {
         return ResponseEntity.ok(service.toggleActivo(id));
     }

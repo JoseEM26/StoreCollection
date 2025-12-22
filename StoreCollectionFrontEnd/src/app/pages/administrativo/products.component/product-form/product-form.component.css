@@ -239,4 +239,99 @@
 
 .italic {
   font-style: italic;
+}.atributos-container {
+  margin-top: 10px;
+}
+
+.empty-atributos {
+  padding: 20px;
+  text-align: center;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e1;
+}
+
+.atributos-table {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 1.5fr 1.5fr 80px;
+  background: #f1f5f9;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #475569;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1.5fr 80px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  align-items: end;
+  gap: 12px;
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.col-attr, .col-valor {
+  min-width: 0;
+}
+
+.form-control-sm {
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  height: auto;
+}
+
+.nuevo-input {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.text-primary {
+  color: #2563eb !important;
+}
+
+.font-weight-bold {
+  font-weight: 600 !important;
+}
+
+/* Responsive: en pantallas pequeñas, apila columnas */
+@media (max-width: 768px) {
+  .table-header,
+  .table-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .col-action {
+    justify-self: end;
+    margin-top: 8px;
+  }
+
+  .table-header > div {
+    display: none;
+  }
+}/* Opcional: fondo suave para atributos */
+.row.g-3 {
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+/* Resaltar cuando se crea nuevo */
+input[autofocus] {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
 }

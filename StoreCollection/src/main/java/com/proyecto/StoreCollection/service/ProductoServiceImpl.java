@@ -323,15 +323,6 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     @Transactional
     public ProductoResponse toggleActivo(Integer id) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        boolean esAdmin = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
-        if (!esAdmin) {
-            throw new AccessDeniedException("Solo los administradores pueden activar o desactivar productos");
-        }
-
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
 
