@@ -137,29 +137,52 @@
         </div>
 
         <!-- Paginación mejorada: más elegante -->
-        <div class="d-flex justify-content-center mt-5" *ngIf="page && page.totalPages > 1">
-          <nav>
-            <ul class="pagination pagination-lg">
-              <li class="page-item" [class.disabled]="!page || page.first">
-                <button class="page-link rounded-pill px-4" (click)="goToPage(currentPage - 1)">
-                  <i class="bi bi-chevron-left"></i>
-                </button>
-              </li>
-              <li class="page-item" 
-                  *ngFor="let i of getPageRange()" 
-                  [class.active]="i === currentPage">
-                <button class="page-link rounded-pill" (click)="goToPage(i)">
-                  {{ i + 1 }}
-                </button>
-              </li>
-              <li class="page-item" [class.disabled]="!page || page.last">
-                <button class="page-link rounded-pill px-4" (click)="goToPage(currentPage + 1)">
-                  <i class="bi bi-chevron-right"></i>
-                </button>
-              </li>
-            </ul>
-          </nav>
-        </div>
+      <!-- Paginación visible y bonita -->
+<div class="text-center mt-5" *ngIf="page && page.totalPages > 1">
+  <nav aria-label="Paginación de tiendas">
+    <ul class="pagination pagination-lg justify-content-center">
+      <!-- Anterior -->
+      <li class="page-item" [class.disabled]="page.first">
+        <button 
+          class="page-link rounded-pill px-4 shadow-sm" 
+          (click)="goToPage(currentPage - 1)"
+          [disabled]="page.first"
+          aria-label="Página anterior">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+      </li>
+
+      <!-- Números de página -->
+      <li 
+        class="page-item" 
+        *ngFor="let num of getVisiblePages()" 
+        [class.active]="num === currentPage">
+        <button 
+          class="page-link rounded-pill shadow-sm" 
+          (click)="goToPage(num)">
+          {{ num + 1 }}
+        </button>
+      </li>
+
+      <!-- Siguiente -->
+      <li class="page-item" [class.disabled]="page.last">
+        <button 
+          class="page-link rounded-pill px-4 shadow-sm" 
+          (click)="goToPage(currentPage + 1)"
+          [disabled]="page.last"
+          aria-label="Página siguiente">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Texto informativo -->
+  <p class="text-muted small mt-3">
+    Mostrando página {{ currentPage + 1 }} de {{ page.totalPages }} 
+    ({{ page.totalElements }} tiendas en total)
+  </p>
+</div>
 
         <div class="text-center text-muted mt-3">
           Mostrando {{ page?.numberOfElements || 0 }} de {{ page?.totalElements || 0 }} tiendas

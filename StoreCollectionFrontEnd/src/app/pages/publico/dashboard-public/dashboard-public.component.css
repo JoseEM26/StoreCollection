@@ -71,5 +71,52 @@
     margin-top: 1rem;
   }
 }
+/* ========================
+   PAGINACIÓN BONITA Y VISIBLE
+   ======================== */
 
+.pagination .page-link {
+  background-color: white;
+  border: 1px solid #dee2e6;
+  color: #667eea;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  min-width: 50px;
+}
+
+.pagination .page-link:hover:not(.disabled) {
+  background-color: #667eea;
+  color: white;
+  border-color: #667eea;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(102, 126, 234, 0.3);
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #667eea !important;
+  border-color: #667eea !important;
+  color: white !important;
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.pagination .page-item.disabled .page-link {
+  color: #adb5bd;
+  background-color: #f8f9fa;
+  cursor: not-allowed;
+}
+
+/* Flechas más grandes */
+.pagination .page-link i {
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+/* Responsivo para móviles */
+@media (max-width: 576px) {
+  .pagination.pagination-lg .page-link {
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
+    min-width: 44px;
+  }
+}
 .z-3 { position: relative; z-index: 3; }

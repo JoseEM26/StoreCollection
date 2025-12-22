@@ -22,10 +22,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,36 +41,51 @@ public class TiendaServiceImpl implements TiendaService {
         return tiendaRepository.findAll(pageable).map(this::toResponse);
     }
 // En TiendaServiceImpl.java
+@Override
+@Transactional(readOnly = true)
+public Page<TiendaResponse> findAllPublicasActivas(Pageable pageable) {
+    // Obtener todas las tiendas activas
+    List<Tienda> todasActivas = tiendaRepository.findByActivoTrue();
 
-    @Override
-    @Transactional(readOnly = true)
-    public Page<TiendaResponse> findAllPublicasActivas(Pageable pageable) {
-        Page<Tienda> tiendas = tiendaRepository.findByActivoTrue(pageable);
+    int mesActual = LocalDate.now().getMonthValue();
 
-        // Filtrar en memoria las que tienen plan válido y vigente
-        List<TiendaResponse> filtradas = tiendas.getContent().stream()
-                .filter(tienda -> {
-                    Plan plan = tienda.getPlan();
-                    if (plan == null) return false;
-                    if (!plan.getActivo()) return false;
+    // Filtrar por plan vigente y mapear a Response
+    List<TiendaResponse> todasFiltradas = todasActivas.stream()
+            .filter(tienda -> {
+                Plan plan = tienda.getPlan();
+                if (plan == null || !plan.getActivo()) {
+                    return false;
+                }
+                int inicio = plan.getMesInicio();
+                int fin = plan.getMesFin();
 
-                    int mesActual = java.time.LocalDate.now().getMonthValue(); // 1-12
-                    int inicio = plan.getMesInicio();
-                    int fin = plan.getMesFin();
+                boolean vigente = (inicio <= fin)
+                        ? (mesActual >= inicio && mesActual <= fin)
+                        : (mesActual >= inicio || mesActual <= fin);
 
-                    if (inicio <= fin) {
-                        return mesActual >= inicio && mesActual <= fin;
-                    } else {
-                        // Cruza fin de año (ej: Nov(11) - Feb(2))
-                        return mesActual >= inicio || mesActual <= fin;
-                    }
-                })
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+                return vigente;
+            })
+            .map(this::toResponse)
+            .collect(Collectors.toList());
 
-        // Reconstruir Page con los elementos filtrados
-        return new PageImpl<>(filtradas, pageable, filtradas.size());
+    // Ordenar siempre por nombre (asc)
+    todasFiltradas.sort(Comparator.comparing(TiendaResponse::getNombre, String.CASE_INSENSITIVE_ORDER));
+
+    long total = todasFiltradas.size();
+
+    // Si es unpaged (usado en búsqueda global), devolver todo
+    if (pageable.isUnpaged()) {
+        return new PageImpl<>(todasFiltradas, pageable, total);
     }
+
+    // Caso normal: aplicar paginación
+    int start = (int) pageable.getOffset();
+    int end = Math.min(start + pageable.getPageSize(), todasFiltradas.size());
+
+    List<TiendaResponse> paginaActual = todasFiltradas.subList(start, end);
+
+    return new PageImpl<>(paginaActual, pageable, total);
+}
     @Override
     @Transactional(readOnly = true)
     public TiendaResponse findById(Integer id) {

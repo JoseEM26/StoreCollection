@@ -4,10 +4,7 @@ import com.proyecto.StoreCollection.dto.response.*;
 import com.proyecto.StoreCollection.service.TiendaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -15,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,46 +25,67 @@ public class TiendaController {
     @GetMapping("/api/public/tiendas")
     public ResponseEntity<Page<TiendaResponse>> listarTodasTiendas(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size,  // Puedes mantener 12 como en frontend
+            @RequestParam(defaultValue = "12") int size,
             @RequestParam(defaultValue = "nombre,asc") String sort,
             @RequestParam(required = false) String search) {
 
-        org.springframework.data.domain.Sort.Direction direction = org.springframework.data.domain.Sort.Direction.ASC;
+        // Parsear el parámetro sort
+        Sort.Direction direction = Sort.Direction.ASC;
         String property = "nombre";
 
         if (sort != null && !sort.trim().isEmpty()) {
             String[] parts = sort.split(",");
-            if (parts.length >= 1) property = parts[0].trim();
-            if (parts.length >= 2) {
-                direction = "desc".equalsIgnoreCase(parts[1].trim())
-                        ? org.springframework.data.domain.Sort.Direction.DESC
-                        : org.springframework.data.domain.Sort.Direction.ASC;
+            if (parts.length >= 1) {
+                property = parts[0].trim();
+            }
+            if (parts.length >= 2 && "desc".equalsIgnoreCase(parts[1].trim())) {
+                direction = Sort.Direction.DESC;
             }
         }
 
-        org.springframework.data.domain.Sort sortObj = org.springframework.data.domain.Sort.by(direction, property);
+        Sort sortObj = Sort.by(direction, property);
         Pageable pageable = PageRequest.of(page, size, sortObj);
 
         Page<TiendaResponse> resultado;
 
         if (search != null && !search.trim().isEmpty()) {
-            // Búsqueda solo entre tiendas activas con plan vigente
-            Page<TiendaResponse> todasActivas = service.findAllPublicasActivas(pageable);
-            resultado = todasActivas.getContent().stream()
-                    .filter(t -> t.getNombre().toLowerCase().contains(search.trim().toLowerCase()))
-                    .collect(Collectors.toList())
-                    .stream()
-                    .collect(Collectors.collectingAndThen(
-                            Collectors.toList(),
-                            list -> new PageImpl(list, pageable, list.size())
-                    ));
+            String terminoBusqueda = search.trim().toLowerCase();
+
+            // 1. Obtener TODAS las tiendas públicas vigentes (sin paginación)
+            List<TiendaResponse> todasVigentes = service.findAllPublicasActivas(Pageable.unpaged())
+                    .getContent();
+
+            // 2. Filtrar por nombre en TODAS las tiendas
+            List<TiendaResponse> coincidencias = todasVigentes.stream()
+                    .filter(t -> t.getNombre().toLowerCase().contains(terminoBusqueda))
+                    .collect(Collectors.toList());
+
+            // 3. Ordenar según el sort solicitado
+            if (direction == Sort.Direction.ASC) {
+                coincidencias.sort(Comparator.comparing(TiendaResponse::getNombre, String.CASE_INSENSITIVE_ORDER));
+            } else {
+                coincidencias.sort(Comparator.comparing(TiendaResponse::getNombre, String.CASE_INSENSITIVE_ORDER).reversed());
+            }
+
+            // 4. Paginación manual sobre los resultados filtrados
+            long totalCoincidencias = coincidencias.size();
+            int start = (int) pageable.getOffset();
+            int end = Math.min(start + pageable.getPageSize(), coincidencias.size());
+
+            List<TiendaResponse> paginaFiltrada = coincidencias.subList(
+                    Math.min(start, coincidencias.size()),
+                    end
+            );
+
+            resultado = new PageImpl<>(paginaFiltrada, pageable, totalCoincidencias);
+
         } else {
+            // Sin búsqueda: paginación normal
             resultado = service.findAllPublicasActivas(pageable);
         }
 
         return ResponseEntity.ok(resultado);
     }
-
     @GetMapping("/api/public/tiendas/{slug}")
     public ResponseEntity<TiendaResponse> publicInfo(@PathVariable String slug) {
         return ResponseEntity.ok(service.findBySlug(slug));

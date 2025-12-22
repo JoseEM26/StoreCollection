@@ -122,7 +122,25 @@ getMesesTexto(mesInicio: number, mesFin: number): string {
     }
     return range;
   }
+// En DashboardPublicComponent (dentro del .ts)
 
+getVisiblePages(): number[] {
+  if (!this.page || this.page.totalPages <= 1) return [];
+
+  const total = this.page.totalPages;
+  const current = this.currentPage;
+  const maxVisible = 7; // Máximo 7 botones visibles
+
+  let start = Math.max(0, current - Math.floor(maxVisible / 2));
+  let end = start + maxVisible;
+
+  if (end > total) {
+    end = total;
+    start = Math.max(0, end - maxVisible);
+  }
+
+  return Array.from({ length: end - start }, (_, i) => start + i);
+}
   goToPage(page: number): void {
     if (this.page && page >= 0 && page < this.page.totalPages) {
       this.loadTiendas(page);
