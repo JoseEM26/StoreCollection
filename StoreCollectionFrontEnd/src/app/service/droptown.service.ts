@@ -27,18 +27,12 @@ export class DropTownService {
     return this.http.get<DropTownStandar[]>(`${this.API_URL}/usuariosDropTown`);
   }
 
-  // getAtributos(): Observable<DropTownStandar[]> {
-  //   return this.http.get<DropTownStandar[]>(`${this.API_URL}/atributosDropTown`);
-  // }
+  getPlanes(): Observable<DropTownStandar[]> {
+    return this.http.get<DropTownStandar[]>(`${this.API_URL}/planesDropTown`);
+  }
 
  getAtributosConValores(): Observable<AtributoConValores[]> {
-  const x = this.http.get<AtributoConValores[]>(`${this.API_URL}/atributosDropTown`);
-
-  x.subscribe(data => {
-    console.log("DATA QUE LLEGA 👉", data);
-  });
-
-  return x;
-}
+  return this.http.get<AtributoConValores[]>(`${this.API_URL}/atributosDropTown`);
+  }
 
 }

@@ -128,14 +128,42 @@
         </div>
 
         <!-- Plan -->
-        <div class="col-12" *ngIf="esAdmin">
-          <label class="form-label">Plan</label>
-          <select formControlName="planId" class="form-select">
-            <option *ngFor="let p of planes" [value]="p.id">
-              {{ p.nombre }}
-            </option>
-          </select>
-        </div>
+      <!-- Plan - Editable solo para ADMIN -->
+<div class="col-12" *ngIf="esAdmin">
+  <label class="form-label">Plan *</label>
+  <select 
+    formControlName="planId" 
+    class="form-select"
+    [class.is-invalid]="form.get('planId')?.invalid && form.get('planId')?.touched"
+    [disabled]="planesLoading">
+    
+    <!-- Opción por defecto mientras carga o si no hay planes -->
+    <option [value]="null" disabled *ngIf="planesLoading || planes.length === 0">
+      {{ planesLoading ? 'Cargando planes...' : 'No hay planes disponibles' }}
+    </option>
+
+    <!-- Opciones reales -->
+    <option *ngFor="let p of planes" [value]="p.id">
+      {{ p.descripcion }}
+    </option>
+  </select>
+
+  <!-- Mensaje de error si es requerido -->
+  <div class="invalid-feedback" *ngIf="form.get('planId')?.touched && form.get('planId')?.errors?.['required']">
+    Este campo es obligatorio
+  </div>
+</div>
+
+<!-- Plan - Solo lectura para usuarios no admin -->
+<div class="col-12" *ngIf="!esAdmin">
+  <label class="form-label">Plan actual</label>
+  <input 
+    type="text" 
+    class="form-control" 
+    [value]="nombrePlanActual" 
+    disabled 
+  />
+</div>
 
         <!-- Si no es admin, mostrar solo lectura -->
         <div class="col-12" *ngIf="!esAdmin">

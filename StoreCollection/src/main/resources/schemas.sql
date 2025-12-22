@@ -125,11 +125,11 @@ CREATE TABLE atributo_valor (
 
 -- En carrito → cambiar variante_id a que apunte a Producto_Variante (ya está bien)
 -- Tabla de relación (también con INT)
-CREATE TABLE Variante_Atributo (
+CREATE TABLE variante_atributo (
     variante_id INT NOT NULL,
     atributo_valor_id INT NOT NULL,
     PRIMARY KEY (variante_id, atributo_valor_id),
-    FOREIGN KEY (variante_id) REFERENCES Producto_Variante(id) ON DELETE CASCADE,
+    FOREIGN KEY (variante_id) REFERENCES producto_variante(id) ON DELETE CASCADE,
     FOREIGN KEY (atributo_valor_id) REFERENCES atributo_valor(id) ON DELETE CASCADE
 );
 
@@ -139,5 +139,5 @@ CREATE TABLE carrito (
     session_id VARCHAR(100) NOT NULL,
     variante_id INT NOT NULL,
     cantidad INT DEFAULT 1,
-    FOREIGN KEY (variante_id) REFERENCES Producto_Variante(id) ON DELETE CASCADE
+    FOREIGN KEY (variante_id) REFERENCES producto_variante(id) ON DELETE CASCADE
 );

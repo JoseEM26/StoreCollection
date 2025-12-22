@@ -26,19 +26,15 @@ export class FormStoresComponent implements OnInit, OnChanges {
   isEditMode = false;
   loading = false;
   logoPreview: string | null = null;
-  selectedFile: File | null = null; // Archivo seleccionado
+  selectedFile: File | null = null;
   serverError: string | null = null;
-  fileError: string | null = null; // Errores específicos de archivo
+  fileError: string | null = null;
 
   usuarios: DropTownStandar[] = [];
   usuariosLoading = false;
+  planes: DropTownStandar[] = [];        // ← Planes dinámicos del backend
+  planesLoading = false;
   esAdmin = false;
-
-  planes = [
-    { id: 1, nombre: 'Básico' },
-    { id: 2, nombre: 'Pro' },
-    { id: 3, nombre: 'Enterprise' }
-  ];
 
   form = new FormGroup({
     nombre: new FormControl<string>('', [Validators.required, Validators.minLength(3)]),
@@ -55,7 +51,7 @@ export class FormStoresComponent implements OnInit, OnChanges {
     direccion: new FormControl<string>(''),
     horarios: new FormControl<string>('Lun - Sáb 9:00 - 21:00'),
     mapa_url: new FormControl<string>('', [Validators.pattern(/^https?:\/\/.+/)]),
-    planId: new FormControl<number>(1, [Validators.required]),
+    planId: new FormControl<number | null>(null, [Validators.required]),  // ← null inicial
     userId: new FormControl<number>(0),
     activo: new FormControl<boolean>(true)
   });
@@ -71,17 +67,15 @@ export class FormStoresComponent implements OnInit, OnChanges {
   ngOnInit(): void {
     this.esAdmin = this.auth.isAdmin();
 
-    // userId solo obligatorio si es ADMIN y estamos en creación
-    if (this.esAdmin) {
-      this.form.get('userId')?.setValidators([Validators.min(1)]);
-    } else {
-      this.form.get('userId')?.clearValidators();
-    }
-    this.form.get('userId')?.updateValueAndValidity();
+    // Configurar validadores dinámicos
+    this.configurarValidadores();
 
-    // Slug empieza habilitado (solo se deshabilita en edición vía ngOnChanges)
+    // Slug empieza habilitado
     this.form.get('slug')?.enable();
 
+    // Cargar datos del backend SIEMPRE (planes para todos, usuarios solo admin)
+    this.cargarPlanes();  // ← Siempre se cargan los 2 planes activos
+    
     if (this.esAdmin) {
       this.cargarUsuarios();
     }
@@ -105,12 +99,15 @@ export class FormStoresComponent implements OnInit, OnChanges {
           direccion: this.tienda.direccion || '',
           horarios: this.tienda.horarios || 'Lun - Sáb 9:00 - 21:00',
           mapa_url: this.tienda.mapa_url || '',
-          planId: this.tienda.planId ?? 1,
+          planId: this.tienda.planId ?? null,
           userId: this.tienda.userId,
           activo: this.tienda.activo
         });
 
-        // Slug NO editable en edición → lo deshabilitamos
+        // Si el plan de la tienda no está en los planes activos, lo agregamos
+        this.agregarPlanActualSiNoExiste();
+
+        // Slug NO editable en edición
         this.form.get('slug')?.disable({ emitEvent: false });
       } else {
         // === MODO CREACIÓN ===
@@ -127,7 +124,7 @@ export class FormStoresComponent implements OnInit, OnChanges {
           direccion: '',
           horarios: 'Lun - Sáb 9:00 - 21:00',
           mapa_url: '',
-          planId: 1,
+          planId: null,  // ← Espera a que carguen los planes
           userId: 0,
           activo: true
         });
@@ -136,6 +133,15 @@ export class FormStoresComponent implements OnInit, OnChanges {
         this.form.get('slug')?.enable({ emitEvent: false });
       }
     }
+  }
+
+  private configurarValidadores() {
+    if (this.esAdmin) {
+      this.form.get('userId')?.setValidators([Validators.required, Validators.min(1)]);
+    } else {
+      this.form.get('userId')?.clearValidators();
+    }
+    this.form.get('userId')?.updateValueAndValidity();
   }
 
   private cargarUsuarios() {
@@ -153,6 +159,49 @@ export class FormStoresComponent implements OnInit, OnChanges {
     });
   }
 
+  private cargarPlanes() {
+    this.planesLoading = true;
+    this.dropTownService.getPlanes().subscribe({
+      next: (data) => {
+        this.planes = data;  // ← Solo llegan los 2 planes activos del backend
+        this.planesLoading = false;
+
+        // Si estamos editando, verificar si el plan actual existe
+        if (this.isEditMode && this.tienda?.planId) {
+          this.agregarPlanActualSiNoExiste();
+        }
+
+        // Setear plan por defecto si no hay selección
+        if (!this.form.get('planId')?.value && this.planes.length > 0) {
+          this.form.patchValue({ planId: this.planes[0].id });
+        }
+      },
+      error: (err) => {
+        console.error('Error cargando planes:', err);
+        this.serverError = 'No se pudieron cargar los planes disponibles';
+        this.planesLoading = false;
+        // Fallback a planes hardcodeados solo si falla el backend
+        this.planes = [
+          { id: 1, descripcion: 'Básico' },
+          { id: 2, descripcion: 'Pro' }
+        ];
+      }
+    });
+  }
+
+  private agregarPlanActualSiNoExiste() {
+    if (this.tienda?.planId) {
+      const planExiste = this.planes.some(p => p.id === this.tienda!.planId);
+      if (!planExiste) {
+        // Agregar el plan actual al inicio (solo para mostrar en edición)
+        this.planes.unshift({
+          id: this.tienda!.planId!,
+          descripcion: (this.tienda.planNombre || 'Plan Actual') + ' (actual)'
+        });
+      }
+    }
+  }
+
   // Generar slug automático al escribir nombre (solo en creación)
   onNombreChange() {
     if (!this.isEditMode && this.form.get('nombre')?.valid) {
@@ -167,22 +216,18 @@ export class FormStoresComponent implements OnInit, OnChanges {
     const file = event.target.files[0] as File;
 
     if (file) {
-      // Validar tipo
       const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
       if (!validTypes.includes(file.type)) {
         this.fileError = 'Formato inválido. Solo JPG, PNG, GIF o WEBP.';
         return;
       }
 
-      // Validar tamaño (máx 5MB)
       if (file.size > 5 * 1024 * 1024) {
         this.fileError = 'La imagen es demasiado grande. Máximo 5MB.';
         return;
       }
 
       this.selectedFile = file;
-
-      // Crear preview
       const reader = new FileReader();
       reader.onload = (e) => {
         this.logoPreview = e.target?.result as string;
@@ -191,7 +236,6 @@ export class FormStoresComponent implements OnInit, OnChanges {
     }
   }
 
-  // Remover imagen seleccionada
   removeLogo() {
     this.selectedFile = null;
     this.logoPreview = this.isEditMode ? this.tienda?.logo_img_url || null : null;
@@ -199,7 +243,6 @@ export class FormStoresComponent implements OnInit, OnChanges {
     this.fileError = null;
   }
 
-  // Mensajes de error personalizados
   getErrorMessage(controlName: string): string {
     const control = this.form.get(controlName);
     if (!control || !control.touched || !control.errors) return '';
@@ -243,7 +286,7 @@ export class FormStoresComponent implements OnInit, OnChanges {
           direccion: this.form.value.direccion?.trim() || undefined,
           horarios: this.form.value.horarios?.trim() || undefined,
           mapa_url: this.form.value.mapa_url?.trim() || undefined,
-          planId: this.form.value.planId ?? null,                    
+          planId: this.form.value.planId ?? null,
           activo: this.esAdmin ? (this.form.value.activo ?? undefined) : undefined
         };
 
@@ -256,14 +299,14 @@ export class FormStoresComponent implements OnInit, OnChanges {
           nombre: this.form.value.nombre!,
           slug: this.form.value.slug!,
           whatsapp: this.form.value.whatsapp ?? undefined,
-          moneda: this.form.value.moneda ?? undefined,           
+          moneda: this.form.value.moneda ?? undefined,
           descripcion: this.form.value.descripcion ?? undefined,
           direccion: this.form.value.direccion ?? undefined,
           horarios: this.form.value.horarios ?? undefined,
           mapa_url: this.form.value.mapa_url ?? undefined,
-          planId: this.form.value.planId ?? undefined,
+          planId: this.form.value.planId!,  // ← Ahora siempre tiene valor
           userId: this.esAdmin ? this.form.value.userId ?? undefined : undefined,
-          activo: this.esAdmin ? this.form.value.activo ?? undefined : undefined  // ← Solo ADMIN
+          activo: this.esAdmin ? this.form.value.activo ?? undefined : undefined
         };
 
         resultado = await lastValueFrom(
@@ -285,14 +328,14 @@ export class FormStoresComponent implements OnInit, OnChanges {
     }
   }
 
-  // Dentro de la clase FormStoresComponent
+  // ← FUNCIÓN CORREGIDA para usar 'descripcion' en lugar de 'nombre'
   get nombrePlanActual(): string {
     const planId = this.form.value.planId;
     if (!planId || !this.planes?.length) {
-      return 'Básico';
+      return 'Sin plan asignado';
     }
     const plan = this.planes.find(p => p.id === planId);
-    return plan ? plan.nombre : 'Básico';
+    return plan ? plan.descripcion : 'Plan desconocido';
   }
 
   onCancel() {

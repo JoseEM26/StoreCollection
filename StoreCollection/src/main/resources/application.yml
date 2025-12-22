@@ -1,20 +1,16 @@
-# src/main/resources/application.yml
 server:
   port: 8080
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/tienda_saas
+    url: jdbc:mysql://mainline.proxy.rlwy.net:24353/tienda_saas?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: root
-    password: mysql
+    password: ArpCGngyCGwEcLItfWCoHpcjsIxssefI
     driver-class-name: com.mysql.cj.jdbc.Driver
-  data:
-    web:
-      pageable:
-        page-serialization-mode: via-dto
+
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: validate    # No crea nada, solo valida tus tablas
     show-sql: true
     properties:
       hibernate:

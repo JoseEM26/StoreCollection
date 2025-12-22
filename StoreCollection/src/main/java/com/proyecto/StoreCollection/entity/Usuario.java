@@ -33,7 +33,7 @@ public class Usuario implements UserDetails {
     private String celular;
 
     @Column(nullable = false)
-    private boolean activo = true;  // Por defecto activo
+    private boolean activo = true;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Rol rol = Rol.CUSTOMER;

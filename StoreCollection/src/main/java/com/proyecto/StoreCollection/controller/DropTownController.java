@@ -22,11 +22,18 @@ public class DropTownController {
     private final CategoriaService categoriaService;
     private final TiendaService tiendaService;
     private final AtributoService atributoService;
+    private final PlanService planService;
 
     // Lista de Tiendas simplificada (solo activas)
     @GetMapping("/tiendasDropTown")
     public ResponseEntity<List<DropTownStandar>> getTiendasDropdown() {
         List<DropTownStandar> lista = tiendaService.getTiendasForDropdown();
+        return ResponseEntity.ok(lista);
+    }
+
+    @GetMapping("/planesDropTown")
+    public ResponseEntity<List<DropTownStandar>> getPlanesDropdown() {
+        List<DropTownStandar> lista = planService.findOnlyTwoActiveForDropdown();
         return ResponseEntity.ok(lista);
     }
 
