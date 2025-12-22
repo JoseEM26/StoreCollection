@@ -5,7 +5,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, combineLatest } from 'rxjs';
 
-import { ProductoCardComponent } from '../../../componente/producto-card/producto-card.component';
 import { Categoria } from '../../../model';
 import { ProductoPublic } from '../../../model/index.dto';
 import { ProductoPublicService } from '../../../service/producto-public.service';
@@ -14,7 +13,7 @@ import { CategoriaPublicService } from '../../../service/categoria-public.servic
 @Component({
   selector: 'app-catalogo',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, ProductoCardComponent],
+  imports: [CommonModule, RouterModule, FormsModule], // ← Ya no importamos ProductoCardComponent
   templateUrl: './catalogo.component.html',
   styleUrls: ['./catalogo.component.css']
 })
@@ -22,7 +21,7 @@ export class CatalogoComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   productos: ProductoPublic[] = [];
-  todosLosProductos: ProductoPublic[] = []; // para filtros
+  todosLosProductos: ProductoPublic[] = [];
   categorias: Categoria[] = [];
   categoriaActual: Categoria | null = null;
 
@@ -80,7 +79,6 @@ export class CatalogoComponent implements OnInit, OnDestroy {
       ? this.todosLosProductos.filter(p => p.nombreCategoria === this.categoriaActual!.nombre)
       : [...this.todosLosProductos];
 
-    // Búsqueda
     if (this.busqueda.trim()) {
       const term = this.busqueda.toLowerCase();
       filtrados = filtrados.filter(p =>
@@ -88,10 +86,8 @@ export class CatalogoComponent implements OnInit, OnDestroy {
       );
     }
 
-    // Precio máximo
     filtrados = filtrados.filter(p => p.precioMinimo <= this.precioMax);
 
-    // Solo en stock
     if (this.soloEnStock) {
       filtrados = filtrados.filter(p => p.stockTotal > 0);
     }

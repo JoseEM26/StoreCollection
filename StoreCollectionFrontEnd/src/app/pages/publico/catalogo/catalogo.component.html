@@ -82,7 +82,46 @@
                *ngFor="let p of productos; let i = index" 
                data-aos="fade-up" 
                [attr.data-aos-delay]="i * 50">
-            <app-producto-card [producto]="p"></app-producto-card>
+
+            <!-- PRODUCT CARD INTEGRADO -->
+            <a [routerLink]="['../../producto', p.slug]" 
+               class="producto-card-link"
+               [class.agotado]="p.stockTotal === 0">
+
+              <div class="producto-card">
+                <div class="imagen-container">
+                  <img [src]="p.imagenPrincipal || 'https://via.placeholder.com/300x300.png?text=Sin+Imagen'" 
+                       [alt]="p.nombre"
+                       loading="lazy"
+                       class="producto-imagen">
+
+                  <!-- Badges -->
+                  <div class="badge badge-agotado" *ngIf="p.stockTotal === 0">
+                    AGOTADO
+                  </div>
+                  <div class="badge badge-ultimas" *ngIf="p.stockTotal > 0 && p.stockTotal <= 5">
+                    ¡Últimas {{ p.stockTotal }}!
+                  </div>
+                </div>
+
+                <div class="info">
+                  <div class="categoria" *ngIf="p.nombreCategoria">
+                    {{ p.nombreCategoria }}
+                  </div>
+                  <h3 class="nombre">{{ p.nombre }}</h3>
+
+                  <div class="precio">
+                    <span class="simbolo">S/</span>
+                    <span class="valor">{{ p.precioMinimo | number:'1.2-2' }}</span>
+                  </div>
+
+                  <div class="stock-status" [class.disponible]="p.stockTotal > 0" [class.no-disponible]="p.stockTotal === 0">
+                    <i class="bi" [class.bi-check-circle-fill]="p.stockTotal > 0" [class.bi-x-circle-fill]="p.stockTotal === 0"></i>
+                    {{ p.stockTotal > 0 ? 'Disponible' : 'Sin stock' }}
+                  </div>
+                </div>
+              </div>
+            </a>
           </div>
         </div>
 
