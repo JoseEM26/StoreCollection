@@ -2,24 +2,25 @@
 <header class="public-header" [class.scrolled]="isScrolled">
   <div class="container d-flex align-items-center justify-content-between py-3">
 
-    <!-- Logo + Nombre Tienda -->
-    <a [routerLink]="['/', tienda?.slug]" class="logo d-flex align-items-center gap-3 text-decoration-none">
-      @if (tienda?.logo_img_url) {
-        <img [src]="tienda.logo_img_url" 
-             alt="Logo {{ tienda.nombre }}" 
-             class="logo-img">
-      } @else {
-        <div class="logo-placeholder">
-          <i class="bi bi-shop fs-3"></i>
-        </div>
-      }
-      <div>
-        <strong class="tienda-nombre">{{ tienda?.nombre || 'STORE COLLECTION' }}</strong>
-        @if (tienda?.planNombre) {
-          <small class="badge bg-success text-white ms-2">{{ tienda.planNombre }}</small>
-        }
-      </div>
-    </a>
+   <!-- Logo + Nombre Tienda -->
+<a [routerLink]="['/', tienda?.slug]" class="logo-link d-flex align-items-center gap-4 text-decoration-none">
+  <!-- Solo mostrar el contenedor del logo SI existe la URL -->
+  @if (tienda?.logo_img_url) {
+    <div class="logo-container">
+      <img [src]="tienda.logo_img_url" 
+           [alt]="'Logo de ' + (tienda.nombre || 'la tienda')" 
+           class="logo-img">
+    </div>
+  }
+
+  <!-- Siempre mostrar el nombre (y plan si existe) -->
+  <div class="tienda-info">
+    <strong class="tienda-nombre">{{ tienda?.nombre || 'STORE COLLECTION' }}</strong>
+    @if (tienda?.planNombre) {
+      <div class="badge bg-success text-white mt-1">{{ tienda.planNombre }}</div>
+    }
+  </div>
+</a>
 
     <!-- Menú Desktop -->
     <nav class="nav-desktop d-none d-lg-flex align-items-center gap-5">

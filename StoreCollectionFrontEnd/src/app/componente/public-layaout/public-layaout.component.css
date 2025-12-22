@@ -191,4 +191,24 @@
 @media (max-width: 992px) {
   .tienda-nombre { font-size: 1.2rem; }
   .logo-img, .logo-placeholder { width: 48px; height: 48px; }
+}/* Logo - Contenedor fijo (solo aparece si hay imagen) */
+.logo-container {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid #e2e8f0;
+  background: transparent;
+}
+
+/* Imagen del logo: ocupa TODO el espacio */
+.logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Llena todo, recorta si es necesario (se ve premium) */
+  /* Si prefieres no recortar y mantener proporciones exactas: */
+  /* object-fit: contain; */
+  /* background: white; */
+  display: block;
 }
