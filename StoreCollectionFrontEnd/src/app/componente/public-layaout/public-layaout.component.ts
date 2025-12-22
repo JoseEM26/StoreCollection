@@ -1,5 +1,5 @@
 // src/app/componente/public-layout/public-layout.component.ts
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { TiendaService } from '../../service/tienda.service';
@@ -15,51 +15,79 @@ import { CommonModule } from '@angular/common';
 })
 export class PublicLayaoutComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+
   tienda: any = null;
   menuOpen = false;
   currentYear = new Date().getFullYear();
-isScrolled = false;
+  isScrolled = false;
+
   constructor(
     private tiendaService: TiendaService,
     private titleService: Title
   ) {}
 
   ngOnInit(): void {
+    // Suscripción a la tienda actual
     this.tiendaService.currentTienda$
       .pipe(takeUntil(this.destroy$))
       .subscribe(tienda => {
         this.tienda = tienda;
         if (tienda?.nombre) {
           this.titleService.setTitle(`${tienda.nombre} - Tienda Online`);
+        } else {
+          this.titleService.setTitle('Tienda Online');
         }
       });
-      window.addEventListener('scroll', this.onScroll.bind(this));
+
+    // Detectar scroll para efecto en header
+    this.onScroll(); // Estado inicial
   }
 
-  toggleMenu() {
-    this.menuOpen = !this.menuOpen;
-  }
-onScroll(): void {
+  // Mejor práctica: usar @HostListener para eventos de window
+  @HostListener('window:scroll')
+  onScroll(): void {
     this.isScrolled = window.scrollY > 20;
   }
 
-  
-  closeMenu() {
+  toggleMenu(): void {
+    this.menuOpen = !this.menuOpen;
+  }
+
+  closeMenu(): void {
     this.menuOpen = false;
   }
 
-  abrirWhatsApp() {
-    if (!this.tienda?.whatsapp) return;
-    const numero = this.tienda.whatsapp.replace(/\D/g, '');
-    const mensaje = encodeURIComponent(
-      `¡Hola ${this.tienda.nombre}!\nVi tu tienda y quiero hacer un pedido\n\n¿Qué tienes disponible?`
-    );
-    window.open(`https://wa.me/${numero}?text=${mensaje}`, '_blank');
+  // MÉTODO PARA GENERAR EL LINK DE WHATSAPP (seguro y limpio)
+  getWhatsAppLink(): string | null {
+    if (!this.tienda?.whatsapp) return null;
+
+    // Limpia todo lo que no sea número (espacios, +, -, (), etc.)
+    const numeroLimpio = this.tienda.whatsapp.replace(/\D/g, '');
+
+    // Opcional: asegura que tenga código de país (Perú: 51)
+    // Si no empieza con 51 y tiene 9 dígitos, agrega 51
+    // if (numeroLimpio.length === 9) {
+    //   return `https://wa.me/51${numeroLimpio}`;
+    // }
+
+    return `https://wa.me/${numeroLimpio}`;
   }
 
-ngOnDestroy(): void {
+  // MÉTODO PARA ABRIR WHATSAPP CON MENSAJE PREDETERMINADO
+  abrirWhatsApp(): void {
+    if (!this.tienda?.whatsapp) return;
+
+    const numeroLimpio = this.tienda.whatsapp.replace(/\D/g, '');
+    const mensaje = encodeURIComponent(
+      `¡Hola ${this.tienda.nombre || 'de la tienda'}! 👋\nVi tu tienda online y estoy interesado/a en tus productos.\n\n¿Me puedes ayudar con más información o disponibilidad? 😊`
+    );
+
+    window.open(`https://wa.me/${numeroLimpio}?text=${mensaje}`, '_blank', 'noopener,noreferrer');
+  }
+
+  ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    window.removeEventListener('scroll', this.onScroll.bind(this));
+    // No es necesario remover el listener si usas @HostListener
   }
 }

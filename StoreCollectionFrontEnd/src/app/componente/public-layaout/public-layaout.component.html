@@ -1,126 +1,183 @@
-<!-- Header con efecto sticky y sombra al hacer scroll -->
-<header class="public-header" [class.scrolled]="isScrolled">
-  <div class="container d-flex align-items-center justify-content-between py-3">
+<!-- Header sticky con efecto scroll -->
+<header class="public-header shadow-sm" [class.scrolled]="isScrolled">
+  <div class="container py-3">
+    <div class="d-flex align-items-center justify-content-between">
 
-   <!-- Logo + Nombre Tienda -->
-<a [routerLink]="['/', tienda?.slug]" class="logo-link d-flex align-items-center gap-4 text-decoration-none">
-  <!-- Solo mostrar el contenedor del logo SI existe la URL -->
-  @if (tienda?.logo_img_url) {
-    <div class="logo-container">
-      <img [src]="tienda.logo_img_url" 
-           [alt]="'Logo de ' + (tienda.nombre || 'la tienda')" 
-           class="logo-img">
+      <!-- Logo + Nombre Tienda -->
+      <a [routerLink]="['/', tienda?.slug]" class="d-flex align-items-center text-decoration-none gap-3 gap-lg-4">
+        @if (tienda?.logo_img_url) {
+          <div class="logo-container">
+            <img [src]="tienda.logo_img_url"
+                 [alt]="'Logo de ' + (tienda?.nombre || 'la tienda')"
+                 class="logo-img">
+          </div>
+        }
+        <div>
+          <h5 class="tienda-nombre mb-0 fw-bold text-dark">{{ tienda?.nombre || 'STORE COLLECTION' }}</h5>
+          @if (tienda?.planNombre) {
+            <span class="badge bg-success text-white small rounded-pill">{{ tienda.planNombre }}</span>
+          }
+        </div>
+      </a>
+
+      <!-- Menú Desktop -->
+      <nav class="d-none d-lg-flex align-items-center gap-4">
+        <a class="nav-link px-3 py-2 rounded-3" 
+           [routerLink]="['/', tienda?.slug]" 
+           routerLinkActive="active fw-bold bg-light">
+          <i class="bi bi-house-door-fill me-2"></i>Inicio
+        </a>
+        <a class="nav-link px-3 py-2 rounded-3" 
+           [routerLink]="['/', tienda?.slug, 'catalogo']" 
+           routerLinkActive="active fw-bold bg-light">
+          <i class="bi bi-grid-3x3-gap-fill me-2"></i>Catálogo
+        </a>
+        <a class="nav-link px-3 py-2 rounded-3" 
+           [routerLink]="['/', tienda?.slug, 'conocenos']" 
+           routerLinkActive="active fw-bold bg-light">
+          <i class="bi bi-heart-fill me-2"></i>Conócenos
+        </a>
+      </nav>
+
+      <!-- Botón menú móvil -->
+      <button class="btn btn-outline-dark d-lg-none rounded-circle p-2" 
+              (click)="toggleMenu()" 
+              aria-label="Menú">
+        <i class="bi fs-4" [class.bi-list]="!menuOpen" [class.bi-x-lg]="menuOpen"></i>
+      </button>
     </div>
-  }
-
-  <!-- Siempre mostrar el nombre (y plan si existe) -->
-  <div class="tienda-info">
-    <strong class="tienda-nombre">{{ tienda?.nombre || 'STORE COLLECTION' }}</strong>
-    @if (tienda?.planNombre) {
-      <div class="badge bg-success text-white mt-1">{{ tienda.planNombre }}</div>
-    }
-  </div>
-</a>
-
-    <!-- Menú Desktop -->
-    <nav class="nav-desktop d-none d-lg-flex align-items-center gap-5">
-      <a [routerLink]="['/', tienda?.slug]" 
-         routerLinkActive="active" 
-         [routerLinkActiveOptions]="{exact: true}">
-        <i class="bi bi-house-door-fill me-2"></i> Inicio
-      </a>
-      <a [routerLink]="['/', tienda?.slug, 'catalogo']" 
-         routerLinkActive="active">
-        <i class="bi bi-grid-3x3-gap-fill me-2"></i> Catálogo
-      </a>
-      <a [routerLink]="['/', tienda?.slug, 'conocenos']" 
-         routerLinkActive="active">
-        <i class="bi bi-heart-fill me-2"></i> Conócenos
-      </a>
-    </nav>
-
-    <!-- Botón Menú Móvil -->
-    <button class="btn-menu-mobile d-lg-none" (click)="toggleMenu()" aria-label="Abrir menú">
-      <i class="bi bi-list fs-3" *ngIf="!menuOpen"></i>
-      <i class="bi bi-x-lg fs-3" *ngIf="menuOpen"></i>
-    </button>
   </div>
 
-  <!-- Menú Móvil (solo uno, corregido) -->
-  <div class="mobile-menu-container" [class.open]="menuOpen">
-    <nav class="mobile-menu">
-      <a [routerLink]="['/', tienda?.slug]" 
+  <!-- Menú móvil -->
+  <div class="mobile-menu bg-white border-top shadow-lg" [class.open]="menuOpen">
+    <div class="container py-3">
+      <a class="d-block py-3 text-dark text-decoration-none border-bottom" 
+         [routerLink]="['/', tienda?.slug]" 
          (click)="closeMenu()" 
-         routerLinkActive="active" 
-         [routerLinkActiveOptions]="{exact: true}">
-        <i class="bi bi-house-door-fill me-3"></i> Inicio
+         routerLinkActive="active fw-bold">
+        <i class="bi bi-house-door-fill me-3"></i>Inicio
       </a>
-      <a [routerLink]="['/', tienda?.slug, 'catalogo']" 
+      <a class="d-block py-3 text-dark text-decoration-none border-bottom" 
+         [routerLink]="['/', tienda?.slug, 'catalogo']" 
          (click)="closeMenu()" 
-         routerLinkActive="active">
-        <i class="bi bi-grid-3x3-gap-fill me-3"></i> Catálogo
+         routerLinkActive="active fw-bold">
+        <i class="bi bi-grid-3x3-gap-fill me-3"></i>Catálogo
       </a>
-      <a [routerLink]="['/', tienda?.slug, 'conocenos']" 
+      <a class="d-block py-3 text-dark text-decoration-none" 
+         [routerLink]="['/', tienda?.slug, 'conocenos']" 
          (click)="closeMenu()" 
-         routerLinkActive="active">
-        <i class="bi bi-heart-fill me-3"></i> Conócenos
+         routerLinkActive="active fw-bold">
+        <i class="bi bi-heart-fill me-3"></i>Conócenos
       </a>
-    </nav>
+    </div>
   </div>
 </header>
 
 <!-- Contenido principal -->
-<main class="public-main">
+<main class="public-main min-vh-100">
   <router-outlet></router-outlet>
 </main>
 
-<!-- Botón WhatsApp Flotante (mejorado) -->
-@if (tienda?.whatsapp) {
-  <button class="btn-whatsapp-flotante" 
-          (click)="abrirWhatsApp()" 
-          aria-label="Chatear por WhatsApp">
-    <i class="bi bi-whatsapp"></i>
+<!-- Botón WhatsApp flotante -->
+@if (tienda?.whatsapp && getWhatsAppLink()) {
+  <a [href]="getWhatsAppLink()"
+     (click)="abrirWhatsApp(); $event.preventDefault()"
+     class="btn-whatsapp-flotante shadow-lg rounded-circle d-flex align-items-center justify-content-center"
+     aria-label="Chatear por WhatsApp"
+     target="_blank"
+     rel="noopener noreferrer">
+    <i class="bi bi-whatsapp fs-3"></i>
     <span class="pulse-ring"></span>
     <span class="online-dot"></span>
-  </button>
+  </a>
 }
 
-<!-- Footer mejorado -->
-<footer class="public-footer">
-  <div class="container py-5">
+<!-- FOOTER PREMIUM CON BOOTSTRAP -->
+<footer class="public-footer bg-dark text-light mt-5">
+  <div class="container py-5 py-lg-7">
     <div class="row g-5">
-      <div class="col-lg-6">
-        <h5 class="fw-bold text-white mb-3">{{ tienda?.nombre || 'STORE COLLECTION' }}</h5>
-        @if (tienda?.descripcion) {
-          <p class="text-muted small lh-lg">{{ tienda.descripcion }}</p>
-        }
+
+      <!-- Columna 1: Marca + Descripción -->
+      <div class="col-lg-4">
+        <div class="d-flex align-items-center gap-4 mb-4">
+          @if (tienda?.logo_img_url) {
+            <div class="footer-logo-container">
+              <img [src]="tienda.logo_img_url" 
+                   [alt]="tienda.nombre" 
+                   class="footer-logo-img rounded-3">
+            </div>
+          }
+          <h4 class="fw-bold mb-0">{{ tienda?.nombre || 'STORE COLLECTION' }}</h4>
+        </div>
+        <p class="text-light-emphasis small lh-lg">
+          {{ tienda?.descripcion || 'Tu tienda online favorita con productos exclusivos, tendencias virales y la mejor atención personalizada.' }}
+        </p>
       </div>
-      <div class="col-lg-6">
-        <div class="footer-info">
+
+      <!-- Columna 2: Enlaces rápidos -->
+      <div class="col-lg-2 col-md-6">
+        <h6 class="fw-bold mb-4 text-white">Enlaces</h6>
+        <ul class="list-unstyled">
+          <li class="mb-3"><a [routerLink]="['/', tienda?.slug]" class="text-light-emphasis text-decoration-none hover-success">Inicio</a></li>
+          <li class="mb-3"><a [routerLink]="['/', tienda?.slug, 'catalogo']" class="text-light-emphasis text-decoration-none hover-success">Catálogo</a></li>
+          <li class="mb-3"><a [routerLink]="['/', tienda?.slug, 'conocenos']" class="text-light-emphasis text-decoration-none hover-success">Conócenos</a></li>
+        </ul>
+      </div>
+
+      <!-- Columna 3: Contacto -->
+      <div class="col-lg-3 col-md-6">
+        <h6 class="fw-bold mb-4 text-white">Contacto</h6>
+        <ul class="list-unstyled">
           @if (tienda?.direccion) {
-            <p class="mb-3">
-              <i class="bi bi-geo-alt-fill text-success me-2"></i>
-              {{ tienda.direccion }}
-            </p>
+            <li class="mb-3 d-flex align-items-start gap-3">
+              <i class="bi bi-geo-alt-fill text-success mt-1"></i>
+              <span class="text-light-emphasis small">{{ tienda.direccion }}</span>
+            </li>
           }
           @if (tienda?.horarios) {
-            <p class="mb-3">
-              <i class="bi bi-clock-fill text-primary me-2"></i>
-              {{ tienda.horarios }}
-            </p>
+            <li class="mb-3 d-flex align-items-start gap-3">
+              <i class="bi bi-clock-fill text-primary mt-1"></i>
+              <span class="text-light-emphasis small">{{ tienda.horarios }}</span>
+            </li>
           }
           @if (tienda?.whatsapp) {
-            <p class="mb-0">
-              <i class="bi bi-whatsapp text-success me-2"></i>
-              {{ tienda.whatsapp }}
-            </p>
+            <li class="mb-3 d-flex align-items-center gap-3">
+              <i class="bi bi-whatsapp text-success"></i>
+              <span class="text-light-emphasis small">{{ tienda.whatsapp }}</span>
+            </li>
           }
+        </ul>
+      </div>
+
+      <!-- Columna 4: Redes sociales -->
+      <div class="col-lg-3">
+        <h6 class="fw-bold mb-4 text-white">Síguenos</h6>
+        <div class="d-flex gap-3 mb-4">
+          <a href="#" target="_blank" class="social-btn bg-secondary-subtle text-dark rounded-3">
+            <i class="bi bi-tiktok fs-5"></i>
+          </a>
+          <a href="#" target="_blank" class="social-btn bg-secondary-subtle text-dark rounded-3">
+            <i class="bi bi-instagram fs-5"></i>
+          </a>
+          <a href="#" target="_blank" class="social-btn bg-secondary-subtle text-dark rounded-3">
+            <i class="bi bi-facebook fs-5"></i>
+          </a>
         </div>
+        <p class="text-light-emphasis small">
+          ¡Ofertas exclusivas y novedades cada semana!
+        </p>
       </div>
     </div>
+
     <hr class="my-5 border-secondary">
-    <p class="text-center text-muted small mb-0">
-      © {{ currentYear }} <strong>{{ tienda?.nombre || 'STORE COLLECTION' }}</strong> • Todos los derechos reservados
-    </p>
+
+    <div class="text-center">
+      <p class="text-light-emphasis small mb-2">
+        © {{ currentYear }} <strong class="text-white">{{ tienda?.nombre || 'STORE COLLECTION' }}</strong> • Todos los derechos reservados
+      </p>
+      <p class="text-light-emphasis small opacity-75">
+        Hecho con <i class="bi bi-heart-fill text-danger"></i> en Perú
+      </p>
+    </div>
   </div>
 </footer>

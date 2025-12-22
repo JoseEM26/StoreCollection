@@ -17,6 +17,10 @@ import { CategoriaPublicService } from '../../../service/categoria-public.servic
   templateUrl: './catalogo.component.html',
   styleUrls: ['./catalogo.component.css']
 })
+// src/app/pages/publico/catalogo/catalogo.component.ts
+
+// ... imports anteriores ...
+
 export class CatalogoComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
@@ -27,10 +31,13 @@ export class CatalogoComponent implements OnInit, OnDestroy {
 
   // Filtros
   busqueda = '';
-  precioMax = 5000;
+  precioMax = 5000; // Valor inicial temporal, se actualizará
   soloEnStock = false;
 
   loading = true;
+
+  // Nuevo: máximo real calculado
+  private maxPrecioCalculado = 5000;
 
   constructor(
     private route: ActivatedRoute,
@@ -57,6 +64,9 @@ export class CatalogoComponent implements OnInit, OnDestroy {
           this.categoriaActual = null;
         }
 
+        // Calculamos el precio máximo real y actualizamos el filtro
+        this.actualizarPrecioMaximo();
+
         this.filtrarPorCategoria();
         this.aplicarFiltros();
         this.loading = false;
@@ -66,12 +76,14 @@ export class CatalogoComponent implements OnInit, OnDestroy {
   private filtrarPorCategoria(): void {
     if (!this.categoriaActual) {
       this.productos = [...this.todosLosProductos];
-      return;
+    } else {
+      this.productos = this.todosLosProductos.filter(p =>
+        p.nombreCategoria === this.categoriaActual!.nombre
+      );
     }
 
-    this.productos = this.todosLosProductos.filter(p =>
-      p.nombreCategoria === this.categoriaActual!.nombre
-    );
+    // Recalculamos el precio máximo cuando cambia la categoría
+    this.actualizarPrecioMaximo();
   }
 
   aplicarFiltros(): void {
@@ -86,6 +98,7 @@ export class CatalogoComponent implements OnInit, OnDestroy {
       );
     }
 
+    // Aplicamos el precio máximo actual (el usuario puede haberlo movido)
     filtrados = filtrados.filter(p => p.precioMinimo <= this.precioMax);
 
     if (this.soloEnStock) {
@@ -93,14 +106,46 @@ export class CatalogoComponent implements OnInit, OnDestroy {
     }
 
     this.productos = filtrados;
+
+    // Opcional: recalcular max si se aplican filtros fuertes (ej: solo en stock o búsqueda)
+    // this.actualizarPrecioMaximo();
   }
 
   limpiarFiltros(): void {
     this.busqueda = '';
-    this.precioMax = 5000;
     this.soloEnStock = false;
+    this.actualizarPrecioMaximo(); // Restablecemos al máximo real
     this.filtrarPorCategoria();
     this.aplicarFiltros();
+  }
+
+  /**
+   * Calcula el precio máximo real de los productos visibles
+   * y lo redondea hacia arriba (ej: 1299 → 1300, 1350 → 1400)
+   */
+  private actualizarPrecioMaximo(): void {
+    const productosVisibles = this.categoriaActual
+      ? this.todosLosProductos.filter(p => p.nombreCategoria === this.categoriaActual!.nombre)
+      : this.todosLosProductos;
+
+    if (productosVisibles.length === 0) {
+      this.maxPrecioCalculado = 5000;
+      this.precioMax = 5000;
+      return;
+    }
+
+    const maxPrecio = Math.max(...productosVisibles.map(p => p.precioMinimo));
+
+    // Redondeamos hacia arriba de forma bonita
+    const redondeado = Math.ceil(maxPrecio / 100) * 100; // Ej: 1299 → 1300, 1301 → 1400
+
+    this.maxPrecioCalculado = Math.max(redondeado, 500); // Mínimo razonable
+    this.precioMax = this.maxPrecioCalculado; // Mostrar todo por defecto
+  }
+
+  // Getter para usar en el template
+  get precioMaximoRango(): number {
+    return this.maxPrecioCalculado;
   }
 
   get tituloPagina(): string {

@@ -1,92 +1,104 @@
-<!-- conocenos.component.html -->
-<div class="container py-5">
-  <div class="row align-items-center g-5">
-    <!-- Imagen / Logo -->
-    <div class="col-lg-5 text-center">
-      <img 
-        [src]="tienda.logo_img_url" 
-        alt="Logo {{ tienda.nombre }}"
-        class="img-fluid rounded shadow-lg"
-        style="max-height: 380px; object-fit: contain;">
-    </div>
+<!-- CONÓCENOS -->
+<section class="conocenos-section py-5 py-lg-7">
+  <div class="container">
+    <div class="row align-items-center g-5">
 
-    <!-- Información de la tienda -->
-    <div class="col-lg-7">
-      <h1 class="display-4 fw-bold text-primary mb-4">
-        Conoce a <span class="text-gradient">{{ tienda.nombre }}</span>
-      </h1>
+    <!-- Imagen / Logo (contenedor rectangular fijo - SIEMPRE LLENO) -->
+<div class="col-lg-5 order-lg-1 order-2 text-center">
+  <div class="logo-container shadow-lg rounded-4 overflow-hidden">
+    <img 
+      [src]="tienda.logo_img_url || 'https://via.placeholder.com/600x450/F8FAFC/6366F1?text=Logo'"
+      [alt]="'Logo de ' + tienda.nombre"
+      class="logo-img"
+      loading="lazy">
+  </div>
+  
+  <!-- Opcional: nombre debajo si quieres -->
+  <!-- <p class="mt-3 text-muted fw-medium">{{ tienda.nombre }}</p> -->
+</div>
 
-      <p class="lead fs-4 text-muted mb-4">
-        {{ tienda.descripcion || 'Tu tienda favorita de zapatillas virales en TikTok' }}
-      </p>
+      <!-- Información de la tienda -->
+      <div class="col-lg-7 order-lg-2 order-1">
+        <h1 class="display-4 fw-black mb-4">
+          Conoce a <span class="text-gradient">{{ tienda.nombre }}</span>
+        </h1>
 
-      <div class="row g-4 mt-4">
-        <div class="col-md-6">
-          <div class="d-flex align-items-start gap-3">
-            <i class="bi bi-geo-alt-fill text-primary fs-3"></i>
-            <div>
-              <h5 class="fw-semibold">Dirección</h5>
-              <p class="mb-0 text-muted">{{ tienda.direccion }}</p>
+        <p class="lead fs-3 text-muted mb-5 lh-lg">
+          {{ tienda.descripcion || 'Tu tienda favorita de zapatillas virales en TikTok. Calidad, estilo y tendencias que no pasan desapercibidas.' }}
+        </p>
+
+        <!-- Detalles en tarjetas -->
+        <div class="row g-4 mb-5">
+          <div class="col-md-6">
+            <div class="info-card">
+              <i class="bi bi-geo-alt-fill icon"></i>
+              <div>
+                <h5 class="fw-bold mb-1">Dirección</h5>
+                <p class="text-muted mb-0">{{ tienda.direccion }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="info-card">
+              <i class="bi bi-clock-fill icon"></i>
+              <div>
+                <h5 class="fw-bold mb-1">Horarios</h5>
+                <p class="text-muted mb-0">{{ tienda.horarios }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="info-card">
+              <i class="bi bi-currency-exchange icon"></i>
+              <div>
+                <h5 class="fw-bold mb-1">Moneda</h5>
+                <p class="text-muted mb-0">{{ tienda.moneda === 'SOLES' ? 'Soles Peruanos (S/)' : tienda.moneda }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="info-card">
+              <i class="bi bi-whatsapp icon text-success"></i>
+              <div>
+                <h5 class="fw-bold mb-2">Contáctanos por WhatsApp</h5>
+                <button class="btn btn-success btn-md rounded-pill shadow-sm px-4" (click)="abrirWhatsApp()">
+                  <i class="bi bi-whatsapp me-2"></i> {{ tienda.whatsapp }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="col-md-6">
-          <div class="d-flex align-items-start gap-3">
-            <i class="bi bi-clock-fill text-primary fs-3"></i>
-            <div>
-              <h5 class="fw-semibold">Horarios</h5>
-              <p class="mb-0 text-muted">{{ tienda.horarios }}</p>
-            </div>
-          </div>
+        <!-- Botones de acción -->
+        <div class="d-flex flex-wrap gap-3">
+          <a [href]="tienda.mapa_url" target="_blank" class="btn btn-outline-primary btn-lg rounded-pill px-5 shadow-sm">
+            <i class="bi bi-map me-2"></i> Ver en Google Maps
+          </a>
+          <button class="btn btn-primary btn-lg rounded-pill px-5 shadow" (click)="abrirWhatsApp()">
+            <i class="bi bi-chat-dots me-2"></i> ¡Escríbenos ahora!
+          </button>
         </div>
-
-        <div class="col-md-6">
-          <div class="d-flex align-items-start gap-3">
-            <i class="bi bi-currency-exchange text-primary fs-3"></i>
-            <div>
-              <h5 class="fw-semibold">Moneda</h5>
-              <p class="mb-0 text-muted">{{ tienda.moneda === 'SOLES' ? 'Soles (S/)' : tienda.moneda }}</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-6">
-          <div class="d-flex align-items-start gap-3">
-            <i class="bi bi-whatsapp text-success fs-3"></i>
-            <div>
-              <h5 class="fw-semibold">Contáctanos</h5>
-              <button class="btn btn-success btn-lg shadow-sm" (click)="abrirWhatsApp()">
-                <i class="bi bi-whatsapp me-2"></i> {{ tienda.whatsapp }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Botones de acción -->
-      <div class="mt-5 d-flex flex-wrap gap-3">
-        <a [href]="tienda.mapa_url" target="_blank" class="btn btn-outline-primary btn-lg px-5">
-          <i class="bi bi-map me-2"></i> Ver en Google Maps
-        </a>
-        <button class="btn btn-primary btn-lg px-5 shadow" (click)="abrirWhatsApp()">
-          <i class="bi bi-chat-dots me-2"></i> ¡Escríbenos ya!
-        </button>
       </div>
     </div>
   </div>
-</div>
+</section>
 
-<!-- Sección extra decorativa (opcional) -->
-<section class="bg-light py-5 mt-5">
-  <div class="container">
-    <div class="text-center">
-      <h2 class="fw-bold">¡Te esperamos en {{ tienda.nombre }}!</h2>
-      <p class="lead text-muted">Las mejores zapatillas que están rompiendo TikTok las encuentras aquí.</p>
-      <div class="mt-4">
-        <span class="badge bg-danger fs-5 px-4 py-3"> Envíos a todo Perú</span>
-        <span class="badge bg-warning text-dark fs-5 px-4 py-3 ms-3"> Garantía de originalidad</span>
-      </div>
+<!-- Sección decorativa inferior -->
+<section class="bg-gradient py-6 mt-5">
+  <div class="container text-center">
+    <h2 class="display-5 fw-black text-white mb-3">
+      ¡Te esperamos en {{ tienda.nombre }}!
+    </h2>
+    <p class="lead text-white opacity-90 mb-4">
+      Las zapatillas más virales de TikTok, con garantía de originalidad y envíos rápidos.
+    </p>
+    <div class="d-flex justify-content-center flex-wrap gap-3">
+      <span class="badge-extra bg-danger">🚚 Envíos a todo el Perú</span>
+      <span class="badge-extra bg-warning text-dark">✅ Garantía de originalidad</span>
+      <span class="badge-extra bg-success text-white">🔥 Tendencias virales</span>
     </div>
   </div>
 </section>

@@ -38,31 +38,41 @@
     </div>
   </div>
 </section>
-<!-- CATEGORÍAS (con estado vacío) -->
-<section class="section-categories py-5" *ngIf="categorias.length > 0 || !loading">
+<!-- CATEGORÍAS POPULARES -->
+<section class="section-categories py-5 bg-light" *ngIf="categorias.length > 0 || !loading">
   <div class="container">
-    <h2 class="section-title text-center mb-5">Categorías populares</h2>
+    <h2 class="section-title text-center mb-2 fw-bold display-6">
+      Categorías populares
+    </h2>
 
     <div *ngIf="categorias.length > 0; else emptyCategories">
       <div class="categories-grid">
         <a *ngFor="let cat of categorias; let i = index"
            [routerLink]="['catalogo', cat.slug]"
-           class="category-circle"
-           data-aos="fade-up"
-           [attr.data-aos-delay]="i * 100">
-          <div class="category-img-wrapper">
-  
+           class="category-card"
+           data-aos="zoom-in-up"
+           [attr.data-aos-delay]="i * 80">
+
+          <!-- Círculo con icono + inicial -->
+          <div class="category-icon-circle" [style.background-color]="getColorForCategory(i)">
+            <i class="bi {{ getIconForCategory(cat.nombre) }} icon-large"></i>
+            <!-- Fallback con inicial si no hay icono reconocido -->
+            <span class="fallback-initial" *ngIf="!hasKnownIcon(cat.nombre)">
+              {{ cat.nombre.charAt(0).toUpperCase() }}
+            </span>
           </div>
-          <span class="category-name">{{ cat.nombre }}</span>
+
+          <!-- Nombre de la categoría -->
+          <h3 class="category-name mt-3 mb-0 fw-bold">{{ cat.nombre }}</h3>
         </a>
       </div>
     </div>
 
     <ng-template #emptyCategories>
-      <div class="empty-state">
-        <i class="bi bi-grid-3x3-gap"></i>
-        <h3>Aún no hay categorías</h3>
-        <p>Pronto estarán disponibles las categorías de productos. ¡Vuelve pronto!</p>
+      <div class="empty-state text-center py-5">
+        <i class="bi bi-grid-3x3-gap display-4 text-muted mb-4 opacity-50"></i>
+        <h4 class="text-dark fw-semibold">Aún no hay categorías disponibles</h4>
+        <p class="text-muted">Pronto agregaremos nuevas categorías. ¡Vuelve pronto!</p>
       </div>
     </ng-template>
   </div>

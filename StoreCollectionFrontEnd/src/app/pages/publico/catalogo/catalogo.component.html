@@ -32,18 +32,19 @@
               placeholder="Buscar producto..." 
               class="form-control filtro-busqueda">
           </div>
-
-          <div class="mb-4">
-            <label class="form-label fw-semibold d-block mb-2">
-              Precio máximo: S/ {{ precioMax }}
-            </label>
-            <input 
-              type="range" 
-              [(ngModel)]="precioMax" 
-              (input)="aplicarFiltros()" 
-              min="0" max="5000" step="50" 
-              class="form-range">
-          </div>
+<div class="mb-4">
+  <label class="form-label fw-semibold d-block mb-2">
+    Precio máximo: S/ {{ precioMax }}
+  </label>
+  <input 
+    type="range" 
+    [(ngModel)]="precioMax" 
+    (input)="aplicarFiltros()" 
+    [min]="0" 
+    [max]="precioMaximoRango" 
+    step="50" 
+    class="form-range">
+</div>
 
           <div class="form-check mb-4">
             <input class="form-check-input" type="checkbox" 
@@ -63,12 +64,12 @@
       <!-- PRODUCTOS -->
       <div class="col-lg-9">
 
-        <!-- Buscador móvil -->
-        <div class="d-lg-none mb-4">
-          <input type="text" [(ngModel)]="busqueda" (input)="aplicarFiltros()"
-                 placeholder="Buscar en {{ tituloPagina }}..." 
-                 class="form-control form-control-lg rounded-pill shadow-sm">
-        </div>
+    <!-- Buscador móvil -->
+<div class="d-lg-none mb-4">
+  <input type="text" [(ngModel)]="busqueda" (input)="aplicarFiltros()"
+         placeholder="Buscar en {{ tituloPagina }}..." 
+         class="form-control form-control-lg rounded-pill shadow-sm">
+</div>
 
         <!-- Loading -->
         <div class="text-center py-5" *ngIf="loading">
