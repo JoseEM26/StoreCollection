@@ -98,16 +98,18 @@ public class ProductoController {
         return ResponseEntity.ok(service.getProductoByIdParaEdicion(id));
     }
 
-    @PostMapping("/api/owner/productos")
+    @PostMapping(value = "/api/owner/productos", consumes = "multipart/form-data")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
-    public ResponseEntity<ProductoResponse> crear(@Valid @RequestBody ProductoRequest request) {
+    public ResponseEntity<ProductoResponse> crear(
+            @Valid @ModelAttribute ProductoRequest request) {
         return ResponseEntity.ok(service.save(request));
     }
 
-    @PutMapping("/api/owner/productos/{id}")
+    @PutMapping(value = "/api/owner/productos/{id}", consumes = "multipart/form-data")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
-    public ResponseEntity<ProductoResponse> actualizar(@PathVariable Integer id,
-                                                       @Valid @RequestBody ProductoRequest request) {
+    public ResponseEntity<ProductoResponse> actualizar(
+            @PathVariable Integer id,
+            @Valid @ModelAttribute ProductoRequest request) {  // ← @ModelAttribute en vez de @RequestBody
         return ResponseEntity.ok(service.save(request, id));
     }
     @PatchMapping("/api/owner/productos/{id}/toggle-activo")

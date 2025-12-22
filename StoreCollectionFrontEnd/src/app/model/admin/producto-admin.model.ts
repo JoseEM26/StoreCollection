@@ -40,11 +40,11 @@ export interface VarianteRequest {
   sku: string;
   precio: number;
   stock: number;
-  imagenUrl?: string;           // sigue siendo opcional → string | undefined
+  imagen?: File;                
+  imagenUrl?: string;          
   activo?: boolean;
   atributos: AtributoValorRequest[];
 }
-// === Atributo y Valor (para variantes) ===
 export interface AtributoValorResponse {
   id: number;              // ID del AtributoValor
   atributoNombre: string;  // Nombre del atributo (ej: "Color")

@@ -2,6 +2,7 @@
 
 package com.proyecto.StoreCollection.service;
 
+import com.cloudinary.utils.ObjectUtils;
 import com.proyecto.StoreCollection.dto.DropTown.DropTownStandar;
 import com.proyecto.StoreCollection.dto.request.AtributoValorRequest;
 import com.proyecto.StoreCollection.dto.request.ProductoRequest;
@@ -12,6 +13,7 @@ import com.proyecto.StoreCollection.dto.response.ProductoResponse;
 import com.proyecto.StoreCollection.dto.response.VarianteResponse;
 import com.proyecto.StoreCollection.entity.*;
 import com.proyecto.StoreCollection.repository.*;
+import com.proyecto.StoreCollection.service.Cloudinary.CloudinaryService;
 import com.proyecto.StoreCollection.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -39,7 +42,7 @@ public class ProductoServiceImpl implements ProductoService {
     private final ProductoVarianteRepository varianteRepository;
     private final AtributoRepository atributoRepository;
     private final AtributoValorRepository atributoValorRepository;
-
+    private final CloudinaryService cloudinaryService;
 
     @Override
     public Page<ProductoResponse> buscarPorNombreYEmailUsuario(String nombre, String email, Pageable pageable) {
@@ -153,12 +156,25 @@ public class ProductoServiceImpl implements ProductoService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
-        // Eliminar solo las que no vienen en el request
         List<ProductoVariante> aEliminar = producto.getVariantes().stream()
                 .filter(v -> !idsRequest.contains(v.getId()))
                 .toList();
 
         if (!aEliminar.isEmpty()) {
+            // Opcional: eliminar imágenes antiguas de Cloudinary
+            aEliminar.forEach(v -> {
+                if (v.getImagenUrl() != null && !v.getImagenUrl().contains("placehold.co")) {
+                    try {
+                        String publicId = extractPublicId(v.getImagenUrl());
+                        if (publicId != null) {
+                            cloudinaryService.delete(publicId);
+                        }
+                    } catch (Exception e) {
+                        // Loggear pero no fallar la operación
+                        System.err.println("No se pudo eliminar imagen de Cloudinary: " + e.getMessage());
+                    }
+                }
+            });
             varianteRepository.deleteAll(aEliminar);
         }
 
@@ -176,20 +192,76 @@ public class ProductoServiceImpl implements ProductoService {
                 variante.setProducto(producto);
             }
 
-            // === FORZAR SIEMPRE LA TIENDA (esta es la línea mágica) ===
             variante.setTienda(tienda);
-
             variante.setSku(req.getSku().trim());
             variante.setPrecio(req.getPrecio());
             variante.setStock(req.getStock() != null ? req.getStock() : 0);
-            variante.setImagenUrl(req.getImagenUrl());
             variante.setActivo(req.getActivo() != null ? req.getActivo() : true);
 
-            manejarAtributosValores(variante, req.getAtributos(), tienda);
+            // === SUBIDA DE IMAGEN A CLOUDINARY ===
+            String imagenUrlFinal = null;
 
+            // Caso 1: Se subió un nuevo archivo
+            if (req.getImagen() != null && !req.getImagen().isEmpty()) {
+                try {
+                    Map uploadResult = cloudinaryService.upload(
+                            req.getImagen(),
+                            ObjectUtils.asMap(
+                                    "folder", "tiendas/" + tienda.getSlug() + "/productos",
+                                    "use_filename", false,
+                                    "unique_filename", true,
+                                    "overwrite", true
+                            )
+                    );
+
+                    String publicId = (String) uploadResult.get("public_id");
+                    // URL optimizada: 800x800, auto calidad y formato
+                    imagenUrlFinal = cloudinaryService.getResizedUrl(publicId, 800, 800);
+
+                } catch (IOException e) {
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                            "Error al subir imagen a Cloudinary: " + e.getMessage());
+                }
+            }
+            // Caso 2: Ya tenía imagen y no se cambió → mantener la existente
+            else if (req.getImagenUrl() != null && !req.getImagenUrl().isEmpty()
+                    && !req.getImagenUrl().contains("placehold.co")) {
+                imagenUrlFinal = req.getImagenUrl();
+            }
+            // Caso 3: Sin imagen → placeholder
+            else {
+                imagenUrlFinal = "https://placehold.co/800x800/eeeeee/999999.png?text=Sin+Imagen";
+            }
+
+            variante.setImagenUrl(imagenUrlFinal);
+
+            manejarAtributosValores(variante, req.getAtributos(), tienda);
             producto.getVariantes().add(variante);
         }
     }
+
+    private String extractPublicId(String url) {
+        if (url == null || !url.contains("cloudinary.com")) return null;
+        try {
+            String[] parts = url.split("/upload/");
+            if (parts.length < 2) return null;
+            String afterUpload = parts[1];
+            // Quitar versión si existe (v123456789/)
+            int versionIndex = afterUpload.indexOf("/v");
+            if (versionIndex != -1) {
+                afterUpload = afterUpload.substring(versionIndex + 1);
+                int slashAfterVersion = afterUpload.indexOf("/");
+                if (slashAfterVersion != -1) {
+                    afterUpload = afterUpload.substring(slashAfterVersion + 1);
+                }
+            }
+            // Quitar extensión
+            return afterUpload.replaceAll("\\.[a-zA-Z0-9]+$", "");
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private void manejarAtributosValores(ProductoVariante variante, List<AtributoValorRequest> atributosRequests, Tienda tienda) {
         if (atributosRequests == null || atributosRequests.isEmpty()) {
             variante.getAtributos().clear();

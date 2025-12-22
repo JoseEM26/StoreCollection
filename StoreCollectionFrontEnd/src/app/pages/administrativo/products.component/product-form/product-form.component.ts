@@ -19,7 +19,6 @@ export class ProductFormComponent implements OnChanges {
   @Output() saved = new EventEmitter<void>();
   @Output() closed = new EventEmitter<void>();
 
-  // Señales del formulario
   nombre = signal<string>('');
   slug = signal<string>('');
   categoriaId = signal<number | null>(null);
@@ -27,17 +26,16 @@ export class ProductFormComponent implements OnChanges {
   activo = signal<boolean>(true);
   atributosDisponibles = signal<AtributoConValores[]>([]);
 
-  // Variantes
   variantes = signal<VarianteRequest[]>([]);
   collapsed = signal<boolean[]>([]);
 
-  // Dropdowns
+  // Preview de imágenes (para mostrar antes de guardar)
+  imagenPreviews = signal<Map<number, string>>(new Map());
+
   categorias = signal<DropTownStandar[]>([]);
   tiendas = signal<DropTownStandar[]>([]);
-  // Tienda actual del owner (solo lectura)
   tiendaActual = signal<DropTownStandar | null>(null);
 
-  // Estados
   loading = signal<boolean>(false);
   errorMessage = signal<string | null>(null);
 
@@ -46,166 +44,86 @@ export class ProductFormComponent implements OnChanges {
     public auth: AuthService,
     private dropTownService: DropTownService
   ) {
+    this.loadDropdowns();
     this.loadAtributosConValores();
   }
 
-  // Cargar atributos con valores
+  private loadDropdowns() {
+    this.dropTownService.getCategorias().subscribe(cats => this.categorias.set(cats));
+
+    if (this.auth.isAdmin()) {
+      this.dropTownService.getTiendas().subscribe(tiendas => this.tiendas.set(tiendas));
+    }
+  }
+
   private loadAtributosConValores() {
     this.dropTownService.getAtributosConValores().subscribe(atributos => {
       this.atributosDisponibles.set(atributos);
-      console.log('Atributos con valores cargados:', atributos);
-    });
-  }
-
-  // Método manual para agregar atributo vacío
-  agregarAtributo(varianteIndex: number): void {
-    this.variantes.update(v => {
-      const copy = [...v];
-      copy[varianteIndex].atributos.push({
-        atributoNombre: '',
-        valor: ''
-      });
-      return copy;
-    });
-  }
-
-  // Obtener valores para un atributo específico
-  getValoresForAtributo(nombre: string): DropTownStandar[] {
-    const attr = this.atributosDisponibles().find(a => a.descripcion === nombre);
-    return attr ? attr.valores : [];
-  }
-
-  // Verificar si es nuevo atributo
-  isNewAtributo(attr: AtributoValorRequest): boolean {
-    return attr.atributoNombre === '__new__';
-  }
-
-  // Verificar si es nuevo valor
-  isNewValor(attr: AtributoValorRequest): boolean {
-    return attr.valor === '__new__';
-  }
-
-  // Cambio en selección de atributo
-  onAtributoChange(varianteIndex: number, attrIndex: number, value: string): void {
-    this.variantes.update(v => {
-      const copy = [...v];
-      const attr = copy[varianteIndex].atributos[attrIndex] as AtributoValorRequest & { tempNombre?: string; tempValor?: string };
-      if (value === '__new__') {
-        attr.tempNombre = '';
-        attr.atributoNombre = '__new__';
-      } else {
-        attr.atributoNombre = value;
-        delete attr.tempNombre;
-      }
-      attr.valor = ''; // Resetear valor
-      delete attr.tempValor;
-      return copy;
-    });
-  }
-
-  // Cambio en selección de valor
-  onValorChange(varianteIndex: number, attrIndex: number, value: string): void {
-    this.variantes.update(v => {
-      const copy = [...v];
-      const attr = copy[varianteIndex].atributos[attrIndex] as AtributoValorRequest & { tempNombre?: string; tempValor?: string };
-      if (value === '__new__') {
-        attr.tempValor = '';
-        attr.valor = '__new__';
-      } else {
-        attr.valor = value;
-        delete attr.tempValor;
-      }
-      return copy;
     });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['producto'] && this.producto) {
-      console.log('Producto recibido para edición:', this.producto);
-
       this.nombre.set(this.producto.nombre);
       this.slug.set(this.producto.slug);
       this.categoriaId.set(this.producto.categoriaId);
-
-      // CLAVE: Siempre seteamos tiendaId desde el producto original (igual que en categorías)
       this.tiendaId.set(this.producto.tiendaId);
-      console.log('tiendaId seteado desde producto:', this.producto.tiendaId);
-
       this.activo.set(this.producto.activo);
 
-      // Mapeo de variantes
-      const vars = this.producto.variantes?.map(v => ({
-        id: v.id,
-        sku: v.sku,
-        precio: v.precio,
-        stock: v.stock,
-        imagenUrl: v.imagenUrl ?? '',
-        activo: v.activo,
-        atributos: v.atributos.map(a => ({
-          atributoNombre: a.atributoNombre,
-          valor: a.valor
-        }))
-      })) || [];
+      const vars = this.producto.variantes?.map((v, index) => {
+        const variante: VarianteRequest = {
+          id: v.id,
+          sku: v.sku,
+          precio: v.precio,
+          stock: v.stock,
+          imagenUrl: v.imagenUrl,
+          activo: v.activo,
+          atributos: v.atributos.map(a => ({
+            atributoNombre: a.atributoNombre,
+            valor: a.valor
+          }))
+        };
+
+        // Guardar preview si ya tiene imagen
+        if (v.imagenUrl) {
+          this.imagenPreviews.update(map => map.set(index, v.imagenUrl!));
+        }
+        return variante;
+      }) || [];
 
       this.variantes.set(vars);
       this.collapsed.set(vars.map(() => true));
 
-      // Cargar nombre de tienda para OWNER (solo lectura)
       if (!this.auth.isAdmin() && this.producto.tiendaId) {
         this.dropTownService.getTiendas().subscribe(tiendas => {
           const miTienda = tiendas.find(t => t.id === this.producto!.tiendaId);
           this.tiendaActual.set(miTienda || null);
-          console.log('Tienda del OWNER cargada:', miTienda);
         });
       }
     } else {
-      // Modo creación: limpiar todo
-      this.nombre.set('');
-      this.slug.set('');
-      this.categoriaId.set(null);
-      this.tiendaId.set(null);
-      this.activo.set(true);
-      this.variantes.set([]);
-      this.collapsed.set([]);
-      this.tiendaActual.set(null);
-    }
-
-// ← AÑADE ESTO
-  this.loadAtributosConValores();  // Garantiza que siempre estén cargados
-  this.loadDropdowns();  }
-
-  private loadDropdowns() {
-    this.dropTownService.getCategorias().subscribe(cats => {
-      this.categorias.set(cats);
-      console.log('Categorías cargadas:', cats.length);
-    });
-
-    if (this.auth.isAdmin()) {
-      this.dropTownService.getTiendas().subscribe(tiendas => {
-        this.tiendas.set(tiendas);
-        console.log('Tiendas cargadas para ADMIN:', tiendas);
-      });
+      this.resetForm();
     }
   }
 
-  // TrackBy
-  trackByVarianteIndex(index: number, item: { variante: VarianteRequest; index: number }): any {
-    return item.variante.id || index;
-  }
-
-  trackByAtributoIndex(index: number): any {
-    return index;
+  private resetForm() {
+    this.nombre.set('');
+    this.slug.set('');
+    this.categoriaId.set(null);
+    this.tiendaId.set(null);
+    this.activo.set(true);
+    this.variantes.set([]);
+    this.collapsed.set([]);
+    this.imagenPreviews.set(new Map());
+    this.tiendaActual.set(null);
   }
 
   generarSlugDesdeNombre(): void {
     const nombreNormalizado = this.nombre().trim().toLowerCase()
-      .replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i')
-      .replace(/ó/g, 'o').replace(/ú/g, 'u').replace(/ñ/g, 'n')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '');
-
     this.slug.set(nombreNormalizado);
   }
 
@@ -214,7 +132,6 @@ export class ProductFormComponent implements OnChanges {
       sku: '',
       precio: 0,
       stock: 0,
-      imagenUrl: '',
       activo: true,
       atributos: []
     };
@@ -225,10 +142,69 @@ export class ProductFormComponent implements OnChanges {
   eliminarVariante(index: number): void {
     this.variantes.update(v => v.filter((_, i) => i !== index));
     this.collapsed.update(c => c.filter((_, i) => i !== index));
+    this.imagenPreviews.update(map => {
+      map.delete(index);
+      return new Map(map);
+    });
   }
 
   toggleCollapse(index: number): void {
     this.collapsed.update(c => c.map((val, i) => i === index ? !val : val));
+  }
+
+  // === MANEJO DE IMAGEN ===
+  onImagenChange(event: Event, index: number): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+
+      // Validación básica
+      if (!file.type.startsWith('image/')) {
+        alert('Solo se permiten imágenes');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert('La imagen no puede superar 5MB');
+        return;
+      }
+
+      // Guardar archivo en variante
+      this.variantes.update(v => {
+        const copy = [...v];
+        copy[index].imagen = file;
+        copy[index].imagenUrl = undefined; // Limpiar URL anterior
+        return copy;
+      });
+
+      // Generar preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.imagenPreviews.update(map => map.set(index, e.target?.result as string));
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  eliminarImagen(index: number): void {
+    this.variantes.update(v => {
+      const copy = [...v];
+      delete copy[index].imagen;
+      copy[index].imagenUrl = undefined;
+      return copy;
+    });
+    this.imagenPreviews.update(map => {
+      map.delete(index);
+      return new Map(map);
+    });
+  }
+
+  // === ATRIBUTOS (igual que antes) ===
+  agregarAtributo(varianteIndex: number): void {
+    this.variantes.update(v => {
+      const copy = [...v];
+      copy[varianteIndex].atributos.push({ atributoNombre: '', valor: '' });
+      return copy;
+    });
   }
 
   eliminarAtributo(varianteIndex: number, attrIndex: number): void {
@@ -237,6 +213,11 @@ export class ProductFormComponent implements OnChanges {
       copy[varianteIndex].atributos.splice(attrIndex, 1);
       return copy;
     });
+  }
+
+  getValoresForAtributo(nombre: string): DropTownStandar[] {
+    const attr = this.atributosDisponibles().find(a => a.descripcion === nombre);
+    return attr ? attr.valores : [];
   }
 
   variantesOrdenadas = computed(() => {
@@ -259,106 +240,85 @@ export class ProductFormComponent implements OnChanges {
       return;
     }
 
-    // Limpiar marcadores '__new__' si no se completaron
-    this.variantes().forEach(v => {
-      v.atributos = v.atributos.map(a => {
-        if (a.atributoNombre === '__new__') a.atributoNombre = '';
-        if (a.valor === '__new__') a.valor = '';
-        return a;
-      }).filter(a => a.atributoNombre.trim() && a.valor.trim());
-    });
+    // Construir FormData
+    const formData = new FormData();
 
-    const request: ProductoRequest = {
-      nombre: this.nombre().trim(),
-      slug: this.slug().trim(),
-      categoriaId: this.categoriaId()!,
-      activo: this.activo(),
-      variantes: this.variantes().map(v => ({
-        id: v.id,
-        sku: v.sku.trim(),
-        precio: v.precio,
-        stock: v.stock,
-        imagenUrl: v.imagenUrl?.trim() || undefined,
-        activo: v.activo,
-        atributos: v.atributos
-      }))
-    };
+    // Campos básicos
+    formData.append('nombre', this.nombre().trim());
+    formData.append('slug', this.slug().trim());
+    formData.append('categoriaId', this.categoriaId()!.toString());
+    formData.append('activo', this.activo().toString());
 
-    // =================== LÓGICA DE TIENDAID ===================
-
-    // 1. Si es EDICIÓN → siempre enviar la tienda del producto original
+    // TiendaId (igual lógica que antes)
     if (this.isEdit) {
-      request.tiendaId = this.producto!.tiendaId;
-      console.log('EDICIÓN → tiendaId enviado:', request.tiendaId);
-      this.enviarRequest(request);
-      return;
-    }
-
-    // 2. Si es ADMIN → usar el dropdown seleccionado
-    if (this.auth.isAdmin()) {
+      formData.append('tiendaId', this.producto!.tiendaId.toString());
+    } else if (this.auth.isAdmin()) {
       if (!this.tiendaId()) {
-        this.errorMessage.set('ADMIN: Debes seleccionar una tienda.');
+        this.errorMessage.set('ADMIN: Selecciona una tienda');
         this.loading.set(false);
         return;
       }
-      request.tiendaId = this.tiendaId()!;
-      console.log('ADMIN CREACIÓN → tiendaId seleccionado:', request.tiendaId);
-      this.enviarRequest(request);
-      return;
+      formData.append('tiendaId', this.tiendaId()!.toString());
     }
+    // OWNER: backend lo asigna automáticamente
 
-    // 3. Si es OWNER y es CREACIÓN → obtener automáticamente su tienda
-    // (tu backend ya filtra y devuelve solo su tienda)
-    this.dropTownService.getTiendas().subscribe({
-      next: (tiendas) => {
-        if (tiendas.length === 0) {
-          this.errorMessage.set('No tienes ninguna tienda asignada.');
-          this.loading.set(false);
-          return;
-        }
-        // OWNER solo tiene una tienda → tomamos la primera (o única)
-        request.tiendaId = tiendas[0].id;
-        console.log('OWNER CREACIÓN → tiendaId automático:', request.tiendaId);
+    // Variantes
+    this.variantes().forEach((v, i) => {
+      if (v.id) formData.append(`variantes[${i}].id`, v.id.toString());
+      formData.append(`variantes[${i}].sku`, v.sku.trim());
+      formData.append(`variantes[${i}].precio`, v.precio.toString());
+      formData.append(`variantes[${i}].stock`, v.stock.toString());
+      formData.append(`variantes[${i}].activo`, (v.activo ?? true).toString());
 
-        this.enviarRequest(request);
-      },
-      error: (err) => {
-        console.error('Error al cargar tiendas del OWNER', err);
-        this.errorMessage.set('No se pudo obtener tu tienda.');
-        this.loading.set(false);
+      // Imagen
+      if (v.imagen) {
+        formData.append(`variantes[${i}].imagen`, v.imagen, v.imagen.name);
+      } else if (v.imagenUrl) {
+        formData.append(`variantes[${i}].imagenUrl`, v.imagenUrl);
       }
-    });
-  }
 
-  // Método auxiliar para enviar la petición
-  private enviarRequest(request: ProductoRequest) {
-    console.log('REQUEST FINAL enviado al backend:', {
-      ...request,
-      tiendaId: request.tiendaId ?? 'ERROR: undefined',
-      isEdit: this.isEdit,
-      isAdmin: this.auth.isAdmin()
+      // Atributos
+      v.atributos.forEach((a, j) => {
+        if (a.atributoNombre.trim() && a.valor.trim()) {
+          formData.append(`variantes[${i}].atributos[${j}].atributoNombre`, a.atributoNombre.trim());
+          formData.append(`variantes[${i}].atributos[${j}].valor`, a.valor.trim());
+        }
+      });
     });
 
     const obs = this.isEdit
-      ? this.productoService.actualizarProducto(this.producto!.id, request)
-      : this.productoService.crearProducto(request);
+      ? this.productoService.actualizarProducto(this.producto!.id, formData)
+      : this.productoService.crearProducto(formData);
 
     obs.subscribe({
-      next: (res) => {
-        console.log('Producto guardado exitosamente:', res);
+      next: () => {
         this.loading.set(false);
         this.saved.emit();
       },
       error: (err) => {
-        console.error('Error del backend:', err);
-        this.errorMessage.set(err.error?.message || 'Error al guardar el producto');
+        console.error(err);
+        this.errorMessage.set(err.error?.message || 'Error al guardar');
         this.loading.set(false);
       }
     });
   }
+  onAtributoChange(varianteIndex: number, attrIndex: number, value: string): void {
+    this.variantes.update(v => {
+      const copy = [...v];
+      copy[varianteIndex].atributos[attrIndex].atributoNombre = value === '__new__' ? '__new__' : value;
+      copy[varianteIndex].atributos[attrIndex].valor = ''; // siempre resetear valor
+      return copy;
+    });
+  }
 
+  onValorChange(varianteIndex: number, attrIndex: number, value: string): void {
+    this.variantes.update(v => {
+      const copy = [...v];
+      copy[varianteIndex].atributos[attrIndex].valor = value === '__new__' ? '__new__' : value;
+      return copy;
+    });
+  }
   cancel(): void {
-    console.log('Formulario cancelado');
     this.closed.emit();
   }
 }

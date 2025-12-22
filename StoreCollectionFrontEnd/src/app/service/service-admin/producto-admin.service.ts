@@ -35,9 +35,9 @@ export class ProductoAdminService {
   }
 
   // === CREAR PRODUCTO ===
-  crearProducto(request: ProductoRequest): Observable<ProductoResponse> {
-    return this.http.post<ProductoResponse>(this.baseUrl, request);
-  }
+ crearProducto(request: FormData): Observable<ProductoResponse> {
+  return this.http.post<ProductoResponse>(this.baseUrl, request);
+}
 
   // === OBTENER PRODUCTO PARA EDICIÓN (con verificación de permisos) ===
   obtenerParaEdicion(id: number): Observable<ProductoResponse> {
@@ -45,9 +45,9 @@ export class ProductoAdminService {
   }
 
   // === ACTUALIZAR PRODUCTO ===
-  actualizarProducto(id: number, request: ProductoRequest): Observable<ProductoResponse> {
-    return this.http.put<ProductoResponse>(`${this.baseUrl}/${id}`, request);
-  }
+  actualizarProducto(id: number, request: FormData): Observable<ProductoResponse> {
+  return this.http.put<ProductoResponse>(`${this.baseUrl}/${id}`, request);
+}
 
   // === TOGGLE ACTIVO / INACTIVO (solo ADMIN) ===
   toggleActivo(id: number): Observable<ProductoResponse> {
