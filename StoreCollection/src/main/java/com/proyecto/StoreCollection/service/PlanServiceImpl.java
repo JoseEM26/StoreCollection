@@ -1,5 +1,6 @@
 package com.proyecto.StoreCollection.service;
 
+import com.proyecto.StoreCollection.dto.DropTown.DropTownStandar;
 import com.proyecto.StoreCollection.dto.request.PlanRequest;
 import com.proyecto.StoreCollection.dto.response.PlanResponse;
 import com.proyecto.StoreCollection.entity.Plan;
@@ -9,6 +10,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -31,7 +35,19 @@ public class PlanServiceImpl implements PlanService {
                 .orElseThrow(() -> new RuntimeException("Plan no encontrado: " + id));
         return toResponse(plan);
     }
-
+    @Override
+    public List<DropTownStandar> findOnlyTwoActiveForDropdown() {
+        return repository.findByActivoTrue()  // Asumiendo que tienes un método findByActivoTrue en el repository
+                .stream()
+                .limit(2)                     // Solo los primeros 2
+                .map(plan -> {
+                    DropTownStandar dto = new DropTownStandar();
+                    dto.setId(plan.getId());
+                    dto.setDescripcion(plan.getNombre());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
     @Override
     public PlanResponse save(PlanRequest request) { return save(request, null); }
 
@@ -48,7 +64,15 @@ public class PlanServiceImpl implements PlanService {
 
         return toResponse(repository.save(plan));
     }
+    @Override
+    @Transactional
+    public PlanResponse toggleActivo(Integer id) {
+        Plan plan = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Plan no encontrado: " + id));
 
+        plan.setActivo(!plan.getActivo());
+        return toResponse(repository.save(plan));
+    }
     @Override
     public void deleteById(Integer id) {
         if (!repository.existsById(id)) {
@@ -64,6 +88,7 @@ public class PlanServiceImpl implements PlanService {
         dto.setPrecio(p.getPrecio());
         dto.setMaxProductos(p.getMaxProductos());
         dto.setMesInicio(p.getMesInicio());
+        dto.setActivo(p.getActivo());
         dto.setMesFin(p.getMesFin());
         return dto;
     }

@@ -26,11 +26,17 @@ public class UsuarioController {
     @GetMapping
     public ResponseEntity<PageResponse<UsuarioResponse>> listar(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        Page<UsuarioResponse> pagina = service.findAll(PageRequest.of(page, size));
-        return ResponseEntity.ok(toPageResponse(pagina));
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search) {
+
+        PageResponse<UsuarioResponse> response = service.findAll(page, size, search);
+        return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/{id}/toggle-activo")
+    public UsuarioResponse toggleActivo(@PathVariable Integer id) {
+        return service.toggleActivarUsuario(id);
+    }
     @GetMapping("/{id}")
     public ResponseEntity<UsuarioResponse> porId(@PathVariable Integer id) {
         return ResponseEntity.ok(service.findById(id));

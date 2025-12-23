@@ -1,0 +1,34 @@
+/* src/app/componente/carrito/carrito.component.css */
+
+.card {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.btn-success {
+  background: #16a34a;
+  border: none;
+}
+
+.btn-success:hover {
+  background: #15803d;
+}
+
+.img-fluid {
+  transition: transform 0.3s ease;
+}
+
+.img-fluid:hover {
+  transform: scale(1.05);
+}
+
+.sticky-top {
+  transition: all 0.3s ease;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .row > div {
+    margin-bottom: 1.5rem;
+  }
+}

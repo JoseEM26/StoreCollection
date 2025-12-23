@@ -11,6 +11,7 @@ import java.util.List;
 
 public interface TiendaService {
     Page<TiendaResponse> findAll(Pageable pageable);
+    Page<TiendaResponse> findAllPublicasActivas(Pageable pageable);
     TiendaResponse findById(Integer id);
     Tienda getEntityById(Integer id);
     TiendaResponse findBySlug(String slug);

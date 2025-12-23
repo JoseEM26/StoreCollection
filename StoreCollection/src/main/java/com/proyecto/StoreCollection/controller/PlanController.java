@@ -16,44 +16,53 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 @RestController
-@RequestMapping("/api/admin/planes")  // ← ruta protegida
-@PreAuthorize("hasRole('ADMIN')")     // ← doble protección
+@RequestMapping("/api")  // ← ruta protegida
 public class PlanController {
 
     @Autowired
     private PlanService service;
 
-    @GetMapping
+    @GetMapping("/admin/planes")
     public ResponseEntity<PageResponse<PlanResponse>> listar(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Page<PlanResponse> pagina = service.findAll(PageRequest.of(page, size));
         return ResponseEntity.ok(toPageResponse(pagina));
     }
+    @GetMapping("/public/planes")
+    public ResponseEntity<PageResponse<PlanResponse>> listarpublicos(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<PlanResponse> pagina = service.findAll(PageRequest.of(page, size));
+        return ResponseEntity.ok(toPageResponse(pagina));
+    }
 
-    @GetMapping("/{id}")
+    @GetMapping("/admin/planes/{id}")
     public ResponseEntity<PlanResponse> porId(@PathVariable Integer id) {
         return ResponseEntity.ok(service.findById(id));
     }
 
-    @PostMapping
+    @PostMapping("/admin/planes")
     public ResponseEntity<PlanResponse> crear(@Valid @RequestBody PlanRequest request) {
         return ResponseEntity.ok(service.save(request));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/admin/planes/{id}")
     public ResponseEntity<PlanResponse> actualizar(
             @PathVariable Integer id,
             @Valid @RequestBody PlanRequest request) {
         return ResponseEntity.ok(service.save(request, id));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/planes/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
         service.deleteById(id);
         return ResponseEntity.noContent().build();
     }
-
+    @PatchMapping("/admin/planes/{id}/toggle-activo")
+    public ResponseEntity<PlanResponse> toggleActivo(@PathVariable Integer id) {
+        return ResponseEntity.ok(service.toggleActivo(id));
+    }
     private PageResponse<PlanResponse> toPageResponse(Page<PlanResponse> page) {
         PageResponse<PlanResponse> response = new PageResponse<>();
         response.setContent(page.getContent());

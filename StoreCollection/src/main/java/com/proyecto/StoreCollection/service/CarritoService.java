@@ -1,6 +1,8 @@
 package com.proyecto.StoreCollection.service;
 
+import com.proyecto.StoreCollection.dto.request.BoletaRequest;
 import com.proyecto.StoreCollection.dto.request.CarritoRequest;
+import com.proyecto.StoreCollection.dto.response.BoletaResponse;
 import com.proyecto.StoreCollection.dto.response.CarritoResponse;
 
 import java.util.List;
@@ -12,4 +14,6 @@ public interface CarritoService {
     CarritoResponse save(CarritoRequest request, Integer id);
     void deleteById(Integer id);
     void limpiarCarrito(String sessionId);
+
+    BoletaResponse checkout(BoletaRequest request);
 }

@@ -4,16 +4,17 @@ import com.proyecto.StoreCollection.dto.response.*;
 import com.proyecto.StoreCollection.service.TiendaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,15 +22,15 @@ public class TiendaController {
 
     private final TiendaService service;
 
-    //ESTO ES LA TIENDA PUBLICA DONDE TODOS ACCEDEN
     @GetMapping("/api/public/tiendas")
     public ResponseEntity<Page<TiendaResponse>> listarTodasTiendas(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "12") int size,
             @RequestParam(defaultValue = "nombre,asc") String sort,
             @RequestParam(required = false) String search) {
 
-        org.springframework.data.domain.Sort.Direction direction = org.springframework.data.domain.Sort.Direction.ASC;
+        // Parsear el parámetro sort
+        Sort.Direction direction = Sort.Direction.ASC;
         String property = "nombre";
 
         if (sort != null && !sort.trim().isEmpty()) {
@@ -37,23 +38,54 @@ public class TiendaController {
             if (parts.length >= 1) {
                 property = parts[0].trim();
             }
-            if (parts.length >= 2) {
-                direction = "desc".equalsIgnoreCase(parts[1].trim())
-                        ? org.springframework.data.domain.Sort.Direction.DESC
-                        : org.springframework.data.domain.Sort.Direction.ASC;
+            if (parts.length >= 2 && "desc".equalsIgnoreCase(parts[1].trim())) {
+                direction = Sort.Direction.DESC;
             }
         }
 
-        org.springframework.data.domain.Sort sortObj = org.springframework.data.domain.Sort.by(direction, property);
+        Sort sortObj = Sort.by(direction, property);
         Pageable pageable = PageRequest.of(page, size, sortObj);
 
-        Page<TiendaResponse> resultado = search != null && !search.trim().isEmpty()
-                ? service.buscarPorNombreContainingIgnoreCase(search.trim(), pageable)
-                : service.findAll(pageable);
+        Page<TiendaResponse> resultado;
+
+        if (search != null && !search.trim().isEmpty()) {
+            String terminoBusqueda = search.trim().toLowerCase();
+
+            // 1. Obtener TODAS las tiendas públicas vigentes (sin paginación)
+            List<TiendaResponse> todasVigentes = service.findAllPublicasActivas(Pageable.unpaged())
+                    .getContent();
+
+            // 2. Filtrar por nombre en TODAS las tiendas
+            List<TiendaResponse> coincidencias = todasVigentes.stream()
+                    .filter(t -> t.getNombre().toLowerCase().contains(terminoBusqueda))
+                    .collect(Collectors.toList());
+
+            // 3. Ordenar según el sort solicitado
+            if (direction == Sort.Direction.ASC) {
+                coincidencias.sort(Comparator.comparing(TiendaResponse::getNombre, String.CASE_INSENSITIVE_ORDER));
+            } else {
+                coincidencias.sort(Comparator.comparing(TiendaResponse::getNombre, String.CASE_INSENSITIVE_ORDER).reversed());
+            }
+
+            // 4. Paginación manual sobre los resultados filtrados
+            long totalCoincidencias = coincidencias.size();
+            int start = (int) pageable.getOffset();
+            int end = Math.min(start + pageable.getPageSize(), coincidencias.size());
+
+            List<TiendaResponse> paginaFiltrada = coincidencias.subList(
+                    Math.min(start, coincidencias.size()),
+                    end
+            );
+
+            resultado = new PageImpl<>(paginaFiltrada, pageable, totalCoincidencias);
+
+        } else {
+            // Sin búsqueda: paginación normal
+            resultado = service.findAllPublicasActivas(pageable);
+        }
 
         return ResponseEntity.ok(resultado);
     }
-
     @GetMapping("/api/public/tiendas/{slug}")
     public ResponseEntity<TiendaResponse> publicInfo(@PathVariable String slug) {
         return ResponseEntity.ok(service.findBySlug(slug));
@@ -114,23 +146,21 @@ public class TiendaController {
 
     @PostMapping("/api/owner/tiendas")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
-    public ResponseEntity<TiendaResponse> crearTienda(@Valid @RequestBody TiendaRequest request) {
-        // IMPORTANTE: En el service, asegúrate de validar que:
-        // 1. OWNER solo pueda crear tiendas para sí mismo
-        // 2. ADMIN pueda crear tiendas para cualquier usuario
-        return ResponseEntity.ok(service.save(request));
-    }
+    public ResponseEntity<TiendaResponse> crearTienda(
+            @RequestPart("data") @Valid TiendaRequest request,
+            @RequestPart(value = "logoImg", required = false) MultipartFile logoImg) {
 
+        request.setLogoImg(logoImg); // Asignamos el archivo al DTO
+        return ResponseEntity.ok(service.save(request, null));
+    }
     @PutMapping("/api/owner/tiendas/{id}")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<TiendaResponse> actualizarTienda(
             @PathVariable Integer id,
-            @Valid @RequestBody TiendaRequest request) {
+            @RequestPart("data") @Valid TiendaRequest request,
+            @RequestPart(value = "logoImg", required = false) MultipartFile logoImg) {
 
-        // IMPORTANTE: En el service.save(request, id) debes:
-        // 1. Verificar que el usuario autenticado es dueño de la tienda (si es OWNER)
-        // 2. Permitir a ADMIN editar cualquier tienda
-        // 3. No permitir cambiar el usuario propietario en edición
+        request.setLogoImg(logoImg);
         return ResponseEntity.ok(service.save(request, id));
     }
     @PatchMapping("/api/owner/tiendas/{id}/toggle-activo")

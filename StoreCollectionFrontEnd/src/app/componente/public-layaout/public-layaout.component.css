@@ -1,165 +1,171 @@
-/* Layout general */
-.public-main {
-  min-height: 80vh;
-  padding-bottom: 4rem;
-  background: #f8fafc;
-}
-
-/* Header */
+/* ====================== HEADER ====================== */
 .public-header {
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
   position: sticky;
   top: 0;
-  z-index: 1050;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  z-index: 1030;
+}
+
+.public-header.scrolled {
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 0.5rem 0;
+}
+
+/* Logo */
+.logo-container {
+  width: 70px;
+  height: 70px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 3px solid #e9ecef;
+  flex-shrink: 0;
 }
 
 .logo-img {
-  width: 50px;
-  height: 50px;
-  object-fit: contain;
-  border-radius: 12px;
-  border: 2px solid #f1f5f9;
-}
-
-/* Menú Desktop */
-.nav-desktop a {
-  margin: 0 1.5rem;
-  font-weight: 600;
-  color: #475569;
-  text-decoration: none;
-  padding: 0.5rem 0;
-  position: relative;
-  transition: all 0.3s;
-}
-
-.nav-desktop a:hover,
-.nav-desktop a.active {
-  color: #111111;
-}
-
-.nav-desktop a.active::after {
-  content: '';
-  position: absolute;
-  bottom: -12px;
-  left: 0;
   width: 100%;
-  height: 4px;
-  background: linear-gradient(90deg, #10b981, #34d399);
-  border-radius: 2px;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Enlaces activos */
+.nav-link.active {
+  background-color: #f0fdf4 !important;
+  color: #16a34a !important;
 }
 
 /* Menú móvil */
-.btn-menu-mobile {
-  font-size: 1.8rem;
-  background: none;
-  border: none;
-  color: #111;
-  display: none;
-}
-
 .mobile-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-  padding: 1rem 0;
-  transform: translateY(-100%);
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
 }
 
 .mobile-menu.open {
-  transform: translateY(0);
-  opacity: 1;
-  visibility: visible;
+  max-height: 400px;
 }
 
-.mobile-menu a {
-  display: block;
-  padding: 0.8rem 2rem;
-  color: #333;
-  font-weight: 500;
-  text-decoration: none;
+/* ====================== MAIN ====================== */
+.public-main {
+  background: #f8fafc;
+  padding-top: 2rem;
+  padding-bottom: 4rem;
 }
 
-.mobile-menu a.active {
-  background: #f0fdf4;
-  color: #10b981;
-  font-weight: 700;
-}
-
-/* WhatsApp flotante mejorado */
+/* ====================== WHATSAPP FLOTANTE ====================== */
 .btn-whatsapp-flotante {
   position: fixed;
-  bottom: 25px;
-  right: 25px;
+  bottom: 30px;
+  right: 30px;
   width: 64px;
   height: 64px;
   background: #25d366;
   color: white;
-  border: none;
-  border-radius: 50%;
-  font-size: 2.2rem;
-  box-shadow: 0 10px 30px rgba(37, 211, 102, 0.5);
+  box-shadow: 0 8px 25px rgba(37, 211, 102, 0.4);
   z-index: 9999;
-  cursor: pointer;
   transition: all 0.3s ease;
-  animation: float 6s ease-in-out infinite;
 }
 
 .btn-whatsapp-flotante:hover {
-  transform: scale(1.2);
+  transform: scale(1.15);
   background: #128c7e;
+}
+
+.pulse-ring {
+  position: absolute;
+  inset: 0;
+  border: 4px solid #25d366;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
 }
 
 .online-dot {
   position: absolute;
-  bottom: 10px;
-  right: 10px;
-  width: 14px;
-  height: 14px;
-  background: #25d366;
-  border: 3px solid white;
+  bottom: 8px;
+  right: 8px;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border: 3px solid #25d366;
   border-radius: 50%;
-  box-shadow: 0 0 10px rgba(37, 211, 102, 0.8);
 }
 
-.pulse {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: #25d366;
-  opacity: 0.6;
-  animation: pulse 2s infinite;
-}
-
-/* Footer */
+/* ====================== FOOTER ====================== */
 .public-footer {
-  background: #0f172a;
-  color: #cbd5e1;
-  margin-top: 6rem;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
 }
 
-.public-footer h5 {
-  color: white;
+.footer-logo-container {
+  width: 70px;
+  height: 70px;
+  overflow: hidden;
+  border: 3px solid rgba(255, 255, 255, 0.15);
 }
 
-.public-footer hr {
-  border-color: #334155;
+.footer-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-@keyframes pulse { 0% { transform: scale(1); opacity: 0.6; } 70% { transform: scale(1.5); opacity: 0; } }
-@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+.hover-success:hover {
+  color: #16a34a !important;
+  transition: color 0.3s ease;
+}
 
-/* Responsive */
-@media (max-width: 768px) {
-  .nav-desktop { display: none; }
-  .btn-menu-mobile { display: block; }
-  .logo strong { font-size: 1.3rem; }
+.social-btn {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.social-btn:hover {
+  background: #16a34a !important;
+  color: white !important;
+  transform: translateY(-5px);
+}
+
+/* Animación pulse WhatsApp */
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.7; }
+  70% { transform: scale(1.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+/* Responsive ajustes */
+@media (max-width: 992px) {
+  .logo-container { width: 60px; height: 60px; }
+  .tienda-nombre { font-size: 1.1rem; }
+}
+
+@media (max-width: 576px) {
+  .footer-logo-container { width: 60px; height: 60px; }
+  .social-btn { width: 45px; height: 45px; }
+}/* Ícono carrito en header */
+a[aria-label="Ver carrito"] {
+  margin-right: 1rem;
+}
+
+a[aria-label="Ver carrito"]:hover {
+  opacity: 0.8;
+}
+
+.badge {
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* En móvil: ajustar margen */
+@media (max-width: 992px) {
+  a[aria-label="Ver carrito"] {
+    margin-right: 0.5rem;
+  }
 }

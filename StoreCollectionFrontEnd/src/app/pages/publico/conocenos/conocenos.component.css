@@ -1,29 +1,172 @@
-/* conocenos.component.css */
+/* ====================== GENERAL ====================== */
+.conocenos-section {
+  background: #ffffff;
+}
+
+.fw-black {
+  font-weight: 900 !important;
+}
+
 .text-gradient {
-  background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.btn-primary {
-  background: linear-gradient(45deg, #2575fc, #6a11cb);
-  border: none;
-}
-
-.btn-primary:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 20px rgba(37, 117, 252, 0.3);
-}
-
-.img-fluid {
+/* ====================== LOGO RECTANGULAR FIJO ====================== */
+.logo-container {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  aspect-ratio: 4 / 3; /* Proporción rectangular fija (ajusta si quieres 16:9 → 16/9) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: transform 0.4s ease;
 }
 
-.img-fluid:hover {
-  transform: scale(1.05);
+.logo-container:hover {
+  transform: translateY(-8px);
 }
 
-.bi {
-  width: 30px;
+.logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Mantiene proporción y no deforma */
+  object-position: center;
+}
+
+/* ====================== TARJETAS DE INFO ====================== */
+.info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.2rem;
+  background: #f8fafc;
+  border-radius: 16px;
+  transition: all 0.3s ease;
+  border: 1px solid #e2e8f0;
+}
+
+.info-card:hover {
+  background: #ffffff;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
+}
+
+.icon {
+  font-size: 1.8rem;
+  min-width: 40px;
+  margin-top: 4px;
+}
+
+/* ====================== BOTONES ====================== */
+.btn-primary {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  border: none;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 30px rgba(102, 126, 234, 0.3);
+}
+
+.btn-outline-primary {
+  font-weight: 600;
+  border-width: 2px;
+}
+
+.btn-outline-primary:hover {
+  transform: translateY(-4px);
+}
+
+/* ====================== SECCIÓN INFERIOR ====================== */
+.bg-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.badge-extra {
+  font-size: 1.1rem;
+  padding: 0.8rem 1.8rem;
+  border-radius: 50px;
+  font-weight: 700;
+}
+
+/* ====================== RESPONSIVE ====================== */
+@media (max-width: 992px) {
+  .order-1 { order: 1; }
+  .order-2 { order: 2; }
+
+  .display-4 {
+    font-size: 2.8rem;
+  }
+
+  .logo-container {
+    max-width: 400px;
+    aspect-ratio: 16 / 9; /* En móvil puede ser más ancho */
+  }
+}
+
+@media (max-width: 576px) {
+  .display-4 {
+    font-size: 2.4rem;
+  }
+
+  .info-card {
+    padding: 1rem;
+  }
+
+  .badge-extra {
+    font-size: 1rem;
+    padding: 0.7rem 1.4rem;
+    margin-bottom: 0.5rem;
+  }
+}/* ====================== LOGO RECTANGULAR - SIEMPRE OCUPADO ====================== */
+.logo-container {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  aspect-ratio: 4 / 3; /* Rectángulo clásico. Cambia a 16/9 si prefieres más ancho */
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); /* Fondo de reserva elegante */
+  transition: all 0.4s ease;
+  position: relative;
+}
+
+.logo-container:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.18);
+}
+
+.logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;    /* ¡CLAVE! Cubre todo el contenedor sin dejar espacios */
+  object-position: center; /* Centra la parte más importante de la imagen */
+  display: block;
+  transition: transform 0.6s ease;
+}
+
+.logo-container:hover .logo-img {
+  transform: scale(1.08); /* Zoom sutil al hover */
+}
+
+/* ====================== RESPONSIVE ====================== */
+@media (max-width: 992px) {
+  .logo-container {
+    max-width: 420px;
+    aspect-ratio: 16 / 9; /* En tablets/móviles puede ser más panorámico si quieres */
+  }
+}
+
+@media (max-width: 576px) {
+  .logo-container {
+    max-width: 100%;
+    aspect-ratio: 4 / 3; /* Vuelve a rectangular en móvil para mejor uso de pantalla */
+    border-radius: 20px;
+  }
 }

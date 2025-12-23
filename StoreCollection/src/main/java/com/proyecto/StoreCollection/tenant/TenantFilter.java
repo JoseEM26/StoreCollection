@@ -1,4 +1,3 @@
-// src/main/java/com/proyecto/StoreCollection/tenant/TenantFilter.java
 package com.proyecto.StoreCollection.tenant;
 
 import com.proyecto.StoreCollection.entity.Tienda;
@@ -19,13 +18,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Component
-@Order(1) // Ejecutar antes que el filtro JWT
+@Order(1)
 @RequiredArgsConstructor
 public class TenantFilter extends OncePerRequestFilter {
 
     private final TiendaRepository tiendaRepository;
 
-    // Patrón para rutas que incluyen el slug: /api/(public|owner)/tiendas/{slug}
+    // Coincide con: /api/public/tiendas/zapatik  o  /api/owner/tiendas/mislug
     private static final Pattern TENANT_SLUG_PATTERN = Pattern.compile("^/api/(public|owner)/tiendas/([^/]+)");
 
     @Override
@@ -33,7 +32,6 @@ public class TenantFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        // Saltar OPTIONS (preflight CORS)
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
@@ -47,38 +45,47 @@ public class TenantFilter extends OncePerRequestFilter {
         boolean isAuthenticated = auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal());
 
         try {
-            if (hasTenantSlug) {
-                // Caso 1: URL con slug → resolver por slug (público o privado)
-                String slug = matcher.group(2);
-                Tienda tienda = tiendaRepository.findBySlug(slug).orElse(null);
+            Tienda tienda = null;
 
-                if (tienda == null || !tienda.getActivo()) {
-                    if (path.startsWith("/api/public/")) {
-                        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                        response.setContentType("application/json");
-                        response.getWriter().write("{\"error\": \"Tienda no encontrada o inactiva\"}");
-                        return;
-                    }
-                    // Para rutas /owner con slug inválido → seguir sin tenant (se manejará en controller)
-                } else {
+            if (hasTenantSlug) {
+                String slug = matcher.group(2);
+                tienda = tiendaRepository.findBySlug(slug).orElse(null);
+
+                // Para rutas PÚBLICAS: si no existe la tienda → 404 claro
+                if (tienda == null && path.startsWith("/api/public/")) {
+                    sendNotFound(response, "Tienda no encontrada");
+                    return;
+                }
+
+                // Para rutas PÚBLICAS: permitimos acceso aunque esté inactiva (catálogo visible)
+                // Solo establecemos tenant si existe
+                if (tienda != null) {
                     TenantContext.setTenantId(tienda.getId());
                 }
+
             } else if (isAuthenticated && path.startsWith("/api/owner/")) {
-                // Caso 2: Ruta privada de OWNER sin slug → buscar tienda por email del usuario autenticado
+                // Rutas privadas sin slug → buscar por usuario autenticado
                 String email = auth.getName();
-                Tienda tienda = tiendaRepository.findFirstByUserEmail(email).orElse(null);
+                tienda = tiendaRepository.findFirstByUserEmail(email).orElse(null);
 
                 if (tienda != null && tienda.getActivo()) {
                     TenantContext.setTenantId(tienda.getId());
                 }
-                // Si no tiene tienda o está inactiva → tenantId queda null (controller devuelve vacío)
+                // Si no tiene tienda activa → no se establece tenant (controller manejará el error)
             }
-            // Si es ruta pública sin slug → no se establece tenant (normal)
 
+            // Rutas públicas sin slug (ej: listar todas las tiendas) → no necesitan tenant
             filterChain.doFilter(request, response);
+
         } finally {
-            // Siempre limpiar el ThreadLocal al final de la petición
             TenantContext.clear();
         }
+    }
+
+    private void sendNotFound(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_NOT_FOUND); // 404 en vez de 403
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"error\": \"" + message + "\"}");
     }
 }

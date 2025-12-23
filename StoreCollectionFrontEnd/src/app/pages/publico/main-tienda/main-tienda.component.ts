@@ -69,6 +69,68 @@ export class MainTiendaComponent implements OnInit {
       error: () => this.loading = false
     });
   }
+// Dentro de tu componente (por ejemplo, home.component.ts o donde esté esta sección)
 
+getIconForCategory(nombre: string): string {
+  const lower = nombre.toLowerCase();
+  const iconMap: { [key: string]: string } = {
+    // Personaliza según tus categorías reales
+    'electrónica': 'bi-laptop',
+    'computadora': 'bi-pc-display',
+    'celular': 'bi-phone',
+    'smartphone': 'bi-phone-vibrate',
+    'audio': 'bi-headphones',
+    'cámara': 'bi-camera',
+    'televisor': 'bi-tv',
+    'hogar': 'bi-house-door',
+    'cocina': 'bi-egg-fried',
+    'moda': 'bi-handbag',
+    'ropa': 'bi-tshirt',
+    'zapatos': 'bi-shoe',
+    'belleza': 'bi-stars',
+    'deporte': 'bi-trophy',
+    'juguetes': 'bi-controller',
+    'libros': 'bi-book',
+    'música': 'bi-music-note-beamed',
+    'gaming': 'bi-joystick',
+    'accesorios': 'bi-gem',
+    'salud': 'bi-heart-pulse',
+    'jardín': 'bi-flower1',
+    'automóvil': 'bi-car-front',
+    'moto': 'bi-bicycle',
+  };
+
+  for (const key in iconMap) {
+    if (lower.includes(key)) {
+      return iconMap[key];
+    }
+  }
+  return 'bi-bag-fill'; // fallback genérico
+}
+
+hasKnownIcon(nombre: string): boolean {
+  const lower = nombre.toLowerCase();
+  const keys = ['electrónica', 'computadora', 'celular', 'audio', 'cámara', 'televisor', 
+                'hogar', 'cocina', 'moda', 'ropa', 'zapatos', 'belleza', 'deporte', 
+                'juguetes', 'libros', 'música', 'gaming', 'accesorios', 'salud', 
+                'jardín', 'automóvil', 'moto'];
+  return keys.some(k => lower.includes(k));
+}
+
+getColorForCategory(index: number): string {
+  const colors = [
+    '#6366f1', // indigo
+    '#8b5cf6', // violet
+    '#ec4899', // pink
+    '#f43f5e', // rose
+    '#f97316', // orange
+    '#10b981', // emerald
+    '#14b8a6', // teal
+    '#06b6d4', // cyan
+    '#3b82f6', // blue
+    '#a855f7', // purple
+  ];
+  return colors[index % colors.length];
+}
 
 }

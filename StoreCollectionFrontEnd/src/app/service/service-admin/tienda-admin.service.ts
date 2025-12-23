@@ -18,7 +18,6 @@ export interface TiendaCreateRequest {
   direccion?: string;
   horarios?: string;
   mapa_url?: string;
-  logo_img_url?: string;
   planId?: number;
   userId?: number;                     
   activo?: boolean;                    
@@ -33,7 +32,6 @@ export interface TiendaUpdateRequest {
   direccion?: string;
   horarios?: string;
   mapa_url?: string;
-  logo_img_url?: string;
   planId?: number | null;
   activo?: boolean;                   
 }
@@ -73,14 +71,24 @@ export class TiendaAdminService {
   }
 
   // === CREAR TIENDA ===
-  crearTienda(request: TiendaCreateRequest): Observable<TiendaResponse> {
-    return this.http.post<TiendaResponse>(this.BASE_URL, request)
+  crearTienda(data: TiendaCreateRequest, logoImg?: File): Observable<TiendaResponse> {
+    const formData = new FormData();
+    formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+    if (logoImg) {
+      formData.append('logoImg', logoImg, logoImg.name);
+    }
+    return this.http.post<TiendaResponse>(this.BASE_URL, formData)
       .pipe(catchError(this.handleError));
   }
 
   // === ACTUALIZAR TIENDA ===
-  actualizarTienda(id: number, request: TiendaUpdateRequest): Observable<TiendaResponse> {
-    return this.http.put<TiendaResponse>(`${this.BASE_URL}/${id}`, request)
+  actualizarTienda(id: number, data: TiendaUpdateRequest, logoImg?: File): Observable<TiendaResponse> {
+    const formData = new FormData();
+    formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+    if (logoImg) {
+      formData.append('logoImg', logoImg, logoImg.name);
+    }
+    return this.http.put<TiendaResponse>(`${this.BASE_URL}/${id}`, formData)
       .pipe(catchError(this.handleError));
   }
 

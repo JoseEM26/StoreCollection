@@ -10,8 +10,10 @@ import com.proyecto.StoreCollection.entity.Usuario;
 import com.proyecto.StoreCollection.repository.PlanRepository;
 import com.proyecto.StoreCollection.repository.TiendaRepository;
 import com.proyecto.StoreCollection.repository.UsuarioRepository;
+import com.proyecto.StoreCollection.service.Cloudinary.CloudinaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -19,9 +21,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,13 +34,58 @@ public class TiendaServiceImpl implements TiendaService {
     private final TiendaRepository tiendaRepository;
     private final PlanRepository planRepository;
     private final UsuarioRepository usuarioRepository;
-
+    private final CloudinaryService cloudinaryService;
     @Override
     @Transactional(readOnly = true)
     public Page<TiendaResponse> findAll(Pageable pageable) {
         return tiendaRepository.findAll(pageable).map(this::toResponse);
     }
+// En TiendaServiceImpl.java
+@Override
+@Transactional(readOnly = true)
+public Page<TiendaResponse> findAllPublicasActivas(Pageable pageable) {
+    // Obtener todas las tiendas activas
+    List<Tienda> todasActivas = tiendaRepository.findByActivoTrue();
 
+    int mesActual = LocalDate.now().getMonthValue();
+
+    // Filtrar por plan vigente y mapear a Response
+    List<TiendaResponse> todasFiltradas = todasActivas.stream()
+            .filter(tienda -> {
+                Plan plan = tienda.getPlan();
+                if (plan == null || !plan.getActivo()) {
+                    return false;
+                }
+                int inicio = plan.getMesInicio();
+                int fin = plan.getMesFin();
+
+                boolean vigente = (inicio <= fin)
+                        ? (mesActual >= inicio && mesActual <= fin)
+                        : (mesActual >= inicio || mesActual <= fin);
+
+                return vigente;
+            })
+            .map(this::toResponse)
+            .collect(Collectors.toList());
+
+    // Ordenar siempre por nombre (asc)
+    todasFiltradas.sort(Comparator.comparing(TiendaResponse::getNombre, String.CASE_INSENSITIVE_ORDER));
+
+    long total = todasFiltradas.size();
+
+    // Si es unpaged (usado en búsqueda global), devolver todo
+    if (pageable.isUnpaged()) {
+        return new PageImpl<>(todasFiltradas, pageable, total);
+    }
+
+    // Caso normal: aplicar paginación
+    int start = (int) pageable.getOffset();
+    int end = Math.min(start + pageable.getPageSize(), todasFiltradas.size());
+
+    List<TiendaResponse> paginaActual = todasFiltradas.subList(start, end);
+
+    return new PageImpl<>(paginaActual, pageable, total);
+}
     @Override
     @Transactional(readOnly = true)
     public TiendaResponse findById(Integer id) {
@@ -125,49 +172,47 @@ public class TiendaServiceImpl implements TiendaService {
         Tienda t;
 
         if (id == null) {
-            // CREACIÓN
+            // CREACIÓN DE NUEVA TIENDA
             t = new Tienda();
 
-            // Validar que userId sea el usuario actual (o ADMIN creando para otros)
             boolean esAdmin = auth.getAuthorities().stream()
                     .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
             if (request.getUserId() == null) {
                 throw new RuntimeException("userId es requerido para crear una tienda");
             }
+
             if (tiendaRepository.findBySlug(request.getSlug()).isPresent()) {
                 throw new RuntimeException("Ya existe una tienda con ese slug: " + request.getSlug());
             }
+
             Usuario usuario = usuarioRepository.findById(request.getUserId())
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-            // Si no es ADMIN, solo puede crear para sí mismo
             if (!esAdmin && !usuario.getEmail().equals(emailActual)) {
                 throw new RuntimeException("No puedes crear una tienda para otro usuario");
             }
 
             t.setUser(usuario);
         } else {
-            // EDICIÓN
+            // EDICIÓN DE TIENDA EXISTENTE
             t = tiendaRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Tienda no encontrada"));
 
-            // Verificar permisos: solo el dueño o ADMIN puede editar
             boolean esAdmin = auth.getAuthorities().stream()
                     .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
             Optional<Tienda> tiendaConMismoSlug = tiendaRepository.findBySlug(request.getSlug());
             if (tiendaConMismoSlug.isPresent() && !tiendaConMismoSlug.get().getId().equals(id)) {
                 throw new RuntimeException("Ya existe otra tienda con ese slug: " + request.getSlug());
             }
+
             if (!t.getUser().getEmail().equals(emailActual) && !esAdmin) {
                 throw new RuntimeException("No tienes permisos para editar esta tienda");
             }
-
-            // En edición, mantener usuario existente (no cambiar dueño)
-            // Solo ADMIN podría cambiar el dueño si se necesita, pero aquí no permitimos
         }
 
-        // Setear campos comunes
+        // === CAMPOS COMUNES ===
         t.setNombre(request.getNombre());
         t.setSlug(request.getSlug());
         t.setWhatsapp(request.getWhatsapp());
@@ -184,9 +229,42 @@ public class TiendaServiceImpl implements TiendaService {
         t.setDireccion(request.getDireccion());
         t.setHorarios(request.getHorarios());
         t.setMapa_url(request.getMapa_url());
-        t.setLogo_img_url(request.getLogo_img_url());
 
-        // Manejar campo activo (solo ADMIN puede cambiar)
+        // === MANEJO DE LA IMAGEN DEL LOGO CON CLOUDINARY ===
+        if (request.getLogoImg() != null && !request.getLogoImg().isEmpty()) {
+            try {
+                // Opciones: subir a una carpeta organizada
+                Map<String, Object> options = Map.of(
+                        "folder", "tiendas/logos",
+                        "overwrite", true,
+                        "resource_type", "image"
+                );
+
+                Map uploadResult = cloudinaryService.upload(request.getLogoImg(), options);
+                String secureUrl = (String) uploadResult.get("secure_url");
+
+                // Si estamos editando y había una imagen anterior → borrarla de Cloudinary
+                if (id != null && t.getLogo_img_url() != null && !t.getLogo_img_url().isEmpty()) {
+                    String oldPublicId = extractPublicId(t.getLogo_img_url());
+                    if (oldPublicId != null) {
+                        try {
+                            cloudinaryService.delete(oldPublicId);
+                        } catch (Exception e) {
+                            // No rompemos el flujo si falla el borrado (puede ser imagen ya borrada)
+                            System.out.println("No se pudo borrar la imagen anterior: " + e.getMessage());
+                        }
+                    }
+                }
+
+                t.setLogo_img_url(secureUrl);
+
+            } catch (IOException e) {
+                throw new RuntimeException("Error al subir el logo a Cloudinary: " + e.getMessage());
+            }
+        }
+        // Si no se envía nueva imagen → mantiene la actual (o null en creación)
+
+        // === ACTIVO (solo ADMIN) ===
         boolean esAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
@@ -194,17 +272,69 @@ public class TiendaServiceImpl implements TiendaService {
             t.setActivo(request.getActivo());
         }
 
-        // Manejar plan
+        // === PLAN ===
         if (request.getPlanId() != null) {
             Plan plan = planRepository.findById(request.getPlanId())
                     .orElseThrow(() -> new RuntimeException("Plan no encontrado"));
             t.setPlan(plan);
         } else if (id != null) {
-            // Permitir quitar el plan en edición
+            // Permite quitar el plan en edición
             t.setPlan(null);
         }
 
+        // Guardar y devolver respuesta
         return toResponse(tiendaRepository.save(t));
+    }
+
+    /**
+     * Extrae el public_id de una URL de Cloudinary
+     * Ej: https://res.cloudinary.com/dqznlmig0/image/upload/v123/tiendas/logos/mi_logo.jpg
+     * → devuelve "tiendas/logos/mi_logo"
+     */
+    private String extractPublicId(String url) {
+        if (url == null || url.isEmpty()) {
+            return null;
+        }
+
+        try {
+            // Quitar la parte inicial hasta /upload/
+            int uploadIndex = url.indexOf("/upload/");
+            if (uploadIndex == -1) return null;
+
+            String path = url.substring(uploadIndex + 8); // +8 para saltar "/upload/"
+
+            // Quitar la versión (v1234567890/)
+            int versionIndex = path.indexOf("/");
+            if (versionIndex != -1) {
+                path = path.substring(versionIndex + 1);
+            }
+
+            // Quitar la extensión .jpg, .png, etc.
+            int dotIndex = path.lastIndexOf(".");
+            if (dotIndex != -1) {
+                path = path.substring(0, dotIndex);
+            }
+
+            return path;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    private String extractPublicIdFromUrl(String url) {
+        if (url == null || url.isEmpty()) return null;
+
+        // Extrae "carpeta/imagen" (sin extensión y sin versión)
+        String[] parts = url.split("/");
+        String fileWithExt = parts[parts.length - 1];
+        String fileWithoutExt = fileWithExt.substring(0, fileWithExt.lastIndexOf('.'));
+
+        // Si hay carpeta: "carpeta/" + fileWithoutExt
+        String publicId = fileWithoutExt;
+        if (parts.length > 6) {  // Si hay carpeta
+            publicId = parts[parts.length - 2] + "/" + fileWithoutExt;
+        }
+
+        return publicId;
     }
     @Override
     @Transactional(readOnly = true)

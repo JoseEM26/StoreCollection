@@ -4,12 +4,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UsuarioAdminService } from '../../../service/service-admin/usuario-admin.service';
 import { UsuarioPage, UsuarioResponse } from '../../../model/admin/usuario-admin.model';
-import { AuthService } from '../../../../auth/auth.service';
+import { UsuariosFormComponent } from './usuarios-form/usuarios-form.component';
 
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, UsuariosFormComponent],
   templateUrl: './usuarios.component.html',
   styleUrl: './usuarios.component.css'
 })
@@ -22,10 +22,25 @@ export class UsuariosComponent implements OnInit {
   pageSize = 10;
   searchTerm = '';
 
-  constructor(
-    private usuarioService: UsuarioAdminService,
-    public auth: AuthService
-  ) {
+  // Modal
+  showModal = signal(false);
+  editingUsuario = signal<UsuarioResponse | null>(null);
+
+  // Debounce para búsqueda
+  private searchTimeout: any;
+
+  // Para calcular el rango de paginación
+  get startItem(): number {
+    return this.currentPage() * this.pageSize + 1;
+  }
+
+  get endItem(): number {
+    const calculated = (this.currentPage() + 1) * this.pageSize;
+    const total = this.pageData()?.totalElements || 0;
+    return calculated > total ? total : calculated;
+  }
+
+  constructor(private usuarioService: UsuarioAdminService) {
     effect(() => this.loadUsuarios());
   }
 
@@ -49,14 +64,55 @@ export class UsuariosComponent implements OnInit {
       });
   }
 
+  abrirCrear(): void {
+    this.editingUsuario.set(null);
+    this.showModal.set(true);
+  }
+
+  abrirEditar(usuario: UsuarioResponse): void {
+    this.editingUsuario.set(usuario);
+    this.showModal.set(true);
+  }
+
+  closeModal(): void {
+    this.showModal.set(false);
+    this.editingUsuario.set(null);
+  }
+
+  onFormSuccess(savedUsuario: UsuarioResponse): void {
+    this.closeModal();
+    this.loadUsuarios();
+  }
+
+  toggleActivo(usuario: UsuarioResponse): void {
+    if (usuario.rol === 'ADMIN') {
+      alert('No se permite cambiar el estado de un usuario ADMINISTRADOR');
+      return;
+    }
+
+    this.usuarioService.toggleActivo(usuario.id).subscribe({
+      next: (updated) => {
+        this.usuarios.update(list =>
+          list.map(u => u.id === updated.id ? updated : u)
+        );
+      },
+      error: () => alert('Error al cambiar el estado del usuario')
+    });
+  }
+
   goToPage(page: number): void {
     if (page >= 0 && page < (this.pageData()?.totalPages || 0)) {
       this.currentPage.set(page);
+      this.loadUsuarios();
     }
   }
 
   onSearch(): void {
-    this.currentPage.set(0);
+    clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+      this.currentPage.set(0);
+      this.loadUsuarios();
+    }, 500); // Debounce de 500ms
   }
 
   getRoleBadgeClass(rol: string): string {
@@ -68,6 +124,10 @@ export class UsuariosComponent implements OnInit {
     }
   }
 
+  getEstadoBadgeClass(activo: boolean): string {
+    return activo ? 'bg-success' : 'bg-warning text-dark';
+  }
+
   getPageNumbers(): number[] {
     const total = this.pageData()?.totalPages || 0;
     const current = this.currentPage();
@@ -77,5 +137,14 @@ export class UsuariosComponent implements OnInit {
       range.push(i);
     }
     return range;
+  }
+
+  trackById(index: number, usuario: UsuarioResponse): number {
+    return usuario.id!;
+  }
+
+  // Para deshabilitar toggle en ADMIN
+  canToggle(usuario: UsuarioResponse): boolean {
+    return usuario.rol !== 'ADMIN';
   }
 }

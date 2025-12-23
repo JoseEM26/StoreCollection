@@ -11,4 +11,6 @@ public class PlanResponse {
     private Integer maxProductos;
     private Integer mesInicio;
     private Integer mesFin;
+    private Boolean activo = true;  // Por defecto activo
+
 }

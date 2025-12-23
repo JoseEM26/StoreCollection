@@ -1,0 +1,31 @@
+/* src/app/componente/suscripcion-expirada-component/suscripcion-expirada-component.component.css */
+
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+}
+
+.card {
+  border-radius: 1.2rem !important;
+}
+
+.btn {
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.bi {
+  font-size: 1.2em;
+}
+
+@media (max-width: 576px) {
+  .display-6 {
+    font-size: 2rem;
+  }
+  
+  .card-body {
+    padding: 2rem !important;
+  }
+}

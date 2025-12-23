@@ -28,7 +28,8 @@ public class Tienda {
     private String mapa_url;
     private String logo_img_url;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "plan_id")
     private Plan plan;
 
     @ManyToOne @JoinColumn(nullable = false)

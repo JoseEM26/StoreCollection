@@ -1,8 +1,10 @@
-// src/app/componente/public-layout/public-layout.component.ts
-import { Component, OnInit, OnDestroy } from '@angular/core';
+// src/app/componente/public-layout/public-layaout.component.ts
+
+import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { TiendaService } from '../../service/tienda.service';
+import { CarritoService } from '../../service/carrito.service'; // ← NUEVA IMPORTACIÓN
 import { Title } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 
@@ -15,41 +17,70 @@ import { CommonModule } from '@angular/common';
 })
 export class PublicLayaoutComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+
   tienda: any = null;
   menuOpen = false;
   currentYear = new Date().getFullYear();
+  isScrolled = false;
+
+  // Variables para el carrito en el header
+  totalItemsCarrito = 0;
 
   constructor(
     private tiendaService: TiendaService,
+    private carritoService: CarritoService, // ← NUEVO
     private titleService: Title
   ) {}
 
   ngOnInit(): void {
+    // Suscripción a la tienda
     this.tiendaService.currentTienda$
       .pipe(takeUntil(this.destroy$))
       .subscribe(tienda => {
         this.tienda = tienda;
         if (tienda?.nombre) {
           this.titleService.setTitle(`${tienda.nombre} - Tienda Online`);
+        } else {
+          this.titleService.setTitle('Tienda Online');
         }
       });
+
+    // Suscripción al número de items en el carrito
+    this.carritoService.itemsCount$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(count => {
+        this.totalItemsCarrito = count;
+      });
+
+    this.onScroll();
   }
 
-  toggleMenu() {
+  @HostListener('window:scroll')
+  onScroll(): void {
+    this.isScrolled = window.scrollY > 20;
+  }
+
+  toggleMenu(): void {
     this.menuOpen = !this.menuOpen;
   }
 
-  closeMenu() {
+  closeMenu(): void {
     this.menuOpen = false;
   }
 
-  abrirWhatsApp() {
+  getWhatsAppLink(): string | null {
+    if (!this.tienda?.whatsapp) return null;
+    const numeroLimpio = this.tienda.whatsapp.replace(/\D/g, '');
+    return `https://wa.me/${numeroLimpio}`;
+  }
+
+  abrirWhatsApp(): void {
     if (!this.tienda?.whatsapp) return;
-    const numero = this.tienda.whatsapp.replace(/\D/g, '');
+    const numeroLimpio = this.tienda.whatsapp.replace(/\D/g, '');
     const mensaje = encodeURIComponent(
-      `¡Hola ${this.tienda.nombre}!\nVi tu tienda y quiero hacer un pedido\n\n¿Qué tienes disponible?`
+      `¡Hola ${this.tienda.nombre || 'de la tienda'}! 👋\nVi tu tienda online y estoy interesado/a en tus productos.\n\n¿Me puedes ayudar con más información o disponibilidad? 😊`
     );
-    window.open(`https://wa.me/${numero}?text=${mensaje}`, '_blank');
+    window.open(`https://wa.me/${numeroLimpio}?text=${mensaje}`, '_blank', 'noopener,noreferrer');
   }
 
   ngOnDestroy(): void {

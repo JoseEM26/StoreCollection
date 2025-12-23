@@ -26,7 +26,10 @@ export class ProductsComponent implements OnInit {
   selectedProducto = signal<ProductoResponse | undefined>(undefined);
   loadingEdicion = signal(false);
 
-  // Filtros
+  // Loading para el botón de toggle (evita clicks múltiples)
+  loadingToggleId = signal<number | null>(null);
+
+  // Filtros y paginación
   currentPage = signal(0);
   pageSize = 20;
   sort = signal('nombre,asc');
@@ -36,6 +39,7 @@ export class ProductsComponent implements OnInit {
     private productoService: ProductoAdminService,
     public auth: AuthService
   ) {
+    // Recarga automática cuando cambian filtros relevantes
     effect(() => {
       this.loadProductos();
     });
@@ -112,55 +116,51 @@ export class ProductsComponent implements OnInit {
     this.loadProductos();
   }
 
- // ... el resto del código permanece igual
+  toggleActivo(producto: ProductoResponse): void {
+    const nuevoEstado = !producto.activo;
+console.log('🚀 Iniciando toggle para producto:', producto.id, 'activo actual:', producto.activo);
+    // Loading en el botón específico
+    this.loadingToggleId.set(producto.id);
 
-toggleActivo(producto: ProductoResponse): void {
-  if (!this.auth.isAdmin()) return;
+    // Optimistic update: cambia inmediatamente en la UI
+    this.productos.update(list =>
+      list.map(p =>
+        p.id === producto.id ? { ...p, activo: nuevoEstado } : p
+      )
+    );
 
-  const nuevoEstado = !producto.activo;
+    // Llamada al backend
+    this.productoService.toggleActivo(producto.id).subscribe({
+      next: (updatedProducto: ProductoResponse) => {
+        // Actualiza con el objeto real devuelto por el backend (fuente de verdad)
+        this.productos.update(list =>
+          list.map(p =>
+            p.id === updatedProducto.id ? updatedProducto : p
+          )
+          
+        );
+        
+        this.loadingToggleId.set(null);
+      },
+      error: (err) => {
+        console.error('Error al cambiar estado', err);
+        alert('Error al cambiar el estado del producto');
 
-  // Optimistic update: cambio inmediato en UI
-  this.productos.update(list =>
-    list.map(p =>
-      p.id === producto.id
-        ? { ...p, activo: nuevoEstado }
-        : p
-    )
-  );
+        // Revierte el cambio optimista si falla
+        this.productos.update(list =>
+          list.map(p =>
+            p.id === producto.id ? { ...p, activo: !nuevoEstado } : p
+          )
+        );
+        this.loadingToggleId.set(null);
+      }
+    });
+  }
 
-  // Llamada al backend
-  this.productoService.toggleActivo(producto.id).subscribe({
-    next: (updated) => {
-      // ¡NO sobreescribas con 'updated'!
-      // El servidor probablemente te devolvió el estado viejo.
-      // Si quieres ser precavido y el servidor sí devuelve el nuevo estado correcto,
-      // entonces sí puedes actualizar, pero en tu caso parece que no.
-      // Opción segura: no hacer nada aquí, el optimistic ya es el estado final correcto.
+  trackByProductoId(index: number, producto: ProductoResponse): number {
+    return producto.id;
+  }
 
-      // Si en el futuro el backend devuelve el objeto actualizado correctamente,
-      // descomenta esto:
-      // this.productos.update(list =>
-      //   list.map(p => p.id === updated.id ? { ...updated } : p)
-      // );
-    },
-    error: (err) => {
-      console.error('Error al cambiar estado', err);
-      alert('Error al cambiar el estado del producto');
-
-      // Revertir si falla
-      this.productos.update(list =>
-        list.map(p =>
-          p.id === producto.id
-            ? { ...p, activo: !nuevoEstado }
-            : p
-        )
-      );
-    }
-  });
-}
-trackByProductoId(index: number, producto: ProductoResponse): number {
-  return producto.id;
-}
   onSearch(): void {
     this.currentPage.set(0);
   }
@@ -188,8 +188,24 @@ trackByProductoId(index: number, producto: ProductoResponse): number {
     }
     return range;
   }
+// MÉTODO CON DEPURACIÓN (temporal, para diagnosticar)
+toggleActivoConLog(producto: ProductoResponse): void {
+  console.log('🔍 [DEBUG TOGGLE] Producto ID:', producto.id);
+  console.log('🔍 [DEBUG TOGGLE] Nombre:', producto.nombre);
+  console.log('🔍 [DEBUG TOGGLE] Valor actual de p.activo:', producto.activo);
+  console.log('🔍 [DEBUG TOGGLE] Tipo de activo:', typeof producto.activo);
+  console.log('🔍 [DEBUG TOGGLE] Todo el objeto producto:', producto);
+  console.log('🔍 [DEBUG TOGGLE] loadingToggleId actual:', this.loadingToggleId());
+  console.log('--------------------------------------------------');
 
-  // Cierre con tecla Escape
+  // Si activo es undefined o null, forzamos a boolean
+  const actualActivo = !!producto.activo;
+  if (producto.activo === undefined || producto.activo === null) {
+    console.warn('⚠️ p.activo es null/undefined! Forzando a:', actualActivo);
+  }
+
+  this.toggleActivo(producto); // Llamamos al método original
+}
   @HostListener('document:keydown.escape')
   onEscape() {
     if (this.showModal()) {

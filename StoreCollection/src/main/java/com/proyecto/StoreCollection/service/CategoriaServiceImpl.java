@@ -11,11 +11,13 @@ import com.proyecto.StoreCollection.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.List;
@@ -29,16 +31,18 @@ public class CategoriaServiceImpl implements CategoriaService {
     private final TiendaService tiendaService; // ← para asignar automáticamente la tienda
     private final ProductoRepository productoRepository; // ← para asignar automáticamente la tienda
 
-    // === PÚBLICO: para el menú y filtros del catálogo ===
     @Override
     @Transactional(readOnly = true)
     public List<CategoriaResponse> findByTiendaSlug(String tiendaSlug) {
-        // TenantFilter ya puso el tenantId → solo mostramos las categorías de esa tienda
-        return categoriaRepository.findAllByTenant().stream()
+        Integer tenantId = TenantContext.getTenantId();
+        if (tenantId == null) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Tienda no disponible");
+        }
+
+        return categoriaRepository.findByTiendaIdAndActivoTrue(tenantId).stream()
                 .map(this::toResponse)
                 .toList();
     }
-
     // === PRIVADO: panel del dueño ===
     @Override
     @Transactional(readOnly = true)
@@ -200,7 +204,6 @@ public class CategoriaServiceImpl implements CategoriaService {
     public CategoriaResponse toggleActivo(Integer id) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        // Solo ADMIN puede togglear el estado activo
         boolean esAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
@@ -211,22 +214,20 @@ public class CategoriaServiceImpl implements CategoriaService {
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + id));
 
-        // Toggle del estado activo
         boolean nuevoEstado = !categoria.isActivo();
         categoria.setActivo(nuevoEstado);
 
-        // Si se DESACTIVA la categoría → desactivar todos sus productos
-        if (!nuevoEstado) {
+        if (nuevoEstado) {
+            // ← NUEVO: Al activar la categoría, reactivar todos sus productos
+            productoRepository.activarTodosPorCategoriaId(id);
+        } else {
+            // Al desactivar la categoría, desactivar todos sus productos
             productoRepository.desactivarTodosPorCategoriaId(id);
         }
-        // Nota: No reactivamos productos automáticamente al activar la categoría
-        // (para no interferir con desactivaciones manuales que haya hecho el owner)
 
         Categoria saved = categoriaRepository.save(categoria);
-
         return toResponse(saved);
     }
-    // === MODIFICADO: deleteById (agrega verificación de permisos) ===
     @Override
     public void deleteById(Integer id) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

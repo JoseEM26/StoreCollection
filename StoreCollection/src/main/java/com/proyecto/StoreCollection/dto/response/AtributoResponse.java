@@ -4,10 +4,12 @@ import lombok.*;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class AtributoResponse {
     private Integer id;
     private String nombre;
     private Integer tiendaId;
+    private String valor;
+
 }

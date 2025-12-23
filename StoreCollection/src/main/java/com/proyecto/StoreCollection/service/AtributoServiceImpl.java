@@ -128,7 +128,8 @@ public class AtributoServiceImpl implements AtributoService {
         return new AtributoResponse(
                 a.getId(),
                 a.getNombre(),
-                a.getTienda().getId()
+                a.getTienda().getId(),
+                null
         );
     }
 }

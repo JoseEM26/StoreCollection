@@ -1,12 +1,12 @@
-/* Backdrop suave con blur sutil (moderno y elegante) */
+/* Backdrop suave con blur */
 .custom-backdrop {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(15, 23, 42, 0.4); /* Gris oscuro semi-transparente */
-  backdrop-filter: blur(8px); /* Efecto glassmorphism suave */
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(8px);
   opacity: 0;
   transition: opacity 0.3s ease;
   z-index: 1040;
@@ -16,7 +16,7 @@
   opacity: 1;
 }
 
-/* Modal personalizado - más limpio y controlado */
+/* Modal personalizado */
 .custom-modal {
   position: fixed;
   top: 0;
@@ -31,7 +31,7 @@
   visibility: hidden;
   transition: all 0.3s ease;
   z-index: 1050;
-  overflow-y: auto; /* Permite scroll si el modal es muy alto */
+  overflow-y: auto;
 }
 
 .custom-modal.show {
@@ -41,8 +41,8 @@
 
 .modal-container {
   width: 100%;
-  max-width: 1000px; /* Ancho máximo controlado (ajusta si quieres más/menos) */
-  max-height: 95vh; /* Nunca ocupará más del 95% de la pantalla */
+  max-width: 1000px;
+  max-height: 95vh;
   background: white;
   border-radius: 16px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
@@ -52,11 +52,10 @@
 
 .modal-inner {
   max-height: 90vh;
-  overflow-y: auto; /* Scroll interno solo si el formulario es muy largo */
+  overflow-y: auto;
   padding: 2rem;
 }
 
-/* Animación suave de entrada */
 @keyframes modalFadeIn {
   from {
     opacity: 0;
@@ -68,19 +67,7 @@
   }
 }
 
-/* Mejora en móviles */
-@media (max-width: 768px) {
-  .modal-container {
-    max-width: 95vw;
-    border-radius: 12px;
-  }
-  
-  .modal-inner {
-    padding: 1.5rem;
-  }
-}
-
-/* Opcional: scrollbar bonita en el modal */
+/* Scrollbar bonita en el modal */
 .modal-inner::-webkit-scrollbar {
   width: 8px;
 }
@@ -97,4 +84,16 @@
 
 .modal-inner::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .modal-container {
+    max-width: 95vw;
+    border-radius: 12px;
+  }
+  
+  .modal-inner {
+    padding: 1.5rem;
+  }
 }
