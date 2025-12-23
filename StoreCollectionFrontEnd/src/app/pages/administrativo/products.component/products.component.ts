@@ -118,7 +118,7 @@ export class ProductsComponent implements OnInit {
 
   toggleActivo(producto: ProductoResponse): void {
     const nuevoEstado = !producto.activo;
-
+console.log('🚀 Iniciando toggle para producto:', producto.id, 'activo actual:', producto.activo);
     // Loading en el botón específico
     this.loadingToggleId.set(producto.id);
 
@@ -137,7 +137,9 @@ export class ProductsComponent implements OnInit {
           list.map(p =>
             p.id === updatedProducto.id ? updatedProducto : p
           )
+          
         );
+        
         this.loadingToggleId.set(null);
       },
       error: (err) => {
@@ -186,7 +188,24 @@ export class ProductsComponent implements OnInit {
     }
     return range;
   }
+// MÉTODO CON DEPURACIÓN (temporal, para diagnosticar)
+toggleActivoConLog(producto: ProductoResponse): void {
+  console.log('🔍 [DEBUG TOGGLE] Producto ID:', producto.id);
+  console.log('🔍 [DEBUG TOGGLE] Nombre:', producto.nombre);
+  console.log('🔍 [DEBUG TOGGLE] Valor actual de p.activo:', producto.activo);
+  console.log('🔍 [DEBUG TOGGLE] Tipo de activo:', typeof producto.activo);
+  console.log('🔍 [DEBUG TOGGLE] Todo el objeto producto:', producto);
+  console.log('🔍 [DEBUG TOGGLE] loadingToggleId actual:', this.loadingToggleId());
+  console.log('--------------------------------------------------');
 
+  // Si activo es undefined o null, forzamos a boolean
+  const actualActivo = !!producto.activo;
+  if (producto.activo === undefined || producto.activo === null) {
+    console.warn('⚠️ p.activo es null/undefined! Forzando a:', actualActivo);
+  }
+
+  this.toggleActivo(producto); // Llamamos al método original
+}
   @HostListener('document:keydown.escape')
   onEscape() {
     if (this.showModal()) {

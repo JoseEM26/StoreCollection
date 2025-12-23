@@ -324,21 +324,25 @@ public class ProductoServiceImpl implements ProductoService {
     @Transactional
     public ProductoResponse toggleActivo(Integer id) {
         Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
+                .orElseThrow(() -> new RuntimeException("No encontrado"));
 
         boolean nuevoEstado = !producto.isActivo();
         producto.setActivo(nuevoEstado);
+        productoRepository.save(producto); // Guardamos el estado del producto
 
         if (nuevoEstado) {
-            // ← NUEVO: Al activar el producto, reactivar todas sus variantes
             varianteRepository.activarTodasPorProductoId(id);
         } else {
-            // Al desactivar, desactivar todas las variantes
             varianteRepository.desactivarTodasPorProductoId(id);
         }
 
-        Producto saved = productoRepository.save(producto);
-        return toResponse(saved);
+        // FORZAR RELECTURA: Limpiamos la caché de primer nivel y buscamos de nuevo
+        productoRepository.flush();
+
+        // Volvemos a buscar el producto para que toResponse() tenga los datos reales de la BD
+        Producto productoActualizado = productoRepository.findById(id).get();
+
+        return toResponse(productoActualizado);
     }
     @Override
     public void deleteById(Integer id) {
@@ -528,7 +532,7 @@ public class ProductoServiceImpl implements ProductoService {
         resp.setCategoriaId(p.getCategoria().getId());
         resp.setTiendaId(p.getTienda().getId());
         resp.setCategoriaNombre(p.getCategoria().getNombre());
-        resp.setActivo(p.getCategoria().isActivo());
+        resp.setActivo(p.isActivo());
         return resp;
     }
     private ProductoResponse toResponseProductoCreate(Producto producto) {

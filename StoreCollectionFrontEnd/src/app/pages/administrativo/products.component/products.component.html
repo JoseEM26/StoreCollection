@@ -116,23 +116,29 @@
                     </button>
 
                     <!-- Botón Toggle Activo/Inactivo -->
-                    <button
-                      class="btn btn-sm"
-                      [class.btn-success]="p.activo && loadingToggleId() !== p.id"
-                      [class.btn-danger]="!p.activo && loadingToggleId() !== p.id"
-                      [class.btn-secondary]="loadingToggleId() === p.id"
-                      (click)="toggleActivo(p)"
-                      [disabled]="loadingToggleId() === p.id"
-                      [title]="p.activo ? 'Desactivar' : 'Activar'">
-                      <i class="bi me-1"
-                         [class.bi-check-circle-fill]="p.activo && loadingToggleId() !== p.id"
-                         [class.bi-x-circle-fill]="!p.activo && loadingToggleId() !== p.id"
-                         [class.bi-hourglass-split]="loadingToggleId() === p.id">
-                      </i>
-                      <span class="d-none d-md-inline">
-                        {{ loadingToggleId() === p.id ? 'Procesando...' : (p.activo ? 'Desactivar' : 'Activar') }}
-                      </span>
-                    </button>
+                    <!-- Botón Toggle Activo/Inactivo con DEPURACIÓN -->
+<button
+  class="btn btn-sm"
+  [ngClass]="{
+    'btn-success': p.activo && loadingToggleId() !== p.id,
+    'btn-danger': !p.activo && loadingToggleId() !== p.id,
+    'btn-secondary': loadingToggleId() === p.id
+  }"
+  (click)="toggleActivoConLog(p)"
+  [disabled]="loadingToggleId() === p.id"
+  [title]="p.activo ? 'Desactivar' : 'Activar'">
+
+  <i class="bi me-1"
+     [ngClass]="{
+       'bi-check-circle-fill': p.activo && loadingToggleId() !== p.id,
+       'bi-x-circle-fill': !p.activo && loadingToggleId() !== p.id,
+       'bi-hourglass-split': loadingToggleId() === p.id
+     }">
+  </i>
+  <span class="d-none d-md-inline">
+    {{ loadingToggleId() === p.id ? 'Procesando...' : (p.activo ? 'Desactivar' : 'Activar') }}
+  </span>
+</button>
                   </td>
                 </tr>
               </tbody>
