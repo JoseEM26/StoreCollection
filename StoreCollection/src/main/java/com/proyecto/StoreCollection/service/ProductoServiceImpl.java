@@ -417,32 +417,42 @@ public class ProductoServiceImpl implements ProductoService {
         if (rows.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado o tienda inactiva");
         }
-        Boolean productoActivo = (Boolean) rows.get(0)[8]; // Ajusta el índice según tu query
+
+        // Verificación de producto activo (índice 9 = p.activo)
+        Boolean productoActivo = (Boolean) rows.get(0)[9];
         if (productoActivo == null || !productoActivo) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "El producto no está disponible en este momento.");
         }
+
         Map<Integer, ProductoCardResponse> map = new LinkedHashMap<>();
 
         for (Object[] row : rows) {
-            Integer id = (Integer) row[0];
+            // Índices correctos:
+            Integer varianteId = (Integer) row[0];     // pv.id
+            Integer productoId = (Integer) row[1];     // p.id ← clave correcta
+            String nombre = (String) row[2];
+            String slug = (String) row[3];
+            String nombreCategoria = (String) row[4];
+            BigDecimal precio = (BigDecimal) row[5];
+            Integer stock = (Integer) row[6];
+            String imagenUrl = (String) row[7];
+            Boolean activoVar = (Boolean) row[8];
 
-            ProductoCardResponse p = map.computeIfAbsent(id, k -> {
+            // Crear o recuperar el producto
+            ProductoCardResponse p = map.computeIfAbsent(productoId, k -> {
                 ProductoCardResponse dto = new ProductoCardResponse();
-                dto.setId(id);
-                dto.setNombre((String) row[1]);
-                dto.setSlug((String) row[2]);
-                dto.setNombreCategoria((String) row[3]);
+                dto.setId(productoId);
+                dto.setNombre(nombre);
+                dto.setSlug(slug);
+                dto.setNombreCategoria(nombreCategoria);
                 dto.setVariantes(new ArrayList<>());
                 return dto;
             });
 
-            BigDecimal precio = row[4] != null ? (BigDecimal) row[4] : null;
-            Integer stock = row[5] != null ? (Integer) row[5] : 0;
-            String imagenUrl = (String) row[6];
-            Boolean activoVar = row[7] != null ? (Boolean) row[7] : false;
-
+            // Solo agregar variantes activas con precio
             if (activoVar && precio != null) {
                 ProductoCardResponse.VarianteCard v = new ProductoCardResponse.VarianteCard();
+                v.setId(varianteId);           // ← Ahora sí se asigna correctamente
                 v.setPrecio(precio);
                 v.setStock(stock);
                 v.setImagenUrl(imagenUrl);
@@ -454,13 +464,12 @@ public class ProductoServiceImpl implements ProductoService {
         ProductoCardResponse resultado = map.values().iterator().next();
         calcularCamposDerivados(resultado);
 
-        // Verificación final: si no tiene variantes activas con stock
         if (resultado.getStockTotal() <= 0) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "El producto no tiene stock disponible.");
         }
+
         return resultado;
     }
-
     /**
      * Método reutilizable: calcula precio mínimo, stock total e imagen principal
      */

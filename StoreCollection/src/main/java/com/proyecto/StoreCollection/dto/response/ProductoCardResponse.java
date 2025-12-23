@@ -32,6 +32,7 @@ public class ProductoCardResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class VarianteCard {
+        private Integer id;
         private BigDecimal precio;
         private Integer stock;
         private String imagenUrl;

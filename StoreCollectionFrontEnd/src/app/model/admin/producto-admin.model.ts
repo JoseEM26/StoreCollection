@@ -30,7 +30,7 @@ export interface VarianteResponse {
   sku: string;
   precio: number;
   stock: number;
-  imagenUrl?: string;           // también aquí usa undefined, no null
+  imagenUrl?: string | null;    // Permite null o undefined (más flexible)
   activo: boolean;
   atributos: AtributoValorResponse[];
 }
@@ -41,10 +41,11 @@ export interface VarianteRequest {
   precio: number;
   stock: number;
   imagen?: File;                
-  imagenUrl?: string;          
+  imagenUrl?: string | null;    
   activo?: boolean;
   atributos: AtributoValorRequest[];
 }
+
 export interface AtributoValorResponse {
   id: number;              // ID del AtributoValor
   atributoNombre: string;  // Nombre del atributo (ej: "Color")
@@ -66,6 +67,7 @@ export interface AtributoValorRequest {
   atributoNombreTemp?: string;
   valorTemp?: string;
 }
+
 // === Paginación ===
 export interface ProductoPage {
   content: ProductoResponse[];

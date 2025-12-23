@@ -73,14 +73,50 @@
         </div>
       </div>
 
-      <!-- Botones principales -->
+          <!-- Botones principales -->
       <div class="acciones">
-        <button class="btn-whatsapp" (click)="consultarWhatsApp()" [disabled]="!hayStock">
-          WhatsApp Consultar por WhatsApp
+        <!-- Mensaje de éxito -->
+        <div class="alert alert-success text-center mb-4" *ngIf="mensajeExito">
+          <i class="bi bi-check-circle me-2"></i>
+          ¡{{ cantidad }} producto(s) agregado(s) al carrito!
+        </div>
+
+        <!-- Selector de cantidad + Agregar al carrito -->
+        <div class="carrito-controls mb-4" *ngIf="hayStock">
+          <div class="cantidad-selector">
+            <button class="btn-cantidad" (click)="disminuirCantidad()" [disabled]="cantidad <= 1">
+              <i class="bi bi-dash-lg"></i>
+            </button>
+            <span class="cantidad-numero">{{ cantidad }}</span>
+            <button class="btn-cantidad" (click)="aumentarCantidad()" [disabled]="cantidad >= stockActual">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+          </div>
+
+          <button class="btn-agregar-carrito"
+                  (click)="agregarAlCarrito()"
+                  [disabled]="agregandoAlCarrito">
+            <span *ngIf="!agregandoAlCarrito">
+              <i class="bi bi-cart-plus me-2"></i> Agregar al carrito
+            </span>
+            <span *ngIf="agregandoAlCarrito">
+              <span class="spinner-border spinner-border-sm me-2"></span> Agregando...
+            </span>
+          </button>
+        </div>
+
+        <!-- WhatsApp principal -->
+        <button class="btn-whatsapp" (click)="consultarWhatsApp()">
+          <i class="bi bi-whatsapp me-2"></i> Consultar por WhatsApp
         </button>
+
         <div class="secundarios">
-          <button class="btn-sec" (click)="llamarAhora()">Phone Llamar</button>
-          <button class="btn-sec" (click)="abrirCotizacion()">Chat Cotizar</button>
+          <button class="btn-sec" (click)="llamarAhora()">
+            <i class="bi bi-telephone me-2"></i> Llamar
+          </button>
+          <button class="btn-sec" (click)="abrirCotizacion()">
+            <i class="bi bi-chat-dots me-2"></i> Cotizar
+          </button>
         </div>
       </div>
 

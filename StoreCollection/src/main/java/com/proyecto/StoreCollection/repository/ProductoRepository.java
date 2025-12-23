@@ -82,15 +82,16 @@ List<Producto> findByTiendaSlugPublic(@Param("tiendaSlug") String tiendaSlug);
 
      @Query("""
     SELECT 
-        p.id,
-        p.nombre,
-        p.slug,
-        c.nombre,
-        pv.precio,
-        pv.stock,
-        pv.imagenUrl,
-        pv.activo,
-        p.activo               
+        pv.id,                  
+        p.id,                   
+        p.nombre,               
+        p.slug,                 
+        c.nombre,              
+        pv.precio,              
+        pv.stock,               
+        pv.imagenUrl,          
+        pv.activo,              
+        p.activo                
     FROM Producto p
     JOIN p.categoria c
     LEFT JOIN p.variantes pv WITH pv.activo = true
@@ -104,6 +105,8 @@ List<Producto> findByTiendaSlugPublic(@Param("tiendaSlug") String tiendaSlug);
      List<Object[]> findRawDetailBySlugs(
              @Param("tiendaSlug") String tiendaSlug,
              @Param("productoSlug") String productoSlug);
+
+
 
      @Modifying
      @Query("UPDATE Producto p SET p.activo = true WHERE p.categoria.id = :categoriaId")

@@ -49,60 +49,60 @@ export interface Categoria {
   tienda?: Tienda;
 }
 
-export interface Atributo {
-  id: number;
-  nombre: string; // ej: "Talla", "Color"
-  tiendaId: number;
-  tienda?: Tienda;
-  valores?: AtributoValor[]; // opcional para cargar con atributos
-}
+// export interface Atributo {
+//   id: number;
+//   nombre: string; // ej: "Talla", "Color"
+//   tiendaId: number;
+//   tienda?: Tienda;
+//   valores?: AtributoValor[]; // opcional para cargar con atributos
+// }
 
-export interface AtributoValor {
-  id: number;
-  valor: string;     // ej: "Rojo", "38", "65W"
-  atributoId: number;
-  atributo?: Atributo;
-  tiendaId: number;
-  tienda?: Tienda;
-}
+// export interface AtributoValor {
+//   id: number;
+//   valor: string;     // ej: "Rojo", "38", "65W"
+//   atributoId: number;
+//   atributo?: Atributo;
+//   tiendaId: number;
+//   tienda?: Tienda;
+// }
 
-export interface Producto {
-  id: number;
-  nombre: string;
-  slug: string;
-  categoriaId: number;
-  categoria?: Categoria;
-  tiendaId: number;
-  tienda?: Tienda;
-  variantes?: Variante[];
-  createdAt?: string;
-  updatedAt?: string;
-}
+// export interface Producto {
+//   id: number;
+//   nombre: string;
+//   slug: string;
+//   categoriaId: number;
+//   categoria?: Categoria;
+//   tiendaId: number;
+//   tienda?: Tienda;
+//   variantes?: Variante[];
+//   createdAt?: string;
+//   updatedAt?: string;
+// }
 
-export interface Variante {
-  id: number;
-  productoId: number;
-  producto?: Producto;
-  tiendaId: number;
-  tienda?: Tienda;
-  sku: string;
-  precio: number;
-  stock: number;
-  imagenUrl?: string | null;  // ← ¡¡IMPORTANTE!! coincide con imagen_url en BD
-  activo: boolean;
-  atributos?: AtributoValor[]; // relación muchos-a-muchos (Variante_Atributo)
-  createdAt?: string;
-  updatedAt?: string;
-}
+// export interface Variante {
+//   id: number;
+//   productoId: number;
+//   producto?: Producto;
+//   tiendaId: number;
+//   tienda?: Tienda;
+//   sku: string;
+//   precio: number;
+//   stock: number;
+//   imagenUrl?: string | null;  // ← ¡¡IMPORTANTE!! coincide con imagen_url en BD
+//   activo: boolean;
+//   atributos?: AtributoValor[]; // relación muchos-a-muchos (Variante_Atributo)
+//   createdAt?: string;
+//   updatedAt?: string;
+// }
 
-export interface CarritoItem {
-  id: number;
-  sessionId: string;
-  varianteId: number;
-  variante?: Variante;
-  cantidad: number;
-  createdAt?: string;
-}
+// export interface CarritoItem {
+//   id: number;
+//   sessionId: string;
+//   varianteId: number;
+//   variante?: Variante;
+//   cantidad: number;
+//   createdAt?: string;
+// }
 
 // ========================================
 // DTOs PARA FORMULARIOS Y PETICIONES
