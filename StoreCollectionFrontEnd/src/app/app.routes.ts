@@ -27,6 +27,7 @@ import { TiendaResolver } from './service/tienda.resolver';
 import { authGuard } from '../auth/auth.guard';
 import { tiendaExistsGuard } from '../auth/tienda-exists.guard';
 import { resourceActiveGuard } from '../auth/resource-active.guard'; // ← IMPORTANTE: el guard para productos inactivos
+import { CarritoComponent } from './componente/carrito/carrito.component';
 
 export const routes: Routes = [
 
@@ -65,7 +66,7 @@ export const routes: Routes = [
     children: [
       { path: '', component: MainTiendaComponent },
       { path: 'conocenos', component: ConocenosComponent },
-
+      { path: 'carrito', component: CarritoComponent, title: 'Mi Carrito' }, 
       {
         path: 'catalogo',
         children: [

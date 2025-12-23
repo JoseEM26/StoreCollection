@@ -1,8 +1,10 @@
-// src/app/componente/public-layout/public-layout.component.ts
+// src/app/componente/public-layout/public-layaout.component.ts
+
 import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { TiendaService } from '../../service/tienda.service';
+import { CarritoService } from '../../service/carrito.service'; // ← NUEVA IMPORTACIÓN
 import { Title } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 
@@ -21,13 +23,17 @@ export class PublicLayaoutComponent implements OnInit, OnDestroy {
   currentYear = new Date().getFullYear();
   isScrolled = false;
 
+  // Variables para el carrito en el header
+  totalItemsCarrito = 0;
+
   constructor(
     private tiendaService: TiendaService,
+    private carritoService: CarritoService, // ← NUEVO
     private titleService: Title
   ) {}
 
   ngOnInit(): void {
-    // Suscripción a la tienda actual
+    // Suscripción a la tienda
     this.tiendaService.currentTienda$
       .pipe(takeUntil(this.destroy$))
       .subscribe(tienda => {
@@ -39,11 +45,16 @@ export class PublicLayaoutComponent implements OnInit, OnDestroy {
         }
       });
 
-    // Detectar scroll para efecto en header
-    this.onScroll(); // Estado inicial
+    // Suscripción al número de items en el carrito
+    this.carritoService.itemsCount$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(count => {
+        this.totalItemsCarrito = count;
+      });
+
+    this.onScroll();
   }
 
-  // Mejor práctica: usar @HostListener para eventos de window
   @HostListener('window:scroll')
   onScroll(): void {
     this.isScrolled = window.scrollY > 20;
@@ -57,37 +68,23 @@ export class PublicLayaoutComponent implements OnInit, OnDestroy {
     this.menuOpen = false;
   }
 
-  // MÉTODO PARA GENERAR EL LINK DE WHATSAPP (seguro y limpio)
   getWhatsAppLink(): string | null {
     if (!this.tienda?.whatsapp) return null;
-
-    // Limpia todo lo que no sea número (espacios, +, -, (), etc.)
     const numeroLimpio = this.tienda.whatsapp.replace(/\D/g, '');
-
-    // Opcional: asegura que tenga código de país (Perú: 51)
-    // Si no empieza con 51 y tiene 9 dígitos, agrega 51
-    // if (numeroLimpio.length === 9) {
-    //   return `https://wa.me/51${numeroLimpio}`;
-    // }
-
     return `https://wa.me/${numeroLimpio}`;
   }
 
-  // MÉTODO PARA ABRIR WHATSAPP CON MENSAJE PREDETERMINADO
   abrirWhatsApp(): void {
     if (!this.tienda?.whatsapp) return;
-
     const numeroLimpio = this.tienda.whatsapp.replace(/\D/g, '');
     const mensaje = encodeURIComponent(
       `¡Hola ${this.tienda.nombre || 'de la tienda'}! 👋\nVi tu tienda online y estoy interesado/a en tus productos.\n\n¿Me puedes ayudar con más información o disponibilidad? 😊`
     );
-
     window.open(`https://wa.me/${numeroLimpio}?text=${mensaje}`, '_blank', 'noopener,noreferrer');
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    // No es necesario remover el listener si usas @HostListener
   }
 }

@@ -38,7 +38,28 @@
           <i class="bi bi-heart-fill me-2"></i>Conócenos
         </a>
       </nav>
+      <!-- ÍCONO CARRITO - Desktop y móvil -->
+      <a [routerLink]="['/', tienda?.slug, 'carrito']"
+         class="position-relative text-dark text-decoration-none d-flex align-items-center"
+         aria-label="Ver carrito">
+        <i class="bi bi-cart3 fs-3"></i>
+        
+        <!-- Badge con cantidad -->
+        @if (totalItemsCarrito > 0) {
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                style="font-size: 0.65rem;">
+            {{ totalItemsCarrito }}
+            <span class="visually-hidden">productos en el carrito</span>
+          </span>
+        }
+      </a>
 
+      <!-- Botón menú móvil -->
+      <button class="btn btn-outline-dark d-lg-none rounded-circle p-2 ms-3" 
+              (click)="toggleMenu()" 
+              aria-label="Menú">
+        <i class="bi fs-4" [class.bi-list]="!menuOpen" [class.bi-x-lg]="menuOpen"></i>
+      </button>
       <!-- Botón menú móvil -->
       <button class="btn btn-outline-dark d-lg-none rounded-circle p-2" 
               (click)="toggleMenu()" 

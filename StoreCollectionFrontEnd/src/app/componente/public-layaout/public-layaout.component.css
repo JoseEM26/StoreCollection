@@ -146,4 +146,26 @@
 @media (max-width: 576px) {
   .footer-logo-container { width: 60px; height: 60px; }
   .social-btn { width: 45px; height: 45px; }
+}/* Ícono carrito en header */
+a[aria-label="Ver carrito"] {
+  margin-right: 1rem;
+}
+
+a[aria-label="Ver carrito"]:hover {
+  opacity: 0.8;
+}
+
+.badge {
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* En móvil: ajustar margen */
+@media (max-width: 992px) {
+  a[aria-label="Ver carrito"] {
+    margin-right: 0.5rem;
+  }
 }
