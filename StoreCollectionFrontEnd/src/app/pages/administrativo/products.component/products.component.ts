@@ -26,7 +26,10 @@ export class ProductsComponent implements OnInit {
   selectedProducto = signal<ProductoResponse | undefined>(undefined);
   loadingEdicion = signal(false);
 
-  // Filtros
+  // Loading para el botón de toggle (evita clicks múltiples)
+  loadingToggleId = signal<number | null>(null);
+
+  // Filtros y paginación
   currentPage = signal(0);
   pageSize = 20;
   sort = signal('nombre,asc');
@@ -36,6 +39,7 @@ export class ProductsComponent implements OnInit {
     private productoService: ProductoAdminService,
     public auth: AuthService
   ) {
+    // Recarga automática cuando cambian filtros relevantes
     effect(() => {
       this.loadProductos();
     });
@@ -112,43 +116,49 @@ export class ProductsComponent implements OnInit {
     this.loadProductos();
   }
 
- // ... el resto del código permanece igual
+  toggleActivo(producto: ProductoResponse): void {
+    const nuevoEstado = !producto.activo;
 
-toggleActivo(producto: ProductoResponse): void {
+    // Loading en el botón específico
+    this.loadingToggleId.set(producto.id);
 
-  const nuevoEstado = !producto.activo;
+    // Optimistic update: cambia inmediatamente en la UI
+    this.productos.update(list =>
+      list.map(p =>
+        p.id === producto.id ? { ...p, activo: nuevoEstado } : p
+      )
+    );
 
-  // Optimistic update: cambio inmediato en UI
-  this.productos.update(list =>
-    list.map(p =>
-      p.id === producto.id
-        ? { ...p, activo: nuevoEstado }
-        : p
-    )
-  );
+    // Llamada al backend
+    this.productoService.toggleActivo(producto.id).subscribe({
+      next: (updatedProducto: ProductoResponse) => {
+        // Actualiza con el objeto real devuelto por el backend (fuente de verdad)
+        this.productos.update(list =>
+          list.map(p =>
+            p.id === updatedProducto.id ? updatedProducto : p
+          )
+        );
+        this.loadingToggleId.set(null);
+      },
+      error: (err) => {
+        console.error('Error al cambiar estado', err);
+        alert('Error al cambiar el estado del producto');
 
-  // Llamada al backend
-  this.productoService.toggleActivo(producto.id).subscribe({
-    next: (updated) => {
-    },
-    error: (err) => {
-      console.error('Error al cambiar estado', err);
-      alert('Error al cambiar el estado del producto');
+        // Revierte el cambio optimista si falla
+        this.productos.update(list =>
+          list.map(p =>
+            p.id === producto.id ? { ...p, activo: !nuevoEstado } : p
+          )
+        );
+        this.loadingToggleId.set(null);
+      }
+    });
+  }
 
-      // Revertir si falla
-      this.productos.update(list =>
-        list.map(p =>
-          p.id === producto.id
-            ? { ...p, activo: !nuevoEstado }
-            : p
-        )
-      );
-    }
-  });
-}
-trackByProductoId(index: number, producto: ProductoResponse): number {
-  return producto.id;
-}
+  trackByProductoId(index: number, producto: ProductoResponse): number {
+    return producto.id;
+  }
+
   onSearch(): void {
     this.currentPage.set(0);
   }
@@ -177,7 +187,6 @@ trackByProductoId(index: number, producto: ProductoResponse): number {
     return range;
   }
 
-  // Cierre con tecla Escape
   @HostListener('document:keydown.escape')
   onEscape() {
     if (this.showModal()) {

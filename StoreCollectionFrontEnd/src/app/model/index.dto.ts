@@ -7,6 +7,7 @@ export interface ProductoPublic {
   precioMinimo: number;        // ← viene como number (Java BigDecimal → JS number)
   stockTotal: number;
   imagenPrincipal: string;
+  activo:boolean;
   variantes: {
     precio: number;
     stock: number;

@@ -14,9 +14,10 @@
             <span class="ms-2">( {{ pageData()?.totalElements || 0 }} en total )</span>
           </p>
         </div>
-        <button class="btn btn-primary btn-lg shadow-sm" (click)="openCreateModal()"
-        *ngIf="auth.isLoggedIn() && !auth.isAdmin() && !auth.isCustomer()"
-        >
+        <button 
+          class="btn btn-primary btn-lg shadow-sm" 
+          (click)="openCreateModal()"
+          *ngIf="auth.isLoggedIn() && !auth.isAdmin() && !auth.isCustomer()">
           <i class="bi bi-plus-lg me-2"></i>
           Nuevo Producto
         </button>
@@ -77,7 +78,7 @@
                 <tr *ngFor="let p of productos(); trackBy: trackByProductoId">
                   <td class="ps-4">
                     <div class="d-flex align-items-center gap-3">
-                      <div class="bg-primary text-white rounded-3 d-flex align-items-center justify-content-center" 
+                      <div class="bg-primary text-white rounded-3 d-flex align-items-center justify-content-center"
                            style="width: 56px; height: 56px; font-size: 1.8rem;">
                         <i class="bi bi-box-seam"></i>
                       </div>
@@ -101,31 +102,37 @@
                     </span>
                   </td>
                   <td>
-                    <span class="badge rounded-pill" 
-                          [class.bg-success]="p.activo" 
+                    <span class="badge rounded-pill"
+                          [class.bg-success]="p.activo"
                           [class.bg-danger]="!p.activo">
                       {{ p.activo ? 'Activo' : 'Inactivo' }}
                     </span>
                   </td>
                   <td class="text-end pe-4">
-                    <button class="btn btn-outline-primary btn-sm me-2" 
-                            (click)="openEditModal(p.id)"  
+                    <button class="btn btn-outline-primary btn-sm me-2"
+                            (click)="openEditModal(p.id)"
                             title="Editar">
                       <i class="bi bi-pencil"></i>
                     </button>
-                    <button 
-        class="btn btn-sm"
-        [class.btn-success]="p.activo"
-        [class.btn-danger]="!p.activo"
-        (click)="toggleActivo(p)"
-        title="{{ p.activo ? 'Desactivar' : 'Activar' }}">
-  <i class="bi me-1" 
-     [class.bi-check-circle-fill]="p.activo" 
-     [class.bi-x-circle-fill]="!p.activo"></i>
-  <span class="d-none d-md-inline">
-    {{ p.activo ? 'Desactivar' : 'Activar' }}
-  </span>
-</button>
+
+                    <!-- Botón Toggle Activo/Inactivo -->
+                    <button
+                      class="btn btn-sm"
+                      [class.btn-success]="p.activo && loadingToggleId() !== p.id"
+                      [class.btn-danger]="!p.activo && loadingToggleId() !== p.id"
+                      [class.btn-secondary]="loadingToggleId() === p.id"
+                      (click)="toggleActivo(p)"
+                      [disabled]="loadingToggleId() === p.id"
+                      [title]="p.activo ? 'Desactivar' : 'Activar'">
+                      <i class="bi me-1"
+                         [class.bi-check-circle-fill]="p.activo && loadingToggleId() !== p.id"
+                         [class.bi-x-circle-fill]="!p.activo && loadingToggleId() !== p.id"
+                         [class.bi-hourglass-split]="loadingToggleId() === p.id">
+                      </i>
+                      <span class="d-none d-md-inline">
+                        {{ loadingToggleId() === p.id ? 'Procesando...' : (p.activo ? 'Desactivar' : 'Activar') }}
+                      </span>
+                    </button>
                   </td>
                 </tr>
               </tbody>
@@ -158,13 +165,13 @@
               <i class="bi bi-chevron-left"></i>
             </button>
           </li>
-          <li class="page-item" 
-              *ngFor="let page of getPageNumbers()" 
+          <li class="page-item"
+              *ngFor="let page of getPageNumbers()"
               [class.active]="page === currentPage()">
             <button class="page-link" (click)="goToPage(page)">{{ page + 1 }}</button>
           </li>
           <li class="page-item" [class.disabled]="currentPage() === (pageData()!.totalPages - 1)">
-            <button class="page-link" (click)="goToPage(currentPage() + 1)" 
+            <button class="page-link" (click)="goToPage(currentPage() + 1)"
                     [disabled]="currentPage() === (pageData()!.totalPages - 1)">
               <i class="bi bi-chevron-right"></i>
             </button>
@@ -176,16 +183,16 @@
   </div>
 </div>
 
-<!-- Backdrop mejorado: más suave y con blur opcional -->
-<div class="custom-backdrop" 
-     [class.show]="showModal()" 
-     *ngIf="showModal()" 
+<!-- Backdrop -->
+<div class="custom-backdrop"
+     [class.show]="showModal()"
+     *ngIf="showModal()"
      (click)="closeModal()">
 </div>
 
-<!-- Modal mejorado -->
-<div class="custom-modal" 
-     [class.show]="showModal()" 
+<!-- Modal -->
+<div class="custom-modal"
+     [class.show]="showModal()"
      *ngIf="showModal()"
      tabindex="-1">
   <div class="modal-container" (click)="$event.stopPropagation()">

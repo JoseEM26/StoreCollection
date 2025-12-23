@@ -66,13 +66,15 @@ export class ProductFormComponent implements OnChanges {
     });
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['producto'] && this.producto) {
+ ngOnChanges(changes: SimpleChanges): void {
+  if (changes['producto'] || changes['isEdit']) {
+    if (this.producto && this.isEdit) {
+      // Modo edición: cargar datos del producto
       this.nombre.set(this.producto.nombre);
       this.slug.set(this.producto.slug);
       this.categoriaId.set(this.producto.categoriaId);
       this.tiendaId.set(this.producto.tiendaId);
-      this.activo.set(this.producto.activo);
+      this.activo.set(this.producto.activo); // ← Respeta el valor real del backend
 
       const vars = this.producto.variantes?.map((v, index) => {
         const variante: VarianteRequest = {
@@ -103,21 +105,22 @@ export class ProductFormComponent implements OnChanges {
         });
       }
     } else {
+      // Solo modo creación: resetear todo
       this.resetForm();
     }
   }
-
-  private resetForm() {
-    this.nombre.set('');
-    this.slug.set('');
-    this.categoriaId.set(null);
-    this.tiendaId.set(null);
-    this.activo.set(true);
-    this.variantes.set([]);
-    this.collapsed.set([]);
-    this.imagenPreviews.set(new Map());
-    this.tiendaActual.set(null);
-  }
+}
+private resetForm() {
+  this.nombre.set('');
+  this.slug.set('');
+  this.categoriaId.set(null);
+  this.tiendaId.set(null);
+  this.activo.set(true); 
+  this.variantes.set([]);
+  this.collapsed.set([]);
+  this.imagenPreviews.set(new Map());
+  this.tiendaActual.set(null);
+}
 
   generarSlugDesdeNombre(): void {
     const nombreNormalizado = this.nombre().trim().toLowerCase()
