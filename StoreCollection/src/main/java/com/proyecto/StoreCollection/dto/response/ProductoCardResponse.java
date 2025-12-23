@@ -36,8 +36,21 @@ public class ProductoCardResponse {
         private BigDecimal precio;
         private Integer stock;
         private String imagenUrl;
-
         @Builder.Default
         private boolean activo = true;
+
+        // ← NUEVO: Lista de atributos
+        @Builder.Default
+        private List<AtributoValorDTO> atributos = new ArrayList<>();
+
+        // DTO interno simple para atributo-valor
+        @Data
+        @Builder
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class AtributoValorDTO {
+            private String atributoNombre;
+            private String valor;
+        }
     }
 }

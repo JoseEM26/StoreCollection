@@ -80,7 +80,7 @@ List<Producto> findByTiendaSlugPublic(@Param("tiendaSlug") String tiendaSlug);
      List<Object[]> findRawCatalogByTiendaSlug(@Param("tiendaSlug") String tiendaSlug);
 
 
-     @Query("""
+     @Query(value = """
     SELECT 
         pv.id,                  
         p.id,                   
@@ -89,19 +89,23 @@ List<Producto> findByTiendaSlugPublic(@Param("tiendaSlug") String tiendaSlug);
         c.nombre,              
         pv.precio,              
         pv.stock,               
-        pv.imagenUrl,          
+        pv.imagen_url AS imagenUrl,          
         pv.activo,              
-        p.activo                
-    FROM Producto p
-    JOIN p.categoria c
-    LEFT JOIN p.variantes pv WITH pv.activo = true
-    WHERE p.tienda.slug = :tiendaSlug 
+        p.activo,
+        a.nombre AS atributo_nombre,
+        av.valor
+    FROM producto p
+    JOIN categoria c ON c.id = p.categoria_id
+    LEFT JOIN producto_variante pv ON pv.producto_id = p.id AND pv.activo = true
+    LEFT JOIN variante_atributo va ON va.variante_id = pv.id
+    LEFT JOIN atributo_valor av ON av.id = va.atributo_valor_id
+    LEFT JOIN atributo a ON a.id = av.atributo_id
+    WHERE p.tienda_id = (SELECT t.id FROM tienda t WHERE t.slug = :tiendaSlug AND t.activo = true)
       AND p.slug = :productoSlug
-      AND p.tienda.activo = true
       AND p.activo = true              
       AND c.activo = true               
-    ORDER BY p.id, pv.id
-    """)
+    ORDER BY p.id, pv.id, a.nombre, av.valor
+    """, nativeQuery = true)
      List<Object[]> findRawDetailBySlugs(
              @Param("tiendaSlug") String tiendaSlug,
              @Param("productoSlug") String productoSlug);

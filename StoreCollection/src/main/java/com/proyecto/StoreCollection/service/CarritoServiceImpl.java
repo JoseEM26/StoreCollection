@@ -2,38 +2,27 @@ package com.proyecto.StoreCollection.service;
 
 import com.proyecto.StoreCollection.dto.request.BoletaRequest;
 import com.proyecto.StoreCollection.dto.request.CarritoRequest;
-import com.proyecto.StoreCollection.dto.response.BoletaDetalleResponse;
-import com.proyecto.StoreCollection.dto.response.BoletaResponse;
-import com.proyecto.StoreCollection.dto.response.CarritoResponse;
+import com.proyecto.StoreCollection.dto.response.*;
 import com.proyecto.StoreCollection.entity.*;
 import com.proyecto.StoreCollection.repository.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 @Transactional
 public class CarritoServiceImpl implements CarritoService {
 
-    @Autowired
-    private CarritoRepository repository;
-
-    @Autowired
-    private ProductoVarianteRepository varianteRepository;
-
-    @Autowired
-    private BoletaRepository boletaRepository;
-
-    @Autowired
-    private TiendaRepository tiendaRepository;
-
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    private final CarritoRepository repository;
+    private final ProductoVarianteRepository varianteRepository;
+    private final BoletaRepository boletaRepository;
+    private final TiendaRepository tiendaRepository;
+    private final UsuarioRepository usuarioRepository;
 
     // ===================== CARRITO =====================
 
@@ -61,16 +50,18 @@ public class CarritoServiceImpl implements CarritoService {
 
     @Override
     public CarritoResponse save(CarritoRequest request, Integer id) {
-        Carrito carrito = id == null ? new Carrito() : repository.findById(id)
+        Carrito carrito = (id == null)
+                ? new Carrito()
+                : repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Carrito no encontrado: " + id));
 
         carrito.setSessionId(request.getSessionId());
         carrito.setCantidad(request.getCantidad());
 
         if (request.getVarianteId() != null) {
-            ProductoVariante v = varianteRepository.findById(request.getVarianteId())
-                    .orElseThrow(() -> new RuntimeException("Variante no encontrada"));
-            carrito.setVariante(v);
+            ProductoVariante variante = varianteRepository.findById(request.getVarianteId())
+                    .orElseThrow(() -> new RuntimeException("Variante no encontrada: " + request.getVarianteId()));
+            carrito.setVariante(variante);
         }
 
         return toResponse(repository.save(carrito));
@@ -86,7 +77,6 @@ public class CarritoServiceImpl implements CarritoService {
         repository.deleteBySessionId(sessionId);
     }
 
-    /** Mapeo completo de Carrito → CarritoResponse con datos ricos */
     private CarritoResponse toResponse(Carrito c) {
         CarritoResponse dto = new CarritoResponse();
         dto.setId(c.getId());
@@ -101,10 +91,17 @@ public class CarritoServiceImpl implements CarritoService {
             dto.setPrecio(v.getPrecio().doubleValue());
             dto.setImagenUrl(v.getImagenUrl());
 
-            // Combinar atributos (Color, Talla, etc.)
-            String atributos = v.getAtributos().stream()
-                    .map(av -> av.getValor())
-                    .collect(Collectors.joining(", "));
+            List<AtributoResponse> atributos = v.getAtributos().stream()
+                    .map(av -> {
+                        AtributoResponse attr = new AtributoResponse();
+                        attr.setId(av.getId());
+                        attr.setNombre(av.getAtributo().getNombre());
+                        attr.setValor(av.getValor());
+                        attr.setTiendaId(av.getAtributo().getTienda().getId());
+                        return attr;
+                    })
+                    .collect(Collectors.toList());
+
             dto.setAtributos(atributos.isEmpty() ? null : atributos);
         }
         return dto;
@@ -116,23 +113,32 @@ public class CarritoServiceImpl implements CarritoService {
     public BoletaResponse checkout(BoletaRequest request) {
         List<Carrito> items = repository.findBySessionId(request.getSessionId());
         if (items.isEmpty()) {
-            throw new RuntimeException("Carrito vacío");
+            throw new RuntimeException("El carrito está vacío");
         }
 
-        // Validar stock y calcular total
+        Tienda tienda = tiendaRepository.findById(request.getTiendaId())
+                .orElseThrow(() -> new RuntimeException("Tienda no encontrada"));
+
         BigDecimal total = BigDecimal.ZERO;
         for (Carrito item : items) {
             ProductoVariante variante = item.getVariante();
+            if (variante == null) {
+                throw new RuntimeException("Variante no asociada en un ítem del carrito");
+            }
             if (variante.getStock() < item.getCantidad()) {
-                throw new RuntimeException("Stock insuficiente para SKU: " + variante.getSku());
+                throw new RuntimeException(
+                        String.format("Stock insuficiente para %s (%s): solo hay %d disponibles",
+                                variante.getProducto().getNombre(), variante.getSku(), variante.getStock())
+                );
             }
             total = total.add(variante.getPrecio().multiply(BigDecimal.valueOf(item.getCantidad())));
         }
 
-        // Crear boleta
         Boleta boleta = new Boleta();
         boleta.setSessionId(request.getSessionId());
         boleta.setTotal(total);
+        boleta.setTienda(tienda);
+        boleta.setEstado(Boleta.EstadoBoleta.COMPLETADA);
 
         if (request.getUserId() != null) {
             Usuario user = usuarioRepository.findById(request.getUserId())
@@ -140,11 +146,6 @@ public class CarritoServiceImpl implements CarritoService {
             boleta.setUser(user);
         }
 
-        Tienda tienda = tiendaRepository.findById(request.getTiendaId())
-                .orElseThrow(() -> new RuntimeException("Tienda no encontrada"));
-        boleta.setTienda(tienda);
-
-        // Crear detalles y reducir stock
         for (Carrito item : items) {
             ProductoVariante variante = item.getVariante();
 
@@ -157,15 +158,11 @@ public class CarritoServiceImpl implements CarritoService {
 
             boleta.getDetalles().add(detalle);
 
-            // Reducir stock
             variante.setStock(variante.getStock() - item.getCantidad());
             varianteRepository.save(variante);
         }
 
-        boleta.setEstado(Boleta.EstadoBoleta.COMPLETADA);
         boleta = boletaRepository.save(boleta);
-
-        // Limpiar carrito
         limpiarCarrito(request.getSessionId());
 
         return toBoletaResponse(boleta);
@@ -173,25 +170,21 @@ public class CarritoServiceImpl implements CarritoService {
 
     private BoletaResponse toBoletaResponse(Boleta boleta) {
         BoletaResponse response = new BoletaResponse();
-
         response.setId(boleta.getId());
         response.setSessionId(boleta.getSessionId());
-
-        if (boleta.getUser() != null) {
-            response.setUserId(boleta.getUser().getId());
-        }
-
         response.setTiendaId(boleta.getTienda().getId());
         response.setTotal(boleta.getTotal());
         response.setFecha(boleta.getFecha());
         response.setEstado(boleta.getEstado().name());
 
+        if (boleta.getUser() != null) {
+            response.setUserId(boleta.getUser().getId());
+        }
+
         response.setDetalles(
-                boleta.getDetalles() != null
-                        ? boleta.getDetalles().stream()
+                boleta.getDetalles().stream()
                         .map(this::toBoletaDetalleResponse)
                         .collect(Collectors.toList())
-                        : new ArrayList<>()
         );
 
         return response;
@@ -205,6 +198,24 @@ public class CarritoServiceImpl implements CarritoService {
         dto.setCantidad(detalle.getCantidad());
         dto.setPrecioUnitario(detalle.getPrecioUnitario());
         dto.setSubtotal(detalle.getSubtotal());
+
+        ProductoVariante variante = detalle.getVariante();
+        dto.setNombreProducto(variante.getProducto().getNombre());
+        dto.setSku(variante.getSku());
+        dto.setImagenUrl(variante.getImagenUrl());
+
+        List<AtributoResponse> atributos = variante.getAtributos().stream()
+                .map(av -> {
+                    AtributoResponse attr = new AtributoResponse();
+                    attr.setId(av.getId());
+                    attr.setNombre(av.getAtributo().getNombre());
+                    attr.setValor(av.getValor());
+                    attr.setTiendaId(av.getAtributo().getTienda().getId());
+                    return attr;
+                })
+                .collect(Collectors.toList());
+
+        dto.setAtributos(atributos.isEmpty() ? null : atributos);
 
         return dto;
     }

@@ -2,6 +2,8 @@ package com.proyecto.StoreCollection.dto.response;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class CarritoResponse {
     private Integer id;
@@ -14,5 +16,6 @@ public class CarritoResponse {
     private String sku;
     private Double precio;        // Usamos Double en DTO para fácil manejo en JSON/Frontend
     private String imagenUrl;
-    private String atributos;     // Ej: "Rojo, Talla M"
+    private List<AtributoResponse> atributos;
+
 }

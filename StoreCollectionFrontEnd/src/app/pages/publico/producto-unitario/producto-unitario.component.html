@@ -1,9 +1,11 @@
 <div class="container py-5" *ngIf="!loading && producto; else cargando">
-  <button class="btn-volver" routerLink="/catalogo">Back Regresar</button>
+  <button class="btn-volver" routerLink="/catalogo">
+    <i class="bi bi-arrow-left me-2"></i> Regresar al catálogo
+  </button>
 
   <div class="producto-grid">
 
-    <!-- IMAGEN CON LUPA INTERNA (solo una imagen) -->
+    <!-- ==================== IMAGEN CON LUPA ==================== -->
     <div class="imagen-seccion">
       <div class="zoom-container"
            (mousemove)="actualizarLupa($event)"
@@ -16,38 +18,41 @@
              loading="lazy"
              (error)="imagenActual = fallbackImage">
 
-        <!-- Lupa circular dentro de la imagen -->
+        <!-- Lupa interna -->
         <div class="lupa-interna"
              [class.visible]="lupaVisible"
              [style.left.px]="lupaX"
              [style.top.px]="lupaY"
              [style.backgroundImage]="'url(' + imagenActual + ')'"
-             [style.backgroundPosition.%]="(lupaX / 500 * 100)"
-             [style.backgroundPositionY.%]="(lupaY / 500 * 100)">
+             [style.backgroundPosition.%]="-(lupaX * 2)"
+             [style.backgroundPositionY.%]="-(lupaY * 2)"
+             [style.backgroundSize.%]="300">
         </div>
 
-        <!-- Badge stock -->
+        <!-- Badges de stock -->
         <div class="badge-stock" *ngIf="varianteSeleccionada">
           <span class="agotado" *ngIf="stockActual === 0">AGOTADO</span>
           <span class="ultimas" *ngIf="stockActual > 0 && stockActual <= 5">
-            ¡Últimas {{ stockActual }}!
+            ¡Últimas {{ stockActual }} unidades!
           </span>
         </div>
       </div>
 
-      <!-- Miniaturas (opcional) -->
-      <div class="miniaturas" *ngIf="producto.variantes.length > 1">
+      <!-- Miniaturas (opcional: si las variantes tienen imágenes distintas) -->
+      <div class="miniaturas" *ngIf="tieneVariantesConImagen">
         <button *ngFor="let v of producto.variantes"
                 class="mini-btn"
                 [class.active]="v.imagenUrl === imagenActual"
                 (click)="cambiarImagen(v.imagenUrl)"
                 [disabled]="!v.imagenUrl">
-          <img [src]="v.imagenUrl || fallbackImage" alt="variante">
+          <img [src]="v.imagenUrl || fallbackImage"
+               [alt]="'Variante ' + producto.nombre"
+               loading="lazy">
         </button>
       </div>
     </div>
 
-    <!-- INFO PRODUCTO -->
+    <!-- ==================== INFORMACIÓN DEL PRODUCTO ==================== -->
     <div class="info-seccion">
       <span class="categoria">{{ producto.nombreCategoria }}</span>
       <h1 class="titulo">{{ producto.nombre }}</h1>
@@ -56,34 +61,53 @@
         S/ <span>{{ precioActual | number:'1.2-2' }}</span>
       </div>
 
-      <!-- Variantes -->
-      <div class="variantes" *ngIf="producto.variantes.length > 1">
-        <h3>Elige tu variante</h3>
-        <div class="lista-variantes">
-          <button *ngFor="let v of producto.variantes"
-                  class="variante-btn"
-                  [class.selected]="v === varianteSeleccionada"
-                  [class.agotado]="v.stock === 0"
-                  [disabled]="v.stock === 0"
-                  (click)="seleccionarVariante(v)">
-            <div>S/ {{ v.precio | number:'1.2-2' }}</div>
-            <small>{{ v.stock > 0 ? v.stock + ' disponibles' : 'Agotado' }}</small>
-            <span class="check" *ngIf="v === varianteSeleccionada">Check</span>
-          </button>
+      <!-- Atributos seleccionados -->
+      <div class="atributos-seleccionados mb-4" *ngIf="atributosTexto">
+        <strong>Variante seleccionada:</strong>
+        <div class="atributos-lista mt-2">
+          <span class="atributo-chip" *ngFor="let attr of varianteSeleccionada?.atributos">
+            {{ attr.atributoNombre }}: <strong>{{ attr.valor }}</strong>
+          </span>
         </div>
       </div>
 
-          <!-- Botones principales -->
-      <div class="acciones">
-        <!-- Mensaje de éxito -->
-        <div class="alert alert-success text-center mb-4" *ngIf="mensajeExito">
-          <i class="bi bi-check-circle me-2"></i>
-          ¡{{ cantidad }} producto(s) agregado(s) al carrito!
+      <!-- ==================== SELECCIÓN DE ATRIBUTOS ==================== -->
+      <div class="atributos-selector mb-5" *ngIf="atributosAgrupados.length > 0">
+        <h3 class="mb-4">Elige tus opciones</h3>
+
+        <div class="atributo-grupo mb-4" *ngFor="let grupo of atributosAgrupados">
+          <label class="form-label fw-bold">{{ grupo.nombre }}</label>
+          <div class="opciones-atributo">
+            <button type="button"
+                    class="opcion-btn"
+                    [class.selected]="seleccionAtributos[grupo.nombre] === valor"
+                    [class.disabled]="!esValorDisponible(grupo.nombre, valor)"
+                    (click)="seleccionarValorAtributo(grupo.nombre, valor)"
+                    *ngFor="let valor of grupo.valores">
+              {{ valor }}
+            </button>
+          </div>
         </div>
 
-        <!-- Selector de cantidad + Agregar al carrito -->
-        <div class="carrito-controls mb-4" *ngIf="hayStock">
-          <div class="cantidad-selector">
+        <!-- Mensajes de disponibilidad -->
+        <div class="alert alert-warning mt-3" *ngIf="varianteSeleccionada && stockActual === 0">
+          Lo sentimos, esta combinación está agotada.
+        </div>
+        <div class="alert alert-info mt-3" *ngIf="!varianteSeleccionada && tieneAlgunaSeleccion()">
+          Selecciona todas las opciones para ver disponibilidad y precio.
+        </div>
+      </div>
+
+      <!-- ==================== ACCIONES PRINCIPALES ==================== -->
+      <div class="acciones mt-5">
+
+        <div class="alert alert-success text-center mb-4 p-3" *ngIf="mensajeExito">
+          <i class="bi bi-check-circle-fill me-2"></i>
+          <strong>¡{{ cantidad }} producto(s) agregado(s) al carrito!</strong>
+        </div>
+
+        <div class="carrito-controls mb-4" *ngIf="hayStock && varianteSeleccionada">
+          <div class="cantidad-selector mb-3">
             <button class="btn-cantidad" (click)="disminuirCantidad()" [disabled]="cantidad <= 1">
               <i class="bi bi-dash-lg"></i>
             </button>
@@ -93,7 +117,7 @@
             </button>
           </div>
 
-          <button class="btn-agregar-carrito"
+          <button class="btn-agregar-carrito w-100"
                   (click)="agregarAlCarrito()"
                   [disabled]="agregandoAlCarrito">
             <span *ngIf="!agregandoAlCarrito">
@@ -105,46 +129,84 @@
           </button>
         </div>
 
-        <!-- WhatsApp principal -->
-        <button class="btn-whatsapp" (click)="consultarWhatsApp()">
+        <button class="btn-whatsapp w-100 mb-3" (click)="consultarWhatsApp()">
           <i class="bi bi-whatsapp me-2"></i> Consultar por WhatsApp
         </button>
 
         <div class="secundarios">
           <button class="btn-sec" (click)="llamarAhora()">
-            <i class="bi bi-telephone me-2"></i> Llamar
+            <i class="bi bi-telephone me-2"></i> Llamar ahora
           </button>
           <button class="btn-sec" (click)="abrirCotizacion()">
-            <i class="bi bi-chat-dots me-2"></i> Cotizar
+            <i class="bi bi-chat-dots me-2"></i> Pedir cotización
           </button>
         </div>
       </div>
 
-      <!-- Garantías -->
-      <div class="garantias">
-        <div>Truck <strong>Envíos a todo el Perú</strong></div>
-        <div>Shield <strong>Compra segura</strong></div>
-        <div>Headset <strong>Atención 24/7</strong></div>
+      <!-- ==================== GARANTÍAS ==================== -->
+      <div class="garantias mt-5">
+        <div class="garantia-item">
+          <i class="bi bi-truck"></i> <strong>Envíos a todo el Perú</strong>
+        </div>
+        <div class="garantia-item">
+          <i class="bi bi-shield-check"></i> <strong>Compra 100% segura</strong>
+        </div>
+        <div class="garantia-item">
+          <i class="bi bi-headset"></i> <strong>Atención personalizada 24/7</strong>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Loading -->
+<!-- LOADING -->
 <ng-template #cargando>
-  <div class="loading">Cargando producto...</div>
+  <div class="loading text-center py-5">
+    <div class="spinner-border text-success" role="status" style="width: 4rem; height: 4rem;">
+      <span class="visually-hidden">Cargando producto...</span>
+    </div>
+    <p class="mt-4 fs-4 text-muted">Cargando producto...</p>
+  </div>
 </ng-template>
 
-<!-- Modal -->
+<!-- MODAL COTIZACIÓN -->
 <div class="modal" *ngIf="showQuoteModal" (click)="cerrarModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
-    <button class="cerrar" (click)="cerrarModal()">Close</button>
-    <h3>Pide tu cotización</h3>
-    <input [(ngModel)]="clienteNombre" placeholder="Nombre" required>
-    <input [(ngModel)]="clienteTelefono" placeholder="WhatsApp" required>
-    <textarea [(ngModel)]="clienteMensaje" placeholder="Mensaje (opcional)"></textarea>
-    <button class="enviar" (click)="enviarCotizacion()" [disabled]="enviandoCotizacion">
-      {{ enviandoCotizacion ? 'Enviando...' : 'Enviar por WhatsApp' }}
+    <button class="cerrar" (click)="cerrarModal()" aria-label="Cerrar">
+      <i class="bi bi-x-lg"></i>
     </button>
+    <h3>Pide tu cotización personalizada</h3>
+    <p class="text-muted mb-4">Te contactaremos por WhatsApp en minutos</p>
+
+    <form>
+      <input type="text"
+             [(ngModel)]="clienteNombre"
+             placeholder="Tu nombre completo"
+             class="form-control mb-3"
+             required>
+
+      <input type="tel"
+             [(ngModel)]="clienteTelefono"
+             placeholder="Tu número de WhatsApp"
+             class="form-control mb-3"
+             required>
+
+      <textarea [(ngModel)]="clienteMensaje"
+                placeholder="Mensaje adicional (opcional)"
+                rows="4"
+                class="form-control mb-4"></textarea>
+
+      <button type="button"
+              class="btn-whatsapp w-100 py-3"
+              (click)="enviarCotizacion()"
+              [disabled]="enviandoCotizacion || !clienteNombre || !clienteTelefono">
+        <span *ngIf="!enviandoCotizacion">
+          <i class="bi bi-send me-2"></i> Enviar por WhatsApp
+        </span>
+        <span *ngIf="enviandoCotizacion">
+          <span class="spinner-border spinner-border-sm me-2"></span> Enviando...
+        </span>
+      </button>
+    </form>
   </div>
 </div>

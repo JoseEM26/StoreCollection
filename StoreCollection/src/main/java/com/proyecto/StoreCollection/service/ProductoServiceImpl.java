@@ -418,18 +418,19 @@ public class ProductoServiceImpl implements ProductoService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado o tienda inactiva");
         }
 
-        // Verificación de producto activo (índice 9 = p.activo)
         Boolean productoActivo = (Boolean) rows.get(0)[9];
         if (productoActivo == null || !productoActivo) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "El producto no está disponible en este momento.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "El producto no está disponible.");
         }
 
-        Map<Integer, ProductoCardResponse> map = new LinkedHashMap<>();
+        // Mapa: productoId → respuesta
+        Map<Integer, ProductoCardResponse> productoMap = new LinkedHashMap<>();
+        // Mapa auxiliar: varianteId → lista de atributos
+        Map<Integer, List<ProductoCardResponse.VarianteCard.AtributoValorDTO>> atributosMap = new HashMap<>();
 
         for (Object[] row : rows) {
-            // Índices correctos:
-            Integer varianteId = (Integer) row[0];     // pv.id
-            Integer productoId = (Integer) row[1];     // p.id ← clave correcta
+            Integer varianteId = (Integer) row[0];
+            Integer productoId = (Integer) row[1];
             String nombre = (String) row[2];
             String slug = (String) row[3];
             String nombreCategoria = (String) row[4];
@@ -438,8 +439,8 @@ public class ProductoServiceImpl implements ProductoService {
             String imagenUrl = (String) row[7];
             Boolean activoVar = (Boolean) row[8];
 
-            // Crear o recuperar el producto
-            ProductoCardResponse p = map.computeIfAbsent(productoId, k -> {
+            // Crear producto base
+            ProductoCardResponse p = productoMap.computeIfAbsent(productoId, k -> {
                 ProductoCardResponse dto = new ProductoCardResponse();
                 dto.setId(productoId);
                 dto.setNombre(nombre);
@@ -449,19 +450,36 @@ public class ProductoServiceImpl implements ProductoService {
                 return dto;
             });
 
-            // Solo agregar variantes activas con precio
+            // Solo procesar variantes activas con precio
             if (activoVar && precio != null) {
-                ProductoCardResponse.VarianteCard v = new ProductoCardResponse.VarianteCard();
-                v.setId(varianteId);           // ← Ahora sí se asigna correctamente
-                v.setPrecio(precio);
-                v.setStock(stock);
-                v.setImagenUrl(imagenUrl);
-                v.setActivo(true);
-                p.getVariantes().add(v);
+                // Buscar o crear variante
+                ProductoCardResponse.VarianteCard variante = p.getVariantes().stream()
+                        .filter(v -> v.getId() != null && v.getId().equals(varianteId))
+                        .findFirst()
+                        .orElseGet(() -> {
+                            ProductoCardResponse.VarianteCard v = new ProductoCardResponse.VarianteCard();
+                            v.setId(varianteId);
+                            v.setPrecio(precio);
+                            v.setStock(stock);
+                            v.setImagenUrl(imagenUrl);
+                            v.setActivo(true);
+                            p.getVariantes().add(v);
+                            return v;
+                        });
+
+                // Agregar atributo si existe
+                String atributoNombre = (String) row[10];
+                String valor = (String) row[11];
+                if (atributoNombre != null && valor != null) {
+                    ProductoCardResponse.VarianteCard.AtributoValorDTO attr = new ProductoCardResponse.VarianteCard.AtributoValorDTO();
+                    attr.setAtributoNombre(atributoNombre);
+                    attr.setValor(valor);
+                    variante.getAtributos().add(attr);
+                }
             }
         }
 
-        ProductoCardResponse resultado = map.values().iterator().next();
+        ProductoCardResponse resultado = productoMap.values().iterator().next();
         calcularCamposDerivados(resultado);
 
         if (resultado.getStockTotal() <= 0) {
