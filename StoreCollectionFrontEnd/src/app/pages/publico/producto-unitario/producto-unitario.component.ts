@@ -42,7 +42,7 @@ export class ProductoUnitarioComponent implements OnInit {
   clienteMensaje = '';
   enviandoCotizacion = false;
 
-  // === NUEVO: Selección por atributos independientes ===
+  // Selección por atributos independientes
   atributosAgrupados: { nombre: string; valores: string[] }[] = [];
   seleccionAtributos: { [atributoNombre: string]: string } = {};
 
@@ -66,17 +66,21 @@ export class ProductoUnitarioComponent implements OnInit {
       error: () => this.loading = false
     });
   }
-get tieneVariantesConImagen(): boolean {
-  return this.producto?.variantes?.some(v => v.imagenUrl) ?? false;
-}
+
+  get tieneVariantesConImagen(): boolean {
+    return this.producto?.variantes?.some(v => v.imagenUrl) ?? false;
+  }
+
   private inicializarAtributos() {
     if (!this.producto.variantes || this.producto.variantes.length === 0) {
       this.atributosAgrupados = [];
+      this.seleccionAtributos = {};
       this.varianteSeleccionada = null;
       this.actualizarImagen();
       return;
     }
 
+    // 1. Construir mapa de atributos y valores únicos
     const mapa = new Map<string, Set<string>>();
 
     this.producto.variantes.forEach(variante => {
@@ -88,6 +92,7 @@ get tieneVariantesConImagen(): boolean {
       });
     });
 
+    // 2. Crear lista agrupada y ordenada
     this.atributosAgrupados = Array.from(mapa.entries())
       .map(([nombre, valoresSet]) => ({
         nombre,
@@ -95,14 +100,26 @@ get tieneVariantesConImagen(): boolean {
       }))
       .sort((a, b) => a.nombre.localeCompare(b.nombre));
 
-    // Inicializar objeto de selección
+    // 3. Inicializar objeto de selección vacío
     this.seleccionAtributos = {};
     this.atributosAgrupados.forEach(attr => {
       this.seleccionAtributos[attr.nombre] = '';
     });
 
-    // Preseleccionar la primera variante disponible
+    // 4. Auto-seleccionar si solo hay una opción por atributo (ej: solo talla M)
+    this.atributosAgrupados.forEach(grupo => {
+      if (grupo.valores.length === 1) {
+        this.seleccionAtributos[grupo.nombre] = grupo.valores[0];
+      }
+    });
+
+    // 5. Intentar preseleccionar una variante disponible (con stock preferido)
     this.seleccionarVarianteDisponible();
+
+    // 6. Si no hay variante preseleccionada por stock, usar la selección actual (auto o manual)
+    if (!this.varianteSeleccionada) {
+      this.actualizarVarianteSegunSeleccion();
+    }
   }
 
   private seleccionarVarianteDisponible() {
@@ -116,9 +133,6 @@ get tieneVariantesConImagen(): boolean {
         }
       });
       this.varianteSeleccionada = varianteDisponible;
-      this.actualizarImagen();
-    } else {
-      this.varianteSeleccionada = null;
       this.actualizarImagen();
     }
   }
@@ -136,7 +150,9 @@ get tieneVariantesConImagen(): boolean {
     }
 
     const varianteCoincidente = this.producto.variantes.find(v => {
-      if (v.atributos.length !== Object.values(this.seleccionAtributos).filter(v => v).length) return false;
+      // Debe coincidir el número de atributos seleccionados con los de la variante
+      const seleccionadosCount = Object.values(this.seleccionAtributos).filter(v => v !== '').length;
+      if (v.atributos.length !== seleccionadosCount) return false;
 
       return v.atributos.every(attr =>
         this.seleccionAtributos[attr.atributoNombre] === attr.valor
@@ -145,11 +161,10 @@ get tieneVariantesConImagen(): boolean {
 
     this.varianteSeleccionada = varianteCoincidente || null;
     this.actualizarImagen();
-    this.cantidad = 1;
+    this.cantidad = 1; // Reiniciar cantidad al cambiar variante
   }
 
   esValorDisponible(atributoNombre: string, valor: string): boolean {
-    // Si no hay otras selecciones, todos los valores son posibles
     const otrasSelecciones = Object.entries(this.seleccionAtributos)
       .filter(([k]) => k !== atributoNombre)
       .some(([, v]) => v !== '');
@@ -174,7 +189,6 @@ get tieneVariantesConImagen(): boolean {
     return Object.values(this.seleccionAtributos).some(v => v !== '');
   }
 
-  /** Cambia la imagen principal */
   cambiarImagen(url: string | undefined) {
     this.imagenActual = url?.trim() || this.producto.imagenPrincipal || this.fallbackImage;
   }
@@ -260,6 +274,22 @@ get tieneVariantesConImagen(): boolean {
     this.clienteTelefono = '';
     this.clienteMensaje = '';
   }
+get atributosFaltantesTexto(): string {
+  if (this.atributosAgrupados.length === 0) return '';
+
+  const faltantes = this.atributosAgrupados
+    .filter(g => 
+      !this.seleccionAtributos[g.nombre] || 
+      this.seleccionAtributos[g.nombre] === ''
+    )
+    .map(g => g.nombre);
+
+  if (faltantes.length === 0) return '';
+  if (faltantes.length === 1) return faltantes[0];
+  
+  // Para más de uno: "Color y Talla"
+  return faltantes.slice(0, -1).join(', ') + ' y ' + faltantes[faltantes.length - 1];
+}
 
   enviarCotizacion() {
     if (!this.clienteNombre || !this.clienteTelefono) return;

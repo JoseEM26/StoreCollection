@@ -38,7 +38,7 @@
         </div>
       </div>
 
-      <!-- Miniaturas (opcional: si las variantes tienen imágenes distintas) -->
+      <!-- Miniaturas -->
       <div class="miniaturas" *ngIf="tieneVariantesConImagen">
         <button *ngFor="let v of producto.variantes"
                 class="mini-btn"
@@ -61,7 +61,7 @@
         S/ <span>{{ precioActual | number:'1.2-2' }}</span>
       </div>
 
-      <!-- Atributos seleccionados -->
+      <!-- Variante seleccionada (chips) -->
       <div class="atributos-seleccionados mb-4" *ngIf="atributosTexto">
         <strong>Variante seleccionada:</strong>
         <div class="atributos-lista mt-2">
@@ -89,13 +89,25 @@
           </div>
         </div>
 
-        <!-- Mensajes de disponibilidad -->
+        <!-- Mensaje si falta seleccionar algo -->
+        <div class="alert alert-light border mt-4" *ngIf="!varianteSeleccionada && tieneAlgunaSeleccion()">
+          <i class="bi bi-info-circle me-2"></i>
+          Por favor, selecciona: 
+        <strong>{{ atributosFaltantesTexto }}</strong>
+          para continuar.
+        </div>
+
+        <!-- Mensaje si la combinación no existe -->
         <div class="alert alert-warning mt-3" *ngIf="varianteSeleccionada && stockActual === 0">
+          <i class="bi bi-exclamation-triangle me-2"></i>
           Lo sentimos, esta combinación está agotada.
         </div>
-        <div class="alert alert-info mt-3" *ngIf="!varianteSeleccionada && tieneAlgunaSeleccion()">
-          Selecciona todas las opciones para ver disponibilidad y precio.
-        </div>
+
+        <!-- Stock disponible -->
+        <small class="text-muted d-block mt-3" *ngIf="varianteSeleccionada && stockActual > 0">
+          <i class="bi bi-box-seam me-1"></i>
+          {{ stockActual }} unidades disponibles
+        </small>
       </div>
 
       <!-- ==================== ACCIONES PRINCIPALES ==================== -->
@@ -106,22 +118,32 @@
           <strong>¡{{ cantidad }} producto(s) agregado(s) al carrito!</strong>
         </div>
 
-        <div class="carrito-controls mb-4" *ngIf="hayStock && varianteSeleccionada">
+        <div class="carrito-controls mb-4" *ngIf="varianteSeleccionada">
           <div class="cantidad-selector mb-3">
             <button class="btn-cantidad" (click)="disminuirCantidad()" [disabled]="cantidad <= 1">
               <i class="bi bi-dash-lg"></i>
             </button>
             <span class="cantidad-numero">{{ cantidad }}</span>
-            <button class="btn-cantidad" (click)="aumentarCantidad()" [disabled]="cantidad >= stockActual">
+            <button class="btn-cantidad" (click)="aumentarCantidad()" [disabled]="cantidad >= stockActual || !hayStock">
               <i class="bi bi-plus-lg"></i>
             </button>
           </div>
 
+          <!-- BOTÓN CON TEXTO DINÁMICO -->
           <button class="btn-agregar-carrito w-100"
                   (click)="agregarAlCarrito()"
-                  [disabled]="agregandoAlCarrito">
+                  [disabled]="!varianteSeleccionada || !hayStock || agregandoAlCarrito">
             <span *ngIf="!agregandoAlCarrito">
-              <i class="bi bi-cart-plus me-2"></i> Agregar al carrito
+              <i class="bi bi-cart-plus me-2"></i>
+              <ng-container *ngIf="varianteSeleccionada && hayStock">
+                Agregar al carrito
+              </ng-container>
+              <ng-container *ngIf="!varianteSeleccionada">
+                Selecciona las opciones
+              </ng-container>
+              <ng-container *ngIf="varianteSeleccionada && !hayStock">
+                Sin stock disponible
+              </ng-container>
             </span>
             <span *ngIf="agregandoAlCarrito">
               <span class="spinner-border spinner-border-sm me-2"></span> Agregando...

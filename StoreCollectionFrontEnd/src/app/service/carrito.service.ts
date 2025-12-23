@@ -14,7 +14,7 @@ import { environment } from '../../../environment';
 export class CarritoService {
   private apiUrl = `${environment.apiUrl}/api/public/carrito`;
 
-  // Estado global del carrito
+  // Estado reactivo del carrito
   private carritoItems = new BehaviorSubject<CarritoItemResponse[]>([]);
   carritoItems$ = this.carritoItems.asObservable();
 
@@ -38,17 +38,23 @@ export class CarritoService {
   /** Carga el carrito desde el backend */
   cargarCarritoDesdeBackend(): void {
     const sessionId = this.getSessionId();
+    if (!sessionId) {
+      this.actualizarEstadoCarrito([]);
+      return;
+    }
+
     this.http.get<CarritoResponse>(`${this.apiUrl}/session/${sessionId}`).subscribe({
       next: (items) => {
         this.actualizarEstadoCarrito(items);
       },
-      error: () => {
+      error: (err) => {
+        console.error('Error cargando carrito:', err);
         this.actualizarEstadoCarrito([]);
       }
     });
   }
 
-  /** Agregar al carrito */
+  /** Agregar o actualizar (si ya existe, el backend lo maneja) */
   agregarAlCarrito(varianteId: number, cantidad: number = 1): Observable<CarritoItemResponse> {
     const request: CarritoRequest = {
       sessionId: this.getSessionId(),
@@ -61,7 +67,7 @@ export class CarritoService {
     );
   }
 
-  /** Actualizar cantidad */
+  /** Actualizar cantidad de un item existente */
   actualizarCantidad(itemId: number, cantidad: number): Observable<CarritoItemResponse> {
     const request: Partial<CarritoRequest> = {
       sessionId: this.getSessionId(),
@@ -73,24 +79,27 @@ export class CarritoService {
     );
   }
 
-  /** Eliminar item */
+  /** Eliminar un item */
   eliminarItem(itemId: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${itemId}`).pipe(
       tap(() => this.cargarCarritoDesdeBackend())
     );
   }
 
-  /** Vaciar carrito */
+  /** Vaciar todo el carrito */
   vaciarCarrito(): Observable<void> {
     const sessionId = this.getSessionId();
+    if (!sessionId) {
+      this.actualizarEstadoCarrito([]);
+      return new Observable<void>();
+    }
+
     return this.http.delete<void>(`${this.apiUrl}/session/${sessionId}`).pipe(
-      tap(() => {
-        this.actualizarEstadoCarrito([]);
-      })
+      tap(() => this.actualizarEstadoCarrito([]))
     );
   }
 
-  /** Checkout - procesar compra */
+  /** Procesar compra (checkout) */
   checkout(tiendaId: number, userId?: number): Observable<BoletaResponse> {
     const request: BoletaRequest = {
       sessionId: this.getSessionId(),
@@ -99,11 +108,14 @@ export class CarritoService {
     };
 
     return this.http.post<BoletaResponse>(`${this.apiUrl}/checkout`, request).pipe(
-      tap(() => this.cargarCarritoDesdeBackend()) // El backend ya limpia el carrito
+      tap(() => {
+        // El backend ya limpia el carrito, pero recargamos por seguridad
+        this.cargarCarritoDesdeBackend();
+      })
     );
   }
 
-  /** Actualiza los observables con los datos recibidos */
+  /** Actualiza todos los observables */
   private actualizarEstadoCarrito(items: CarritoItemResponse[]): void {
     this.carritoItems.next(items);
 
@@ -114,7 +126,7 @@ export class CarritoService {
     this.totalPrecio.next(totalPrice);
   }
 
-  // Métodos de acceso rápido
+  // Getters sincronos
   getTotalItems(): number {
     return this.itemsCount.value;
   }

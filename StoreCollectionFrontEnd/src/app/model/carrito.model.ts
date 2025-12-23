@@ -1,26 +1,36 @@
 // src/app/model/carrito.model.ts
 
-// Modelo exacto que coincide con CarritoResponse del backend
+// Atributo individual (como lo devuelve el backend)
+export interface AtributoResponse {
+  id: number;
+  nombre: string;      // ej: "Color", "Talla"
+  valor: string;       // ej: "Rojo", "M"
+  tiendaId: number;
+}
+
+// Modelo exacto de un ítem del carrito (coincide con CarritoResponse del backend)
 export interface CarritoItemResponse {
   id: number;
   sessionId: string;
   cantidad: number;
   varianteId: number;
 
-  // Campos agregados en el backend para mostrar en el carrito
+  // Datos enriquecidos del producto/variante
   nombreProducto: string;
   sku: string;
-  precio: number;           // Double del backend
+  precio: number;                  // double del backend → number en TS
   imagenUrl: string | null;
-  atributos: string | null; // Ej: "Rojo, Talla M"
+
+  // Ahora es una lista de objetos, no un string
+  atributos: AtributoResponse[] | null;
 }
 
-// Request para agregar/actualizar item
+// Request para agregar o actualizar
 export interface CarritoRequest {
   sessionId: string;
   varianteId: number;
   cantidad: number;
 }
 
-// El endpoint GET /session/{id} devuelve un array de CarritoItemResponse
+// El endpoint GET /session/{sessionId} devuelve directamente un array
 export type CarritoResponse = CarritoItemResponse[];

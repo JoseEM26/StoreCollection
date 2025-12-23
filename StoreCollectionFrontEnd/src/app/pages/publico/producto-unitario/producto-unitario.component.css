@@ -528,4 +528,57 @@
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
+}/* Botones de opciones (Talla, Color, etc.) */
+.opciones-atributo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.opcion-btn {
+  padding: 10px 20px;
+  border: 2px solid #e0e0e0;
+  background: white;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s;
+  min-width: 60px;
+}
+
+.opcion-btn:hover:not(.disabled) {
+  border-color: #28a745;
+  background: #f8fff9;
+}
+
+.opcion-btn.selected {
+  border-color: #28a745;
+  background: #28a745;
+  color: white;
+  font-weight: bold;
+}
+
+.opcion-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background-color: #f8f9fa !important;
+  border-color: #dee2e6 !important;
+  color: #6c757d !important;
+  pointer-events: none;
+}
+
+/* Chips de variante seleccionada */
+.atributo-chip {
+  display: inline-block;
+  background: #e9ecef;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+/* Alertas personalizadas */
+.alert-light.border {
+  border: 1px solid #dee2e6;
+  background-color: #f8f9fa;
 }
