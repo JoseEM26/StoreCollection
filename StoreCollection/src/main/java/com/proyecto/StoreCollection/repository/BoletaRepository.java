@@ -9,5 +9,6 @@ import java.util.List;
 @Repository
 public interface BoletaRepository extends JpaRepository<Boleta, Integer> {
     List<Boleta> findBySessionId(String sessionId);
-    List<Boleta> findByUserId(Integer userId);
+
+    List<Boleta> findByTiendaId(Integer tiendaId);
 }

@@ -1,3 +1,5 @@
+// src/app/componente/producto-unitario/producto-unitario.component.ts
+
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -31,10 +33,6 @@ export class ProductoUnitarioComponent implements OnInit {
   cantidad: number = 1;
   agregandoAlCarrito = false;
   mensajeExito = false;
-
-  lupaVisible = false;
-  lupaX = 0;
-  lupaY = 0;
 
   showQuoteModal = false;
   clienteNombre = '';
@@ -80,9 +78,7 @@ export class ProductoUnitarioComponent implements OnInit {
       return;
     }
 
-    // 1. Construir mapa de atributos y valores únicos
     const mapa = new Map<string, Set<string>>();
-
     this.producto.variantes.forEach(variante => {
       variante.atributos.forEach(attr => {
         if (!mapa.has(attr.atributoNombre)) {
@@ -92,7 +88,6 @@ export class ProductoUnitarioComponent implements OnInit {
       });
     });
 
-    // 2. Crear lista agrupada y ordenada
     this.atributosAgrupados = Array.from(mapa.entries())
       .map(([nombre, valoresSet]) => ({
         nombre,
@@ -100,23 +95,19 @@ export class ProductoUnitarioComponent implements OnInit {
       }))
       .sort((a, b) => a.nombre.localeCompare(b.nombre));
 
-    // 3. Inicializar objeto de selección vacío
     this.seleccionAtributos = {};
     this.atributosAgrupados.forEach(attr => {
       this.seleccionAtributos[attr.nombre] = '';
     });
 
-    // 4. Auto-seleccionar si solo hay una opción por atributo (ej: solo talla M)
     this.atributosAgrupados.forEach(grupo => {
       if (grupo.valores.length === 1) {
         this.seleccionAtributos[grupo.nombre] = grupo.valores[0];
       }
     });
 
-    // 5. Intentar preseleccionar una variante disponible (con stock preferido)
     this.seleccionarVarianteDisponible();
 
-    // 6. Si no hay variante preseleccionada por stock, usar la selección actual (auto o manual)
     if (!this.varianteSeleccionada) {
       this.actualizarVarianteSegunSeleccion();
     }
@@ -150,7 +141,6 @@ export class ProductoUnitarioComponent implements OnInit {
     }
 
     const varianteCoincidente = this.producto.variantes.find(v => {
-      // Debe coincidir el número de atributos seleccionados con los de la variante
       const seleccionadosCount = Object.values(this.seleccionAtributos).filter(v => v !== '').length;
       if (v.atributos.length !== seleccionadosCount) return false;
 
@@ -161,7 +151,7 @@ export class ProductoUnitarioComponent implements OnInit {
 
     this.varianteSeleccionada = varianteCoincidente || null;
     this.actualizarImagen();
-    this.cantidad = 1; // Reiniciar cantidad al cambiar variante
+    this.cantidad = 1;
   }
 
   esValorDisponible(atributoNombre: string, valor: string): boolean {
@@ -240,16 +230,6 @@ export class ProductoUnitarioComponent implements OnInit {
     });
   }
 
-  // ===== LUPA =====
-  mostrarLupa(e: MouseEvent) { this.lupaVisible = true; this.actualizarLupa(e); }
-  ocultarLupa() { this.lupaVisible = false; }
-  actualizarLupa(e: MouseEvent) {
-    const img = e.currentTarget as HTMLElement;
-    const rect = img.getBoundingClientRect();
-    this.lupaX = e.clientX - rect.left;
-    this.lupaY = e.clientY - rect.top;
-  }
-
   // ===== WHATSAPP Y LLAMADA =====
   consultarWhatsApp() {
     const msg = encodeURIComponent(
@@ -274,22 +254,19 @@ export class ProductoUnitarioComponent implements OnInit {
     this.clienteTelefono = '';
     this.clienteMensaje = '';
   }
-get atributosFaltantesTexto(): string {
-  if (this.atributosAgrupados.length === 0) return '';
 
-  const faltantes = this.atributosAgrupados
-    .filter(g => 
-      !this.seleccionAtributos[g.nombre] || 
-      this.seleccionAtributos[g.nombre] === ''
-    )
-    .map(g => g.nombre);
+  get atributosFaltantesTexto(): string {
+    if (this.atributosAgrupados.length === 0) return '';
 
-  if (faltantes.length === 0) return '';
-  if (faltantes.length === 1) return faltantes[0];
-  
-  // Para más de uno: "Color y Talla"
-  return faltantes.slice(0, -1).join(', ') + ' y ' + faltantes[faltantes.length - 1];
-}
+    const faltantes = this.atributosAgrupados
+      .filter(g => !this.seleccionAtributos[g.nombre] || this.seleccionAtributos[g.nombre] === '')
+      .map(g => g.nombre);
+
+    if (faltantes.length === 0) return '';
+    if (faltantes.length === 1) return faltantes[0];
+
+    return faltantes.slice(0, -1).join(', ') + ' y ' + faltantes[faltantes.length - 1];
+  }
 
   enviarCotizacion() {
     if (!this.clienteNombre || !this.clienteTelefono) return;

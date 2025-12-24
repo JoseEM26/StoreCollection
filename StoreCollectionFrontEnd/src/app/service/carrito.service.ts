@@ -99,22 +99,6 @@ export class CarritoService {
     );
   }
 
-  /** Procesar compra (checkout) */
-  checkout(tiendaId: number, userId?: number): Observable<BoletaResponse> {
-    const request: BoletaRequest = {
-      sessionId: this.getSessionId(),
-      tiendaId,
-      userId
-    };
-
-    return this.http.post<BoletaResponse>(`${this.apiUrl}/checkout`, request).pipe(
-      tap(() => {
-        // El backend ya limpia el carrito, pero recargamos por seguridad
-        this.cargarCarritoDesdeBackend();
-      })
-    );
-  }
-
   /** Actualiza todos los observables */
   private actualizarEstadoCarrito(items: CarritoItemResponse[]): void {
     this.carritoItems.next(items);
@@ -137,5 +121,37 @@ export class CarritoService {
 
   getItems(): CarritoItemResponse[] {
     return this.carritoItems.value;
+  }
+  // Dentro de CarritoService (agrega estos métodos)
+
+  /** Checkout online: guarda el pedido en DB y notifica por email */
+  checkoutOnline(tiendaId: number, userId?: number): Observable<BoletaResponse> {
+    const request: BoletaRequest = {
+      sessionId: this.getSessionId(),
+      tiendaId,
+      userId
+    };
+
+    return this.http.post<BoletaResponse>(`${this.apiUrl}/checkout/online`, request).pipe(
+      tap(() => this.cargarCarritoDesdeBackend())
+    );
+  }
+
+  /** Checkout WhatsApp: devuelve URL para enviar mensaje */
+  checkoutWhatsapp(tiendaId: number, userId?: number): Observable<string> {
+    const request: BoletaRequest = {
+      sessionId: this.getSessionId(),
+      tiendaId,
+      userId
+    };
+
+    return this.http.post<string>(`${this.apiUrl}/checkout/whatsapp`, request).pipe(
+      tap(() => this.cargarCarritoDesdeBackend())
+    );
+  }
+
+  /** Mantén el viejo checkout como alias de online (compatibilidad) */
+  checkout(tiendaId: number, userId?: number): Observable<BoletaResponse> {
+    return this.checkoutOnline(tiendaId, userId);
   }
 }

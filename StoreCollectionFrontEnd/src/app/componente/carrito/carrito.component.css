@@ -1,17 +1,37 @@
 /* src/app/componente/carrito/carrito.component.css */
 
 .card {
-  border-radius: 16px;
+  border-radius: 1rem;
   overflow: hidden;
+}
+
+.hover-bg-light:hover {
+  background-color: #f8fafc !important;
+  transition: background-color 0.2s ease;
+}
+
+.btn-whatsapp {
+  background-color: #25d366;
+  color: white;
+  border: none;
+}
+
+.btn-whatsapp:hover {
+  background-color: #128c7e;
+  color: white;
 }
 
 .btn-success {
   background: #16a34a;
-  border: none;
 }
 
 .btn-success:hover {
   background: #15803d;
+}
+
+.badge {
+  font-size: 0.85rem;
+  padding: 0.5em 0.8em;
 }
 
 .img-fluid {
@@ -19,16 +39,16 @@
 }
 
 .img-fluid:hover {
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
 
-.sticky-top {
-  transition: all 0.3s ease;
+hr {
+  opacity: 0.3;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .row > div {
-    margin-bottom: 1.5rem;
+  .row.g-5 {
+    row-gap: 2rem;
   }
 }

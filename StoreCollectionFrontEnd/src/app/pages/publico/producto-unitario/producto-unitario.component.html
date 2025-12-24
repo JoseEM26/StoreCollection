@@ -1,3 +1,5 @@
+<!-- src/app/componente/producto-unitario/producto-unitario.component.html -->
+
 <div class="container py-5" *ngIf="!loading && producto; else cargando">
   <button class="btn-volver" routerLink="/catalogo">
     <i class="bi bi-arrow-left me-2"></i> Regresar al catálogo
@@ -5,29 +7,14 @@
 
   <div class="producto-grid">
 
-    <!-- ==================== IMAGEN CON LUPA ==================== -->
+    <!-- ==================== IMAGEN PRINCIPAL ==================== -->
     <div class="imagen-seccion">
-      <div class="zoom-container"
-           (mousemove)="actualizarLupa($event)"
-           (mouseenter)="mostrarLupa($event)"
-           (mouseleave)="ocultarLupa()">
-
+      <div class="imagen-container">
         <img [src]="imagenActual"
              [alt]="producto.nombre"
              class="imagen-principal"
              loading="lazy"
              (error)="imagenActual = fallbackImage">
-
-        <!-- Lupa interna -->
-        <div class="lupa-interna"
-             [class.visible]="lupaVisible"
-             [style.left.px]="lupaX"
-             [style.top.px]="lupaY"
-             [style.backgroundImage]="'url(' + imagenActual + ')'"
-             [style.backgroundPosition.%]="-(lupaX * 2)"
-             [style.backgroundPositionY.%]="-(lupaY * 2)"
-             [style.backgroundSize.%]="300">
-        </div>
 
         <!-- Badges de stock -->
         <div class="badge-stock" *ngIf="varianteSeleccionada">
@@ -93,7 +80,7 @@
         <div class="alert alert-light border mt-4" *ngIf="!varianteSeleccionada && tieneAlgunaSeleccion()">
           <i class="bi bi-info-circle me-2"></i>
           Por favor, selecciona: 
-        <strong>{{ atributosFaltantesTexto }}</strong>
+          <strong>{{ atributosFaltantesTexto }}</strong>
           para continuar.
         </div>
 
@@ -112,7 +99,6 @@
 
       <!-- ==================== ACCIONES PRINCIPALES ==================== -->
       <div class="acciones mt-5">
-
         <div class="alert alert-success text-center mb-4 p-3" *ngIf="mensajeExito">
           <i class="bi bi-check-circle-fill me-2"></i>
           <strong>¡{{ cantidad }} producto(s) agregado(s) al carrito!</strong>
@@ -129,7 +115,6 @@
             </button>
           </div>
 
-          <!-- BOTÓN CON TEXTO DINÁMICO -->
           <button class="btn-agregar-carrito w-100"
                   (click)="agregarAlCarrito()"
                   [disabled]="!varianteSeleccionada || !hayStock || agregandoAlCarrito">

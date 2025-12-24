@@ -1,7 +1,7 @@
 package com.proyecto.StoreCollection.entity;
 
 import lombok.*;
-        import jakarta.persistence.*;
+import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -27,7 +27,7 @@ public class Boleta {
     private Tienda tienda;
 
     @Column(precision = 10, scale = 2)
-    private BigDecimal total;  // ← CAMBIO A BIGDECIMAL
+    private BigDecimal total;
 
     private LocalDateTime fecha = LocalDateTime.now();
 
@@ -38,6 +38,6 @@ public class Boleta {
     private List<BoletaDetalle> detalles = new ArrayList<>();
 
     public enum EstadoBoleta {
-        PENDIENTE, COMPLETADA, CANCELADA
+        PENDIENTE, ATENDIDA, CANCELADA
     }
 }
