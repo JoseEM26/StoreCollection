@@ -137,10 +137,11 @@ CREATE TABLE boleta (
     tienda_id INT NOT NULL,   -- Para multi-tenant
     total DECIMAL(10,2) NOT NULL,
     fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
-    estado ENUM('PENDIENTE', 'COMPLETADA', 'CANCELADA') DEFAULT 'PENDIENTE',
+    -- ENUM corregido: coincide exactamente con el enum Java (mayúsculas)
+    estado ENUM('PENDIENTE', 'ATENDIDA', 'CANCELADA') NOT NULL DEFAULT 'PENDIENTE',
     FOREIGN KEY (user_id) REFERENCES usuario(id) ON DELETE SET NULL,
     FOREIGN KEY (tienda_id) REFERENCES tienda(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE boleta_detalle (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -151,4 +152,4 @@ CREATE TABLE boleta_detalle (
     subtotal DECIMAL(10,2) NOT NULL,
     FOREIGN KEY (boleta_id) REFERENCES boleta(id) ON DELETE CASCADE,
     FOREIGN KEY (variante_id) REFERENCES producto_variante(id) ON DELETE RESTRICT
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
