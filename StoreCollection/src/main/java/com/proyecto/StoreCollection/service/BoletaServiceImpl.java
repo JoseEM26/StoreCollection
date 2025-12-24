@@ -1,14 +1,18 @@
-// Nuevo: BoletaServiceImpl (para admin, con deducción de stock al atender)
 package com.proyecto.StoreCollection.service;
 
 import com.proyecto.StoreCollection.dto.response.*;
 import com.proyecto.StoreCollection.entity.*;
 import com.proyecto.StoreCollection.repository.*;
+import com.proyecto.StoreCollection.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -16,64 +20,138 @@ import java.util.stream.Collectors;
 @Transactional
 public class BoletaServiceImpl implements BoletaService {
 
-    private final BoletaRepository repository;
+    private final BoletaRepository boletaRepository;
     private final ProductoVarianteRepository varianteRepository;
 
+    // ───────────────────────────────────────────────────────────────
+    // Listados paginados
+    // ───────────────────────────────────────────────────────────────
+
     @Override
     @Transactional(readOnly = true)
-    public List<BoletaResponse> findByTienda(Integer tiendaId) {
-        return repository.findByTiendaId(tiendaId)
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+    public Page<BoletaResponse> findAll(Pageable pageable) {
+        return boletaRepository.findAll(pageable)
+                .map(this::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<BoletaResponse> findBySessionId(String sessionId) {
-        return repository.findBySessionId(sessionId)
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+    public Page<BoletaResponse> findByTiendaId(Integer tiendaId, Pageable pageable) {
+        return boletaRepository.findByTiendaId(tiendaId, pageable)
+                .map(this::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public BoletaResponse findById(Integer id) {
-        Boleta boleta = repository.findById(id)
+    public Page<BoletaResponse> findByEstado(String estado, Pageable pageable) {
+        Boleta.EstadoBoleta estadoEnum = Boleta.EstadoBoleta.valueOf(estado.toUpperCase());
+        return boletaRepository.findByEstado(estadoEnum, pageable)
+                .map(this::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<BoletaResponse> findBySessionId(String sessionId, Pageable pageable) {
+        return boletaRepository.findBySessionId(sessionId, pageable)
+                .map(this::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<BoletaResponse> findByTiendaIdAndEstado(Integer tiendaId, String estado, Pageable pageable) {
+        Boleta.EstadoBoleta estadoEnum = Boleta.EstadoBoleta.valueOf(estado.toUpperCase());
+        return boletaRepository.findByTiendaIdAndEstado(tiendaId, estadoEnum, pageable)
+                .map(this::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<BoletaResponse> findByTiendaIdAndSessionId(Integer tiendaId, String sessionId, Pageable pageable) {
+        return boletaRepository.findByTiendaIdAndSessionId(tiendaId, sessionId, pageable)
+                .map(this::toResponse);
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // Detalle con permisos
+    // ───────────────────────────────────────────────────────────────
+
+    @Override
+    @Transactional(readOnly = true)
+    public BoletaResponse findByIdConPermisos(Integer id) {
+        Boleta boleta = boletaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Boleta no encontrada: " + id));
+
+        verificarPermisosSobreBoleta(boleta);
         return toResponse(boleta);
     }
 
+    private void verificarPermisosSobreBoleta(Boleta boleta) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (esAdmin) {
+            return;
+        }
+
+        Integer tenantId = TenantContext.getTenantId();
+        if (tenantId == null || !tenantId.equals(boleta.getTienda().getId())) {
+            throw new AccessDeniedException("No tienes permisos para ver esta boleta");
+        }
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // Cambio de estado + deducción de stock
+    // ───────────────────────────────────────────────────────────────
+
     @Override
-    public BoletaResponse updateEstado(Integer id, String estadoStr) {
-        Boleta boleta = repository.findById(id)
+    @Transactional
+    public BoletaResponse actualizarEstado(Integer id, String estadoStr) {
+        Boleta boleta = boletaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Boleta no encontrada: " + id));
 
-        Boleta.EstadoBoleta nuevoEstado = Boleta.EstadoBoleta.valueOf(estadoStr.toUpperCase());
+        verificarPermisosSobreBoleta(boleta);
 
-        if (nuevoEstado == Boleta.EstadoBoleta.ATENDIDA && boleta.getEstado() == Boleta.EstadoBoleta.PENDIENTE) {
+        Boleta.EstadoBoleta nuevoEstado;
+        try {
+            nuevoEstado = Boleta.EstadoBoleta.valueOf(estadoStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Estado inválido: " + estadoStr);
+        }
+
+        // Solo deducir stock si pasa de PENDIENTE → ATENDIDA
+        if (nuevoEstado == Boleta.EstadoBoleta.ATENDIDA &&
+                boleta.getEstado() == Boleta.EstadoBoleta.PENDIENTE) {
+
             for (BoletaDetalle detalle : boleta.getDetalles()) {
                 ProductoVariante variante = detalle.getVariante();
-                if (variante.getStock() < detalle.getCantidad()) {
-                    throw new RuntimeException("Stock insuficiente para " + variante.getProducto().getNombre());
+                int stockActual = variante.getStock();
+
+                if (stockActual < detalle.getCantidad()) {
+                    throw new IllegalStateException(
+                            "Stock insuficiente para " + variante.getProducto().getNombre() +
+                                    " (SKU: " + variante.getSku() + ")");
                 }
-                variante.setStock(variante.getStock() - detalle.getCantidad());
+
+                variante.setStock(stockActual - detalle.getCantidad());
                 varianteRepository.save(variante);
             }
         }
 
         boleta.setEstado(nuevoEstado);
-        return toResponse(repository.save(boleta));
+        return toResponse(boletaRepository.save(boleta));
     }
 
+    // ───────────────────────────────────────────────────────────────
+    // Mapeadores DTO
+    // ───────────────────────────────────────────────────────────────
     private BoletaResponse toResponse(Boleta boleta) {
         BoletaResponse response = new BoletaResponse();
         response.setId(boleta.getId());
         response.setSessionId(boleta.getSessionId());
         response.setTiendaId(boleta.getTienda().getId());
-        response.setTotal(boleta.getTotal());
-        response.setFecha(boleta.getFecha());
+        response.setTotal(boleta.getTotal());           // BigDecimal directo
+        response.setFecha(boleta.getFecha().toString());
         response.setEstado(boleta.getEstado().name());
 
         if (boleta.getUser() != null) {
@@ -90,9 +168,18 @@ public class BoletaServiceImpl implements BoletaService {
     }
 
     private BoletaDetalleResponse toDetalleResponse(BoletaDetalle detalle) {
-        // Similar a toBoletaDetalleResponse en CarritoServiceImpl
         BoletaDetalleResponse dto = new BoletaDetalleResponse();
-        // ... (copia el código de toBoletaDetalleResponse)
+        dto.setId(detalle.getId());
+        dto.setVarianteId(detalle.getVariante().getId());
+        dto.setCantidad(detalle.getCantidad());
+        dto.setPrecioUnitario(detalle.getPrecioUnitario());  // BigDecimal directo
+        dto.setSubtotal(detalle.getSubtotal());              // BigDecimal directo
+
+        ProductoVariante variante = detalle.getVariante();
+        dto.setNombreProducto(variante.getProducto().getNombre());
+        dto.setSku(variante.getSku());
+        dto.setImagenUrl(variante.getImagenUrl());
+
         return dto;
     }
 }

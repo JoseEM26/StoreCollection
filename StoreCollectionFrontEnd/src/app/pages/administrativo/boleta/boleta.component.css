@@ -1,0 +1,20 @@
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(99, 102, 241, 0.05);
+}
+
+.badge.rounded-pill {
+  min-width: 100px;
+  text-align: center;
+}
+
+.list-group-item {
+  transition: all 0.2s ease;
+}
+
+.list-group-item:hover {
+  background-color: #f8f9fa;
+}

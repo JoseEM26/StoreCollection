@@ -12,7 +12,7 @@ public class BoletaResponse {
     private Integer userId;
     private Integer tiendaId;
     private BigDecimal total;
-    private LocalDateTime fecha;
+    private String fecha;
     private String estado;
     private List<BoletaDetalleResponse> detalles;
 }

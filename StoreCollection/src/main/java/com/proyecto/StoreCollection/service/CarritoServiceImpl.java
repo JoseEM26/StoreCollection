@@ -310,7 +310,7 @@ public class CarritoServiceImpl implements CarritoService {
         response.setSessionId(boleta.getSessionId());
         response.setTiendaId(boleta.getTienda().getId());
         response.setTotal(boleta.getTotal());
-        response.setFecha(boleta.getFecha());
+        response.setFecha(boleta.getFecha().toString());
         response.setEstado(boleta.getEstado().name());
 
         if (boleta.getUser() != null) {
