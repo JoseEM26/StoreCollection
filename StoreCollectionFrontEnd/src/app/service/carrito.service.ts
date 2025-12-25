@@ -1,10 +1,14 @@
-// src/app/service/carrito.service.ts
+// src/app/service/carrito.service.ts (COMPLETO, sin errores y 100% compatible con backend)
 
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
-import { CarritoSessionService } from './carrito-session.service';
-import { CarritoItemResponse, CarritoRequest, CarritoResponse } from '../model/carrito.model';
+import { BehaviorSubject, Observable, tap, catchError } from 'rxjs';
+import { CarritoSessionService } from './carrito-session.service';  // Asume que existe
+import { 
+  CarritoItemResponse, 
+  CarritoRequest, 
+  CarritoResponse 
+} from '../model/carrito.model';
 import { BoletaRequest, BoletaResponse } from '../model/boleta.model';
 import { environment } from '../../../environment';
 
@@ -14,13 +18,15 @@ import { environment } from '../../../environment';
 export class CarritoService {
   private apiUrl = `${environment.apiUrl}/api/public/carrito`;
 
-  // Estado reactivo del carrito
+  // Estado reactivo principal
   private carritoItems = new BehaviorSubject<CarritoItemResponse[]>([]);
   carritoItems$ = this.carritoItems.asObservable();
 
+  // Conteo de ítems (cantidad total de productos)
   private itemsCount = new BehaviorSubject<number>(0);
   itemsCount$ = this.itemsCount.asObservable();
 
+  // Total a pagar
   private totalPrecio = new BehaviorSubject<number>(0);
   totalPrecio$ = this.totalPrecio.asObservable();
 
@@ -35,7 +41,7 @@ export class CarritoService {
     return this.sessionService.getSessionId();
   }
 
-  /** Carga el carrito desde el backend */
+  /** Carga o recarga el carrito completo desde el backend */
   cargarCarritoDesdeBackend(): void {
     const sessionId = this.getSessionId();
     if (!sessionId) {
@@ -43,18 +49,18 @@ export class CarritoService {
       return;
     }
 
-    this.http.get<CarritoResponse>(`${this.apiUrl}/session/${sessionId}`).subscribe({
+    this.http.get<CarritoItemResponse[]>(`${this.apiUrl}/session/${sessionId}`).subscribe({
       next: (items) => {
-        this.actualizarEstadoCarrito(items);
+        this.actualizarEstadoCarrito(items || []);
       },
       error: (err) => {
-        console.error('Error cargando carrito:', err);
+        console.error('Error al cargar carrito:', err);
         this.actualizarEstadoCarrito([]);
       }
     });
   }
 
-  /** Agregar o actualizar (si ya existe, el backend lo maneja) */
+  /** Agregar producto (o actualizar si ya existe) */
   agregarAlCarrito(varianteId: number, cantidad: number = 1): Observable<CarritoItemResponse> {
     const request: CarritoRequest = {
       sessionId: this.getSessionId(),
@@ -63,94 +69,133 @@ export class CarritoService {
     };
 
     return this.http.post<CarritoItemResponse>(this.apiUrl, request).pipe(
-      tap(() => this.cargarCarritoDesdeBackend())
+      tap(() => this.cargarCarritoDesdeBackend()),
+      catchError(err => {
+        console.error('Error al agregar al carrito:', err);
+        throw err;
+      })
     );
   }
 
-  /** Actualizar cantidad de un item existente */
+  /** Actualizar cantidad de un ítem específico */
   actualizarCantidad(itemId: number, cantidad: number): Observable<CarritoItemResponse> {
-    const request: Partial<CarritoRequest> = {
+    const request = {
       sessionId: this.getSessionId(),
       cantidad
     };
 
     return this.http.put<CarritoItemResponse>(`${this.apiUrl}/${itemId}`, request).pipe(
-      tap(() => this.cargarCarritoDesdeBackend())
+      tap(() => this.cargarCarritoDesdeBackend()),
+      catchError(err => {
+        console.error('Error al actualizar cantidad:', err);
+        throw err;
+      })
     );
   }
 
-  /** Eliminar un item */
+  /** Eliminar un ítem del carrito */
   eliminarItem(itemId: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${itemId}`).pipe(
-      tap(() => this.cargarCarritoDesdeBackend())
+      tap(() => this.cargarCarritoDesdeBackend()),
+      catchError(err => {
+        console.error('Error al eliminar item:', err);
+        throw err;
+      })
     );
   }
 
-  /** Vaciar todo el carrito */
+  /** Vaciar completamente el carrito */
   vaciarCarrito(): Observable<void> {
     const sessionId = this.getSessionId();
     if (!sessionId) {
       this.actualizarEstadoCarrito([]);
-      return new Observable<void>();
+      return new Observable<void>(observer => observer.complete());
     }
 
     return this.http.delete<void>(`${this.apiUrl}/session/${sessionId}`).pipe(
-      tap(() => this.actualizarEstadoCarrito([]))
+      tap(() => this.actualizarEstadoCarrito([])),
+      catchError(err => {
+        console.error('Error al vaciar carrito:', err);
+        throw err;
+      })
     );
   }
 
-  /** Actualiza todos los observables */
+  /** Actualiza todos los observables reactivos a partir de la lista de items */
   private actualizarEstadoCarrito(items: CarritoItemResponse[]): void {
     this.carritoItems.next(items);
 
-    const totalItems = items.reduce((sum, item) => sum + item.cantidad, 0);
+    const totalItems = items.reduce((sum, item) => sum + (item.cantidad || 0), 0);
     this.itemsCount.next(totalItems);
 
-    const totalPrice = items.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+    const totalPrice = items.reduce((sum, item) => {
+      return sum + ((item.precio || 0) * (item.cantidad || 0));
+    }, 0);
+
     this.totalPrecio.next(totalPrice);
   }
 
-  // Getters sincronos
-  getTotalItems(): number {
+  // Getters síncronos (útiles en algunos casos)
+  getTotalItemsSync(): number {
     return this.itemsCount.value;
   }
 
-  getTotalPrecio(): number {
+  getTotalPrecioSync(): number {
     return this.totalPrecio.value;
   }
 
-  getItems(): CarritoItemResponse[] {
+  getItemsSync(): CarritoItemResponse[] {
     return this.carritoItems.value;
   }
-  // Dentro de CarritoService (agrega estos métodos)
 
-  /** Checkout online: guarda el pedido en DB y notifica por email */
+  // ── Checkout ───────────────────────────────────────────────
+
+  /** Checkout online: registra el pedido en la base de datos + email */
   checkoutOnline(tiendaId: number, userId?: number): Observable<BoletaResponse> {
     const request: BoletaRequest = {
       sessionId: this.getSessionId(),
       tiendaId,
-      userId
+      userId: userId ?? null
     };
 
     return this.http.post<BoletaResponse>(`${this.apiUrl}/checkout/online`, request).pipe(
-      tap(() => this.cargarCarritoDesdeBackend())
+      tap(() => this.cargarCarritoDesdeBackend()), // limpia carrito visualmente
+      catchError(err => {
+        console.error('Error en checkout online:', err);
+        throw err;
+      })
     );
   }
 
-  /** Checkout WhatsApp: devuelve URL para enviar mensaje */
-  checkoutWhatsapp(tiendaId: number, userId?: number): Observable<string> {
+checkoutWhatsapp(tiendaId: number, userId?: number): Observable<string> {
     const request: BoletaRequest = {
       sessionId: this.getSessionId(),
       tiendaId,
-      userId
+      userId: userId ?? null
     };
 
-    return this.http.post<string>(`${this.apiUrl}/checkout/whatsapp`, request).pipe(
-      tap(() => this.cargarCarritoDesdeBackend())
+    console.log('[CarritoService] Iniciando checkoutWhatsapp - Request enviado:', request);
+    console.log('[CarritoService] URL de petición:', `${this.apiUrl}/checkout/whatsapp`);
+
+    return this.http.post<string>(`${this.apiUrl}/checkout/whatsapp`, request, { responseType: 'text' as 'json' }).pipe(  // ← fuerza text
+      tap(response => {
+        console.log('[CarritoService] checkoutWhatsapp EXITOSO - Response cruda:', response);
+        console.log('[CarritoService] Tipo de response:', typeof response);
+      }),
+      tap(() => this.cargarCarritoDesdeBackend()),
+      catchError(err => {
+        console.error('[CarritoService] ERROR en checkoutWhatsapp:', {
+          status: err.status,
+          statusText: err.statusText,
+          message: err.message,
+          errorBody: err.error
+        });
+        throw err;
+      })
     );
   }
 
-  /** Mantén el viejo checkout como alias de online (compatibilidad) */
+  /** Alias retrocompatible (si algún componente viejo lo usa) */
   checkout(tiendaId: number, userId?: number): Observable<BoletaResponse> {
     return this.checkoutOnline(tiendaId, userId);
   }

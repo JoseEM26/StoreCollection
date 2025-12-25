@@ -6,23 +6,21 @@
   <base href="/">
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#667eea"> <!-- Mejora PWA y navegador móvil -->
+  <meta name="color-scheme" content="light dark"> <!-- Soporte dark mode futuro -->
+
   <link rel="icon" type="image/x-icon" href="favicon.ico">
 
-  <!-- Preconnect para rendimiento -->
+  <!-- Google Fonts: solo las variantes que realmente usas (optimización) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-  <!-- Google Fonts: Inter (la mejor para dashboards) -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-  <!-- Bootstrap Icons 1.11.3 – Íconos perfectos y ligeros -->
+  <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-  <!-- AOS Animations – Solo si realmente lo usas en todas las páginas -->
+  <!-- Solo si realmente usas AOS en la mayoría de páginas (sino quítalo) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css">
-
-  <!-- Optimización: Preload de fuentes críticas (opcional pero PRO) -->
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap">
 
   <style>
     :root {
@@ -44,7 +42,7 @@
     }
 
     body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       background: var(--bg);
       color: var(--text);
       -webkit-font-smoothing: antialiased;
@@ -53,19 +51,19 @@
       min-height: 100vh;
     }
 
-    /* Loading suave antes de que Angular arranque */
+    /* Mejora visual del loader */
     app-root {
       display: block;
       min-height: 100vh;
       opacity: 0;
-      animation: fadeIn 0.6s ease-out forwards;
+      transition: opacity 0.6s ease-out;
     }
 
-    @keyframes fadeIn {
-      to { opacity: 1; }
+    app-root.loaded {
+      opacity: 1;
     }
 
-    /* Scrollbar personalizada (opcional, queda brutal) */
+    /* Scrollbar minimalista y elegante */
     ::-webkit-scrollbar {
       width: 8px;
     }
@@ -84,66 +82,76 @@
 
 <body>
   <app-root>
-    <!-- Mensaje elegante mientras carga Angular -->
-    <div style="
+    <!-- Loader elegante y moderno -->
+    <div id="app-loader" style="
       position: fixed;
       inset: 0;
-      background: linear-gradient(135deg, #667eea, #764ba2);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      flex-direction: column;
       color: white;
-      font-size: 1.5rem;
+      font-size: 1.6rem;
       font-weight: 600;
       z-index: 9999;
+      transition: opacity 0.6s ease;
     ">
       <div style="
-        width: 60px;
-        height: 60px;
-        border: 4px solid rgba(255,255,255,0.3);
+        width: 64px;
+        height: 64px;
+        border: 5px solid rgba(255,255,255,0.25);
         border-top-color: white;
         border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin-bottom: 1.5rem;
+        animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        margin-bottom: 1.8rem;
       "></div>
       <div>Cargando Store Collection...</div>
     </div>
   </app-root>
 
-  <!-- AOS Init – Solo si usas animaciones en el 90% de las páginas -->
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
   <script>
+    // Inicialización AOS (solo si lo usas)
     document.addEventListener('DOMContentLoaded', () => {
       AOS.init({
-        duration: 800,
+        duration: 750,
         easing: 'ease-out-quart',
         once: true,
-        offset: 80,
-        delay: 50
+        offset: 60
       });
     });
 
-    // Spinner animation
-    const style = document.createElement('style');
-    style.innerHTML = `
-      @keyframes spin {
-        to { transform: rotate(360deg); }
+    // Ocultar loader cuando Angular termina de renderizar
+    // Más confiable que 'load' en aplicaciones SPA
+    function hideLoader() {
+      const loader = document.getElementById('app-loader');
+      if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.remove(), 700);
       }
-    `;
-    document.head.appendChild(style);
+      document.querySelector('app-root').classList.add('loaded');
+    }
+
+    // Intentamos varias formas de detectar que Angular ya cargó
+    window.addEventListener('load', hideLoader);
+    
+    // Método más confiable en Angular moderno
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      setTimeout(hideLoader, 300);
+    }
   </script>
 
-  <!-- Opcional: Elimina el spinner cuando Angular ya cargó -->
+  <!-- Estilo para la animación del spinner -->
   <script>
-    window.addEventListener('load', () => {
-      const loader = document.querySelector('app-root > div');
-      if (loader) {
-        loader.style.transition = 'opacity 0.6s ease';
-        loader.style.opacity = '0';
-        setTimeout(() => loader.remove(), 600);
-      }
-    });
+    document.head.insertAdjacentHTML('beforeend', `
+      <style>
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      </style>
+    `);
   </script>
 </body>
 </html>

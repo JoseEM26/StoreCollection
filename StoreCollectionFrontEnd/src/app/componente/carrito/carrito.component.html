@@ -1,5 +1,4 @@
 <!-- src/app/componente/carrito/carrito.component.html -->
-
 <div class="container py-5">
   <h2 class="fw-bold text-center mb-5 text-dark">
     <i class="bi bi-cart4 me-3"></i> Mi Carrito
@@ -8,16 +7,16 @@
   @if (loading) {
     <div class="text-center py-5">
       <div class="spinner-border text-success" role="status">
-        <span class="visually-hidden">Cargando...</span>
+        <span class="visually-hidden">Cargando carrito...</span>
       </div>
     </div>
   } @else if (items.length === 0) {
     <div class="text-center py-5 bg-light rounded-4 shadow-sm">
       <i class="bi bi-cart-x display-1 text-muted mb-4"></i>
       <h4 class="text-muted">Tu carrito está vacío</h4>
-      <p class="text-muted mb-4">Agrega productos increíbles desde el catálogo</p>
+      <p class="text-muted mb-4">¡Agrega productos increíbles desde el catálogo!</p>
       <a [routerLink]="['/']" class="btn btn-success btn-lg px-5">
-        <i class="bi bi-shop me-2"></i> Ir al catálogo
+        <i class="bi bi-shop me-2"></i> Explorar productos
       </a>
     </div>
   } @else {
@@ -30,14 +29,14 @@
           </div>
           <div class="card-body p-0">
             @for (item of items; track item.id) {
-              <div class="p-4 border-bottom hover-bg-light">
+              <div class="p-4 border-bottom hover-bg-light transition-all">
                 <div class="row align-items-center g-4">
                   <!-- Imagen -->
                   <div class="col-4 col-md-3 col-lg-2">
-                    <img [src]="item.imagenUrl || 'https://via.placeholder.com/200'"
+                    <img [src]="item.imagenUrl || 'https://via.placeholder.com/220x220?text=Producto'"
                          [alt]="item.nombreProducto"
                          class="img-fluid rounded-4 shadow-sm"
-                         style="height: 120px; object-fit: cover;">
+                         style="height: 140px; object-fit: cover; width: 100%;">
                   </div>
 
                   <!-- Detalles -->
@@ -45,13 +44,12 @@
                     <div class="d-flex justify-content-between align-items-start">
                       <div class="flex-grow-1">
                         <h6 class="fw-bold mb-1">{{ item.nombreProducto }}</h6>
-                        <small class="text-muted">SKU: {{ item.sku }}</small>
+                        <small class="text-muted">SKU: {{ item.sku || '—' }}</small>
 
-                        <!-- Atributos seleccionados -->
-                        @if (item.atributos && item.atributos.length > 0) {
-                          <div class="mt-2">
-                            @for (attr of item.atributos; track attr.id; let last = $last) {
-                              <span class="badge bg-light text-dark border me-2 mb-1">
+                        @if (item.atributos?.length) {
+                          <div class="mt-2 flex-wrap d-flex gap-2">
+                            @for (attr of item.atributos; track attr.id) {
+                              <span class="badge bg-light text-dark border">
                                 <strong>{{ attr.nombre }}:</strong> {{ attr.valor }}
                               </span>
                             }
@@ -59,20 +57,20 @@
                         }
 
                         <div class="mt-3 d-flex align-items-center gap-3">
-                          <div class="d-flex align-items-center border rounded-3">
-                            <button class="btn btn-outline-secondary btn-sm rounded-0"
-                                    (click)="actualizarCantidad(item.id, item.cantidad - 1)"
+                          <div class="d-flex align-items-center border rounded-3 bg-white">
+                            <button class="btn btn-outline-secondary btn-sm rounded-0 px-3"
+                                    (click)="actualizarCantidad(item.id, -1)"
                                     [disabled]="item.cantidad <= 1">
-                              <i class="bi bi-dash"></i>
+                              <i class="bi bi-dash-lg"></i>
                             </button>
-                            <span class="px-4 fw-bold">{{ item.cantidad }}</span>
-                            <button class="btn btn-outline-secondary btn-sm rounded-0"
-                                    (click)="actualizarCantidad(item.id, item.cantidad + 1)">
-                              <i class="bi bi-plus"></i>
+                            <span class="px-4 fw-bold fs-5">{{ item.cantidad }}</span>
+                            <button class="btn btn-outline-secondary btn-sm rounded-0 px-3"
+                                    (click)="actualizarCantidad(item.id, 1)">
+                              <i class="bi bi-plus-lg"></i>
                             </button>
                           </div>
 
-                          <button class="btn btn-link text-danger p-0 small"
+                          <button class="btn btn-link text-danger p-0 small fw-medium"
                                   (click)="eliminarItem(item.id)">
                             <i class="bi bi-trash me-1"></i> Eliminar
                           </button>
@@ -107,7 +105,7 @@
             <h5 class="fw-bold mb-4">Resumen del pedido</h5>
 
             <div class="d-flex justify-content-between mb-3 text-muted">
-              <span>Subtotal ({{ totalItems }} productos)</span>
+              <span>Productos ({{ totalItems }})</span>
               <span>S/ {{ totalPrecio | number:'1.2-2' }}</span>
             </div>
 
@@ -118,19 +116,23 @@
               <span>S/ {{ totalPrecio | number:'1.2-2' }}</span>
             </div>
 
-            <!-- Botones de checkout -->
-            <button class="btn btn-success btn-lg w-100 mb-3 shadow-sm"
-                    (click)="checkoutOnline()">
-              <i class="bi bi-check-circle me-2"></i>
-              Reservar pedido (Online)
-            </button>
+          <!-- Botón Confirmar pedido Online -->
+<button class="btn btn-success btn-lg w-100 mb-3 shadow-sm py-3"
+        (click)="checkoutOnline()"
+        [disabled]="isProcessingOnline || isProcessingWhatsapp || loading || items.length === 0">
+  <span *ngIf="isProcessingOnline" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+  <i class="bi bi-check-circle-fill me-2"></i>
+  {{ isProcessingOnline ? 'Procesando...' : 'Confirmar pedido (Online)' }}
+</button>
 
-            <button class="btn btn-whatsapp btn-lg w-100 shadow-sm"
-                    (click)="checkoutWhatsapp()">
-              <i class="bi bi-whatsapp me-2"></i>
-              Enviar por WhatsApp
-            </button>
-
+<!-- Botón Enviar por WhatsApp -->
+<button class="btn btn-whatsapp btn-lg w-100 shadow-sm py-3"
+        (click)="checkoutWhatsapp()"
+        [disabled]="isProcessingWhatsapp || isProcessingOnline || loading || items.length === 0">
+  <span *ngIf="isProcessingWhatsapp" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+  <i class="bi bi-whatsapp me-2"></i>
+  {{ isProcessingWhatsapp ? 'Generando enlace...' : 'Enviar por WhatsApp' }}
+</button>
             <hr class="my-4">
 
             <a [routerLink]="['/']" class="btn btn-outline-secondary w-100">

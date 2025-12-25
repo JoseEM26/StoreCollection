@@ -1,44 +1,33 @@
-// src/app/model/boleta.model.ts
+// src/app/model/boleta.model.ts (COMPLETO y compatible con backend)
 
-// Para solicitudes de creación de boleta
+import { AtributoResponse } from './carrito.model';
+
 export interface BoletaRequest {
   sessionId: string;
   tiendaId: number;
-  userId?: number;
+  userId?: number | null;  // Compatible con Integer null del backend
 }
 
-// Detalle de cada ítem en la boleta
+export interface BoletaResponse {
+  id: number;
+  sessionId: string;
+  userId: number | null;
+  tiendaId: number;
+  total: number;  // BigDecimal → number en TS
+  fecha: string;
+  estado: string;
+  detalles: BoletaDetalleResponse[];
+}
+// src/app/model/boleta-detalle.model.ts (agregado para completar BoletaResponse, basado en backend)
+
 export interface BoletaDetalleResponse {
   id: number;
   varianteId: number;
   cantidad: number;
-  precioUnitario: number;      // number (viene como double desde backend)
-  subtotal: number;
+  precioUnitario: number;  // BigDecimal → number
+  subtotal: number;  // BigDecimal → number
   nombreProducto: string;
-  sku?: string;
-  imagenUrl?: string;
-  atributos?: any[];           // opcional
-}
-
-// Respuesta individual de boleta
-export interface BoletaResponse {
-  id: number;
-  sessionId: string;
-  userId?: number;
-  tiendaId: number;
-  total: number;
-  fecha: string;               // ISO string o formato legible
-  estado: string;
-  detalles: BoletaDetalleResponse[];
-}
-
-// Respuesta paginada (para listados admin/owner)
-export interface BoletaPageResponse {
-  content: BoletaResponse[];
-  totalElements: number;
-  totalPages: number;
-  number: number;              // página actual (0-based)
-  size: number;
-  first: boolean;
-  last: boolean;
+  sku: string | null;
+  imagenUrl: string | null;
+  atributos: AtributoResponse[] | null;  // Reutiliza de carrito.model
 }

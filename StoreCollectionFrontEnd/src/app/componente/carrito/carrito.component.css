@@ -51,4 +51,63 @@ hr {
   .row.g-5 {
     row-gap: 2rem;
   }
+}/* ... mantener lo que ya tienes y agregar/mejorar ... */
+
+.card {
+  border: none;
+  border-radius: 1.25rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08) !important;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 15px 40px rgba(0,0,0,0.12) !important;
+}
+
+.btn-whatsapp {
+  background: linear-gradient(135deg, #25d366 0%, #20b958 100%);
+  border: none;
+  font-weight: 600;
+  transition: all 0.25s ease;
+}
+
+.btn-whatsapp:hover {
+  background: linear-gradient(135deg, #128c7e 0%, #0f7a6d 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(37, 211, 102, 0.35);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #198754 0%, #157347 100%);
+  border: none;
+  font-weight: 600;
+  transition: all 0.25s ease;
+}
+
+.btn-success:hover {
+  background: linear-gradient(135deg, #146c43 0%, #115c37 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(25, 135, 84, 0.35);
+}
+
+.product-item {
+  transition: all 0.25s ease;
+}
+
+.product-item:hover {
+  background-color: #f8f9fa;
+  transform: translateX(6px);
+}
+
+.quantity-btn {
+  width: 42px;
+  font-weight: bold;
+}
+
+.btn-outline-danger {
+  transition: all 0.2s ease;
+}
+
+.btn-outline-danger:hover {
+  background-color: #dc35451a;
 }

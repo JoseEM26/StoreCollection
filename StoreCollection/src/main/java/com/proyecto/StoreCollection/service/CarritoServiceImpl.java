@@ -16,8 +16,10 @@ import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -246,30 +248,160 @@ public class CarritoServiceImpl implements CarritoService {
     }
 
     @Override
+    @Transactional(readOnly = true)  // ← OBLIGATORIO para fetch eager y evitar LazyInitializationException
     public String checkoutWhatsapp(BoletaRequest request) {
-        List<Carrito> items = repository.findBySessionId(request.getSessionId());
-        if (items.isEmpty()) {
-            throw new RuntimeException("El carrito está vacío");
+        // 1. Carga con JOIN FETCH (carga variante, producto, atributos y tienda)
+        List<Carrito> items = repository.findBySessionIdWithDetails(request.getSessionId());
+
+        if (items == null || items.isEmpty()) {
+            throw new IllegalStateException("El carrito está vacío o la sesión no existe");
         }
+
+        System.out.println("Checkout WhatsApp - Sesión: " + request.getSessionId() +
+                " | Items encontrados: " + items.size());
 
         Tienda tienda = tiendaRepository.findById(request.getTiendaId())
-                .orElseThrow(() -> new RuntimeException("Tienda no encontrada"));
+                .orElseThrow(() -> new IllegalArgumentException("Tienda no encontrada: " + request.getTiendaId()));
 
-        StringBuilder message = new StringBuilder("Nuevo pedido:\n");
-        BigDecimal total = BigDecimal.ZERO;
-        for (Carrito item : items) {
-            ProductoVariante v = item.getVariante();
-            message.append(v.getProducto().getNombre()).append(" x").append(item.getCantidad()).append("\n");
-            total = total.add(v.getPrecio().multiply(BigDecimal.valueOf(item.getCantidad())));
+        String numeroWhats = normalizeWhatsappNumber(tienda.getWhatsapp());
+        if (numeroWhats == null || numeroWhats.length() < 9) {
+            throw new IllegalStateException("Número de WhatsApp inválido: " + tienda.getWhatsapp());
         }
-        message.append("Total: ").append(total);
 
-        String encodedMessage = URLEncoder.encode(message.toString(), StandardCharsets.UTF_8);
+        // 2. Construcción del mensaje
+        StringBuilder msg = new StringBuilder();
+        msg.append("🛒 *¡NUEVO PEDIDO EN ").append(tienda.getNombre().toUpperCase()).append("!*\n\n");
 
+        BigDecimal total = BigDecimal.ZERO;
+        int itemNumber = 1;
+        int validItems = 0;
+
+        for (Carrito item : items) {
+            ProductoVariante variante = item.getVariante();
+
+            // Log clave para depurar
+            System.out.println("Item #" + item.getId() + " | Variante ID: " +
+                    (variante != null ? variante.getId() : "NULL") +
+                    " | Producto: " + (variante != null && variante.getProducto() != null ?
+                    variante.getProducto().getNombre() : "NULL"));
+
+            if (variante == null) {
+                msg.append("⚠️ Ítem ").append(itemNumber).append(" - Variante no encontrada (ID: ")
+                        .append(item.getVariante().getId()).append(")\n");
+                itemNumber++;
+                continue;
+            }
+
+            Producto producto = variante.getProducto();
+            if (producto == null) {
+                msg.append("⚠️ Ítem ").append(itemNumber).append(" - Producto no encontrado (Variante: ")
+                        .append(variante.getId()).append(")\n");
+                itemNumber++;
+                continue;
+            }
+
+            validItems++;
+
+            // Producto principal
+            msg.append("*").append(itemNumber).append(".* ")
+                    .append(producto.getNombre())
+                    .append(" × ").append(item.getCantidad())
+                    .append(" und.\n");
+
+            // Precios
+            BigDecimal precioUnit = variante.getPrecio();
+            BigDecimal subtotal = precioUnit.multiply(BigDecimal.valueOf(item.getCantidad()));
+            total = total.add(subtotal);
+
+            msg.append("   💵 Precio: S/ ").append(formatPrice(precioUnit))
+                    .append("   → Subtotal: S/ ").append(formatPrice(subtotal))
+                    .append("\n");
+
+            // SKU
+            if (variante.getSku() != null && !variante.getSku().trim().isEmpty()) {
+                msg.append("   🏷️ SKU: ").append(variante.getSku()).append("\n");
+            }
+
+            // Atributos
+            if (variante.getAtributos() != null && !variante.getAtributos().isEmpty()) {
+                msg.append("   🎨 *Variantes:*\n");
+                for (AtributoValor av : variante.getAtributos()) {
+                    String nombreAttr = (av.getAtributo() != null && av.getAtributo().getNombre() != null)
+                            ? av.getAtributo().getNombre() : "Atributo";
+                    msg.append("      • ").append(nombreAttr).append(": *").append(av.getValor()).append("*\n");
+                }
+            }
+
+            // Imagen
+            if (variante.getImagenUrl() != null && !variante.getImagenUrl().trim().isEmpty()) {
+                msg.append("   📸 ").append(shortenUrl(variante.getImagenUrl())).append("\n");
+            }
+
+            msg.append("\n");
+            itemNumber++;
+        }
+
+        if (validItems == 0) {
+            throw new IllegalStateException("No hay ítems válidos en el carrito (todas las variantes/productos son null)");
+        }
+
+        // Resumen
+        msg.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+        msg.append("📊 *RESUMEN DEL PEDIDO*\n");
+        msg.append("Items válidos: ").append(validItems).append("\n");
+        msg.append("💰 *TOTAL A COBRAR: S/ ").append(formatPrice(total)).append("*\n");
+
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm", Locale.forLanguageTag("es-PE"));
+        msg.append("📅 Generado: ").append(LocalDateTime.now().format(dtf)).append("\n\n");
+
+        msg.append("👤 *DATOS DEL CLIENTE (coordinar):*\n");
+        msg.append("• Nombre: ______________________\n");
+        msg.append("• Teléfono: ____________________\n");
+        msg.append("• Dirección: ___________________\n");
+        msg.append("• Pago: ________________________\n\n");
+
+        msg.append("✅ *¡Listo para procesar!* Responde para confirmar 🙌");
+
+        // Encoding seguro
+        String encodedMessage;
+        try {
+            encodedMessage = URLEncoder.encode(msg.toString(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            System.err.println("Error encoding mensaje WhatsApp: " + e.getMessage());
+            encodedMessage = URLEncoder.encode(msg.toString().replaceAll("[^\\p{ASCII}]", "?"), StandardCharsets.UTF_8);
+        }
+
+        // Limpieza
         limpiarCarrito(request.getSessionId());
 
-        return "https://wa.me/" + tienda.getWhatsapp() + "?text=" + encodedMessage;
+        // URL final
+        String url = "https://wa.me/" + numeroWhats + "?text=" + encodedMessage;
+        System.out.println("URL WhatsApp generada exitosamente: " + url);
+
+        return url;
     }
+    // MÉTODOS AUXILIARES (agregar estos private methods)
+    private String normalizeWhatsappNumber(String raw) {
+        if (raw == null) return null;
+        String cleaned = raw.replaceAll("[^0-9]", "");
+        if (cleaned.startsWith("00")) cleaned = cleaned.substring(2);
+        if (cleaned.startsWith("+")) cleaned = cleaned.substring(1);
+        if (cleaned.length() == 9 && !cleaned.startsWith("51")) cleaned = "51" + cleaned; // Perú
+        return (cleaned.length() >= 10 && cleaned.length() <= 14) ? cleaned : null;
+    }
+
+    private String formatPrice(BigDecimal price) {
+        if (price == null) return "0.00";
+        return String.format(Locale.forLanguageTag("es-PE"), "%.2f", price);
+    }
+
+    private String shortenUrl(String url) {
+        if (url.length() > 50) {
+            return url.substring(0, 47) + "...";
+        }
+        return url;
+    }
+
     private CarritoResponse toResponse(Carrito c) {
         CarritoResponse dto = new CarritoResponse();
         dto.setId(c.getId());
