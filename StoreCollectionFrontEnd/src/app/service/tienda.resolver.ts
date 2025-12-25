@@ -5,15 +5,17 @@ import {
   ActivatedRouteSnapshot,
   Router
 } from '@angular/router';
+import { TiendaPublicService } from './tienda-public.service';
 import { TiendaService } from './tienda.service';
-import { catchError, of } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class TiendaResolver implements Resolve<any> {
 
   constructor(
     private tiendaService: TiendaService,
+    private tiendaPublicService: TiendaPublicService,
     private router: Router
   ) {}
 
@@ -25,20 +27,23 @@ export class TiendaResolver implements Resolve<any> {
       return of(null);
     }
 
-    // Importante: Cargamos los datos de la tienda y los inyectamos en el service
-    return this.tiendaService.cargarTiendaPorSlug(slug).pipe(
+    // 1. Guardamos el slug inmediatamente
+    this.tiendaService.setSlug(slug);
+
+    // 2. Cargamos los datos completos de la tienda y los inyectamos en el service
+    return this.tiendaPublicService.cargarTiendaActual().pipe(
       map(tienda => {
         if (tienda) {
-          // Actualizamos el BehaviorSubject con los datos reales
-          this.tiendaService.actualizarTienda(tienda);
-          return tienda;
+          return tienda; // Resolver devuelve la tienda (opcional, para usar en snapshot si quieres)
         } else {
-          // Si no existe la tienda, redirigimos al home o página de error
+          // Tienda no encontrada o error → redirigir
+          this.tiendaService.limpiarTienda();
           this.router.navigate(['/']);
           return null;
         }
       }),
       catchError(() => {
+        this.tiendaService.limpiarTienda();
         this.router.navigate(['/']);
         return of(null);
       })

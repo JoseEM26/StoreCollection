@@ -2,13 +2,14 @@ package com.proyecto.StoreCollection.controller;
 
 import com.proyecto.StoreCollection.dto.response.BoletaResponse;
 import com.proyecto.StoreCollection.service.BoletaService;
+import com.proyecto.StoreCollection.service.PdfService;
 import com.proyecto.StoreCollection.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 public class BoletaController {
 
     private final BoletaService service;
+    private final PdfService pdfService;
 
     @GetMapping("/admin-list")
     public ResponseEntity<Page<BoletaResponse>> listarBoletas(
@@ -62,7 +64,30 @@ public class BoletaController {
 
         return ResponseEntity.ok(resultado);
     }
+    @GetMapping("/{id}/factura-pdf")
+    public ResponseEntity<byte[]> descargarFacturaPdf(@PathVariable Integer id) {
+        BoletaResponse boleta = service.findByIdConPermisos(id);
 
+        if (!"ATENDIDA".equals(boleta.getEstado())) {
+            return ResponseEntity.notFound().build();  // 404 Not Found → más lógico
+        }
+
+        try {
+            byte[] pdf = pdfService.generarFacturaPdf(boleta);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDisposition(ContentDisposition.attachment()
+                    .filename("factura_boleta_" + id + ".pdf")
+                    .build());
+            headers.setContentLength(pdf.length);
+
+            return new ResponseEntity<>(pdf, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
     // Método auxiliar para crear Pageable
     private Pageable crearPageable(int page, int size, String sort) {
         String[] sortParts = sort.split(",");

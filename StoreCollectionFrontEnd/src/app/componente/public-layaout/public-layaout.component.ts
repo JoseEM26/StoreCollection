@@ -32,28 +32,38 @@ export class PublicLayaoutComponent implements OnInit, OnDestroy {
     private titleService: Title
   ) {}
 
-  ngOnInit(): void {
-    // Suscripción a la tienda
-    this.tiendaService.currentTienda$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(tienda => {
-        this.tienda = tienda;
-        if (tienda?.nombre) {
-          this.titleService.setTitle(`${tienda.nombre} - Tienda Online`);
-        } else {
-          this.titleService.setTitle('Tienda Online');
-        }
-      });
+// En ngOnInit() del PublicLayoutComponent
+ngOnInit(): void {
+  // 1. Valor inmediato desde el service (gracias al resolver que ya lo cargó)
+  this.tienda = this.tiendaService.currentTiendaValue;
 
-    // Suscripción al número de items en el carrito
-    this.carritoService.itemsCount$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(count => {
-        this.totalItemsCarrito = count;
-      });
-
-    this.onScroll();
+  if (this.tienda?.nombre) {
+    this.titleService.setTitle(`${this.tienda.nombre} - Tienda Online`);
+  } else {
+    this.titleService.setTitle('Tienda Online');
   }
+
+  // 2. Suscripción para cambios futuros (por si se actualiza dinámicamente)
+  this.tiendaService.currentTienda$
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(tienda => {
+      this.tienda = tienda;
+      if (tienda?.nombre) {
+        this.titleService.setTitle(`${tienda.nombre} - Tienda Online`);
+      } else {
+        this.titleService.setTitle('Tienda Online');
+      }
+    });
+
+  // Carrito
+  this.carritoService.itemsCount$
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(count => {
+      this.totalItemsCarrito = count;
+    });
+
+  this.onScroll();
+}
 
   @HostListener('window:scroll')
   onScroll(): void {

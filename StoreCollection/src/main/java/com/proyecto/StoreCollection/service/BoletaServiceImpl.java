@@ -22,7 +22,7 @@ public class BoletaServiceImpl implements BoletaService {
 
     private final BoletaRepository boletaRepository;
     private final ProductoVarianteRepository varianteRepository;
-
+    private final PdfService pdfService;
     // ───────────────────────────────────────────────────────────────
     // Listados paginados
     // ───────────────────────────────────────────────────────────────
@@ -101,7 +101,7 @@ public class BoletaServiceImpl implements BoletaService {
     }
 
     // ───────────────────────────────────────────────────────────────
-    // Cambio de estado + deducción de stock
+    // Cambio de estado + gestión de stock
     // ───────────────────────────────────────────────────────────────
 
     @Override
@@ -112,16 +112,20 @@ public class BoletaServiceImpl implements BoletaService {
 
         verificarPermisosSobreBoleta(boleta);
 
+        // Validar estado recibido
         Boleta.EstadoBoleta nuevoEstado;
         try {
-            nuevoEstado = Boleta.EstadoBoleta.valueOf(estadoStr.toUpperCase());
+            nuevoEstado = Boleta.EstadoBoleta.valueOf(estadoStr.toUpperCase().trim());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Estado inválido: " + estadoStr);
+            throw new IllegalArgumentException(
+                    "Estado inválido: '" + estadoStr + "'. Los estados permitidos son: PENDIENTE, ATENDIDA, CANCELADA");
         }
 
-        // Solo deducir stock si pasa de PENDIENTE → ATENDIDA
-        if (nuevoEstado == Boleta.EstadoBoleta.ATENDIDA &&
-                boleta.getEstado() == Boleta.EstadoBoleta.PENDIENTE) {
+        Boleta.EstadoBoleta estadoAnterior = boleta.getEstado();
+
+        // 1. Deducción de stock: solo al pasar de PENDIENTE → ATENDIDA
+        if (nuevoEstado == Boleta.EstadoBoleta.ATENDIDA
+                && estadoAnterior == Boleta.EstadoBoleta.PENDIENTE) {
 
             for (BoletaDetalle detalle : boleta.getDetalles()) {
                 ProductoVariante variante = detalle.getVariante();
@@ -129,8 +133,9 @@ public class BoletaServiceImpl implements BoletaService {
 
                 if (stockActual < detalle.getCantidad()) {
                     throw new IllegalStateException(
-                            "Stock insuficiente para " + variante.getProducto().getNombre() +
-                                    " (SKU: " + variante.getSku() + ")");
+                            "Stock insuficiente para el producto '" + variante.getProducto().getNombre() +
+                                    "' (SKU: " + variante.getSku() + "). Disponible: " + stockActual +
+                                    ", requerido: " + detalle.getCantidad());
                 }
 
                 variante.setStock(stockActual - detalle.getCantidad());
@@ -138,21 +143,60 @@ public class BoletaServiceImpl implements BoletaService {
             }
         }
 
+        // 2. Devolución de stock: solo al pasar de ATENDIDA → CANCELADA
+        if (nuevoEstado == Boleta.EstadoBoleta.CANCELADA
+                && estadoAnterior == Boleta.EstadoBoleta.ATENDIDA) {
+
+            for (BoletaDetalle detalle : boleta.getDetalles()) {
+                ProductoVariante variante = detalle.getVariante();
+                int stockActual = variante.getStock();
+
+                variante.setStock(stockActual + detalle.getCantidad());
+                varianteRepository.save(variante);
+            }
+        }
+
+        // Opcional: prevenir cambios ilógicos (ej. de CANCELADA a ATENDIDA)
+        // Puedes agregar más reglas según tu flujo de negocio
+        /*
+        if (estadoAnterior == Boleta.EstadoBoleta.CANCELADA && nuevoEstado == Boleta.EstadoBoleta.ATENDIDA) {
+            throw new IllegalStateException("No se puede atender una boleta ya cancelada");
+        }
+        */
+
         boleta.setEstado(nuevoEstado);
-        return toResponse(boletaRepository.save(boleta));
+        Boleta boletaGuardada = boletaRepository.save(boleta);
+        BoletaResponse response = toResponse(boletaGuardada);
+
+        if (nuevoEstado == Boleta.EstadoBoleta.ATENDIDA
+                && estadoAnterior == Boleta.EstadoBoleta.PENDIENTE) {  // ← Usa la variable que ya tienes
+
+            try {
+                byte[] pdfBytes = pdfService.generarFacturaPdf(response);
+                System.out.println("PDF generado para boleta " + boletaGuardada.getId());
+                // En el futuro puedes guardar el PDF en Cloudinary, base de datos, etc.
+            } catch (Exception e) {
+                // No fallar la transacción por error en PDF
+                e.printStackTrace();
+            }
+        }
+
+        return response;
     }
 
     // ───────────────────────────────────────────────────────────────
     // Mapeadores DTO
     // ───────────────────────────────────────────────────────────────
+
     private BoletaResponse toResponse(Boleta boleta) {
         BoletaResponse response = new BoletaResponse();
         response.setId(boleta.getId());
         response.setSessionId(boleta.getSessionId());
         response.setTiendaId(boleta.getTienda().getId());
-        response.setTotal(boleta.getTotal());           // BigDecimal directo
+        response.setTotal(boleta.getTotal());
         response.setFecha(boleta.getFecha().toString());
         response.setEstado(boleta.getEstado().name());
+        response.setTiendaNombre(boleta.getTienda().getNombre());
 
         if (boleta.getUser() != null) {
             response.setUserId(boleta.getUser().getId());
@@ -172,8 +216,8 @@ public class BoletaServiceImpl implements BoletaService {
         dto.setId(detalle.getId());
         dto.setVarianteId(detalle.getVariante().getId());
         dto.setCantidad(detalle.getCantidad());
-        dto.setPrecioUnitario(detalle.getPrecioUnitario());  // BigDecimal directo
-        dto.setSubtotal(detalle.getSubtotal());              // BigDecimal directo
+        dto.setPrecioUnitario(detalle.getPrecioUnitario());
+        dto.setSubtotal(detalle.getSubtotal());
 
         ProductoVariante variante = detalle.getVariante();
         dto.setNombreProducto(variante.getProducto().getNombre());

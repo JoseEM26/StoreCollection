@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 
 import { CarritoService } from '../../service/carrito.service';
@@ -163,6 +163,19 @@ export class CarritoComponent implements OnInit, OnDestroy {
 
     if (this.isProcessingOnline || this.isProcessingWhatsapp) return;
 
+    // Generar el URL ANTES de la confirmación para minimizar el delay y reducir bloqueo de popup
+    this.isProcessingWhatsapp = true;
+    let whatsappUrl: string;
+    try {
+      whatsappUrl = await firstValueFrom(this.carritoService.checkoutWhatsapp(this.tiendaId));
+    } catch (err) {
+      console.error('Error generando URL WhatsApp:', err);
+      this.showError('No pudimos generar el enlace de WhatsApp');
+      this.isProcessingWhatsapp = false;
+      return;
+    }
+    this.isProcessingWhatsapp = false;
+
     const { isConfirmed } = await Swal.fire({
       title: '¿Enviar por WhatsApp?',
       text: 'Se abrirá el chat con la tienda',
@@ -177,37 +190,28 @@ export class CarritoComponent implements OnInit, OnDestroy {
 
     this.isProcessingWhatsapp = true;
 
-    this.carritoService.checkoutWhatsapp(this.tiendaId).subscribe({
-      next: (whatsappUrl: string) => {
-        const newWindow = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    const newWindow = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
 
-        if (newWindow) {
-          newWindow.focus();
-          this.showSuccess('¡Abriendo WhatsApp!', 'Redirigiendo al chat...');
-        } else {
-          // Fallback con enlace clicable
-          Swal.fire({
-            title: 'No se pudo abrir automáticamente',
-            html: `
-              El navegador bloqueó la ventana.<br><br>
-              <strong>Haz clic aquí:</strong><br>
-              <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" style="color:#25d366; font-weight:600; word-break:break-all;">
-                Abrir chat de WhatsApp →
-              </a>
-            `,
-            showConfirmButton: false,
-            footer: '<small>Recomendación: permite ventanas emergentes</small>'
-          });
-        }
-      },
-      error: (err) => {
-        console.error('Error checkout whatsapp:', err);
-        this.showError('No pudimos generar el enlace de WhatsApp');
-      },
-      complete: () => {
-        this.isProcessingWhatsapp = false;
-      }
-    });
+    if (newWindow) {
+      newWindow.focus();
+      this.showSuccess('¡Abriendo WhatsApp!', 'Redirigiendo al chat...');
+    } else {
+      // Fallback con enlace clicable
+      Swal.fire({
+        title: 'No se pudo abrir automáticamente',
+        html: `
+          El navegador bloqueó la ventana.<br><br>
+          <strong>Haz clic aquí:</strong><br>
+          <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" style="color:#25d366; font-weight:600; word-break:break-all;">
+            Abrir chat de WhatsApp →
+          </a>
+        `,
+        showConfirmButton: false,
+        footer: '<small>Recomendación: permite ventanas emergentes</small>'
+      });
+    }
+
+    this.isProcessingWhatsapp = false;
   }
 
   ngOnDestroy(): void {

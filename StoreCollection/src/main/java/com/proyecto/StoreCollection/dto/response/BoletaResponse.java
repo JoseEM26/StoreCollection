@@ -10,6 +10,7 @@ public class BoletaResponse {
     private Integer id;
     private String sessionId;
     private Integer userId;
+    private String tiendaNombre;
     private Integer tiendaId;
     private BigDecimal total;
     private String fecha;
