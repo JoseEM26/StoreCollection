@@ -80,6 +80,9 @@ export class BoletaService {
     return this.actualizarEstado(id, 'CANCELADA');
   }
 
+volverAPendiente(id: number): Observable<BoletaResponse> {
+  return this.actualizarEstado(id, 'PENDIENTE');
+}
   // =============================================
   // DESCARGA DE FACTURA PDF
   // =============================================

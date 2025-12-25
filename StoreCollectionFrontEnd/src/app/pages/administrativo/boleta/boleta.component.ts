@@ -1,8 +1,10 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core'; // ← Agrega ChangeDetectorRef
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BoletaService } from '../../../service/boleta.service';
 import { BoletaPageResponse, BoletaResponse } from '../../../model/boleta.model';
+import Swal from 'sweetalert2';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-boleta',
@@ -26,7 +28,7 @@ export class BoletaComponent implements OnInit {
 
   constructor(
     private boletaService: BoletaService,
-    private cdr: ChangeDetectorRef  // ← Inyectamos para forzar detección de cambios
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -47,13 +49,12 @@ export class BoletaComponent implements OnInit {
           this.isLoading = false;
         },
         error: () => {
-          this.errorMessage = 'Error al cargar los pedidos. Intenta nuevamente.';
+          this.errorMessage = 'No se pudieron cargar los pedidos. Intenta nuevamente.';
           this.isLoading = false;
         }
       });
   }
 
-  // Paginación (sin cambios)
   paginaAnterior(): void {
     if (this.currentPage > 0) this.cargarBoletas(this.currentPage - 1);
   }
@@ -75,52 +76,80 @@ export class BoletaComponent implements OnInit {
   }
 
   verDetalle(boleta: BoletaResponse): void {
-    this.boletaSeleccionada = { ...boleta }; // ← Clonamos para evitar problemas de referencia
+    this.boletaSeleccionada = { ...boleta };
   }
 
   cerrarDetalle(): void {
     this.boletaSeleccionada = null;
   }
 
-  // === CAMBIO CLAVE: Actualizar estado y forzar UI ===
-  cambiarEstado(boleta: BoletaResponse, nuevoEstado: 'ATENDIDA' | 'CANCELADA'): void {
-    const accion = nuevoEstado === 'ATENDIDA' ? 'atender' : 'cancelar';
-    if (!confirm(`¿Estás seguro de que deseas ${accion} el pedido #${boleta.id}?`)) return;
+  async cambiarEstado(boleta: BoletaResponse, nuevoEstado: 'PENDIENTE' | 'ATENDIDA' | 'CANCELADA'): Promise<void> {
+    const textos = {
+      PENDIENTE: 'volver a pendiente',
+      ATENDIDA: 'marcar como atendido',
+      CANCELADA: 'cancelar'
+    };
+
+    const result = await Swal.fire({
+      title: '¿Confirmar acción?',
+      text: `Vas a ${textos[nuevoEstado]} el pedido #${boleta.id}`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, continuar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33'
+    });
+
+    if (!result.isConfirmed) return;
 
     this.isLoading = true;
 
-    const serviceCall = nuevoEstado === 'ATENDIDA'
-      ? this.boletaService.marcarComoAtendida(boleta.id)
-      : this.boletaService.cancelarBoleta(boleta.id);
+    let serviceCall: Observable<BoletaResponse>;
+
+    switch (nuevoEstado) {
+      case 'ATENDIDA':
+        serviceCall = this.boletaService.marcarComoAtendida(boleta.id);
+        break;
+      case 'CANCELADA':
+        serviceCall = this.boletaService.cancelarBoleta(boleta.id);
+        break;
+      case 'PENDIENTE':
+        serviceCall = this.boletaService.volverAPendiente(boleta.id);
+        break;
+      default:
+        this.isLoading = false;
+        return;
+    }
 
     serviceCall.subscribe({
       next: (actualizada) => {
-        // Actualizar en la lista principal
         const index = this.boletas.findIndex(b => b.id === actualizada.id);
-        if (index !== -1) {
-          this.boletas[index] = actualizada;
-        }
+        if (index !== -1) this.boletas[index] = actualizada;
 
-        // Actualizar el modal si está abierto
         if (this.boletaSeleccionada?.id === actualizada.id) {
           this.boletaSeleccionada = actualizada;
         }
 
-        this.isLoading = false;
-
-        // Forzar detección de cambios (clave para que aparezca el botón de PDF)
         this.cdr.detectChanges();
-
-        this.mostrarExito(`Pedido #${actualizada.id} ${nuevoEstado === 'ATENDIDA' ? 'atendido' : 'cancelado'} correctamente.`);
-      },
-      error: (err) => {
         this.isLoading = false;
-        this.mostrarError(`No se pudo ${accion} el pedido. ${err.message || 'Intenta de nuevo.'}`);
-      }
+
+        Swal.fire('¡Éxito!', `El pedido #${actualizada.id} ha sido actualizado.`, 'success');
+      },
+    error: (err) => {
+  this.isLoading = false;
+  const mensajeError = err.message ?? 'No se pudo cambiar el estado del pedido.';
+  this.errorMessage = mensajeError;
+  Swal.fire({
+    title: 'Error',
+    text: mensajeError,
+    icon: 'error',
+    confirmButtonText: 'Entendido'
+  });
+}
     });
   }
 
-  // === DESCARGA DE PDF (sin file-saver) ===
   descargarFactura(id: number): void {
     this.boletaService.descargarFacturaPdf(id).subscribe({
       next: (blob: Blob) => {
@@ -134,15 +163,14 @@ export class BoletaComponent implements OnInit {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
 
-        this.mostrarExito(`¡Factura del pedido #${id} descargada correctamente!`);
+        Swal.fire('¡Descargado!', 'La factura se ha guardado correctamente.', 'success');
       },
       error: (err: Error) => {
-        this.mostrarError(err.message || 'No se pudo descargar la factura.');
+        Swal.fire('Error', err.message || 'No se pudo generar la factura.', 'error');
       }
     });
   }
 
-  // Helpers UI
   getEstadoBadge(estado: string): { text: string; class: string } {
     return {
       'PENDIENTE': { text: 'Pendiente', class: 'bg-warning text-dark' },
@@ -163,13 +191,5 @@ export class BoletaComponent implements OnInit {
 
   getTotalItems(detalles: any[] = []): number {
     return detalles.reduce((sum, item) => sum + item.cantidad, 0);
-  }
-
-  mostrarExito(msg: string) {
-    alert(msg);
-  }
-
-  mostrarError(msg: string) {
-    alert('Error: ' + msg);
   }
 }

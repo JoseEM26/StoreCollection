@@ -123,60 +123,42 @@ public class BoletaServiceImpl implements BoletaService {
 
         Boleta.EstadoBoleta estadoAnterior = boleta.getEstado();
 
-        // 1. Deducción de stock: solo al pasar de PENDIENTE → ATENDIDA
+        // === GESTIÓN DE STOCK ===
+        // Caso 1: Se atiende por primera vez (PENDIENTE → ATENDIDA)
         if (nuevoEstado == Boleta.EstadoBoleta.ATENDIDA
                 && estadoAnterior == Boleta.EstadoBoleta.PENDIENTE) {
 
-            for (BoletaDetalle detalle : boleta.getDetalles()) {
-                ProductoVariante variante = detalle.getVariante();
-                int stockActual = variante.getStock();
-
-                if (stockActual < detalle.getCantidad()) {
-                    throw new IllegalStateException(
-                            "Stock insuficiente para el producto '" + variante.getProducto().getNombre() +
-                                    "' (SKU: " + variante.getSku() + "). Disponible: " + stockActual +
-                                    ", requerido: " + detalle.getCantidad());
-                }
-
-                variante.setStock(stockActual - detalle.getCantidad());
-                varianteRepository.save(variante);
-            }
+            descontarStock(boleta);
         }
 
-        // 2. Devolución de stock: solo al pasar de ATENDIDA → CANCELADA
-        if (nuevoEstado == Boleta.EstadoBoleta.CANCELADA
-                && estadoAnterior == Boleta.EstadoBoleta.ATENDIDA) {
+        // Caso 2: Se devuelve al inventario (ATENDIDA → PENDIENTE o ATENDIDA → CANCELADA)
+        else if (estadoAnterior == Boleta.EstadoBoleta.ATENDIDA
+                && (nuevoEstado == Boleta.EstadoBoleta.PENDIENTE || nuevoEstado == Boleta.EstadoBoleta.CANCELADA)) {
 
-            for (BoletaDetalle detalle : boleta.getDetalles()) {
-                ProductoVariante variante = detalle.getVariante();
-                int stockActual = variante.getStock();
-
-                variante.setStock(stockActual + detalle.getCantidad());
-                varianteRepository.save(variante);
-            }
+            devolverStock(boleta);
         }
 
-        // Opcional: prevenir cambios ilógicos (ej. de CANCELADA a ATENDIDA)
-        // Puedes agregar más reglas según tu flujo de negocio
-        /*
-        if (estadoAnterior == Boleta.EstadoBoleta.CANCELADA && nuevoEstado == Boleta.EstadoBoleta.ATENDIDA) {
-            throw new IllegalStateException("No se puede atender una boleta ya cancelada");
-        }
-        */
+        // Caso 3: Se atiende nuevamente después de haber sido cancelada o devuelta (CANCELADA/PENDIENTE → ATENDIDA)
+        else if (nuevoEstado == Boleta.EstadoBoleta.ATENDIDA
+                && (estadoAnterior == Boleta.EstadoBoleta.CANCELADA || estadoAnterior == Boleta.EstadoBoleta.PENDIENTE)) {
 
+            // Si venía de CANCELADA, el stock ya estaba devuelto → descontamos de nuevo
+            descontarStock(boleta);
+        }
+
+        // Otros casos (PENDIENTE → CANCELADA, CANCELADA → PENDIENTE, etc.): no tocar stock
+
+        // Actualizar estado
         boleta.setEstado(nuevoEstado);
         Boleta boletaGuardada = boletaRepository.save(boleta);
         BoletaResponse response = toResponse(boletaGuardada);
 
-        if (nuevoEstado == Boleta.EstadoBoleta.ATENDIDA
-                && estadoAnterior == Boleta.EstadoBoleta.PENDIENTE) {  // ← Usa la variable que ya tienes
-
+        // Generar PDF solo al pasar a ATENDIDA por primera vez
+        if (nuevoEstado == Boleta.EstadoBoleta.ATENDIDA && estadoAnterior == Boleta.EstadoBoleta.PENDIENTE) {
             try {
                 byte[] pdfBytes = pdfService.generarFacturaPdf(response);
                 System.out.println("PDF generado para boleta " + boletaGuardada.getId());
-                // En el futuro puedes guardar el PDF en Cloudinary, base de datos, etc.
             } catch (Exception e) {
-                // No fallar la transacción por error en PDF
                 e.printStackTrace();
             }
         }
@@ -184,6 +166,31 @@ public class BoletaServiceImpl implements BoletaService {
         return response;
     }
 
+    // === MÉTODOS AUXILIARES PARA REUTILIZAR LÓGICA ===
+    private void descontarStock(Boleta boleta) {
+        for (BoletaDetalle detalle : boleta.getDetalles()) {
+            ProductoVariante variante = detalle.getVariante();
+            int stockActual = variante.getStock();
+
+            if (stockActual < detalle.getCantidad()) {
+                throw new IllegalStateException(
+                        "Stock insuficiente para '" + variante.getProducto().getNombre() +
+                                "' (SKU: " + variante.getSku() + "). Disponible: " + stockActual +
+                                ", requerido: " + detalle.getCantidad());
+            }
+
+            variante.setStock(stockActual - detalle.getCantidad());
+            varianteRepository.save(variante);
+        }
+    }
+
+    private void devolverStock(Boleta boleta) {
+        for (BoletaDetalle detalle : boleta.getDetalles()) {
+            ProductoVariante variante = detalle.getVariante();
+            variante.setStock(variante.getStock() + detalle.getCantidad());
+            varianteRepository.save(variante);
+        }
+    }
     // ───────────────────────────────────────────────────────────────
     // Mapeadores DTO
     // ───────────────────────────────────────────────────────────────
