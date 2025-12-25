@@ -31,3 +31,15 @@ export interface BoletaDetalleResponse {
   imagenUrl: string | null;
   atributos: AtributoResponse[] | null;  // Reutiliza de carrito.model
 }
+
+export interface BoletaPageResponse {
+  content: BoletaResponse[];         // lista de boletas
+  totalElements: number;             // total de registros
+  totalPages: number;                // total de páginas
+  number: number;                    // página actual (0-based)
+  size: number;                      // tamaño de página
+  first: boolean;
+  last: boolean;
+  numberOfElements: number;
+  empty: boolean;
+}

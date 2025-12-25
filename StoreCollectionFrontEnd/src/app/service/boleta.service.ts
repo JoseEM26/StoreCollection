@@ -1,46 +1,26 @@
-// src/app/service/boleta.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environment';
-import { BoletaResponse } from '../model/boleta.model';
-
-// Interfaz para la respuesta paginada (muy común en Spring Boot Page<T>)
-export interface BoletaPageResponse {
-  content: BoletaResponse[];         // lista de boletas
-  totalElements: number;             // total de registros
-  totalPages: number;                // total de páginas
-  number: number;                    // página actual (0-based)
-  size: number;                      // tamaño de página
-  first: boolean;
-  last: boolean;
-  numberOfElements: number;
-  empty: boolean;
-}
+import { BoletaPageResponse, BoletaResponse } from '../model/boleta.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BoletaService {
-  private apiUrl = `${environment.apiUrl}/api/owner/boletas`; // Ruta base del controlador owner
+  private apiUrl = `${environment.apiUrl}/api/owner/boletas`;
 
   constructor(private http: HttpClient) {}
 
-  /**
-   * Obtiene boletas paginadas (para admin/owner)
-   * @param page Número de página (0-based)
-   * @param size Tamaño de página
-   * @param sort Ordenamiento (ej: 'fecha,desc')
-   * @param estado Filtro opcional por estado
-   * @param tiendaId Filtro opcional por tienda (multi-tenant)
-   */
+  // =============================================
+  // Listado paginado (admin / owner)
+  // =============================================
   getBoletasPaginadas(
     page: number = 0,
     size: number = 20,
     sort: string = 'fecha,desc',
-    estado?: 'PENDIENTE' | 'ATENDIDA' | 'CANCELADA',
-    tiendaId?: number
+    estado?: 'PENDIENTE' | 'ATENDIDA' | 'CANCELADA'
   ): Observable<BoletaPageResponse> {
     let params = new HttpParams()
       .set('page', page.toString())
@@ -51,56 +31,91 @@ export class BoletaService {
       params = params.set('estado', estado);
     }
 
-    if (tiendaId !== undefined && tiendaId !== null) {
-      params = params.set('tiendaId', tiendaId.toString());
-    }
-
-    // Depuración (puedes quitar en producción)
-    console.log('[BoletaService] Solicitando boletas con params:', params.toString());
-
     return this.http.get<BoletaPageResponse>(`${this.apiUrl}/admin-list`, { params }).pipe(
-      map(response => {
-        // Opcional: normalizar datos si es necesario
-        return response;
-      }),
       catchError(error => {
-        console.error('[BoletaService] Error al obtener boletas paginadas:', error);
-        return throwError(() => new Error('No se pudieron cargar las boletas. Intenta nuevamente más tarde.'));
+        console.error('[BoletaService] Error al cargar lista de boletas:', error);
+        return throwError(() => new Error('Error al cargar las boletas. Inténtalo de nuevo.'));
       })
     );
   }
-public actualizarEstado(id: number, estado: 'PENDIENTE' | 'ATENDIDA' | 'CANCELADA'): Observable<BoletaResponse> {
-  console.log(`[BoletaService] Actualizando boleta #${id} → estado: ${estado}`);
 
-  return this.http.put<BoletaResponse>(`${this.apiUrl}/${id}/estado`, { estado }).pipe(
-    catchError(error => {
-      console.error(`[BoletaService] Error actualizando estado de boleta #${id}:`, error);
-      return throwError(() => new Error(`No se pudo cambiar el estado a ${estado}`));
-    })
-  );
-}
-
-
-  /**
-   * Obtiene el detalle de una boleta específica por su ID
-   */
+  // =============================================
+  // Detalle de boleta
+  // =============================================
   getBoletaPorId(id: number): Observable<BoletaResponse> {
     return this.http.get<BoletaResponse>(`${this.apiUrl}/${id}`).pipe(
       catchError(error => {
         console.error(`[BoletaService] Error al obtener boleta #${id}:`, error);
-        return throwError(() => new Error('No se pudo cargar el detalle de la boleta'));
+        return throwError(() => new Error('No se pudo cargar el detalle de la boleta.'));
       })
     );
   }
 
-  
+  // =============================================
+  // Cambio de estado
+  // =============================================
+  private actualizarEstado(id: number, estado: 'PENDIENTE' | 'ATENDIDA' | 'CANCELADA'): Observable<BoletaResponse> {
+    const body = { estado };
+    console.log(`[BoletaService] Cambiando estado de boleta #${id} → ${estado}`);
 
- // Métodos de conveniencia (pueden seguir siendo públicos)
-marcarComoAtendida(id: number): Observable<BoletaResponse> {
-  return this.actualizarEstado(id, 'ATENDIDA');
-}
+    return this.http.put<BoletaResponse>(`${this.apiUrl}/${id}/estado`, body).pipe(
+      catchError(error => {
+        console.error(`[BoletaService] Error al actualizar estado de boleta #${id}:`, error);
+        let mensaje = 'No se pudo actualizar el estado de la boleta.';
+        if (error.status === 400) {
+          mensaje = 'Datos inválidos al cambiar el estado.';
+        } else if (error.status === 403) {
+          mensaje = 'No tienes permiso para realizar esta acción.';
+        }
+        return throwError(() => new Error(mensaje));
+      })
+    );
+  }
 
-cancelarBoleta(id: number): Observable<BoletaResponse> {
-  return this.actualizarEstado(id, 'CANCELADA');
-}
+  marcarComoAtendida(id: number): Observable<BoletaResponse> {
+    return this.actualizarEstado(id, 'ATENDIDA');
+  }
+
+  cancelarBoleta(id: number): Observable<BoletaResponse> {
+    return this.actualizarEstado(id, 'CANCELADA');
+  }
+
+  // =============================================
+  // DESCARGA DE FACTURA PDF
+  // =============================================
+  descargarFacturaPdf(id: number): Observable<Blob> {
+    console.log(`[BoletaService] Solicitando descarga de factura PDF para boleta #${id}`);
+
+    const headers = new HttpHeaders({
+      'Accept': 'application/pdf'
+    });
+
+    return this.http.get(`${this.apiUrl}/${id}/factura-pdf`, {
+      responseType: 'blob',  // ¡CRÍTICO! Para archivos binarios
+      headers,
+      observe: 'response'
+    }).pipe(
+      map(response => {
+        if (response.status === 404) {
+          throw new Error('La factura aún no está disponible. La boleta debe estar en estado ATENDIDA.');
+        }
+        if (!response.body || response.body.size === 0) {
+          throw new Error('El PDF está vacío o no se generó correctamente.');
+        }
+        return response.body as Blob;
+      }),
+      catchError(error => {
+        let mensaje = 'Error al descargar la factura.';
+        if (error.status === 404) {
+          mensaje = 'Factura no disponible: la boleta debe estar ATENDIDA.';
+        } else if (error.status === 403) {
+          mensaje = 'No tienes permiso para descargar esta factura.';
+        } else if (error.status >= 500) {
+          mensaje = 'Error en el servidor al generar la factura.';
+        }
+        console.error('[BoletaService] Error descarga PDF:', error);
+        return throwError(() => new Error(mensaje));
+      })
+    );
+  }
 }
