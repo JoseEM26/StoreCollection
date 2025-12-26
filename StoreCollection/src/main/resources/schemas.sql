@@ -132,16 +132,40 @@ CREATE TABLE carrito (
 
 CREATE TABLE boleta (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    session_id VARCHAR(100),  -- Para asociar con carrito si es guest
-    user_id INT,              -- Si el usuario está logueado (opcional)
-    tienda_id INT NOT NULL,   -- Para multi-tenant
+    session_id VARCHAR(100),              -- Para asociar con carrito si es guest
+    user_id INT,                          -- Opcional (si está logueado)
+    tienda_id INT NOT NULL,               -- Multi-tenant
+
     total DECIMAL(10,2) NOT NULL,
     fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
-    -- ENUM corregido: coincide exactamente con el enum Java (mayúsculas)
+
     estado ENUM('PENDIENTE', 'ATENDIDA', 'CANCELADA') NOT NULL DEFAULT 'PENDIENTE',
-    FOREIGN KEY (user_id) REFERENCES usuario(id) ON DELETE SET NULL,
-    FOREIGN KEY (tienda_id) REFERENCES tienda(id) ON DELETE CASCADE
+
+    -- Nuevos campos de comprador y envío
+    comprador_nombre    VARCHAR(100) NOT NULL,
+    comprador_email     VARCHAR(120) NOT NULL,
+    comprador_telefono  VARCHAR(20) DEFAULT NULL,
+
+    direccion_envio     VARCHAR(150) NOT NULL,
+    referencia_envio    VARCHAR(100) DEFAULT NULL,
+    distrito            VARCHAR(60) NOT NULL,
+    provincia           VARCHAR(60) NOT NULL,
+    departamento        VARCHAR(40) NOT NULL,
+    codigo_postal       VARCHAR(10) DEFAULT NULL,
+
+    tipo_entrega ENUM('DOMICILIO', 'RECOGIDA_EN_TIENDA', 'AGENCIA')
+        NOT NULL DEFAULT 'DOMICILIO',
+
+    -- Claves foráneas
+    FOREIGN KEY (user_id)   REFERENCES usuario(id)   ON DELETE SET NULL,
+    FOREIGN KEY (tienda_id) REFERENCES tienda(id)    ON DELETE CASCADE,
+
+    -- Índices recomendados (mejoran consultas frecuentes)
+    INDEX idx_tienda_estado (tienda_id, estado),
+    INDEX idx_session_id (session_id),
+    INDEX idx_fecha (fecha)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
 CREATE TABLE boleta_detalle (
     id INT AUTO_INCREMENT PRIMARY KEY,

@@ -5,7 +5,26 @@ import { AtributoResponse } from './carrito.model';
 export interface BoletaRequest {
   sessionId: string;
   tiendaId: number;
-  userId?: number | null;  // Compatible con Integer null del backend
+  userId?: number | null;  // opcional
+
+  // Datos del comprador (obligatorios)
+  compradorNombre: string;
+  compradorEmail: string;
+  compradorTelefono?: string;  // opcional
+
+  // Datos de envío (obligatorios excepto algunos)
+  direccionEnvio: string;
+  referenciaEnvio?: string;
+  distrito: string;
+  provincia: string;
+  departamento: string;
+  codigoPostal?: string;
+
+  // Tipo de entrega
+  tipoEntrega: 'DOMICILIO' | 'RECOGIDA_EN_TIENDA' | 'AGENCIA';
+
+  // Opcional: método de pago (si lo implementas después)
+  metodoPago?: string;
 }
 
 export interface BoletaResponse {
@@ -13,9 +32,24 @@ export interface BoletaResponse {
   sessionId: string;
   userId: number | null;
   tiendaId: number;
-  total: number;  // BigDecimal → number en TS
+  total: number;
   fecha: string;
   estado: string;
+
+  // Nuevos campos agregados
+  compradorNombre: string;
+  compradorEmail: string;
+  compradorTelefono?: string;
+
+  direccionEnvio: string;
+  referenciaEnvio?: string;
+  distrito: string;
+  provincia: string;
+  departamento: string;
+  codigoPostal?: string;
+
+  tipoEntrega: string;  // 'DOMICILIO' | etc...
+
   detalles: BoletaDetalleResponse[];
 }
 // src/app/model/boleta-detalle.model.ts (agregado para completar BoletaResponse, basado en backend)

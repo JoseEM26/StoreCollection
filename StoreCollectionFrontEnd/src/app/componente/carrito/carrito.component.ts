@@ -6,11 +6,12 @@ import Swal from 'sweetalert2';
 
 import { CarritoService } from '../../service/carrito.service';
 import { CarritoItemResponse } from '../../model/carrito.model';
+import { CheckoutFormComponent } from "./checkout-form/checkout-form.component";
 
 @Component({
   selector: 'app-carrito',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, CheckoutFormComponent],
   templateUrl: './carrito.component.html',
   styleUrl: './carrito.component.css'
 })
@@ -23,11 +24,13 @@ export class CarritoComponent implements OnInit, OnDestroy {
   totalPrecio = 0;
   loading = true;
 
-  // Estados de carga para evitar doble click
   isProcessingOnline = false;
   isProcessingWhatsapp = false;
 
-  tiendaId: number = 1; // TODO: obtener dinámicamente
+  tiendaId: number = 1; // TODO: obtener dinámicamente (desde servicio o store)
+
+  // Control del modal de checkout
+  showCheckoutModal = false;
 
   ngOnInit(): void {
     this.carritoService.carritoItems$
@@ -44,25 +47,14 @@ export class CarritoComponent implements OnInit, OnDestroy {
 
   // ── Métodos auxiliares ──────────────────────────────────────────
   private showError(message: string = 'Ocurrió un error inesperado'): void {
-    Swal.fire({
-      icon: 'error',
-      title: '¡Ups!',
-      text: message,
-      timer: 3500
-    });
+    Swal.fire({ icon: 'error', title: '¡Ups!', text: message, timer: 3500 });
   }
 
   private showSuccess(title: string, message: string): void {
-    Swal.fire({
-      icon: 'success',
-      title,
-      text: message,
-      timer: 3500,
-      showConfirmButton: false
-    });
+    Swal.fire({ icon: 'success', title, text: message, timer: 3500, showConfirmButton: false });
   }
 
-  // ── Acciones ────────────────────────────────────────────────────
+  // ── Acciones del carrito ────────────────────────────────────────
   async eliminarItem(itemId: number): Promise<void> {
     const { isConfirmed } = await Swal.fire({
       title: '¿Eliminar producto?',
@@ -118,7 +110,8 @@ export class CarritoComponent implements OnInit, OnDestroy {
     });
   }
 
-  async checkoutOnline(): Promise<void> {
+  // ── Checkout Online con formulario modal ─────────────────────────
+  abrirFormularioCheckout(): void {
     if (this.items.length === 0) {
       Swal.fire({ icon: 'info', title: 'Carrito vacío', timer: 2200 });
       return;
@@ -126,28 +119,24 @@ export class CarritoComponent implements OnInit, OnDestroy {
 
     if (this.isProcessingOnline || this.isProcessingWhatsapp) return;
 
-    const { isConfirmed } = await Swal.fire({
-      title: '¿Confirmar pedido online?',
-      text: 'Se registrará y te contactaremos pronto',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#198754',
-      confirmButtonText: 'Sí, confirmar',
-      cancelButtonText: 'Cancelar'
-    });
+    this.showCheckoutModal = true;
+  }
 
-    if (!isConfirmed) return;
+  cerrarFormularioCheckout(): void {
+    this.showCheckoutModal = false;
+  }
 
+  procesarCheckout(datosComprador: any): void {
+    this.showCheckoutModal = false;
     this.isProcessingOnline = true;
 
-    this.carritoService.checkoutOnline(this.tiendaId).subscribe({
+    this.carritoService.checkoutOnline(this.tiendaId, datosComprador).subscribe({
       next: (boleta) => {
         this.showSuccess('¡Pedido registrado!', `Número: #${boleta.id}\nTe contactaremos pronto`);
-        // El servicio ya limpia el carrito vía tap()
       },
       error: (err) => {
         console.error('Error checkout online:', err);
-        this.showError('No pudimos procesar el pedido');
+        this.showError(err.message || 'No pudimos procesar el pedido');
       },
       complete: () => {
         this.isProcessingOnline = false;
@@ -155,6 +144,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
     });
   }
 
+  // ── Checkout WhatsApp (con datos de prueba por ahora) ────────────
   async checkoutWhatsapp(): Promise<void> {
     if (this.items.length === 0) {
       Swal.fire({ icon: 'info', title: 'Carrito vacío', timer: 2200 });
@@ -163,18 +153,32 @@ export class CarritoComponent implements OnInit, OnDestroy {
 
     if (this.isProcessingOnline || this.isProcessingWhatsapp) return;
 
-    // Generar el URL ANTES de la confirmación para minimizar el delay y reducir bloqueo de popup
+    const datosComprador = {
+      compradorNombre: 'Cliente de Prueba',
+      compradorEmail: 'prueba@ejemplo.com',
+      compradorTelefono: '+51999123456',
+      direccionEnvio: 'Av. Prueba 123, Miraflores',
+      referenciaEnvio: 'Frente al parque',
+      distrito: 'Miraflores',
+      provincia: 'Lima',
+      departamento: 'Lima',
+      codigoPostal: '15074',
+      tipoEntrega: 'DOMICILIO' as const
+    };
+
     this.isProcessingWhatsapp = true;
+
     let whatsappUrl: string;
     try {
-      whatsappUrl = await firstValueFrom(this.carritoService.checkoutWhatsapp(this.tiendaId));
-    } catch (err) {
+      whatsappUrl = await firstValueFrom(
+        this.carritoService.checkoutWhatsapp(this.tiendaId, datosComprador)
+      );
+    } catch (err: any) {
       console.error('Error generando URL WhatsApp:', err);
       this.showError('No pudimos generar el enlace de WhatsApp');
       this.isProcessingWhatsapp = false;
       return;
     }
-    this.isProcessingWhatsapp = false;
 
     const { isConfirmed } = await Swal.fire({
       title: '¿Enviar por WhatsApp?',
@@ -186,9 +190,10 @@ export class CarritoComponent implements OnInit, OnDestroy {
       cancelButtonText: 'Cancelar'
     });
 
-    if (!isConfirmed) return;
-
-    this.isProcessingWhatsapp = true;
+    if (!isConfirmed) {
+      this.isProcessingWhatsapp = false;
+      return;
+    }
 
     const newWindow = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
 
@@ -196,7 +201,6 @@ export class CarritoComponent implements OnInit, OnDestroy {
       newWindow.focus();
       this.showSuccess('¡Abriendo WhatsApp!', 'Redirigiendo al chat...');
     } else {
-      // Fallback con enlace clicable
       Swal.fire({
         title: 'No se pudo abrir automáticamente',
         html: `

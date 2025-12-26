@@ -26,7 +26,7 @@ export class ProductoUnitarioComponent implements OnInit {
   loading = true;
 
   fallbackImage = 'https://via.placeholder.com/800x800.png?text=Sin+Imagen';
-
+mensajeExito: string | null = null;  // null = oculto, string = se muestra
   varianteSeleccionada: VariantePublic | null = null;
   imagenActual: string = '';
   cantidad: number = 1;
@@ -218,7 +218,7 @@ export class ProductoUnitarioComponent implements OnInit {
   }
 
   // ===== AGREGAR AL CARRITO CON VALIDACIÓN =====
-  agregarAlCarrito() {
+agregarAlCarrito() {
     if (!this.varianteSeleccionada) {
       Swal.fire('Selecciona una variante', 'Por favor elige todas las opciones requeridas.', 'info');
       return;
@@ -240,11 +240,21 @@ export class ProductoUnitarioComponent implements OnInit {
     this.carritoService.agregarAlCarrito(this.varianteSeleccionada.id, this.cantidad).subscribe({
       next: () => {
         this.agregandoAlCarrito = false;
+
+        // ¡Aquí mostramos el mensaje de éxito!
+        this.mensajeExito = `${this.cantidad} × ${this.producto.nombre} ${this.atributosTexto ? '(' + this.atributosTexto + ')' : ''}`;
+
+        // Opcional: ocultar automáticamente después de 5 segundos
+        setTimeout(() => {
+          this.mensajeExito = null;
+        }, 5000);
+
+        // SweetAlert adicional (opcional)
         Swal.fire({
-          title: '¡Agregado al carrito!',
-          text: `${this.cantidad} × ${this.producto.nombre} ${this.atributosTexto ? '(' + this.atributosTexto + ')' : ''}`,
+          title: '¡Agregado!',
+          text: 'Producto agregado al carrito correctamente',
           icon: 'success',
-          timer: 3000,
+          timer: 2500,
           showConfirmButton: false
         });
       },

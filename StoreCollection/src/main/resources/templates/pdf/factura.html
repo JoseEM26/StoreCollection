@@ -2,224 +2,223 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Comprobante de Compra #[[${boleta.id}]]</title>
+    <title>Comprobante #[[${boleta.id}]]</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         @page {
-            size: A4;
-            margin: 0.8cm;
+            size: A4 portrait;
+            margin: 12mm 10mm;
         }
         body {
-            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
             margin: 0;
             padding: 0;
-            background: #ffffff;
-            color: #2d3436;
-            line-height: 1.5;
-            font-size: 10.5pt;
+            color: #222;
+            font-size: 11pt;
+            line-height: 1.45;
         }
         .container {
-            width: 100%;
-            max-width: 210mm;
+            max-width: 190mm;
             margin: 0 auto;
-            background: #ffffff;
         }
+
+        /* Header */
         .header {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            background: linear-gradient(135deg, #ff6b6b, #ee5253);
             color: white;
-            padding: 28px 20px;
             text-align: center;
-            border-radius: 16px 16px 0 0;
-            position: relative;
-            overflow: hidden;
-        }
-        .header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.2) 10%, transparent 10%);
-            background-size: 40px 40px;
-            opacity: 0.3;
+            padding: 22px 18px 18px;
+            border-radius: 12px 12px 0 0;
         }
         .header h1 {
-            margin: 0 0 8px;
-            font-size: 2.2em;
+            margin: 0;
+            font-size: 2.1em;
             font-weight: 800;
             letter-spacing: 1px;
         }
-        .header p {
-            margin: 0;
-            font-size: 1.1em;
+        .header .subtitle {
+            margin: 8px 0 0;
+            font-size: 1.05em;
             opacity: 0.95;
         }
 
-        .info-section {
-            padding: 25px 20px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            background: #f8f9fa;
+        /* Info grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            padding: 22px 18px;
+            background: #fff;
         }
-        .info-box {
-            flex: 1;
-            min-width: 280px;
-            background: white;
-            padding: 20px;
-            border-radius: 14px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        .info-card {
+            background: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 18px;
         }
-        .tienda-nombre {
-            font-size: 1.8em;
-            font-weight: 800;
-            color: #ee5a52;
-            margin: 10px 0 6px;
+        .info-card h3 {
+            margin: 0 0 10px;
+            color: #ee5253;
+            font-size: 1.25em;
+            border-bottom: 2px solid #ffebeb;
+            padding-bottom: 6px;
         }
-        .tienda-tag {
+        .estado {
             display: inline-block;
-            background: #ffe0e0;
-            color: #ee5a52;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: 600;
-        }
-        .estado-badge {
-            display: inline-block;
-            padding: 10px 24px;
+            padding: 8px 20px;
             border-radius: 50px;
-            font-weight: 700;
+            font-weight: bold;
             font-size: 1.1em;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
+            margin: 8px 0;
         }
-        .estado-atendida { background: #d4edda; color: #155724; }
-        .estado-cancelada { background: #f8d7da; color: #721c24; }
-        .estado-pendiente { background: #fff3cd; color: #856404; }
+        .estado-atendida  { background: #e8f5e9; color: #2e7d32; }
+        .estado-pendiente { background: #fff3e0; color: #ef6c00; }
+        .estado-cancelada { background: #ffebee; color: #c62828; }
 
-        .detalles {
-            padding: 25px 20px;
+        /* Sections */
+        .section {
+            padding: 0 18px 22px;
         }
-        .detalles h2 {
-            color: #ee5a52;
-            font-size: 1.6em;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 700;
+        .section-title {
+            color: #d32f2f;
+            font-size: 1.45em;
+            margin: 24px 0 14px;
+            border-left: 5px solid #ee5253;
+            padding-left: 12px;
         }
+
+        /* Compact table */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 20px 0;
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            margin: 16px 0 24px;
+            font-size: 0.98em;
         }
         th {
-            background: #ee5a52;
+            background: #ee5253;
             color: white;
-            padding: 14px 12px;
+            padding: 10px 12px;
             text-align: left;
             font-weight: 600;
         }
         td {
-            padding: 14px 12px;
-            border-bottom: 1px solid #f1f1f1;
-        }
-        tr:last-child td {
-            border-bottom: none;
+            padding: 10px 12px;
+            border-bottom: 1px solid #f0f0f0;
         }
         tr:nth-child(even) {
-            background-color: #fdf7f7;
+            background-color: #fdf8f8;
         }
+        .text-right  { text-align: right; }
         .text-center { text-align: center; }
-        .text-right { text-align: right; }
+        .strong      { font-weight: 700; }
 
-        .total-section {
-            padding: 25px 20px;
-            background: linear-gradient(to right, #ff6b6b, #ee5a52);
+        /* Total */
+        .total-box {
+            background: #ee5253;
             color: white;
             text-align: right;
-            border-radius: 0 0 16px 16px;
+            padding: 20px 24px;
+            border-radius: 0 0 12px 12px;
+            margin-top: 8px;
         }
-        .total-label {
+        .total-box .label {
             font-size: 1.3em;
-            opacity: 0.9;
+            opacity: 0.92;
         }
-        .total {
+        .total-box .amount {
             font-size: 2.4em;
             font-weight: 900;
-            margin: 8px 0 0;
+            margin-top: 4px;
         }
 
+        /* Footer */
         .footer {
             text-align: center;
-            padding: 25px 20px;
-            background: #2d3436;
-            color: white;
-            font-size: 0.95em;
-            border-radius: 0 0 16px 16px;
-            margin-top: -16px;
+            padding: 20px 18px;
+            color: #555;
+            font-size: 0.9em;
+            border-top: 1px solid #eee;
+            margin-top: 16px;
         }
-        .footer .social {
-            margin: 12px 0;
-        }
-        .footer .social i {
-            font-size: 1.6em;
-            margin: 0 10px;
-            opacity: 0.8;
-        }
-        .footer strong {
-            color: #ff6b6b;
-        }
+        .footer .heart { color: #ee5253; }
     </style>
 </head>
 <body>
+
 <div class="container">
+
     <!-- Header -->
     <div class="header">
         <h1>¡GRACIAS POR TU COMPRA!</h1>
-        <p>Comprobante N° <strong>[[${boleta.id}]]</strong> •
-            <span th:text="${#dates.format(#dates.createNow(), 'dd MMMM yyyy • HH:mm')}">25 diciembre 2025 • 18:00</span>
-        </p>
+        <div class="subtitle">
+            Comprobante N° <strong>[[${boleta.id}]]</strong> •
+            <span th:text="${#temporals.format(boleta.fecha, 'dd/MM/yyyy HH:mm')}">25/12/2025 18:00</span>
+        </div>
     </div>
 
-    <!-- Información -->
-    <div class="info-section">
-        <div class="info-box">
-            <strong>Tienda Virtual</strong>
-            <div class="tienda-nombre">[[${boleta.tiendaNombre ?: 'Mi Tienda TikTok'}]]</div>
-            <span class="tienda-tag">Venta por Redes Sociales</span>
+    <!-- Info principal -->
+    <div class="info-grid">
+        <div class="info-card">
+            <h3>Tienda</h3>
+            <div style="font-size:1.5em; font-weight:800; color:#d32f2f; margin:8px 0;">
+                [[${boleta.tiendaNombre ?: 'Mi Tienda TikTok'}]]
+            </div>
+            <span style="background:#ffebee; color:#d32f2f; padding:4px 12px; border-radius:20px; font-size:0.9em;">
+                Venta por Redes Sociales
+            </span>
         </div>
 
-        <div class="info-box">
-            <strong>Estado del pedido</strong><br><br>
+        <div class="info-card">
+            <h3>Estado del pedido</h3>
             <span th:classappend="${boleta.estado == 'ATENDIDA' ? 'estado-atendida' :
-                                     boleta.estado == 'CANCELADA' ? 'estado-cancelada' :
-                                     'estado-pendiente'}"
-                  class="estado-badge"
+                                  boleta.estado == 'CANCELADA' ? 'estado-cancelada' :
+                                  'estado-pendiente'}" class="estado"
                   th:text="${boleta.estado}">ATENDIDA</span>
+            <div style="margin-top:12px;">
+                <strong>Fecha:</strong><br>
+                <span th:text="${#temporals.format(boleta.fecha, 'dd MMMM yyyy')}">25 diciembre 2025</span>
+                <span th:text="${#temporals.format(boleta.fecha, ' - HH:mm')}"> - 18:00</span>
+            </div>
+        </div>
+    </div>
 
-            <br><br>
-            <strong>Fecha de compra:</strong><br>
-            <span th:text="${#dates.format(#dates.createNow(), 'dd MMMM yyyy')}">25 diciembre 2025</span>
-            a las
-            <span th:text="${#dates.format(#dates.createNow(), 'HH:mm')}">18:00</span>
+    <!-- Datos comprador + dirección (más compacto) -->
+    <div class="section">
+        <h2 class="section-title">Datos del Comprador y Envío</h2>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; font-size:0.98em;">
+            <div>
+                <strong>Nombre:</strong> [[${boleta.compradorNombre}]]<br>
+                <strong>Email:</strong> [[${boleta.compradorEmail}]]<br>
+                <div th:if="${boleta.compradorTelefono}">
+                    <strong>WhatsApp:</strong> [[${boleta.compradorTelefono}]]
+                </div>
+            </div>
+
+            <div>
+                <strong>Dirección:</strong><br>
+                [[${boleta.direccionEnvio}]]<br>
+                <div th:if="${boleta.referenciaEnvio}">Ref: [[${boleta.referenciaEnvio}]]</div>
+                [[${boleta.distrito}]], [[${boleta.provincia}]], [[${boleta.departamento}]]<br>
+                <div th:if="${boleta.codigoPostal}">CP: [[${boleta.codigoPostal}]]</div>
+                <strong>Entrega:</strong>
+                <span th:if="${boleta.tipoEntrega == 'DOMICILIO'}">A domicilio</span>
+                <span th:if="${boleta.tipoEntrega == 'RECOGIDA_EN_TIENDA'}">Recojo en tienda</span>
+                <span th:if="${boleta.tipoEntrega == 'AGENCIA'}">Agencia</span>
+            </div>
         </div>
     </div>
 
     <!-- Productos -->
-    <div class="detalles">
-        <h2>Tus productos</h2>
+    <div class="section">
+        <h2 class="section-title">Productos</h2>
+
         <table>
             <thead>
             <tr>
                 <th>Producto</th>
                 <th class="text-center">Cant.</th>
-                <th class="text-right">Precio</th>
+                <th class="text-right">P. Unit</th>
                 <th class="text-right">Subtotal</th>
             </tr>
             </thead>
@@ -227,33 +226,24 @@
             <tr th:each="item : ${boleta.detalles}">
                 <td><strong>[[${item.nombreProducto}]]</strong></td>
                 <td class="text-center">×[[${item.cantidad}]]</td>
-                <td class="text-right">S/ [[${#numbers.formatDecimal(item.precioUnitario, 1, 2)}]]</td>
-                <td class="text-right"><strong>S/ [[${#numbers.formatDecimal(item.subtotal, 1, 2)}]]</strong></td>
+                <td class="text-right">S/ [[${#numbers.formatDecimal(item.precioUnitario,1,2,'POINT')}]]</td>
+                <td class="text-right strong">S/ [[${#numbers.formatDecimal(item.subtotal,1,2,'POINT')}]]</td>
             </tr>
             </tbody>
         </table>
 
         <!-- Total -->
-        <div class="total-section">
-            <div class="total-label">Total pagado</div>
-            <div class="total">S/ [[${#numbers.formatDecimal(boleta.total, 1, 2)}]]</div>
+        <div class="total-box">
+            <div class="label">TOTAL PAGADO</div>
+            <div class="amount">S/ [[${#numbers.formatDecimal(boleta.total, 1, 2, 'POINT')}]]</div>
         </div>
     </div>
 
-    <!-- Footer -->
+    <!-- Footer simple -->
     <div class="footer">
-        <p>¡Gracias por confiar en nosotros!</p>
-        <div class="social">
-            <i class="bi bi-tiktok"></i>
-            <i class="bi bi-instagram"></i>
-            <i class="bi bi-facebook"></i>
-            <i class="bi bi-whatsapp"></i>
-        </div>
-        <p>Tu compra fue procesada el
-            <span th:text="${#dates.format(#dates.createNow(), 'dd MMMM yyyy')}">25 diciembre 2025</span>
-        </p>
-        <p><strong>¡Te esperamos pronto de vuelta!</strong> 💖</p>
+        ¡Gracias por tu confianza! 💖 Te esperamos pronto de nuevo
     </div>
+
 </div>
 </body>
 </html>

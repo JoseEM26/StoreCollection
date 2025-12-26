@@ -62,6 +62,7 @@
           <thead class="bg-indigo text-white">
             <tr>
               <th class="ps-4 py-4 fw-semibold">Pedido</th>
+              <th class="py-4 fw-semibold">Comprador</th> <!-- Nueva columna -->
               <th class="py-4 fw-semibold">Fecha y Hora</th>
               <th class="py-4 fw-semibold text-center">Items</th>
               <th class="py-4 fw-semibold text-end">Total</th>
@@ -73,6 +74,13 @@
             <tr *ngFor="let boleta of boletas" class="transition-row">
               <td class="ps-4 py-4">
                 <div class="fw-bold text-indigo fs-5">#{{ boleta.id }}</div>
+              </td>
+              <td class="py-4">
+                <div class="fw-semibold">{{ boleta.compradorNombre }}</div>
+                <small class="text-muted">{{ boleta.compradorEmail }}</small>
+                <small class="text-muted d-block" *ngIf="boleta.compradorTelefono">
+                  <i class="bi bi-telephone me-1"></i> {{ boleta.compradorTelefono }}
+                </small>
               </td>
               <td class="py-4">
                 <div class="text-muted">{{ formatDate(boleta.fecha) }}</div>
@@ -167,7 +175,7 @@
     </div>
   </ng-container>
 
-  <!-- Modal de Detalle -->
+  <!-- Modal de Detalle - Actualizado con nuevos datos -->
   <div class="modal fade" tabindex="-1" 
        [class.show]="boletaSeleccionada"
        [style.display]="boletaSeleccionada ? 'block' : 'none'"
@@ -183,20 +191,78 @@
         </div>
 
         <div class="modal-body p-5" *ngIf="boletaSeleccionada">
+          <!-- Información básica -->
           <div class="row g-4 mb-5 pb-4 border-bottom">
-            <div class="col-lg-7">
+            <div class="col-lg-4">
               <small class="text-muted text-uppercase fw-semibold">Fecha del pedido</small>
               <div class="h5 fw-bold mt-1">{{ formatDate(boletaSeleccionada.fecha) }}</div>
             </div>
-            <div class="col-lg-5 text-lg-end">
+            <div class="col-lg-4">
               <small class="text-muted text-uppercase fw-semibold">Estado actual</small><br>
               <span class="badge rounded-pill px-5 py-3 fs-5 mt-2"
                     [ngClass]="getEstadoBadge(boletaSeleccionada.estado).class">
                 {{ getEstadoBadge(boletaSeleccionada.estado).text }}
               </span>
             </div>
+            <div class="col-lg-4 text-lg-end">
+              <small class="text-muted text-uppercase fw-semibold">Total</small>
+              <div class="display-5 fw-bolder text-primary">
+                S/ {{ boletaSeleccionada.total | number:'1.2-2' }}
+              </div>
+            </div>
           </div>
 
+          <!-- Datos del comprador -->
+          <div class="mb-5 pb-4 border-bottom">
+            <h5 class="fw-bold mb-3 text-primary">
+              <i class="bi bi-person-circle me-2"></i>Datos del Comprador
+            </h5>
+            <div class="row g-4">
+              <div class="col-md-6">
+                <strong>Nombre:</strong> {{ boletaSeleccionada.compradorNombre }}
+              </div>
+              <div class="col-md-6">
+                <strong>Email:</strong> {{ boletaSeleccionada.compradorEmail }}
+              </div>
+              <div class="col-md-6" *ngIf="boletaSeleccionada.compradorTelefono">
+                <strong>Teléfono/WhatsApp:</strong> {{ boletaSeleccionada.compradorTelefono }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Dirección de envío -->
+          <div class="mb-5 pb-4 border-bottom">
+            <h5 class="fw-bold mb-3 text-primary">
+              <i class="bi bi-truck me-2"></i>Dirección de Envío
+            </h5>
+            <div class="row g-4">
+              <div class="col-12">
+                <strong>Dirección:</strong> {{ boletaSeleccionada.direccionEnvio }}
+                <span *ngIf="boletaSeleccionada.referenciaEnvio"> - {{ boletaSeleccionada.referenciaEnvio }}</span>
+              </div>
+              <div class="col-md-4">
+                <strong>Distrito:</strong> {{ boletaSeleccionada.distrito }}
+              </div>
+              <div class="col-md-4">
+                <strong>Provincia:</strong> {{ boletaSeleccionada.provincia }}
+              </div>
+              <div class="col-md-4">
+                <strong>Departamento:</strong> {{ boletaSeleccionada.departamento }}
+              </div>
+              <div class="col-md-4" *ngIf="boletaSeleccionada.codigoPostal">
+                <strong>Código Postal:</strong> {{ boletaSeleccionada.codigoPostal }}
+              </div>
+              <div class="col-12">
+                <strong>Tipo de entrega:</strong> 
+                <span class="badge bg-info text-white">
+                  {{ boletaSeleccionada.tipoEntrega === 'DOMICILIO' ? 'Envío a domicilio' : 
+                     boletaSeleccionada.tipoEntrega === 'RECOGIDA_EN_TIENDA' ? 'Recojo en tienda' : 'Envío a agencia' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Productos incluidos -->
           <h5 class="fw-bold mb-4 text-primary border-bottom pb-3">
             <i class="bi bi-bag-check me-2"></i>
             Productos incluidos
@@ -221,13 +287,6 @@
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div class="bg-primary bg-opacity-10 rounded-4 p-5 text-end">
-            <div class="text-muted fs-5 mb-2">Total del pedido</div>
-            <div class="display-5 fw-bolder text-primary">
-              S/ {{ boletaSeleccionada.total | number:'1.2-2' }}
             </div>
           </div>
         </div>

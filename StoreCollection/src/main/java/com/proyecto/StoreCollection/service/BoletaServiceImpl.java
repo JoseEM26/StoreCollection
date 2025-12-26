@@ -201,12 +201,28 @@ public class BoletaServiceImpl implements BoletaService {
         response.setSessionId(boleta.getSessionId());
         response.setTiendaId(boleta.getTienda().getId());
         response.setTotal(boleta.getTotal());
-        response.setFecha(boleta.getFecha().toString());
+        response.setFecha(boleta.getFecha());
         response.setEstado(boleta.getEstado().name());
         response.setTiendaNombre(boleta.getTienda().getNombre());
 
         if (boleta.getUser() != null) {
             response.setUserId(boleta.getUser().getId());
+        }
+
+        // ── Nuevos campos agregados ────────────────────────────────
+        response.setCompradorNombre(boleta.getCompradorNombre());
+        response.setCompradorEmail(boleta.getCompradorEmail());
+        response.setCompradorTelefono(boleta.getCompradorTelefono());
+
+        response.setDireccionEnvio(boleta.getDireccionEnvio());
+        response.setReferenciaEnvio(boleta.getReferenciaEnvio());
+        response.setDistrito(boleta.getDistrito());
+        response.setProvincia(boleta.getProvincia());
+        response.setDepartamento(boleta.getDepartamento());
+        response.setCodigoPostal(boleta.getCodigoPostal());
+
+        if (boleta.getTipoEntrega() != null) {
+            response.setTipoEntrega(boleta.getTipoEntrega().name());
         }
 
         response.setDetalles(
@@ -217,7 +233,6 @@ public class BoletaServiceImpl implements BoletaService {
 
         return response;
     }
-
     private BoletaDetalleResponse toDetalleResponse(BoletaDetalle detalle) {
         BoletaDetalleResponse dto = new BoletaDetalleResponse();
         dto.setId(detalle.getId());

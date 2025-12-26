@@ -1,4 +1,3 @@
-<!-- src/app/componente/carrito/carrito.component.html -->
 <div class="container py-5">
   <h2 class="fw-bold text-center mb-5 text-dark">
     <i class="bi bi-cart4 me-3"></i> Mi Carrito
@@ -118,9 +117,9 @@
 
             <!-- Botón Confirmar pedido Online -->
             <button class="btn btn-success btn-lg w-100 mb-3 shadow-sm py-3"
-                    (click)="checkoutOnline()"
+                    (click)="abrirFormularioCheckout()"
                     [disabled]="isProcessingOnline || isProcessingWhatsapp || loading || items.length === 0">
-              <span *ngIf="isProcessingOnline" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              <span *ngIf="isProcessingOnline" class="spinner-border spinner-border-sm me-2"></span>
               <i class="bi bi-check-circle-fill me-2"></i>
               {{ isProcessingOnline ? 'Procesando...' : 'Confirmar pedido (Online)' }}
             </button>
@@ -129,15 +128,14 @@
             <button class="btn btn-whatsapp btn-lg w-100 shadow-sm py-3"
                     (click)="checkoutWhatsapp()"
                     [disabled]="isProcessingWhatsapp || isProcessingOnline || loading || items.length === 0">
-              <span *ngIf="isProcessingWhatsapp" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              <span *ngIf="isProcessingWhatsapp" class="spinner-border spinner-border-sm me-2"></span>
               <i class="bi bi-whatsapp me-2"></i>
               {{ isProcessingWhatsapp ? 'Generando enlace...' : 'Enviar por WhatsApp' }}
             </button>
             <hr class="my-4">
 
             <a [routerLink]="['../catalogo']" class="btn btn-outline-secondary w-100">
-              <i class="bi bi-arrow-left me-2"></i>
-              Seguir comprando
+              <i class="bi bi-arrow-left me-2"></i> Seguir comprando
             </a>
           </div>
         </div>
@@ -145,3 +143,26 @@
     </div>
   }
 </div>
+
+<!-- MODAL CON FORMULARIO DE CHECKOUT -->
+<div class="modal fade" tabindex="-1" [class.show]="showCheckoutModal" [style.display]="showCheckoutModal ? 'block' : 'none'" (click)="cerrarFormularioCheckout()">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Completa tus datos para el envío</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="cerrarFormularioCheckout()" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-0">
+        <app-checkout-form 
+          [tiendaId]="tiendaId"
+          (onSubmit)="procesarCheckout($event)"
+          (onCancel)="cerrarFormularioCheckout()">
+        </app-checkout-form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Backdrop manual -->
+<div class="modal-backdrop fade show" *ngIf="showCheckoutModal" (click)="cerrarFormularioCheckout()"></div>

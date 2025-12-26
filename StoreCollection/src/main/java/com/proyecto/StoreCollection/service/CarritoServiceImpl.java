@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -87,58 +88,90 @@ public class CarritoServiceImpl implements CarritoService {
     }
 
     @Override
+    @Transactional
     public BoletaResponse checkoutOnline(BoletaRequest request) {
-        List<Carrito> items = repository.findBySessionId(request.getSessionId());
-        if (items.isEmpty()) {
-            throw new RuntimeException("El carrito está vacío");
+        // 1. Cargar items del carrito (con detalles)
+        List<Carrito> items = repository.findBySessionIdWithDetails(request.getSessionId());
+        if (items == null || items.isEmpty()) {
+            throw new IllegalStateException("El carrito está vacío");
         }
 
+        // 2. Obtener tienda
         Tienda tienda = tiendaRepository.findById(request.getTiendaId())
-                .orElseThrow(() -> new RuntimeException("Tienda no encontrada"));
+                .orElseThrow(() -> new IllegalArgumentException("Tienda no encontrada: " + request.getTiendaId()));
 
+        // 3. Calcular total y crear detalles
         BigDecimal total = BigDecimal.ZERO;
+        List<BoletaDetalle> detalles = new ArrayList<>();
+
         for (Carrito item : items) {
             ProductoVariante variante = item.getVariante();
             if (variante == null) {
-                throw new RuntimeException("Variante no asociada en un ítem del carrito");
+                throw new IllegalStateException("Variante no encontrada en carrito");
             }
-            total = total.add(variante.getPrecio().multiply(BigDecimal.valueOf(item.getCantidad())));
-        }
 
-        Boleta boleta = new Boleta();
-        boleta.setSessionId(request.getSessionId());
-        boleta.setTotal(total);
-        boleta.setTienda(tienda);
-        boleta.setEstado(Boleta.EstadoBoleta.PENDIENTE);
+            // Validación de stock (optimista)
+            if (variante.getStock() < item.getCantidad()) {
+                throw new IllegalStateException(
+                        "Stock insuficiente para " + variante.getProducto().getNombre() +
+                                " (SKU: " + variante.getSku() + "). Disponible: " + variante.getStock() +
+                                ", solicitado: " + item.getCantidad());
+            }
 
-        if (request.getUserId() != null) {
-            Usuario user = usuarioRepository.findById(request.getUserId())
-                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-            boleta.setUser(user);
-        }
-
-        for (Carrito item : items) {
-            ProductoVariante variante = item.getVariante();
+            BigDecimal subtotal = variante.getPrecio().multiply(BigDecimal.valueOf(item.getCantidad()));
+            total = total.add(subtotal);
 
             BoletaDetalle detalle = new BoletaDetalle();
-            detalle.setBoleta(boleta);
+            detalle.setBoleta(null); // se setea después
             detalle.setVariante(variante);
             detalle.setCantidad(item.getCantidad());
             detalle.setPrecioUnitario(variante.getPrecio());
-            detalle.setSubtotal(variante.getPrecio().multiply(BigDecimal.valueOf(item.getCantidad())));
+            detalle.setSubtotal(subtotal);
 
-            boleta.getDetalles().add(detalle);
+            detalles.add(detalle);
         }
 
-        boleta = boletaRepository.save(boleta);
+        // 4. Crear Boleta
+        Boleta boleta = new Boleta();
+        boleta.setSessionId(request.getSessionId());
+        boleta.setTienda(tienda);
+        boleta.setTotal(total);
+        boleta.setEstado(Boleta.EstadoBoleta.PENDIENTE);
+
+        // Usuario si existe
+        if (request.getUserId() != null) {
+            Usuario user = usuarioRepository.findById(request.getUserId())
+                    .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+            boleta.setUser(user);
+        }
+
+        // Nuevos campos de comprador y envío
+        boleta.setCompradorNombre(request.getCompradorNombre());
+        boleta.setCompradorEmail(request.getCompradorEmail());
+        boleta.setCompradorTelefono(request.getCompradorTelefono());
+        boleta.setDireccionEnvio(request.getDireccionEnvio());
+        boleta.setReferenciaEnvio(request.getReferenciaEnvio());
+        boleta.setDistrito(request.getDistrito());
+        boleta.setProvincia(request.getProvincia());
+        boleta.setDepartamento(request.getDepartamento());
+        boleta.setCodigoPostal(request.getCodigoPostal());
+        boleta.setTipoEntrega(request.getTipoEntrega());
+
+        // Asignar detalles a la boleta
+        boleta.setDetalles(detalles);
+        detalles.forEach(d -> d.setBoleta(boleta));
+
+        // 5. Guardar
+        Boleta boletaGuardada = boletaRepository.save(boleta);
+
+        // 6. Limpiar carrito
         limpiarCarrito(request.getSessionId());
 
-        // Enviar email al admin
-        sendEmailNotification(boleta, tienda.getUser().getEmail());
+        // 7. Enviar email de notificación al dueño de la tienda
+        sendEmailNotification(boletaGuardada, tienda.getUser().getEmail());
 
-        return toBoletaResponse(boleta);
+        return toBoletaResponse(boletaGuardada);
     }
-
     private void sendEmailNotification(Boleta boleta, String toEmail) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -442,12 +475,24 @@ public class CarritoServiceImpl implements CarritoService {
         response.setSessionId(boleta.getSessionId());
         response.setTiendaId(boleta.getTienda().getId());
         response.setTotal(boleta.getTotal());
-        response.setFecha(boleta.getFecha().toString());
+        response.setFecha(boleta.getFecha());
         response.setEstado(boleta.getEstado().name());
 
         if (boleta.getUser() != null) {
             response.setUserId(boleta.getUser().getId());
         }
+
+        // Nuevos campos agregados
+        response.setCompradorNombre(boleta.getCompradorNombre());
+        response.setCompradorEmail(boleta.getCompradorEmail());
+        response.setCompradorTelefono(boleta.getCompradorTelefono());
+        response.setDireccionEnvio(boleta.getDireccionEnvio());
+        response.setReferenciaEnvio(boleta.getReferenciaEnvio());
+        response.setDistrito(boleta.getDistrito());
+        response.setProvincia(boleta.getProvincia());
+        response.setDepartamento(boleta.getDepartamento());
+        response.setCodigoPostal(boleta.getCodigoPostal());
+        response.setTipoEntrega(boleta.getTipoEntrega() != null ? boleta.getTipoEntrega().name() : null);
 
         response.setDetalles(
                 boleta.getDetalles().stream()
