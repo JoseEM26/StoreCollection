@@ -115,9 +115,9 @@ public class ProductoServiceImpl implements ProductoService {
             producto = productoRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
             // Verificar permisos
-            if (!esAdmin && !producto.getTienda().getUser().getEmail().equals(emailActual)) {
-                throw new AccessDeniedException("No tienes permisos para editar este producto");
-            }
+            //if (!esAdmin && !producto.getTienda().getUser().getEmail().equals(emailActual)) {
+            //    throw new AccessDeniedException("No tienes permisos para editar este producto");
+            //}
             tiendaAsignada = producto.getTienda();  // Mantener la misma tienda
             // Validar unicidad slug excluyendo este producto
             Optional<Producto> otroConSlug = productoRepository.findBySlugAndTiendaId(request.getSlug(), tiendaAsignada.getId());
@@ -313,9 +313,9 @@ public class ProductoServiceImpl implements ProductoService {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
 
-        if (!esAdmin && !producto.getTienda().getUser().getEmail().equals(emailActual)) {
-            throw new AccessDeniedException("No tienes permisos para acceder a este producto");
-        }
+        //if (!esAdmin && !producto.getTienda().getUser().getEmail().equals(emailActual)) {
+        //    throw new AccessDeniedException("No tienes permisos para acceder a este producto");
+        //}
 
         // ← Aquí está la magia: devolvemos TODO
         return toResponseProductoCreate(producto);   // ← ya incluye variantes + atributos + valores

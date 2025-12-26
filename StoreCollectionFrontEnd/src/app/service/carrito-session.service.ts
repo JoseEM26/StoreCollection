@@ -1,7 +1,4 @@
-// src/app/service/carrito-session.service.ts
-
 import { Injectable } from '@angular/core';
-import { v4 as uuidv4 } from 'uuid';
 
 const SESSION_KEY = 'carrito_session_id';
 
@@ -13,7 +10,7 @@ export class CarritoSessionService {
   getSessionId(): string {
     let sessionId = localStorage.getItem(SESSION_KEY);
     if (!sessionId) {
-      sessionId = uuidv4();
+      sessionId = crypto.randomUUID();
       localStorage.setItem(SESSION_KEY, sessionId);
     }
     return sessionId;
@@ -24,7 +21,7 @@ export class CarritoSessionService {
   }
 
   regenerateSession(): string {
-    const newId = uuidv4();
+    const newId = crypto.randomUUID();
     localStorage.setItem(SESSION_KEY, newId);
     return newId;
   }

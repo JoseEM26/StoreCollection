@@ -24,14 +24,27 @@ public class TenantFilter extends OncePerRequestFilter {
 
     private final TiendaRepository tiendaRepository;
 
-    // Coincide con: /api/public/tiendas/zapatik  o  /api/owner/tiendas/mislug
     private static final Pattern TENANT_SLUG_PATTERN = Pattern.compile("^/api/(public|owner)/tiendas/([^/]+)");
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+        String method = request.getMethod();
+
+        if ((path.equals("/api/owner/productos") || path.startsWith("/api/owner/productos/")) &&
+                ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method))) {
+            return true;
+        }
+
+        return false;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
+        // Bypass para OPTIONS (CORS preflight)
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
@@ -51,30 +64,24 @@ public class TenantFilter extends OncePerRequestFilter {
                 String slug = matcher.group(2);
                 tienda = tiendaRepository.findBySlug(slug).orElse(null);
 
-                // Para rutas PÚBLICAS: si no existe la tienda → 404 claro
                 if (tienda == null && path.startsWith("/api/public/")) {
                     sendNotFound(response, "Tienda no encontrada");
                     return;
                 }
 
-                // Para rutas PÚBLICAS: permitimos acceso aunque esté inactiva (catálogo visible)
-                // Solo establecemos tenant si existe
                 if (tienda != null) {
                     TenantContext.setTenantId(tienda.getId());
                 }
 
             } else if (isAuthenticated && path.startsWith("/api/owner/")) {
-                // Rutas privadas sin slug → buscar por usuario autenticado
                 String email = auth.getName();
                 tienda = tiendaRepository.findFirstByUserEmail(email).orElse(null);
 
                 if (tienda != null && tienda.getActivo()) {
                     TenantContext.setTenantId(tienda.getId());
                 }
-                // Si no tiene tienda activa → no se establece tenant (controller manejará el error)
             }
 
-            // Rutas públicas sin slug (ej: listar todas las tiendas) → no necesitan tenant
             filterChain.doFilter(request, response);
 
         } finally {
@@ -83,7 +90,7 @@ public class TenantFilter extends OncePerRequestFilter {
     }
 
     private void sendNotFound(HttpServletResponse response, String message) throws IOException {
-        response.setStatus(HttpServletResponse.SC_NOT_FOUND); // 404 en vez de 403
+        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write("{\"error\": \"" + message + "\"}");

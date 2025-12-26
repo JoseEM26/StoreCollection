@@ -1,4 +1,3 @@
-// src/main/java/com/proyecto/StoreCollection/tenant/ResourceActiveFilter.java
 package com.proyecto.StoreCollection.tenant;
 
 import com.proyecto.StoreCollection.entity.Categoria;
@@ -26,19 +25,29 @@ public class ResourceActiveFilter extends OncePerRequestFilter {
     private final CategoriaRepository categoriaRepository;
     private final ProductoRepository productoRepository;
 
-    // CORREGIDO: ruta real del detalle de producto
     private static final Pattern PRODUCTO_SLUG_PATTERN = Pattern.compile("^/api/public/tiendas/[^/]+/productos/([^/]+)");
     private static final Pattern PRODUCTO_ID_PATTERN = Pattern.compile("^/api/public/tiendas/[^/]+/productos/(\\d+)");
-
-    // Opcional: si en el futuro tienes detalle de categoría por slug
-    // private static final Pattern CATEGORIA_SLUG_PATTERN = Pattern.compile("^/api/public/tiendas/[^/]+/categorias/([^/]+)");
     private static final Pattern CATEGORIA_ID_PATTERN = Pattern.compile("^/api/public/tiendas/[^/]+/categorias/(\\d+)");
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+        String method = request.getMethod();
+
+        if ((path.equals("/api/owner/productos") || path.startsWith("/api/owner/productos/")) &&
+                ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method))) {
+            return true;
+        }
+
+        return false;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
+        // Bypass para OPTIONS (CORS preflight)
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
@@ -51,45 +60,37 @@ public class ResourceActiveFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-// NUEVO: Excluir explícitamente el listado de productos
+
         if (path.matches("^/api/public/tiendas/[^/]+/productos$")) {
             filterChain.doFilter(request, response);
             return;
         }
+
         try {
-            // Producto por slug (detalle)
             Matcher prodSlugMatcher = PRODUCTO_SLUG_PATTERN.matcher(path);
             if (prodSlugMatcher.find()) {
                 String productoSlug = prodSlugMatcher.group(1);
-                Producto producto = productoRepository.findBySlugAndTiendaId(productoSlug, tenantId)
-                        .orElse(null);
-
+                Producto producto = productoRepository.findBySlugAndTiendaId(productoSlug, tenantId).orElse(null);
                 if (producto == null || !producto.isActivo()) {
                     sendError(response, "El producto no está disponible en este momento.");
                     return;
                 }
             }
 
-            // Producto por ID (si usas)
             Matcher prodIdMatcher = PRODUCTO_ID_PATTERN.matcher(path);
             if (prodIdMatcher.find()) {
                 Integer productoId = Integer.parseInt(prodIdMatcher.group(1));
-                Producto producto = productoRepository.findByIdAndTiendaId(productoId, tenantId)
-                        .orElse(null);
-
+                Producto producto = productoRepository.findByIdAndTiendaId(productoId, tenantId).orElse(null);
                 if (producto == null || !producto.isActivo()) {
                     sendError(response, "El producto no está disponible en este momento.");
                     return;
                 }
             }
 
-            // Categoría por ID (si aplica)
             Matcher catIdMatcher = CATEGORIA_ID_PATTERN.matcher(path);
             if (catIdMatcher.find()) {
                 Integer categoriaId = Integer.parseInt(catIdMatcher.group(1));
-                Categoria categoria = categoriaRepository.findByIdAndTiendaId(categoriaId, tenantId)
-                        .orElse(null);
-
+                Categoria categoria = categoriaRepository.findByIdAndTiendaId(categoriaId, tenantId).orElse(null);
                 if (categoria == null || !categoria.isActivo()) {
                     sendError(response, "La categoría no está disponible en este momento.");
                     return;
@@ -100,7 +101,8 @@ public class ResourceActiveFilter extends OncePerRequestFilter {
 
         } catch (Exception e) {
             logger.error("Error en ResourceActiveFilter", e);
-            sendError(response, "Error al validar el recurso solicitado.");        }
+            sendError(response, "Error al validar el recurso solicitado.");
+        }
     }
 
     private void sendError(HttpServletResponse response, String message) throws IOException {

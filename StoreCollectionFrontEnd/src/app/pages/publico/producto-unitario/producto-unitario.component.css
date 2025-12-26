@@ -1,3 +1,5 @@
+/* src/app/componente/producto-unitario/producto-unitario.component.css */
+
 /* ==================== CONTENEDOR PRINCIPAL ==================== */
 .container {
   max-width: 1300px;
@@ -42,28 +44,20 @@
     grid-template-columns: 1fr;
     gap: 40px;
   }
-
-  .btn-volver {
-    top: 15px;
-    left: 15px;
-    padding: 12px 16px;
-    font-size: 0.95rem;
-  }
 }
 
-/* ==================== SECCIÓN IMAGEN + LUPA ==================== */
+/* ==================== IMAGEN PRINCIPAL (sin lupa) ==================== */
 .imagen-seccion {
   position: relative;
 }
 
-.zoom-container {
+.imagen-container {
   position: relative;
   border-radius: 28px;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
   aspect-ratio: 1 / 1;
   background: #f8f9fa;
-  cursor: crosshair;
 }
 
 .imagen-principal {
@@ -73,28 +67,8 @@
   transition: transform 0.4s ease;
 }
 
-.zoom-container:hover .imagen-principal {
+.imagen-container:hover .imagen-principal {
   transform: scale(1.03);
-}
-
-/* Lupa interna */
-.lupa-interna {
-  position: absolute;
-  width: 220px;
-  height: 220px;
-  border: 4px solid white;
-  border-radius: 50%;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-  background-repeat: no-repeat;
-  transform: translate(-50%, -50%);
-  z-index: 10;
-}
-
-.lupa-interna.visible {
-  opacity: 1;
 }
 
 /* Badges de stock */
@@ -115,15 +89,10 @@
   animation: float 3s ease-in-out infinite;
 }
 
-.agotado {
-  background: #dc2626;
-}
+.agotado { background: #dc2626; }
+.ultimas { background: #f59e0b; }
 
-.ultimas {
-  background: #f59e0b;
-}
-
-/* Miniaturas (imágenes de variantes) */
+/* Miniaturas */
 .miniaturas {
   display: flex;
   gap: 12px;
@@ -160,7 +129,7 @@
   object-fit: cover;
 }
 
-/* ==================== SECCIÓN INFORMACIÓN ==================== */
+/* ==================== INFORMACIÓN ==================== */
 .info-seccion {
   padding: 20px 0;
 }
@@ -184,9 +153,7 @@
 }
 
 @media (max-width: 768px) {
-  .titulo {
-    font-size: 2.4rem;
-  }
+  .titulo { font-size: 2.4rem; }
 }
 
 .precio {
@@ -197,12 +164,10 @@
 }
 
 @media (max-width: 768px) {
-  .precio {
-    font-size: 2.8rem;
-  }
+  .precio { font-size: 2.8rem; }
 }
 
-/* Atributos seleccionados (ej: Talla: L • Color: Negro) */
+/* Atributos seleccionados */
 .atributos-seleccionados {
   background: #f0fdf4;
   border: 2px solid #86efac;
@@ -223,7 +188,7 @@
   font-size: 0.95rem;
 }
 
-/* ==================== NUEVA SELECCIÓN DE ATRIBUTOS (Talla, Color, etc.) ==================== */
+/* Selección de atributos */
 .atributos-selector h3 {
   margin: 40px 0 24px;
   font-size: 1.5rem;
@@ -284,26 +249,23 @@
   border-color: #d1d5db;
 }
 
-/* Mensajes de disponibilidad */
+/* Alertas */
+.alert-light.border {
+  border: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+  padding: 16px;
+  border-radius: 16px;
+}
+
 .alert-warning {
   background: #fffbeb;
   border: 1px solid #fde68a;
   color: #92400e;
   padding: 16px;
   border-radius: 16px;
-  font-weight: 500;
 }
 
-.alert-info {
-  background: #eff6ff;
-  border: 1px solid #93c5fd;
-  color: #1e40af;
-  padding: 16px;
-  border-radius: 16px;
-  font-weight: 500;
-}
-
-/* ==================== ACCIONES (CARRITO, WHATSAPP) ==================== */
+/* Acciones */
 .acciones {
   margin-top: 50px;
 }
@@ -344,7 +306,6 @@
   display: grid;
   place-items: center;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s;
 }
 
 .btn-cantidad:hover:not(:disabled) {
@@ -369,7 +330,6 @@
   font-size: 1.3rem;
   font-weight: 800;
   box-shadow: 0 15px 40px rgba(16, 185, 129, 0.4);
-  transition: all 0.3s;
 }
 
 .btn-agregar-carrito:hover:not(:disabled) {
@@ -387,7 +347,6 @@
   font-size: 1.3rem;
   font-weight: 800;
   box-shadow: 0 15px 40px rgba(37, 211, 102, 0.4);
-  transition: all 0.3s;
   margin: 16px 0;
 }
 
@@ -408,7 +367,6 @@
   background: white;
   border-radius: 16px;
   font-weight: 600;
-  transition: all 0.3s;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -421,7 +379,7 @@
   transform: translateY(-3px);
 }
 
-/* ==================== GARANTÍAS ==================== */
+/* Garantías */
 .garantias {
   margin-top: 60px;
   display: grid;
@@ -444,18 +402,12 @@
   color: #10b981;
 }
 
-/* ==================== LOADING Y MODAL ==================== */
+/* Loading y Modal */
 .loading {
   text-align: center;
   padding: 100px 20px;
 }
 
-.loading .spinner-border {
-  width: 5rem;
-  height: 5rem;
-}
-
-/* Modal cotización */
 .modal {
   position: fixed;
   inset: 0;
@@ -504,7 +456,6 @@
   border-radius: 16px;
   font-size: 1rem;
   margin-bottom: 16px;
-  transition: border 0.3s;
 }
 
 .modal-content input:focus,
@@ -518,67 +469,8 @@
   min-height: 120px;
 }
 
-.btn-whatsapp.w-100.py-3 {
-  padding: 18px !important;
-  font-size: 1.2rem;
-  font-weight: 700;
-}
-
-/* Animación flotante para badges */
+/* Animación badges */
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
-}/* Botones de opciones (Talla, Color, etc.) */
-.opciones-atributo {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.opcion-btn {
-  padding: 10px 20px;
-  border: 2px solid #e0e0e0;
-  background: white;
-  border-radius: 8px;
-  font-weight: 500;
-  transition: all 0.2s;
-  min-width: 60px;
-}
-
-.opcion-btn:hover:not(.disabled) {
-  border-color: #28a745;
-  background: #f8fff9;
-}
-
-.opcion-btn.selected {
-  border-color: #28a745;
-  background: #28a745;
-  color: white;
-  font-weight: bold;
-}
-
-.opcion-btn.disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  background-color: #f8f9fa !important;
-  border-color: #dee2e6 !important;
-  color: #6c757d !important;
-  pointer-events: none;
-}
-
-/* Chips de variante seleccionada */
-.atributo-chip {
-  display: inline-block;
-  background: #e9ecef;
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  margin-right: 8px;
-  margin-bottom: 8px;
-}
-
-/* Alertas personalizadas */
-.alert-light.border {
-  border: 1px solid #dee2e6;
-  background-color: #f8f9fa;
 }

@@ -1,21 +1,26 @@
-<!-- CONÓCENOS -->
-<section class="conocenos-section py-5 py-lg-7">
+<!-- Loader mientras carga la tienda (opcional pero recomendado) -->
+<div *ngIf="!tienda" class="text-center py-7">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Cargando información de la tienda...</span>
+  </div>
+  <p class="mt-3 text-muted">Cargando detalles de la tienda...</p>
+</div>
+
+<!-- Contenido principal - solo se muestra cuando hay tienda -->
+<section *ngIf="tienda" class="conocenos-section py-5 py-lg-7">
   <div class="container">
     <div class="row align-items-center g-5">
 
-    <!-- Imagen / Logo (contenedor rectangular fijo - SIEMPRE LLENO) -->
-<div class="col-lg-5 order-lg-1 order-2 text-center">
-  <div class="logo-container shadow-lg rounded-4 overflow-hidden">
-    <img 
-      [src]="tienda.logo_img_url || 'https://via.placeholder.com/600x450/F8FAFC/6366F1?text=Logo'"
-      [alt]="'Logo de ' + tienda.nombre"
-      class="logo-img"
-      loading="lazy">
-  </div>
-  
-  <!-- Opcional: nombre debajo si quieres -->
-  <!-- <p class="mt-3 text-muted fw-medium">{{ tienda.nombre }}</p> -->
-</div>
+      <!-- Imagen / Logo -->
+      <div class="col-lg-5 order-lg-1 order-2 text-center">
+        <div class="logo-container shadow-lg rounded-4 overflow-hidden">
+          <img
+            [src]="tienda.logo_img_url || 'https://via.placeholder.com/600x450/F8FAFC/6366F1?text=Logo+de+' + tienda.nombre"
+            [alt]="'Logo de ' + tienda.nombre"
+            class="logo-img w-100 h-100 object-fit-cover"
+            loading="lazy">
+        </div>
+      </div>
 
       <!-- Información de la tienda -->
       <div class="col-lg-7 order-lg-2 order-1">
@@ -24,12 +29,13 @@
         </h1>
 
         <p class="lead fs-3 text-muted mb-5 lh-lg">
-          {{ tienda.descripcion || 'Tu tienda favorita de zapatillas virales en TikTok. Calidad, estilo y tendencias que no pasan desapercibidas.' }}
+          {{ tienda.descripcion || 'Tu tienda favorita con productos exclusivos, tendencias virales y la mejor atención personalizada.' }}
         </p>
 
         <!-- Detalles en tarjetas -->
         <div class="row g-4 mb-5">
-          <div class="col-md-6">
+          <!-- Dirección -->
+          <div class="col-md-6" *ngIf="tienda.direccion">
             <div class="info-card">
               <i class="bi bi-geo-alt-fill icon"></i>
               <div>
@@ -39,7 +45,8 @@
             </div>
           </div>
 
-          <div class="col-md-6">
+          <!-- Horarios -->
+          <div class="col-md-6" *ngIf="tienda.horarios">
             <div class="info-card">
               <i class="bi bi-clock-fill icon"></i>
               <div>
@@ -49,17 +56,21 @@
             </div>
           </div>
 
+          <!-- Moneda -->
           <div class="col-md-6">
             <div class="info-card">
               <i class="bi bi-currency-exchange icon"></i>
               <div>
                 <h5 class="fw-bold mb-1">Moneda</h5>
-                <p class="text-muted mb-0">{{ tienda.moneda === 'SOLES' ? 'Soles Peruanos (S/)' : tienda.moneda }}</p>
+                <p class="text-muted mb-0">
+                  {{ tienda.moneda === 'SOLES' ? 'Soles Peruanos (S/)' : tienda.moneda || 'Soles (S/)' }}
+                </p>
               </div>
             </div>
           </div>
 
-          <div class="col-md-6">
+          <!-- WhatsApp -->
+          <div class="col-md-6" *ngIf="tienda.whatsapp">
             <div class="info-card">
               <i class="bi bi-whatsapp icon text-success"></i>
               <div>
@@ -74,9 +85,14 @@
 
         <!-- Botones de acción -->
         <div class="d-flex flex-wrap gap-3">
-          <a [href]="tienda.mapa_url" target="_blank" class="btn btn-outline-primary btn-lg rounded-pill px-5 shadow-sm">
+          <a *ngIf="tienda.mapa_url"
+             [href]="tienda.mapa_url"
+             target="_blank"
+             rel="noopener noreferrer"
+             class="btn btn-outline-primary btn-lg rounded-pill px-5 shadow-sm">
             <i class="bi bi-map me-2"></i> Ver en Google Maps
           </a>
+
           <button class="btn btn-primary btn-lg rounded-pill px-5 shadow" (click)="abrirWhatsApp()">
             <i class="bi bi-chat-dots me-2"></i> ¡Escríbenos ahora!
           </button>
@@ -87,13 +103,13 @@
 </section>
 
 <!-- Sección decorativa inferior -->
-<section class="bg-gradient py-6 mt-5">
+<section *ngIf="tienda" class="bg-gradient py-6 mt-5">
   <div class="container text-center">
     <h2 class="display-5 fw-black text-white mb-3">
       ¡Te esperamos en {{ tienda.nombre }}!
     </h2>
     <p class="lead text-white opacity-90 mb-4">
-      Las zapatillas más virales de TikTok, con garantía de originalidad y envíos rápidos.
+      Productos exclusivos, tendencias virales y envíos rápidos a todo el Perú.
     </p>
     <div class="d-flex justify-content-center flex-wrap gap-3">
       <span class="badge-extra bg-danger">🚚 Envíos a todo el Perú</span>

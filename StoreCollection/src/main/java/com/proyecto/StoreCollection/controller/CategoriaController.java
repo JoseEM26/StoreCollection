@@ -66,6 +66,8 @@ public class CategoriaController {
 
         return ResponseEntity.ok(resultado);
     }
+
+
     @PatchMapping("/api/owner/categorias/{id}/toggle-activo")
     public ResponseEntity<CategoriaResponse> toggleActivo(@PathVariable Integer id) {
         return ResponseEntity.ok(service.toggleActivo(id));

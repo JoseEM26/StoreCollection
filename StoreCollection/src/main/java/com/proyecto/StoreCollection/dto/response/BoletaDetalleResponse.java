@@ -10,8 +10,8 @@ public class BoletaDetalleResponse {
     private Integer id;
     private Integer varianteId;
     private Integer cantidad;
-    private BigDecimal precioUnitario;
-    private BigDecimal subtotal;
+    private BigDecimal precioUnitario;   // ← Perfecto
+    private BigDecimal subtotal;         // ← Perfecto
 
     private String nombreProducto;
     private String sku;

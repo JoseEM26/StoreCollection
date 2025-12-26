@@ -28,6 +28,7 @@ import { authGuard } from '../auth/auth.guard';
 import { tiendaExistsGuard } from '../auth/tienda-exists.guard';
 import { resourceActiveGuard } from '../auth/resource-active.guard'; // ← IMPORTANTE: el guard para productos inactivos
 import { CarritoComponent } from './componente/carrito/carrito.component';
+import { BoletaComponent } from './pages/administrativo/boleta/boleta.component';
 
 export const routes: Routes = [
 
@@ -55,6 +56,7 @@ export const routes: Routes = [
       { path: 'products', component: ProductsComponent, title: 'Productos' },
       { path: 'planes', component: PlanesComponent, title: 'Planes' },
       { path: 'usuarios', component: UsuariosComponent, title: 'Usuarios' },
+      { path: 'boletas', component: BoletaComponent, title: 'Boletas' },
     ]
   },
 

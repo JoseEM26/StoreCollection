@@ -33,7 +33,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     { route: '/admin/categories',  icon: 'bi-grid-3x3-gap', label: 'Categorías',  allowedRoles: ['ADMIN', 'OWNER'] },
     { route: '/admin/products',    icon: 'bi-box-seam',     label: 'Productos',   allowedRoles: ['ADMIN', 'OWNER'] },
     { route: '/admin/usuarios',    icon: 'bi-people',       label: 'Usuarios',    allowedRoles: ['ADMIN'] }, // ← Solo ADMIN
-    { route: '/admin/planes',    icon: 'bi-people',       label: 'Planes',    allowedRoles: ['ADMIN'] } // ← Solo ADMIN
+    { route: '/admin/planes',    icon: 'bi-people',       label: 'Planes',    allowedRoles: ['ADMIN'] }, // ← Solo ADMIN
+    { route: '/admin/boletas',    icon: 'bi-people',       label: 'Boletas',    allowedRoles: ['ADMIN', 'OWNER'] } // ← Solo ADMIN
   ];
 
   constructor(

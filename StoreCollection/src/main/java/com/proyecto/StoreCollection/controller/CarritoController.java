@@ -29,7 +29,15 @@ public class CarritoController {
     public ResponseEntity<CarritoResponse> agregar(@RequestBody @Valid CarritoRequest request) {
         return ResponseEntity.ok(service.save(request));
     }
+    @PostMapping("/checkout/online")
+    public ResponseEntity<BoletaResponse> checkoutOnline(@RequestBody @Valid BoletaRequest request) {
+        return ResponseEntity.ok(service.checkoutOnline(request));
+    }
 
+    @PostMapping("/checkout/whatsapp")
+    public ResponseEntity<String> checkoutWhatsapp(@RequestBody @Valid BoletaRequest request) {
+        return ResponseEntity.ok(service.checkoutWhatsapp(request));
+    }
     @PutMapping("/{id}")
     public ResponseEntity<CarritoResponse> actualizar(@PathVariable Integer id,
                                                       @RequestBody @Valid CarritoRequest request) {
@@ -51,6 +59,6 @@ public class CarritoController {
     // NUEVO ENDPOINT: Checkout
     @PostMapping("/checkout")
     public ResponseEntity<BoletaResponse> checkout(@RequestBody @Valid BoletaRequest request) {
-        return ResponseEntity.ok(service.checkout(request));
+        return ResponseEntity.ok(service.checkoutOnline(request));
     }
 }

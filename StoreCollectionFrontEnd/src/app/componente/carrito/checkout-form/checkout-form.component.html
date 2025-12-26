@@ -1,0 +1,127 @@
+<div class="container py-4">
+  <div class="card shadow border-0 rounded">
+    <div class="card-header bg-primary text-white text-center py-4">
+      <h4 class="mb-0">Datos de Contacto y Envío</h4>
+      <small class="d-block mt-1">Completa la información para procesar tu pedido</small>
+    </div>
+
+    <div class="card-body">
+      <form [formGroup]="checkoutForm" (ngSubmit)="submit()">
+        <!-- Datos del comprador -->
+        <h5 class="mb-3 border-bottom pb-2">Datos Personales</h5>
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Nombre completo <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" formControlName="compradorNombre"
+                   [class.is-invalid]="f['compradorNombre'].touched && f['compradorNombre'].invalid">
+            <div class="invalid-feedback" *ngIf="f['compradorNombre'].errors?.['required']">
+              El nombre es obligatorio
+            </div>
+            <div class="invalid-feedback" *ngIf="f['compradorNombre'].errors?.['minlength']">
+              Mínimo 3 caracteres
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Email <span class="text-danger">*</span></label>
+            <input type="email" class="form-control" formControlName="compradorEmail"
+                   [class.is-invalid]="f['compradorEmail'].touched && f['compradorEmail'].invalid">
+            <div class="invalid-feedback" *ngIf="f['compradorEmail'].errors?.['required']">
+              El email es obligatorio
+            </div>
+            <div class="invalid-feedback" *ngIf="f['compradorEmail'].errors?.['email']">
+              Email inválido
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Teléfono / WhatsApp</label>
+            <input type="tel" class="form-control" formControlName="compradorTelefono"
+                   placeholder="+51 999 123 456"
+                   [class.is-invalid]="f['compradorTelefono'].touched && f['compradorTelefono'].invalid">
+            <div class="invalid-feedback">
+              Formato inválido (ej: +51999123456)
+            </div>
+          </div>
+        </div>
+
+        <!-- Dirección de envío -->
+        <h5 class="mb-3 border-bottom pb-2">Dirección de Envío</h5>
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label fw-bold">Dirección completa <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" formControlName="direccionEnvio"
+                   placeholder="Calle, número, dpto, urbanización..."
+                   [class.is-invalid]="f['direccionEnvio'].touched && f['direccionEnvio'].invalid">
+            <div class="invalid-feedback" *ngIf="f['direccionEnvio'].errors?.['required']">
+              La dirección es obligatoria
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Referencia (opcional)</label>
+            <input type="text" class="form-control" formControlName="referenciaEnvio"
+                   placeholder="Casa verde, frente al parque, etc...">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Distrito <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" formControlName="distrito"
+                   [class.is-invalid]="f['distrito'].touched && f['distrito'].invalid">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Provincia <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" formControlName="provincia"
+                   [class.is-invalid]="f['provincia'].touched && f['provincia'].invalid">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Departamento <span class="text-danger">*</span></label>
+            <select class="form-select" formControlName="departamento"
+                    [class.is-invalid]="f['departamento'].touched && f['departamento'].invalid">
+              <option value="">Selecciona un departamento</option>
+              @for (dep of departamentos; track dep) {
+                <option [value]="dep">{{ dep }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Código Postal (opcional)</label>
+            <input type="text" class="form-control" formControlName="codigoPostal">
+          </div>
+
+          <div class="col-12">
+            <label class="form-label fw-bold">Tipo de entrega <span class="text-danger">*</span></label>
+            <div class="d-flex flex-wrap gap-4">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" id="domicilio" value="DOMICILIO" formControlName="tipoEntrega">
+                <label class="form-check-label" for="domicilio">Envío a domicilio</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" id="recojo" value="RECOGIDA_EN_TIENDA" formControlName="tipoEntrega">
+                <label class="form-check-label" for="recojo">Recojo en tienda</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" id="agencia" value="AGENCIA" formControlName="tipoEntrega">
+                <label class="form-check-label" for="agencia">Envío a agencia</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones -->
+        <div class="d-flex justify-content-end gap-3 mt-5">
+          <button type="button" class="btn btn-outline-secondary px-5 py-2" (click)="cancel()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-success px-5 py-2" [disabled]="checkoutForm.invalid || isSubmitting">
+            <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
+            Confirmar Pedido
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

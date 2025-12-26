@@ -10,6 +10,7 @@ import {
 import { DropTownService, DropTownStandar } from '../../../../service/droptown.service';
 import { ProductoAdminService } from '../../../../service/service-admin/producto-admin.service';
 import { AuthService } from '../../../../../auth/auth.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-product-form',
@@ -24,7 +25,6 @@ export class ProductFormComponent implements OnChanges {
   @Output() saved = new EventEmitter<void>();
   @Output() closed = new EventEmitter<void>();
 
-  // Señales principales
   nombre = signal<string>('');
   slug = signal<string>('');
   categoriaId = signal<number | null>(null);
@@ -66,61 +66,60 @@ export class ProductFormComponent implements OnChanges {
     });
   }
 
- ngOnChanges(changes: SimpleChanges): void {
-  if (changes['producto'] || changes['isEdit']) {
-    if (this.producto && this.isEdit) {
-      // Modo edición: cargar datos del producto
-      this.nombre.set(this.producto.nombre);
-      this.slug.set(this.producto.slug);
-      this.categoriaId.set(this.producto.categoriaId);
-      this.tiendaId.set(this.producto.tiendaId);
-      this.activo.set(this.producto.activo); // ← Respeta el valor real del backend
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['producto'] || changes['isEdit']) {
+      if (this.producto && this.isEdit) {
+        this.nombre.set(this.producto.nombre);
+        this.slug.set(this.producto.slug);
+        this.categoriaId.set(this.producto.categoriaId);
+        this.tiendaId.set(this.producto.tiendaId);
+        this.activo.set(this.producto.activo);
 
-      const vars = this.producto.variantes?.map((v, index) => {
-        const variante: VarianteRequest = {
-          id: v.id,
-          sku: v.sku,
-          precio: v.precio,
-          stock: v.stock,
-          imagenUrl: v.imagenUrl,
-          activo: v.activo,
-          atributos: v.atributos.map(a => ({
-            atributoNombre: a.atributoNombre || '',
-            valor: a.valor || ''
-          }))
-        };
-        if (v.imagenUrl) {
-          this.imagenPreviews.update(map => map.set(index, v.imagenUrl!));
+        const vars = this.producto.variantes?.map((v, index) => {
+          const variante: VarianteRequest = {
+            id: v.id,
+            sku: v.sku,
+            precio: v.precio,
+            stock: v.stock,
+            imagenUrl: v.imagenUrl,
+            activo: v.activo,
+            atributos: v.atributos.map(a => ({
+              atributoNombre: a.atributoNombre || '',
+              valor: a.valor || ''
+            }))
+          };
+          if (v.imagenUrl) {
+            this.imagenPreviews.update(map => map.set(index, v.imagenUrl!));
+          }
+          return variante;
+        }) || [];
+
+        this.variantes.set(vars);
+        this.collapsed.set(vars.map(() => true));
+
+        if (!this.auth.isAdmin() && this.producto.tiendaId) {
+          this.dropTownService.getTiendas().subscribe(tiendas => {
+            const miTienda = tiendas.find(t => t.id === this.producto!.tiendaId);
+            this.tiendaActual.set(miTienda || null);
+          });
         }
-        return variante;
-      }) || [];
-
-      this.variantes.set(vars);
-      this.collapsed.set(vars.map(() => true));
-
-      if (!this.auth.isAdmin() && this.producto.tiendaId) {
-        this.dropTownService.getTiendas().subscribe(tiendas => {
-          const miTienda = tiendas.find(t => t.id === this.producto!.tiendaId);
-          this.tiendaActual.set(miTienda || null);
-        });
+      } else {
+        this.resetForm();
       }
-    } else {
-      // Solo modo creación: resetear todo
-      this.resetForm();
     }
   }
-}
-private resetForm() {
-  this.nombre.set('');
-  this.slug.set('');
-  this.categoriaId.set(null);
-  this.tiendaId.set(null);
-  this.activo.set(true); 
-  this.variantes.set([]);
-  this.collapsed.set([]);
-  this.imagenPreviews.set(new Map());
-  this.tiendaActual.set(null);
-}
+
+  private resetForm() {
+    this.nombre.set('');
+    this.slug.set('');
+    this.categoriaId.set(null);
+    this.tiendaId.set(null);
+    this.activo.set(true);
+    this.variantes.set([]);
+    this.collapsed.set([]);
+    this.imagenPreviews.set(new Map());
+    this.tiendaActual.set(null);
+  }
 
   generarSlugDesdeNombre(): void {
     const nombreNormalizado = this.nombre().trim().toLowerCase()
@@ -157,17 +156,27 @@ private resetForm() {
     this.collapsed.update(c => c.map((val, i) => i === index ? !val : val));
   }
 
-  // === IMÁGENES ===
   onImagenChange(event: Event, index: number): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       const file = input.files[0];
+
       if (!file.type.startsWith('image/')) {
-        alert('Solo se permiten imágenes');
+        Swal.fire({
+          icon: 'warning',
+          title: 'Archivo no permitido',
+          text: 'Solo se aceptan imágenes.',
+          confirmButtonText: 'Entendido'
+        });
         return;
       }
       if (file.size > 5 * 1024 * 1024) {
-        alert('La imagen no puede superar 5MB');
+        Swal.fire({
+          icon: 'warning',
+          title: 'Imagen demasiado grande',
+          text: 'La imagen no puede superar los 5 MB.',
+          confirmButtonText: 'OK'
+        });
         return;
       }
 
@@ -186,20 +195,19 @@ private resetForm() {
     }
   }
 
-  eliminarImagen(index: number): void {
-    this.variantes.update(v => {
-      const copy = [...v];
-      delete copy[index].imagen;
-      copy[index].imagenUrl = undefined;
-      return copy;
-    });
-    this.imagenPreviews.update(map => {
-      map.delete(index);
-      return new Map(map);
-    });
-  }
+eliminarImagen(index: number): void {
+  this.variantes.update(v => {
+    const copy = [...v];
+    delete copy[index].imagen;
+    copy[index].imagenUrl = undefined;
+    return copy;
+  });
 
-  // === ATRIBUTOS ===
+  this.imagenPreviews.update(map => {
+    map.delete(index);
+    return map;
+  });
+}
   agregarAtributo(varianteIndex: number): void {
     this.variantes.update(v => {
       const copy = [...v];
@@ -290,7 +298,6 @@ private resetForm() {
     });
   }
 
-  // ✅ MÉTODOS NUEVOS PARA EVITAR ERRORES DE COMPILACIÓN
   isAtributoPersonalizado(attr: any): boolean {
     return !!attr.atributoNombre && 
            attr.atributoNombre !== '__new__' &&
@@ -314,24 +321,144 @@ private resetForm() {
     return this.variantes().map((v, i) => ({ variante: v, index: i }));
   });
 
-  // === GUARDAR ===
   save(): void {
     this.errorMessage.set(null);
     this.loading.set(true);
 
-    if (!this.nombre().trim() || !this.slug().trim() || !this.categoriaId()) {
-      this.errorMessage.set('Completa nombre, slug y categoría.');
+    const nombreTrim = this.nombre().trim();
+    if (!nombreTrim) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Falta el nombre del producto',
+        text: 'El nombre es obligatorio para identificar el producto en la tienda.',
+        confirmButtonText: 'Entendido'
+      });
+      this.loading.set(false);
+      return;
+    }
+
+    const slugTrim = this.slug().trim();
+    if (!slugTrim) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Slug requerido',
+        text: 'El slug forma parte de la URL del producto. Puedes generarlo automáticamente desde el nombre.',
+        confirmButtonText: 'Corregir'
+      });
+      this.loading.set(false);
+      return;
+    }
+    if (!/^[a-z0-9-]+$/.test(slugTrim)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Formato de slug inválido',
+        text: 'Solo se permiten letras minúsculas, números y guiones (-). Ejemplo válido: zapatillas-nike-air-2024',
+        confirmButtonText: 'Corregir'
+      });
+      this.loading.set(false);
+      return;
+    }
+
+    if (!this.categoriaId()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Selecciona una categoría',
+        text: 'La categoría ayuda a organizar y mostrar el producto correctamente en la tienda.',
+        confirmButtonText: 'Seleccionar'
+      });
+      this.loading.set(false);
+      return;
+    }
+
+    if (!this.isEdit && this.auth.isAdmin() && !this.tiendaId()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Tienda no seleccionada',
+        text: 'Como administrador, debes asignar este producto a una tienda específica.',
+        confirmButtonText: 'Seleccionar tienda'
+      });
       this.loading.set(false);
       return;
     }
 
     if (this.variantes().length === 0) {
-      this.errorMessage.set('Debes agregar al menos una variante.');
+      Swal.fire({
+        icon: 'warning',
+        title: 'No hay variantes',
+        text: 'Todo producto necesita al menos una variante con precio, stock y SKU.',
+        confirmButtonText: 'Agregar variante'
+      });
       this.loading.set(false);
       return;
     }
 
+    for (let i = 0; i < this.variantes().length; i++) {
+      const v = this.variantes()[i];
+
+      if (!v.sku?.trim()) {
+        Swal.fire({
+          icon: 'warning',
+          title: `Variante ${i + 1}: SKU vacío`,
+          text: 'Cada variante debe tener un código SKU único (ej: ZAP-NEG-42).',
+          confirmButtonText: 'Corregir'
+        });
+        this.loading.set(false);
+        return;
+      }
+
+      if (!v.precio || v.precio <= 0) {
+        Swal.fire({
+          icon: 'warning',
+          title: `Variante ${i + 1}: Precio inválido`,
+          text: 'El precio debe ser mayor que cero.',
+          confirmButtonText: 'Corregir'
+        });
+        this.loading.set(false);
+        return;
+      }
+
+      if (v.stock == null || v.stock < 0) {
+        Swal.fire({
+          icon: 'warning',
+          title: `Variante ${i + 1}: Stock inválido`,
+          text: 'El stock no puede ser negativo. Usa 0 si no hay disponibilidad.',
+          confirmButtonText: 'Corregir'
+        });
+        this.loading.set(false);
+        return;
+      }
+
+      for (let j = 0; j < v.atributos.length; j++) {
+        const a = v.atributos[j];
+        if (a.atributoNombre && !a.valor?.trim()) {
+          Swal.fire({
+            icon: 'warning',
+            title: `Variante ${i + 1}: Valor de atributo faltante`,
+            text: `Has seleccionado el atributo "${a.atributoNombre}" pero no has indicado su valor.`,
+            confirmButtonText: 'Completar'
+          });
+          this.loading.set(false);
+          return;
+        }
+        if (!a.atributoNombre?.trim() && a.valor?.trim()) {
+          Swal.fire({
+            icon: 'warning',
+            title: `Variante ${i + 1}: Atributo incompleto`,
+            text: 'Has indicado un valor pero no has seleccionado o escrito el nombre del atributo.',
+            confirmButtonText: 'Corregir'
+          });
+          this.loading.set(false);
+          return;
+        }
+      }
+    }
+
+    this.enviarFormulario();
+  }
+
+  private enviarFormulario(): void {
     const formData = new FormData();
+
     formData.append('nombre', this.nombre().trim());
     formData.append('slug', this.slug().trim());
     formData.append('categoriaId', this.categoriaId()!.toString());
@@ -340,11 +467,6 @@ private resetForm() {
     if (this.isEdit) {
       formData.append('tiendaId', this.producto!.tiendaId.toString());
     } else if (this.auth.isAdmin()) {
-      if (!this.tiendaId()) {
-        this.errorMessage.set('ADMIN: Selecciona una tienda');
-        this.loading.set(false);
-        return;
-      }
       formData.append('tiendaId', this.tiendaId()!.toString());
     }
 
@@ -362,7 +484,7 @@ private resetForm() {
       }
 
       v.atributos.forEach((a, j) => {
-        if (a.atributoNombre.trim() && a.valor.trim() && a.atributoNombre !== '__new__') {
+        if (a.atributoNombre?.trim() && a.valor?.trim() && a.atributoNombre !== '__new__') {
           formData.append(`variantes[${i}].atributos[${j}].atributoNombre`, a.atributoNombre.trim());
           formData.append(`variantes[${i}].atributos[${j}].valor`, a.valor.trim());
         }
@@ -376,11 +498,24 @@ private resetForm() {
     obs.subscribe({
       next: () => {
         this.loading.set(false);
+        Swal.fire({
+          icon: 'success',
+          title: '¡Guardado!',
+          text: this.isEdit ? 'Producto actualizado correctamente.' : 'Producto creado correctamente.',
+          timer: 2000,
+          showConfirmButton: false
+        });
         this.saved.emit();
       },
       error: (err) => {
         console.error(err);
-        this.errorMessage.set(err.error?.message || 'Error al guardar');
+        const mensaje = err.error?.message || 'Error al guardar el producto.';
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: mensaje,
+          confirmButtonText: 'OK'
+        });
         this.loading.set(false);
       }
     });

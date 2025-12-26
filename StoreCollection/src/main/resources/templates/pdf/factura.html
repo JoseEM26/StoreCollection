@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Comprobante #[[${boleta.id}]]</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 12mm 10mm;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #222;
+            font-size: 11pt;
+            line-height: 1.45;
+        }
+        .container {
+            max-width: 190mm;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5253);
+            color: white;
+            text-align: center;
+            padding: 22px 18px 18px;
+            border-radius: 12px 12px 0 0;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.1em;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+        .header .subtitle {
+            margin: 8px 0 0;
+            font-size: 1.05em;
+            opacity: 0.95;
+        }
+
+        /* Info grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            padding: 22px 18px;
+            background: #fff;
+        }
+        .info-card {
+            background: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 18px;
+        }
+        .info-card h3 {
+            margin: 0 0 10px;
+            color: #ee5253;
+            font-size: 1.25em;
+            border-bottom: 2px solid #ffebeb;
+            padding-bottom: 6px;
+        }
+        .estado {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 8px 0;
+        }
+        .estado-atendida  { background: #e8f5e9; color: #2e7d32; }
+        .estado-pendiente { background: #fff3e0; color: #ef6c00; }
+        .estado-cancelada { background: #ffebee; color: #c62828; }
+
+        /* Sections */
+        .section {
+            padding: 0 18px 22px;
+        }
+        .section-title {
+            color: #d32f2f;
+            font-size: 1.45em;
+            margin: 24px 0 14px;
+            border-left: 5px solid #ee5253;
+            padding-left: 12px;
+        }
+
+        /* Compact table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0 24px;
+            font-size: 0.98em;
+        }
+        th {
+            background: #ee5253;
+            color: white;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        tr:nth-child(even) {
+            background-color: #fdf8f8;
+        }
+        .text-right  { text-align: right; }
+        .text-center { text-align: center; }
+        .strong      { font-weight: 700; }
+
+        /* Total */
+        .total-box {
+            background: #ee5253;
+            color: white;
+            text-align: right;
+            padding: 20px 24px;
+            border-radius: 0 0 12px 12px;
+            margin-top: 8px;
+        }
+        .total-box .label {
+            font-size: 1.3em;
+            opacity: 0.92;
+        }
+        .total-box .amount {
+            font-size: 2.4em;
+            font-weight: 900;
+            margin-top: 4px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px 18px;
+            color: #555;
+            font-size: 0.9em;
+            border-top: 1px solid #eee;
+            margin-top: 16px;
+        }
+        .footer .heart { color: #ee5253; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+    <div class="header">
+        <h1>¡GRACIAS POR TU COMPRA!</h1>
+        <div class="subtitle">
+            Comprobante N° <strong>[[${boleta.id}]]</strong> •
+            <span th:text="${#temporals.format(boleta.fecha, 'dd/MM/yyyy HH:mm')}">25/12/2025 18:00</span>
+        </div>
+    </div>
+
+    <!-- Info principal -->
+    <div class="info-grid">
+        <div class="info-card">
+            <h3>Tienda</h3>
+            <div style="font-size:1.5em; font-weight:800; color:#d32f2f; margin:8px 0;">
+                [[${boleta.tiendaNombre ?: 'Mi Tienda TikTok'}]]
+            </div>
+            <span style="background:#ffebee; color:#d32f2f; padding:4px 12px; border-radius:20px; font-size:0.9em;">
+                Venta por Redes Sociales
+            </span>
+        </div>
+
+        <div class="info-card">
+            <h3>Estado del pedido</h3>
+            <span th:classappend="${boleta.estado == 'ATENDIDA' ? 'estado-atendida' :
+                                  boleta.estado == 'CANCELADA' ? 'estado-cancelada' :
+                                  'estado-pendiente'}" class="estado"
+                  th:text="${boleta.estado}">ATENDIDA</span>
+            <div style="margin-top:12px;">
+                <strong>Fecha:</strong><br>
+                <span th:text="${#temporals.format(boleta.fecha, 'dd MMMM yyyy')}">25 diciembre 2025</span>
+                <span th:text="${#temporals.format(boleta.fecha, ' - HH:mm')}"> - 18:00</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Datos comprador + dirección (más compacto) -->
+    <div class="section">
+        <h2 class="section-title">Datos del Comprador y Envío</h2>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; font-size:0.98em;">
+            <div>
+                <strong>Nombre:</strong> [[${boleta.compradorNombre}]]<br>
+                <strong>Email:</strong> [[${boleta.compradorEmail}]]<br>
+                <div th:if="${boleta.compradorTelefono}">
+                    <strong>WhatsApp:</strong> [[${boleta.compradorTelefono}]]
+                </div>
+            </div>
+
+            <div>
+                <strong>Dirección:</strong><br>
+                [[${boleta.direccionEnvio}]]<br>
+                <div th:if="${boleta.referenciaEnvio}">Ref: [[${boleta.referenciaEnvio}]]</div>
+                [[${boleta.distrito}]], [[${boleta.provincia}]], [[${boleta.departamento}]]<br>
+                <div th:if="${boleta.codigoPostal}">CP: [[${boleta.codigoPostal}]]</div>
+                <strong>Entrega:</strong>
+                <span th:if="${boleta.tipoEntrega == 'DOMICILIO'}">A domicilio</span>
+                <span th:if="${boleta.tipoEntrega == 'RECOGIDA_EN_TIENDA'}">Recojo en tienda</span>
+                <span th:if="${boleta.tipoEntrega == 'AGENCIA'}">Agencia</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Productos -->
+    <div class="section">
+        <h2 class="section-title">Productos</h2>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Producto</th>
+                <th class="text-center">Cant.</th>
+                <th class="text-right">P. Unit</th>
+                <th class="text-right">Subtotal</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="item : ${boleta.detalles}">
+                <td><strong>[[${item.nombreProducto}]]</strong></td>
+                <td class="text-center">×[[${item.cantidad}]]</td>
+                <td class="text-right">S/ [[${#numbers.formatDecimal(item.precioUnitario,1,2,'POINT')}]]</td>
+                <td class="text-right strong">S/ [[${#numbers.formatDecimal(item.subtotal,1,2,'POINT')}]]</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Total -->
+        <div class="total-box">
+            <div class="label">TOTAL PAGADO</div>
+            <div class="amount">S/ [[${#numbers.formatDecimal(boleta.total, 1, 2, 'POINT')}]]</div>
+        </div>
+    </div>
+
+    <!-- Footer simple -->
+    <div class="footer">
+        ¡Gracias por tu confianza! 💖 Te esperamos pronto de nuevo
+    </div>
+
+</div>
+</body>
+</html>

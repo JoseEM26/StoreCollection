@@ -6,6 +6,7 @@ import { ProductoPublic, VariantePublic } from '../../../model/index.dto';
 import { ProductoPublicService } from '../../../service/producto-public.service';
 import { TiendaService } from '../../../service/tienda.service';
 import { CarritoService } from '../../../service/carrito.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-producto-unitario',
@@ -25,16 +26,11 @@ export class ProductoUnitarioComponent implements OnInit {
   loading = true;
 
   fallbackImage = 'https://via.placeholder.com/800x800.png?text=Sin+Imagen';
-
+mensajeExito: string | null = null;  // null = oculto, string = se muestra
   varianteSeleccionada: VariantePublic | null = null;
   imagenActual: string = '';
   cantidad: number = 1;
   agregandoAlCarrito = false;
-  mensajeExito = false;
-
-  lupaVisible = false;
-  lupaX = 0;
-  lupaY = 0;
 
   showQuoteModal = false;
   clienteNombre = '';
@@ -42,7 +38,6 @@ export class ProductoUnitarioComponent implements OnInit {
   clienteMensaje = '';
   enviandoCotizacion = false;
 
-  // Selección por atributos independientes
   atributosAgrupados: { nombre: string; valores: string[] }[] = [];
   seleccionAtributos: { [atributoNombre: string]: string } = {};
 
@@ -63,7 +58,10 @@ export class ProductoUnitarioComponent implements OnInit {
         this.inicializarAtributos();
         this.loading = false;
       },
-      error: () => this.loading = false
+      error: () => {
+        this.loading = false;
+        Swal.fire('Error', 'No se pudo cargar el producto. Intenta nuevamente.', 'error');
+      }
     });
   }
 
@@ -80,9 +78,7 @@ export class ProductoUnitarioComponent implements OnInit {
       return;
     }
 
-    // 1. Construir mapa de atributos y valores únicos
     const mapa = new Map<string, Set<string>>();
-
     this.producto.variantes.forEach(variante => {
       variante.atributos.forEach(attr => {
         if (!mapa.has(attr.atributoNombre)) {
@@ -92,7 +88,6 @@ export class ProductoUnitarioComponent implements OnInit {
       });
     });
 
-    // 2. Crear lista agrupada y ordenada
     this.atributosAgrupados = Array.from(mapa.entries())
       .map(([nombre, valoresSet]) => ({
         nombre,
@@ -100,23 +95,19 @@ export class ProductoUnitarioComponent implements OnInit {
       }))
       .sort((a, b) => a.nombre.localeCompare(b.nombre));
 
-    // 3. Inicializar objeto de selección vacío
     this.seleccionAtributos = {};
     this.atributosAgrupados.forEach(attr => {
       this.seleccionAtributos[attr.nombre] = '';
     });
 
-    // 4. Auto-seleccionar si solo hay una opción por atributo (ej: solo talla M)
     this.atributosAgrupados.forEach(grupo => {
       if (grupo.valores.length === 1) {
         this.seleccionAtributos[grupo.nombre] = grupo.valores[0];
       }
     });
 
-    // 5. Intentar preseleccionar una variante disponible (con stock preferido)
     this.seleccionarVarianteDisponible();
 
-    // 6. Si no hay variante preseleccionada por stock, usar la selección actual (auto o manual)
     if (!this.varianteSeleccionada) {
       this.actualizarVarianteSegunSeleccion();
     }
@@ -150,7 +141,6 @@ export class ProductoUnitarioComponent implements OnInit {
     }
 
     const varianteCoincidente = this.producto.variantes.find(v => {
-      // Debe coincidir el número de atributos seleccionados con los de la variante
       const seleccionadosCount = Object.values(this.seleccionAtributos).filter(v => v !== '').length;
       if (v.atributos.length !== seleccionadosCount) return false;
 
@@ -161,7 +151,7 @@ export class ProductoUnitarioComponent implements OnInit {
 
     this.varianteSeleccionada = varianteCoincidente || null;
     this.actualizarImagen();
-    this.cantidad = 1; // Reiniciar cantidad al cambiar variante
+    this.cantidad = 1; // Resetear cantidad al cambiar variante
   }
 
   esValorDisponible(atributoNombre: string, valor: string): boolean {
@@ -214,55 +204,84 @@ export class ProductoUnitarioComponent implements OnInit {
     return this.tienda?.whatsapp?.replace(/\D/g, '') || '51987654321';
   }
 
-  // ===== CARRITO =====
+  // ===== CONTROLES DE CANTIDAD CON VALIDACIÓN DE STOCK =====
   aumentarCantidad() {
-    if (this.cantidad < this.stockActual) this.cantidad++;
+    if (this.cantidad < this.stockActual) {
+      this.cantidad++;
+    } else {
+      Swal.fire('Stock limitado', `Solo hay ${this.stockActual} unidades disponibles.`, 'warning');
+    }
   }
 
   disminuirCantidad() {
     if (this.cantidad > 1) this.cantidad--;
   }
 
-  agregarAlCarrito() {
-    if (!this.hayStock || !this.varianteSeleccionada) return;
+  // ===== AGREGAR AL CARRITO CON VALIDACIÓN =====
+agregarAlCarrito() {
+    if (!this.varianteSeleccionada) {
+      Swal.fire('Selecciona una variante', 'Por favor elige todas las opciones requeridas.', 'info');
+      return;
+    }
+
+    if (!this.hayStock) {
+      Swal.fire('Sin stock', 'Lo sentimos, este producto está agotado.', 'error');
+      return;
+    }
+
+    if (this.cantidad > this.stockActual) {
+      Swal.fire('Cantidad excedida', `Solo puedes agregar hasta ${this.stockActual} unidades.`, 'warning');
+      this.cantidad = this.stockActual;
+      return;
+    }
 
     this.agregandoAlCarrito = true;
+
     this.carritoService.agregarAlCarrito(this.varianteSeleccionada.id, this.cantidad).subscribe({
       next: () => {
         this.agregandoAlCarrito = false;
-        this.mensajeExito = true;
-        setTimeout(() => this.mensajeExito = false, 3000);
+
+        // ¡Aquí mostramos el mensaje de éxito!
+        this.mensajeExito = `${this.cantidad} × ${this.producto.nombre} ${this.atributosTexto ? '(' + this.atributosTexto + ')' : ''}`;
+
+        // Opcional: ocultar automáticamente después de 5 segundos
+        setTimeout(() => {
+          this.mensajeExito = null;
+        }, 5000);
+
+        // SweetAlert adicional (opcional)
+        Swal.fire({
+          title: '¡Agregado!',
+          text: 'Producto agregado al carrito correctamente',
+          icon: 'success',
+          timer: 2500,
+          showConfirmButton: false
+        });
       },
       error: () => {
         this.agregandoAlCarrito = false;
-        alert('Error al agregar al carrito');
+        Swal.fire('Error', 'No se pudo agregar al carrito. Intenta nuevamente.', 'error');
       }
     });
   }
 
-  // ===== LUPA =====
-  mostrarLupa(e: MouseEvent) { this.lupaVisible = true; this.actualizarLupa(e); }
-  ocultarLupa() { this.lupaVisible = false; }
-  actualizarLupa(e: MouseEvent) {
-    const img = e.currentTarget as HTMLElement;
-    const rect = img.getBoundingClientRect();
-    this.lupaX = e.clientX - rect.left;
-    this.lupaY = e.clientY - rect.top;
-  }
-
   // ===== WHATSAPP Y LLAMADA =====
   consultarWhatsApp() {
-    const msg = encodeURIComponent(
-      `¡Hola! Me interesa:\n\n*${this.producto.nombre}*\n${this.atributosTexto ? this.atributosTexto + '\n' : ''}S/ ${this.precioActual.toFixed(2)}\nCantidad: ${this.cantidad}\n\n¿Está disponible?`
-    );
-    window.open(`https://wa.me/${this.whatsappNumero}?text=${msg}`, '_blank');
+    let msg = `¡Hola! Me interesa:\n\n*${this.producto.nombre}*`;
+    if (this.atributosTexto) msg += `\n${this.atributosTexto}`;
+    msg += `\nPrecio: S/ ${this.precioActual.toFixed(2)}`;
+    if (this.varianteSeleccionada) msg += `\nCantidad deseada: ${this.cantidad}`;
+    msg += `\n\n¿Está disponible?`;
+
+    const encoded = encodeURIComponent(msg);
+    window.open(`https://wa.me/${this.whatsappNumero}?text=${encoded}`, '_blank');
   }
 
   llamarAhora() {
     window.location.href = `tel:${this.whatsappNumero}`;
   }
 
-  // ===== COTIZACIÓN MODAL =====
+  // ===== COTIZACIÓN =====
   abrirCotizacion() {
     this.showQuoteModal = true;
     this.clienteMensaje = `Hola, me interesa: ${this.producto.nombre} ${this.atributosTexto ? '(' + this.atributosTexto + ')' : ''} (S/ ${this.precioActual.toFixed(2)})`;
@@ -274,31 +293,37 @@ export class ProductoUnitarioComponent implements OnInit {
     this.clienteTelefono = '';
     this.clienteMensaje = '';
   }
-get atributosFaltantesTexto(): string {
-  if (this.atributosAgrupados.length === 0) return '';
-
-  const faltantes = this.atributosAgrupados
-    .filter(g => 
-      !this.seleccionAtributos[g.nombre] || 
-      this.seleccionAtributos[g.nombre] === ''
-    )
-    .map(g => g.nombre);
-
-  if (faltantes.length === 0) return '';
-  if (faltantes.length === 1) return faltantes[0];
-  
-  // Para más de uno: "Color y Talla"
-  return faltantes.slice(0, -1).join(', ') + ' y ' + faltantes[faltantes.length - 1];
-}
 
   enviarCotizacion() {
-    if (!this.clienteNombre || !this.clienteTelefono) return;
+    if (!this.clienteNombre.trim() || !this.clienteTelefono.trim()) {
+      Swal.fire('Faltan datos', 'Por favor ingresa tu nombre y teléfono.', 'warning');
+      return;
+    }
 
     this.enviandoCotizacion = true;
+
+    // Simulación de envío
     setTimeout(() => {
-      alert(`¡Gracias ${this.clienteNombre}! Te contactaremos pronto por WhatsApp.`);
+      Swal.fire({
+        title: '¡Gracias ' + this.clienteNombre + '!',
+        text: 'Te contactaremos en minutos por WhatsApp.',
+        icon: 'success'
+      });
       this.cerrarModal();
       this.enviandoCotizacion = false;
     }, 1500);
+  }
+
+  get atributosFaltantesTexto(): string {
+    if (this.atributosAgrupados.length === 0) return '';
+
+    const faltantes = this.atributosAgrupados
+      .filter(g => !this.seleccionAtributos[g.nombre] || this.seleccionAtributos[g.nombre] === '')
+      .map(g => g.nombre);
+
+    if (faltantes.length === 0) return '';
+    if (faltantes.length === 1) return faltantes[0];
+
+    return faltantes.slice(0, -1).join(', ') + ' y ' + faltantes[faltantes.length - 1];
   }
 }

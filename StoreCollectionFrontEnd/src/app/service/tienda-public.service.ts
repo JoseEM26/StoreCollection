@@ -1,20 +1,25 @@
-// src/app/services/tienda-public.service.ts
+// src/app/service/tienda-public.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { TiendaService } from './tienda.service';
 import { Observable, of } from 'rxjs';
-import { Tienda } from '../model';
 import { catchError, tap } from 'rxjs/operators';
+import { Tienda } from '../model';
 import { TiendaPage } from '../model/tienda-public.model';
 import { environment } from '../../../environment';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class TiendaPublicService {
-  constructor(private http: HttpClient, private tiendaService: TiendaService) {}
- private apiUrl = `${environment.apiUrl}/api/public/tiendas`;
+  private readonly apiUrl = `${environment.apiUrl}/api/public/tiendas`;
 
+  constructor(
+    private http: HttpClient,
+    private tiendaService: TiendaService
+  ) {}
 
- //ESTO DE ACA CONSUME TODOS LAS TIENDAS
+  // Lista todas las tiendas (paginado)
   getAllTiendas(
     page = 0,
     size = 12,
@@ -33,15 +38,26 @@ export class TiendaPublicService {
     return this.http.get<TiendaPage>(this.apiUrl, { params });
   }
 
-getTiendaBySlug(slug: string): Observable<Tienda | null> {
-  return this.http.get<Tienda>(`${this.apiUrl}/${slug}`).pipe(
-    catchError(() => of(null))
-  );
-}
-  cargarTiendaActual(): Observable<Tienda> {
+  // Obtiene una tienda por slug (sin actualizar el estado global)
+  getTiendaBySlug(slug: string): Observable<Tienda | null> {
+    return this.http.get<Tienda>(`${this.apiUrl}/${slug}`).pipe(
+      catchError(() => of(null))
+    );
+  }
+
+  // Carga la tienda actual usando el slug guardado y actualiza el estado global
+  cargarTiendaActual(): Observable<Tienda | null> {
     const url = this.tiendaService.getBaseUrl();
-    return this.http
-      .get<Tienda>(url)
-      .pipe(tap((tienda) => this.tiendaService.setTienda(tienda)));
+    if (!url) {
+      return of(null);
+    }
+
+    return this.http.get<Tienda>(url).pipe(
+      tap(tienda => this.tiendaService.setTienda(tienda)),
+      catchError(() => {
+        this.tiendaService.setTienda(null);
+        return of(null);
+      })
+    );
   }
 }
