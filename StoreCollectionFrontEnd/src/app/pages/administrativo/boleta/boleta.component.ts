@@ -83,72 +83,138 @@ export class BoletaComponent implements OnInit {
     this.boletaSeleccionada = null;
   }
 
-  async cambiarEstado(boleta: BoletaResponse, nuevoEstado: 'PENDIENTE' | 'ATENDIDA' | 'CANCELADA'): Promise<void> {
-    const textos = {
-      PENDIENTE: 'volver a pendiente',
-      ATENDIDA: 'marcar como atendido',
-      CANCELADA: 'cancelar'
-    };
+ async cambiarEstado(boleta: BoletaResponse, nuevoEstado: 'PENDIENTE' | 'ATENDIDA' | 'CANCELADA'): Promise<void> {
+  const textos = {
+    PENDIENTE: 'volver a pendiente',
+    ATENDIDA: 'marcar como atendido',
+    CANCELADA: 'cancelar'
+  };
 
-    const result = await Swal.fire({
-      title: '¿Confirmar acción?',
-      text: `Vas a ${textos[nuevoEstado]} el pedido #${boleta.id}`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, continuar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33'
-    });
+  const result = await Swal.fire({
+    title: '¿Confirmar acción?',
+    text: `Vas a ${textos[nuevoEstado]} el pedido #${boleta.id}?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, continuar',
+    cancelButtonText: 'No, cancelar',
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33'
+  });
 
-    if (!result.isConfirmed) return;
+  if (!result.isConfirmed) return;
 
-    this.isLoading = true;
+  this.isLoading = true;
 
-    let serviceCall: Observable<BoletaResponse>;
+  let serviceCall: Observable<BoletaResponse>;
 
-    switch (nuevoEstado) {
-      case 'ATENDIDA':
-        serviceCall = this.boletaService.marcarComoAtendida(boleta.id);
-        break;
-      case 'CANCELADA':
-        serviceCall = this.boletaService.cancelarBoleta(boleta.id);
-        break;
-      case 'PENDIENTE':
-        serviceCall = this.boletaService.volverAPendiente(boleta.id);
-        break;
-      default:
-        this.isLoading = false;
-        return;
-    }
+  switch (nuevoEstado) {
+    case 'ATENDIDA':
+      serviceCall = this.boletaService.marcarComoAtendida(boleta.id);
+      break;
+    case 'CANCELADA':
+      serviceCall = this.boletaService.cancelarBoleta(boleta.id);
+      break;
+    case 'PENDIENTE':
+      serviceCall = this.boletaService.volverAPendiente(boleta.id);
+      break;
+    default:
+      this.isLoading = false;
+      return;
+  }
 
-    serviceCall.subscribe({
-      next: (actualizada) => {
-        const index = this.boletas.findIndex(b => b.id === actualizada.id);
-        if (index !== -1) this.boletas[index] = actualizada;
+  serviceCall.subscribe({
+    next: (actualizada) => {
+      const index = this.boletas.findIndex(b => b.id === actualizada.id);
+      if (index !== -1) this.boletas[index] = actualizada;
 
-        if (this.boletaSeleccionada?.id === actualizada.id) {
-          this.boletaSeleccionada = actualizada;
-        }
+      if (this.boletaSeleccionada?.id === actualizada.id) {
+        this.boletaSeleccionada = actualizada;
+      }
 
-        this.cdr.detectChanges();
-        this.isLoading = false;
+      this.cdr.detectChanges();
+      this.isLoading = false;
 
-        Swal.fire('¡Éxito!', `El pedido #${actualizada.id} ha sido actualizado.`, 'success');
-      },
+      Swal.fire({
+        title: '¡Éxito!',
+        text: `El pedido #${actualizada.id} ha sido ${textos[nuevoEstado]} correctamente.`,
+        icon: 'success',
+        timer: 2500,
+        showConfirmButton: false
+      });
+    },
+
     error: (err) => {
-  this.isLoading = false;
-  const mensajeError = err.message ?? 'No se pudo cambiar el estado del pedido.';
-  this.errorMessage = mensajeError;
-  Swal.fire({
-    title: 'Error',
-    text: mensajeError,
-    icon: 'error',
-    confirmButtonText: 'Entendido'
+      this.isLoading = false;
+
+      // Mensajes más específicos y amigables según el tipo de error
+      let titulo = 'Error';
+      let mensaje = 'No se pudo cambiar el estado del pedido.';
+      let icono: 'error' | 'warning' = 'error';
+
+      // Intentamos extraer el mensaje real del backend
+      const errorBody = err.error;
+      let detalleError = '';
+
+      if (errorBody) {
+        // Caso 1: El backend envía un string directo (muy común en Spring cuando lanza excepción)
+        if (typeof errorBody === 'string') {
+          detalleError = errorBody;
+        }
+        // Caso 2: Respuesta JSON con campo "message" (muy recomendado en backend)
+        else if (errorBody?.message) {
+          detalleError = errorBody.message;
+        }
+        // Caso 3: JSON con "error" o "detail"
+        else if (errorBody?.error || errorBody?.detail) {
+          detalleError = errorBody.error || errorBody.detail;
+        }
+      }
+
+      // Detección inteligente de mensajes comunes del backend
+      if (detalleError.includes('Stock insuficiente') || 
+          detalleError.toLowerCase().includes('stock insuficiente') ||
+          detalleError.includes('IllegalStateException') && detalleError.includes('Stock')) {
+        
+        titulo = 'Stock insuficiente';
+        mensaje = detalleError || 
+                 'No hay stock disponible para atender este pedido.\n' +
+                 'Algún producto tiene menos unidades de las solicitadas.';
+        icono = 'warning';
+      }
+      else if (detalleError.includes('No se encontró') || 
+               detalleError.includes('not found') || 
+               err.status === 404) {
+        mensaje = 'El pedido no existe o ya fue modificado.';
+      }
+      else if (err.status === 403) {
+        mensaje = 'No tienes permisos para realizar esta acción.';
+      }
+      else if (err.status === 400) {
+        mensaje = 'Solicitud inválida. ' + (detalleError || 'Revisa los datos del pedido.');
+      }
+      else if (err.status === 409) {
+        mensaje = 'Conflicto: ' + (detalleError || 'El estado del pedido no permite esta acción.');
+      }
+      else if (detalleError) {
+        mensaje = detalleError;
+      }
+      else if (err.status) {
+        mensaje += ` (Error ${err.status})`;
+      }
+
+      Swal.fire({
+        title: titulo,
+        text: mensaje,
+        icon: icono,
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: icono === 'warning' ? '#f39c12' : '#d33'
+      });
+
+      // Opcional: guardar en variable para mostrar también en la UI
+      this.errorMessage = mensaje;
+    }
   });
 }
-    });
-  }
 
   descargarFactura(id: number): void {
     this.boletaService.descargarFacturaPdf(id).subscribe({

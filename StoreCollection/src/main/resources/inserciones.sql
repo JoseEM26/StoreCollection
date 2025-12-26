@@ -50,7 +50,7 @@ INSERT INTO usuario (nombre, email, password, celular, rol) VALUES
 
 -- Tiendas (whatsapp con solo 9 dígitos)
 INSERT INTO tienda (nombre, slug, whatsapp, moneda, descripcion, direccion, horarios, mapa_url, logo_img_url, plan_id, user_id) VALUES
-('ZapaTik', 'zapatik', '987654321', 'SOLES', 'Zapatillas virales de TikTok', 'Av. Brasil 1234, Lima', 'Lun-Sab 10am-9pm', 'https://maps.google.com/?q=zapatik', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/zapatik.png', 3, 2),
+('ZapaTik', 'zapatik', '987654321', 'SOLES', 'Zapatillas virales de TikTok', 'Av. Brasil 1234, Lima', 'Lun-Sab 10am-9pm', 'https://maps.google.com/?q=zapatik', 'https://res.cloudinary.com/dqznlmig0/image/upload/v1766703356/tiendas/logos/yxwdoveun3nb7zndbv2s.png', 3, 2),
 ('TechPro Perú', 'techpro-peru', '911223344', 'DOLARES', 'Gadgets importados premium', 'Tienda online', '24/7', 'https://maps.google.com/?q=techpro', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/techpro.png', 4, 3),
 ('Moda Fashion', 'moda-fashion', '955667788', 'SOLES', 'Ropa trendy 2025', 'Jr. de la Unión 890', 'Lun-Dom 9am-10pm', 'https://maps.google.com/?q=modafashion', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/modafashion.png', 3, 4),
 ('PetFood Premium', 'petfood-premium', '933445566', 'SOLES', 'Alimento para mascotas', 'Av. Larco 123, Miraflores', 'Lun-Vie 9am-7pm', 'https://maps.google.com/?q=petfood', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/petfood.png', 2, 5),
@@ -127,13 +127,13 @@ INSERT INTO atributo_valor (atributo_id, valor, tienda_id) VALUES
 (3, '100W', 2);
 
 INSERT INTO Producto_Variante (producto_id, tienda_id, sku, precio, stock, imagen_url, activo) VALUES
-(1, 1, 'NAM90-38-NEGRO', 549.90, 12, 'https://img.zapatik.pe/nike90-negro-38.jpg', TRUE),
-(1, 1, 'NAM90-38-BLANCO', 549.90, 8, 'https://img.zapatik.pe/nike90-blanco-38.jpg', TRUE),
-(1, 1, 'NAM90-39-NEGRO', 549.90, 15, 'https://img.zapatik.pe/nike90-negro-39.jpg', TRUE),
-(1, 1, 'NAM90-40-ROJO', 579.90, 5, 'https://img.zapatik.pe/nike90-rojo-40.jpg', TRUE),
-(1, 1, 'NAM90-42-AZUL', 549.90, 3, 'https://img.zapatik.pe/nike90-azul-42.jpg', TRUE),
-(2, 1, 'AUB-39-GRIS', 699.90, 10, 'https://img.zapatik.pe/adidas-gris-39.jpg', TRUE),
-(2, 1, 'AUB-41-NEGRO', 699.90, 7, 'https://img.zapatik.pe/adidas-negro-41.jpg', TRUE),
+(1, 1, 'NAM90-38-NEGRO', 549.90, 12, 'https://res.cloudinary.com/dqznlmig0/image/upload/v1766708632/tiendas/zapatik/productos/d2nbioqlakdkh6zor1uz.png', TRUE),
+(1, 1, 'NAM90-38-BLANCO', 549.90, 8, 'https://res.cloudinary.com/dqznlmig0/image/upload/v1766708628/tiendas/zapatik/productos/gbnzhdyt3zn708uvxgym.png', TRUE),
+(1, 1, 'NAM90-39-NEGRO', 549.90, 15, 'https://res.cloudinary.com/dqznlmig0/image/upload/v1766708689/tiendas/zapatik/productos/p98bhi2npuy4z5jjk1sz.png', TRUE),
+(1, 1, 'NAM90-40-ROJO', 579.90, 5, 'https://res.cloudinary.com/dqznlmig0/image/upload/v1766708629/tiendas/zapatik/productos/qzrelpqi6ctuo6m1yasw.png', TRUE),
+(1, 1, 'NAM90-42-AZUL', 549.90, 3, 'https://res.cloudinary.com/dqznlmig0/image/upload/v1766708631/tiendas/zapatik/productos/bydofblcgatdflbbhse3.png', TRUE),
+(2, 1, 'AUB-39-GRIS', 699.90, 10, 'https://res.cloudinary.com/dqznlmig0/image/upload/v1766703511/tiendas/zapatik/productos/ueorju4b64f1bskrjegp.png', TRUE),
+(2, 1, 'AUB-41-NEGRO', 699.90, 7, 'https://res.cloudinary.com/dqznlmig0/image/upload/v1766703547/tiendas/zapatik/productos/gnf99rxfzexe4qzqf2g1.png', TRUE),
 (3, 2, 'CH65W-BLANCO', 89.90, 25, 'https://techpro.pe/cargador-blanco.jpg', TRUE),
 (3, 2, 'CH65W-NEGRO', 89.90, 18, 'https://techpro.pe/cargador-negro.jpg', TRUE),
 (3, 2, 'CH100W-GAN', 129.90, 30, 'https://techpro.pe/gan-100w.jpg', TRUE),
