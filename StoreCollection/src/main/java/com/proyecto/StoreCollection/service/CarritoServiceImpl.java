@@ -28,12 +28,13 @@ import java.util.stream.Collectors;
 @Transactional
 public class CarritoServiceImpl implements CarritoService {
 
-    private final JavaMailSender mailSender;  // ← NUEVO: inyectar esto
+    private final JavaMailSender mailSender;
     private final CarritoRepository repository;
     private final ProductoVarianteRepository varianteRepository;
     private final BoletaRepository boletaRepository;
     private final TiendaRepository tiendaRepository;
     private final UsuarioRepository usuarioRepository;
+
     // ===================== CARRITO =====================
 
     @Override
@@ -87,20 +88,19 @@ public class CarritoServiceImpl implements CarritoService {
         repository.deleteBySessionId(sessionId);
     }
 
+    // ===================== CHECKOUT ONLINE =====================
+
     @Override
     @Transactional
     public BoletaResponse checkoutOnline(BoletaRequest request) {
-        // 1. Cargar items del carrito (con detalles)
         List<Carrito> items = repository.findBySessionIdWithDetails(request.getSessionId());
         if (items == null || items.isEmpty()) {
             throw new IllegalStateException("El carrito está vacío");
         }
 
-        // 2. Obtener tienda
         Tienda tienda = tiendaRepository.findById(request.getTiendaId())
                 .orElseThrow(() -> new IllegalArgumentException("Tienda no encontrada: " + request.getTiendaId()));
 
-        // 3. Calcular total y crear detalles
         BigDecimal total = BigDecimal.ZERO;
         List<BoletaDetalle> detalles = new ArrayList<>();
 
@@ -110,7 +110,6 @@ public class CarritoServiceImpl implements CarritoService {
                 throw new IllegalStateException("Variante no encontrada en carrito");
             }
 
-            // Validación de stock (optimista)
             if (variante.getStock() < item.getCantidad()) {
                 throw new IllegalStateException(
                         "Stock insuficiente para " + variante.getProducto().getNombre() +
@@ -122,30 +121,25 @@ public class CarritoServiceImpl implements CarritoService {
             total = total.add(subtotal);
 
             BoletaDetalle detalle = new BoletaDetalle();
-            detalle.setBoleta(null); // se setea después
             detalle.setVariante(variante);
             detalle.setCantidad(item.getCantidad());
             detalle.setPrecioUnitario(variante.getPrecio());
             detalle.setSubtotal(subtotal);
-
             detalles.add(detalle);
         }
 
-        // 4. Crear Boleta
         Boleta boleta = new Boleta();
         boleta.setSessionId(request.getSessionId());
         boleta.setTienda(tienda);
         boleta.setTotal(total);
         boleta.setEstado(Boleta.EstadoBoleta.PENDIENTE);
 
-        // Usuario si existe
         if (request.getUserId() != null) {
             Usuario user = usuarioRepository.findById(request.getUserId())
                     .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
             boleta.setUser(user);
         }
 
-        // Nuevos campos de comprador y envío
         boleta.setCompradorNombre(request.getCompradorNombre());
         boleta.setCompradorEmail(request.getCompradorEmail());
         boleta.setCompradorTelefono(request.getCompradorTelefono());
@@ -157,44 +151,73 @@ public class CarritoServiceImpl implements CarritoService {
         boleta.setCodigoPostal(request.getCodigoPostal());
         boleta.setTipoEntrega(request.getTipoEntrega());
 
-        // Asignar detalles a la boleta
         boleta.setDetalles(detalles);
         detalles.forEach(d -> d.setBoleta(boleta));
 
-        // 5. Guardar
         Boleta boletaGuardada = boletaRepository.save(boleta);
-
-        // 6. Limpiar carrito
         limpiarCarrito(request.getSessionId());
 
-        // 7. Enviar email de notificación al dueño de la tienda
-        sendEmailNotification(boletaGuardada, tienda.getUser().getEmail());
+        // Enviamos notificaciones por email
+        sendEmailNotifications(boletaGuardada);
 
         return toBoletaResponse(boletaGuardada);
     }
-    private void sendEmailNotification(Boleta boleta, String toEmail) {
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom("StoreCollection <joseangelespinozamorales@hotmail.com>");
-            helper.setTo(toEmail);
-            helper.setSubject("Nuevo Pedido #" + boleta.getId() + " - StoreCollection");
+    // ===================== EMAILS =====================
 
-            String htmlContent = buildEmailHtml(boleta);
-            helper.setText(htmlContent, true); // true = es HTML
+    private void sendEmailNotifications(Boleta boleta) {
+        String ownerEmail = boleta.getTienda().getUser().getEmail();
+        String customerEmail = boleta.getCompradorEmail();
 
-            mailSender.send(message);
-            System.out.println("Email enviado correctamente a " + toEmail);
+        // Siempre enviamos al dueño
+        sendToOwner(boleta, ownerEmail);
 
-        } catch (Exception e) {
-            System.err.println("Error enviando email: " + e.getMessage());
-            e.printStackTrace();
+        // Enviamos al cliente solo si hay email válido
+        if (customerEmail != null && !customerEmail.trim().isEmpty() && customerEmail.contains("@")) {
+            sendToCustomer(boleta, customerEmail);
         }
     }
 
-    private String buildEmailHtml(Boleta boleta) {
-        StringBuilder sb = new StringBuilder(1024);
+    private void sendToOwner(Boleta boleta, String toEmail) {
+        try {
+            MimeMessage msg = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
+
+            helper.setFrom("StoreCollection <joseangelespinozamorales@hotmail.com>");
+            helper.setTo(toEmail);
+            helper.setSubject("¡NUEVO PEDIDO! #" + boleta.getId() + " - " + boleta.getTienda().getNombre());
+
+            String html = buildEmailHtmlForOwner(boleta);
+            helper.setText(html, true);
+
+            mailSender.send(msg);
+            System.out.println("Email enviado al dueño: " + toEmail);
+        } catch (Exception e) {
+            System.err.println("Error enviando email al dueño (" + toEmail + "): " + e.getMessage());
+        }
+    }
+
+    private void sendToCustomer(Boleta boleta, String toEmail) {
+        try {
+            MimeMessage msg = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
+
+            helper.setFrom("StoreCollection <joseangelespinozamorales@hotmail.com>");
+            helper.setTo(toEmail);
+            helper.setSubject("¡Gracias por tu compra! Pedido #" + boleta.getId());
+
+            String html = buildEmailHtmlForCustomer(boleta);
+            helper.setText(html, true);
+
+            mailSender.send(msg);
+            System.out.println("Email de confirmación enviado al cliente: " + toEmail);
+        } catch (Exception e) {
+            System.err.println("Error enviando email de confirmación al cliente (" + toEmail + "): " + e.getMessage());
+        }
+    }
+
+    private String buildEmailHtmlForOwner(Boleta boleta) {
+        StringBuilder sb = new StringBuilder(2048);
 
         sb.append("<!DOCTYPE html>")
                 .append("<html lang=\"es\">")
@@ -203,74 +226,110 @@ public class CarritoServiceImpl implements CarritoService {
                 .append("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">")
                 .append("  <title>Nuevo Pedido #").append(boleta.getId()).append("</title>")
                 .append("  <style>")
-                .append("    body { font-family: -apple-system, BlinkMacC, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #f6f9fc; color: #333; }")
-                .append("    .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }")
-                .append("    .header { background: #6366f1; color: white; padding: 24px 32px; text-align: center; }")
-                .append("    .header h1 { margin: 0; font-size: 24px; }")
-                .append("    .content { padding: 32px; }")
-                .append("    .total { font-size: 20px; font-weight: 600; margin: 24px 0; text-align: right; color: #1f2937; }")
-                .append("    table { width: 100%; border-collapse: collapse; margin: 20px 0; }")
-                .append("    th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #e5e7eb; }")
-                .append("    th { background: #f3f4f6; font-weight: 600; color: #374151; }")
-                .append("    .footer { background: #f9fafb; padding: 24px; text-align: center; font-size: 13px; color: #6b7280; border-top: 1px solid #e5e7eb; }")
-                .append("    .highlight { color: #6366f1; font-weight: 600; }")
+                .append("    body { font-family: Arial, Helvetica, sans-serif; margin:0; padding:0; background:#f6f9fc; color:#333; }")
+                .append("    .container { max-width:600px; margin:40px auto; background:white; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.08); overflow:hidden; }")
+                .append("    .header { background:#6366f1; color:white; padding:24px 32px; text-align:center; }")
+                .append("    .content { padding:32px; }")
+                .append("    table { width:100%; border-collapse:collapse; margin:20px 0; }")
+                .append("    th, td { padding:12px; text-align:left; border-bottom:1px solid #e5e7eb; }")
+                .append("    th { background:#f3f4f6; }")
+                .append("    .total { text-align:right; font-size:20px; font-weight:bold; margin:24px 0; }")
+                .append("    .footer { background:#f9fafb; padding:24px; text-align:center; font-size:13px; color:#6b7280; }")
                 .append("  </style>")
                 .append("</head>")
                 .append("<body>")
-                .append("  <div class=\"container\">")
-                .append("    <div class=\"header\">")
-                .append("      <h1>Nuevo Pedido <span class=\"highlight\">#").append(boleta.getId()).append("</span></h1>")
-                .append("    </div>")
-                .append("    <div class=\"content\">");
-
-        // Información básica
-        sb.append("      <p>Hola, se ha recibido un nuevo pedido en <strong>").append(escapeHtml(boleta.getTienda().getNombre())).append("</strong></p>")
-                .append("      <p><strong>Fecha:</strong> ").append(boleta.getFecha().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))).append("</p>")
-                .append("      <p><strong>Estado:</strong> ").append(boleta.getEstado().name()).append("</p>");
-
-        // Tabla de productos
-        sb.append("      <table>")
-                .append("        <thead>")
-                .append("          <tr>")
-                .append("            <th>Producto</th>")
-                .append("            <th style=\"text-align:center;\">Cant.</th>")
-                .append("            <th style=\"text-align:right;\">Precio unit.</th>")
-                .append("            <th style=\"text-align:right;\">Subtotal</th>")
-                .append("          </tr>")
-                .append("        </thead>")
-                .append("        <tbody>");
-
-        for (BoletaDetalle detalle : boleta.getDetalles()) {
-            Producto producto = detalle.getVariante().getProducto();
-            String nombreProducto = escapeHtml(producto.getNombre());
-
-            sb.append("          <tr>")
-                    .append("            <td>").append(nombreProducto).append("</td>")
-                    .append("            <td style=\"text-align:center;\">").append(detalle.getCantidad()).append("</td>")
-                    .append("            <td style=\"text-align:right;\">S/ ").append(detalle.getPrecioUnitario()).append("</td>")
-                    .append("            <td style=\"text-align:right;\">S/ ").append(detalle.getSubtotal()).append("</td>")
-                    .append("          </tr>");
-        }
-
-        sb.append("        </tbody>")
-                .append("      </table>");
-
-        // Total
-        sb.append("      <div class=\"total\">")
-                .append("        Total: <span style=\"font-size:24px;color:#111827;\">S/ ").append(boleta.getTotal()).append("</span>")
-                .append("      </div>");
-
-        sb.append("    </div>")
-                .append("    <div class=\"footer\">")
-                .append("      <p>StoreCollection © ").append(LocalDate.now().getYear()).append(" | Plataforma de gestión de tiendas</p>")
-                .append("      <p>Este es un mensaje automático, por favor no responder directamente.</p>")
-                .append("    </div>")
+                .append("<div class=\"container\">")
+                .append("  <div class=\"header\"><h1>Nuevo Pedido #").append(boleta.getId()).append("</h1></div>")
+                .append("  <div class=\"content\">")
+                .append("    <p><strong>Tienda:</strong> ").append(escapeHtml(boleta.getTienda().getNombre())).append("</p>")
+                .append("    <p><strong>Fecha:</strong> ").append(boleta.getFecha().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))).append("</p>")
+                .append("    <p><strong>Cliente:</strong> ").append(escapeHtml(boleta.getCompradorNombre())).append("</p>")
+                .append("    <p><strong>Email:</strong> ").append(escapeHtml(boleta.getCompradorEmail())).append("</p>")
+                .append("    <p><strong>Teléfono:</strong> ").append(escapeHtml(boleta.getCompradorTelefono() != null ? boleta.getCompradorTelefono() : "-")).append("</p>")
+                .append("    <p><strong>Dirección:</strong> ").append(escapeHtml(boleta.getDireccionCompleta())).append("</p>")
+                .append("    <h3>Productos</h3>")
+                .append(buildProductsTable(boleta))
+                .append("    <div class=\"total\">Total: S/ ").append(boleta.getTotal()).append("</div>")
                 .append("  </div>")
+                .append("  <div class=\"footer\">")
+                .append("    <p>StoreCollection © ").append(LocalDate.now().getYear()).append(" | Mensaje automático</p>")
+                .append("  </div>")
+                .append("</div>")
                 .append("</body>")
                 .append("</html>");
 
         return sb.toString();
     }
+
+    private String buildEmailHtmlForCustomer(Boleta boleta) {
+        StringBuilder sb = new StringBuilder(2048);
+
+        sb.append("<!DOCTYPE html>")
+                .append("<html lang=\"es\">")
+                .append("<head>")
+                .append("  <meta charset=\"UTF-8\">")
+                .append("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">")
+                .append("  <title>¡Gracias por tu compra! #").append(boleta.getId()).append("</title>")
+                .append("  <style>")
+                .append("    body { font-family: Arial, Helvetica, sans-serif; margin:0; padding:0; background:#f6f9fc; color:#333; }")
+                .append("    .container { max-width:600px; margin:40px auto; background:white; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.08); overflow:hidden; }")
+                .append("    .header { background:#10b981; color:white; padding:32px 24px; text-align:center; }")
+                .append("    .content { padding:32px; }")
+                .append("    table { width:100%; border-collapse:collapse; margin:20px 0; }")
+                .append("    th, td { padding:12px; text-align:left; border-bottom:1px solid #e5e7eb; }")
+                .append("    th { background:#f3f4f6; }")
+                .append("    .total { text-align:right; font-size:20px; font-weight:bold; margin:24px 0; }")
+                .append("    .footer { background:#f9fafb; padding:24px; text-align:center; font-size:13px; color:#6b7280; }")
+                .append("  </style>")
+                .append("</head>")
+                .append("<body>")
+                .append("<div class=\"container\">")
+                .append("  <div class=\"header\"><h2>¡Gracias por tu compra!</h2></div>")
+                .append("  <div class=\"content\">")
+                .append("    <h3>Hola ").append(escapeHtml(boleta.getCompradorNombre())).append("</h3>")
+                .append("    <p>Hemos recibido correctamente tu pedido <strong>#").append(boleta.getId()).append("</strong></p>")
+                .append("    <p>Te contactaremos muy pronto por WhatsApp o correo para coordinar la entrega.</p>")
+                .append("    <h3>Resumen de tu pedido</h3>")
+                .append(buildProductsTable(boleta))
+                .append("    <div class=\"total\">Total: S/ ").append(boleta.getTotal()).append("</div>")
+                .append("    <p style=\"margin-top:32px;\">¡Esperamos que disfrutes mucho tus productos! 🛍️</p>")
+                .append("  </div>")
+                .append("  <div class=\"footer\">")
+                .append("    <p>").append(escapeHtml(boleta.getTienda().getNombre())).append(" © ").append(LocalDate.now().getYear()).append("</p>")
+                .append("    <p>Mensaje automático – no responder</p>")
+                .append("  </div>")
+                .append("</div>")
+                .append("</body>")
+                .append("</html>");
+
+        return sb.toString();
+    }
+
+    private String buildProductsTable(Boleta boleta) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<table>")
+                .append("<thead><tr>")
+                .append("<th>Producto</th>")
+                .append("<th style=\"text-align:center;\">Cant.</th>")
+                .append("<th style=\"text-align:right;\">Precio</th>")
+                .append("<th style=\"text-align:right;\">Subtotal</th>")
+                .append("</tr></thead>")
+                .append("<tbody>");
+
+        for (BoletaDetalle d : boleta.getDetalles()) {
+            String nombre = escapeHtml(d.getVariante().getProducto().getNombre());
+            sb.append("<tr>")
+                    .append("<td>").append(nombre).append("</td>")
+                    .append("<td style=\"text-align:center;\">").append(d.getCantidad()).append("</td>")
+                    .append("<td style=\"text-align:right;\">S/ ").append(d.getPrecioUnitario()).append("</td>")
+                    .append("<td style=\"text-align:right;\">S/ ").append(d.getSubtotal()).append("</td>")
+                    .append("</tr>");
+        }
+
+        sb.append("</tbody></table>");
+        return sb.toString();
+    }
+
     private static String escapeHtml(String input) {
         if (input == null) return "";
         return input.replace("&", "&amp;")
@@ -280,18 +339,16 @@ public class CarritoServiceImpl implements CarritoService {
                 .replace("'", "&#39;");
     }
 
+    // ===================== CHECKOUT WHATSAPP =====================
+
     @Override
-    @Transactional(readOnly = true)  // ← OBLIGATORIO para fetch eager y evitar LazyInitializationException
+    @Transactional(readOnly = true)
     public String checkoutWhatsapp(BoletaRequest request) {
-        // 1. Carga con JOIN FETCH (carga variante, producto, atributos y tienda)
         List<Carrito> items = repository.findBySessionIdWithDetails(request.getSessionId());
 
         if (items == null || items.isEmpty()) {
             throw new IllegalStateException("El carrito está vacío o la sesión no existe");
         }
-
-        System.out.println("Checkout WhatsApp - Sesión: " + request.getSessionId() +
-                " | Items encontrados: " + items.size());
 
         Tienda tienda = tiendaRepository.findById(request.getTiendaId())
                 .orElseThrow(() -> new IllegalArgumentException("Tienda no encontrada: " + request.getTiendaId()));
@@ -301,7 +358,6 @@ public class CarritoServiceImpl implements CarritoService {
             throw new IllegalStateException("Número de WhatsApp inválido: " + tienda.getWhatsapp());
         }
 
-        // 2. Construcción del mensaje
         StringBuilder msg = new StringBuilder();
         msg.append("🛒 *¡NUEVO PEDIDO EN ").append(tienda.getNombre().toUpperCase()).append("!*\n\n");
 
@@ -311,62 +367,37 @@ public class CarritoServiceImpl implements CarritoService {
 
         for (Carrito item : items) {
             ProductoVariante variante = item.getVariante();
-
-            // Log clave para depurar
-            System.out.println("Item #" + item.getId() + " | Variante ID: " +
-                    (variante != null ? variante.getId() : "NULL") +
-                    " | Producto: " + (variante != null && variante.getProducto() != null ?
-                    variante.getProducto().getNombre() : "NULL"));
-
-            if (variante == null) {
-                msg.append("⚠️ Ítem ").append(itemNumber).append(" - Variante no encontrada (ID: ")
-                        .append(item.getVariante().getId()).append(")\n");
-                itemNumber++;
-                continue;
-            }
-
-            Producto producto = variante.getProducto();
-            if (producto == null) {
-                msg.append("⚠️ Ítem ").append(itemNumber).append(" - Producto no encontrado (Variante: ")
-                        .append(variante.getId()).append(")\n");
-                itemNumber++;
+            if (variante == null || variante.getProducto() == null) {
                 continue;
             }
 
             validItems++;
+            Producto producto = variante.getProducto();
 
-            // Producto principal
             msg.append("*").append(itemNumber).append(".* ")
                     .append(producto.getNombre())
-                    .append(" × ").append(item.getCantidad())
-                    .append(" und.\n");
+                    .append(" × ").append(item.getCantidad()).append(" und.\n");
 
-            // Precios
             BigDecimal precioUnit = variante.getPrecio();
             BigDecimal subtotal = precioUnit.multiply(BigDecimal.valueOf(item.getCantidad()));
             total = total.add(subtotal);
 
             msg.append("   💵 Precio: S/ ").append(formatPrice(precioUnit))
-                    .append("   → Subtotal: S/ ").append(formatPrice(subtotal))
-                    .append("\n");
+                    .append("   → Subtotal: S/ ").append(formatPrice(subtotal)).append("\n");
 
-            // SKU
-            if (variante.getSku() != null && !variante.getSku().trim().isEmpty()) {
+            if (variante.getSku() != null && !variante.getSku().isBlank()) {
                 msg.append("   🏷️ SKU: ").append(variante.getSku()).append("\n");
             }
 
-            // Atributos
             if (variante.getAtributos() != null && !variante.getAtributos().isEmpty()) {
                 msg.append("   🎨 *Variantes:*\n");
                 for (AtributoValor av : variante.getAtributos()) {
-                    String nombreAttr = (av.getAtributo() != null && av.getAtributo().getNombre() != null)
-                            ? av.getAtributo().getNombre() : "Atributo";
+                    String nombreAttr = av.getAtributo() != null ? av.getAtributo().getNombre() : "Atributo";
                     msg.append("      • ").append(nombreAttr).append(": *").append(av.getValor()).append("*\n");
                 }
             }
 
-            // Imagen
-            if (variante.getImagenUrl() != null && !variante.getImagenUrl().trim().isEmpty()) {
+            if (variante.getImagenUrl() != null && !variante.getImagenUrl().isBlank()) {
                 msg.append("   📸 ").append(shortenUrl(variante.getImagenUrl())).append("\n");
             }
 
@@ -375,51 +406,41 @@ public class CarritoServiceImpl implements CarritoService {
         }
 
         if (validItems == 0) {
-            throw new IllegalStateException("No hay ítems válidos en el carrito (todas las variantes/productos son null)");
+            throw new IllegalStateException("No hay ítems válidos en el carrito");
         }
 
-        // Resumen
         msg.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
         msg.append("📊 *RESUMEN DEL PEDIDO*\n");
-        msg.append("Items válidos: ").append(validItems).append("\n");
-        msg.append("💰 *TOTAL A COBRAR: S/ ").append(formatPrice(total)).append("*\n");
+        msg.append("Items: ").append(validItems).append("\n");
+        msg.append("💰 *TOTAL: S/ ").append(formatPrice(total)).append("*\n");
+        msg.append("📅 ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm", Locale.forLanguageTag("es-PE")))).append("\n\n");
 
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm", Locale.forLanguageTag("es-PE"));
-        msg.append("📅 Generado: ").append(LocalDateTime.now().format(dtf)).append("\n\n");
-
-        msg.append("👤 *DATOS DEL CLIENTE (coordinar):*\n");
+        msg.append("👤 *DATOS PARA COORDINAR:*\n");
         msg.append("• Nombre: ______________________\n");
         msg.append("• Teléfono: ____________________\n");
-        msg.append("• Dirección: ___________________\n");
-        msg.append("• Pago: ________________________\n\n");
+        msg.append("• Dirección: ___________________\n\n");
+        msg.append("✅ Responde para confirmar el pedido 🙌");
 
-        msg.append("✅ *¡Listo para procesar!* Responde para confirmar 🙌");
-
-        // Encoding seguro
         String encodedMessage;
         try {
             encodedMessage = URLEncoder.encode(msg.toString(), StandardCharsets.UTF_8);
         } catch (Exception e) {
-            System.err.println("Error encoding mensaje WhatsApp: " + e.getMessage());
             encodedMessage = URLEncoder.encode(msg.toString().replaceAll("[^\\p{ASCII}]", "?"), StandardCharsets.UTF_8);
         }
 
-        // Limpieza
         limpiarCarrito(request.getSessionId());
 
-        // URL final
-        String url = "https://wa.me/" + numeroWhats + "?text=" + encodedMessage;
-        System.out.println("URL WhatsApp generada exitosamente: " + url);
-
-        return url;
+        return "https://wa.me/" + numeroWhats + "?text=" + encodedMessage;
     }
-    // MÉTODOS AUXILIARES (agregar estos private methods)
+
+    // ===================== MÉTODOS AUXILIARES =====================
+
     private String normalizeWhatsappNumber(String raw) {
         if (raw == null) return null;
         String cleaned = raw.replaceAll("[^0-9]", "");
         if (cleaned.startsWith("00")) cleaned = cleaned.substring(2);
         if (cleaned.startsWith("+")) cleaned = cleaned.substring(1);
-        if (cleaned.length() == 9 && !cleaned.startsWith("51")) cleaned = "51" + cleaned; // Perú
+        if (cleaned.length() == 9 && !cleaned.startsWith("51")) cleaned = "51" + cleaned;
         return (cleaned.length() >= 10 && cleaned.length() <= 14) ? cleaned : null;
     }
 
@@ -429,10 +450,7 @@ public class CarritoServiceImpl implements CarritoService {
     }
 
     private String shortenUrl(String url) {
-        if (url.length() > 50) {
-            return url.substring(0, 47) + "...";
-        }
-        return url;
+        return (url != null && url.length() > 50) ? url.substring(0, 47) + "..." : url;
     }
 
     private CarritoResponse toResponse(Carrito c) {
@@ -453,9 +471,10 @@ public class CarritoServiceImpl implements CarritoService {
                     .map(av -> {
                         AtributoResponse attr = new AtributoResponse();
                         attr.setId(av.getId());
-                        attr.setNombre(av.getAtributo().getNombre());
+                        attr.setNombre(av.getAtributo() != null ? av.getAtributo().getNombre() : "");
                         attr.setValor(av.getValor());
-                        attr.setTiendaId(av.getAtributo().getTienda().getId());
+                        attr.setTiendaId(av.getAtributo() != null && av.getAtributo().getTienda() != null ?
+                                av.getAtributo().getTienda().getId() : null);
                         return attr;
                     })
                     .collect(Collectors.toList());
@@ -464,10 +483,6 @@ public class CarritoServiceImpl implements CarritoService {
         }
         return dto;
     }
-
-    // ===================== CHECKOUT =====================
-
-
 
     private BoletaResponse toBoletaResponse(Boleta boleta) {
         BoletaResponse response = new BoletaResponse();
@@ -482,7 +497,6 @@ public class CarritoServiceImpl implements CarritoService {
             response.setUserId(boleta.getUser().getId());
         }
 
-        // Nuevos campos agregados
         response.setCompradorNombre(boleta.getCompradorNombre());
         response.setCompradorEmail(boleta.getCompradorEmail());
         response.setCompradorTelefono(boleta.getCompradorTelefono());
@@ -505,7 +519,6 @@ public class CarritoServiceImpl implements CarritoService {
 
     private BoletaDetalleResponse toBoletaDetalleResponse(BoletaDetalle detalle) {
         BoletaDetalleResponse dto = new BoletaDetalleResponse();
-
         dto.setId(detalle.getId());
         dto.setVarianteId(detalle.getVariante().getId());
         dto.setCantidad(detalle.getCantidad());
@@ -521,15 +534,15 @@ public class CarritoServiceImpl implements CarritoService {
                 .map(av -> {
                     AtributoResponse attr = new AtributoResponse();
                     attr.setId(av.getId());
-                    attr.setNombre(av.getAtributo().getNombre());
+                    attr.setNombre(av.getAtributo() != null ? av.getAtributo().getNombre() : "");
                     attr.setValor(av.getValor());
-                    attr.setTiendaId(av.getAtributo().getTienda().getId());
+                    attr.setTiendaId(av.getAtributo() != null && av.getAtributo().getTienda() != null ?
+                            av.getAtributo().getTienda().getId() : null);
                     return attr;
                 })
                 .collect(Collectors.toList());
 
         dto.setAtributos(atributos.isEmpty() ? null : atributos);
-
         return dto;
     }
 }
