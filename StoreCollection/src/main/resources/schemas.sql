@@ -1,29 +1,14 @@
 -- ========================================================
--- STORECOLLECTION v2.1 - SCRIPT ACTUALIZADO 2025
--- Agregadas tablas para Boleta y BoletaDetalle
--- Modificaciones para manejo de compras
+-- STORECOLLECTION v2.2 - SCRIPT CORREGIDO Y CON ORDEN ADECUADO (27 DIC 2025)
 -- ========================================================
 
--- 1. ELIMINAR Y CREAR BASE DE DATOS (mismo)
 DROP DATABASE IF EXISTS tienda_saas;
 CREATE DATABASE tienda_saas CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE tienda_saas;
 
 -- ========================================
--- 2. CREACIÓN DE TABLAS (ORDEN CORRECTO)
+-- TABLAS SIN DEPENDENCIAS (primero)
 -- ========================================
-
--- Tablas existentes (sin cambios mayores, solo agrego las nuevas al final)
-
-CREATE TABLE plan (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL,
-    precio DECIMAL(10,2) DEFAULT 0.00,
-    activo BOOLEAN DEFAULT true NOT NULL,
-    max_productos INT DEFAULT 100,
-    mes_inicio INT NOT NULL CHECK (mes_inicio BETWEEN 1 AND 12),
-    mes_fin INT NOT NULL CHECK (mes_fin BETWEEN 1 AND 12)
-);
 
 CREATE TABLE usuario (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -34,6 +19,33 @@ CREATE TABLE usuario (
     celular VARCHAR(15),
     rol ENUM('ADMIN', 'OWNER', 'CUSTOMER') DEFAULT 'CUSTOMER'
 );
+
+CREATE TABLE plan (
+    id                  INT AUTO_INCREMENT PRIMARY KEY,
+    nombre              VARCHAR(60) NOT NULL,
+    slug                VARCHAR(50) NOT NULL UNIQUE,
+    descripcion         TEXT,
+    precio_mensual      DECIMAL(10,2) DEFAULT 0.00,
+    precio_anual        DECIMAL(10,2) DEFAULT NULL,
+    intervalo_billing   VARCHAR(20) NOT NULL DEFAULT 'month',
+    intervalo_cantidad  INT NOT NULL DEFAULT 1,                -- CORREGIDO: SMALLINT → INT
+    duracion_dias       INT DEFAULT NULL,
+    max_productos       INT NOT NULL DEFAULT 100,
+    max_variantes       INT DEFAULT 500,
+    es_trial            BOOLEAN DEFAULT FALSE,
+    dias_trial          SMALLINT DEFAULT 0,
+    es_visible_publico  BOOLEAN DEFAULT TRUE,
+    orden               SMALLINT DEFAULT 999,
+    activo              BOOLEAN DEFAULT TRUE NOT NULL,
+    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uq_slug (slug)
+);
+
+-- ========================================
+-- TABLAS QUE SON REFERENCIADAS
+-- ========================================
 
 CREATE TABLE tienda (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -47,10 +59,36 @@ CREATE TABLE tienda (
     mapa_url TEXT,
     logo_img_url TEXT,
     activo BOOLEAN DEFAULT true NOT NULL,
-    plan_id INT,
     user_id INT NOT NULL,
-    FOREIGN KEY (plan_id) REFERENCES plan(id) ON DELETE SET NULL,
     FOREIGN KEY (user_id) REFERENCES usuario(id) ON DELETE CASCADE
+);
+
+-- ========================================
+-- TABLAS QUE DEPENDEN DE LAS ANTERIORES
+-- ========================================
+
+CREATE TABLE tienda_suscripcion (
+    id                        BIGINT AUTO_INCREMENT PRIMARY KEY,
+    tienda_id                 INT NOT NULL,
+    plan_id                   INT NOT NULL,
+    estado                    VARCHAR(30) NOT NULL DEFAULT 'trial',
+    fecha_inicio              DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_fin                 DATETIME DEFAULT NULL,
+    trial_ends_at             DATETIME DEFAULT NULL,
+    periodo_actual_inicio     DATETIME,
+    periodo_actual_fin        DATETIME,
+    cancel_at                 DATETIME DEFAULT NULL,
+    cancel_at_period_end      BOOLEAN DEFAULT FALSE,
+    payment_provider          VARCHAR(30) DEFAULT 'manual',
+    external_subscription_id  VARCHAR(100) DEFAULT NULL,
+    notas                     TEXT,
+    created_at                TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at                TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (tienda_id) REFERENCES tienda(id) ON DELETE CASCADE,
+    FOREIGN KEY (plan_id)   REFERENCES plan(id)   ON DELETE RESTRICT,
+    INDEX idx_tienda_estado (tienda_id, estado),
+    INDEX idx_external_id (external_subscription_id)
 );
 
 CREATE TABLE categoria (

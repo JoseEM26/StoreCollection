@@ -10,29 +10,77 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "plan")
-@Data @NoArgsConstructor @AllArgsConstructor
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Plan {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @NotBlank
     private String nombre;
 
-    @PositiveOrZero
-    private BigDecimal precio = BigDecimal.ZERO;
+    @NotBlank
+    @Column(unique = true)
+    private String slug;
 
-    @Positive
+    private String descripcion;
+
+    @PositiveOrZero(message = "El precio mensual debe ser mayor o igual a cero")
+    @Column(name = "precio_mensual")
+    private BigDecimal precioMensual = BigDecimal.ZERO;
+
+    // ← QUITA @PositiveOrZero de precioAnual porque es opcional
+    @Column(name = "precio_anual")
+    private BigDecimal precioAnual;  // null = sin plan anual
+
+    @NotBlank
+    @Column(name = "intervalo_billing")
+    private String intervaloBilling = "month";
+
+    // ← QUITA @Min(1) si puede ser null, o déjalo pero permite null con validación personalizada
+    @Min(value = 1, message = "La cantidad de intervalos debe ser al menos 1")
+    @Column(name = "intervalo_cantidad")
+    private Integer intervaloCantidad = 1;
+
+    @Column(name = "duracion_dias")
+    private Integer duracionDias;  // null = lifetime → sin validación numérica
+
+    @PositiveOrZero(message = "Máximo productos debe ser mayor o igual a cero")
+    @Column(name = "max_productos")
     private Integer maxProductos = 100;
 
-    @Min(1) @Max(12)
-    @Column(name = "mes_inicio", nullable = false)
-    private Integer mesInicio;
+    @PositiveOrZero(message = "Máximo variantes debe ser mayor o igual a cero")
+    @Column(name = "max_variantes")
+    private Integer maxVariantes = 500;
 
-    @Min(1) @Max(12)
-    @Column(name = "mes_fin", nullable = false)
-    private Integer mesFin;
+    @Column(name = "es_trial")
+    private Boolean esTrial = false;
 
-    // NUEVO CAMPO: estado activo/inactivo
+    @Column(name = "dias_trial")
+    private Short diasTrial = 0;
+
+    @Column(name = "es_visible_publico")
+    private Boolean esVisiblePublico = true;
+
+    @Column(name = "orden")
+    private Short orden = 999;
+
     @Column(nullable = false)
-    private Boolean activo = true;  // Por defecto activo
+    private Boolean activo = true;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    // Opcional: pre-update para mantener updated_at
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

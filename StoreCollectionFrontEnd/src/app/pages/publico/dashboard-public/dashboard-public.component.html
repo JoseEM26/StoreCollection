@@ -1,13 +1,15 @@
 <!-- src/app/pages/public-dashboard/public-dashboard.component.html -->
 <div class="min-vh-100">
 
-  <!-- HERO mejorado: más dinámico con partículas o gradiente animado (usa CSS) -->
+  <!-- HERO -->
   <section class="hero-section text-white py-5 position-relative overflow-hidden">
     <div class="container py-5 text-center position-relative z-3">
       <h1 class="display-2 fw-bold mb-4 animate__animated animate__fadeInDown">
         Store<span class="text-warning">Collection</span>
       </h1>
-      <p class="lead fs-3 mb-4 animate__animated animate__fadeInUp">Tu catálogo digital profesional en minutos</p>
+      <p class="lead fs-3 mb-4 animate__animated animate__fadeInUp">
+        Tu catálogo digital profesional en minutos
+      </p>
       <p class="fs-5 mb-5 opacity-90 animate__animated animate__fadeInUp animate__delay-1s">
         Sin tarjetas, sin contratos, sin complicaciones.<br>
         <strong class="text-warning">Empieza gratis hoy y crece cuando quieras.</strong>
@@ -23,12 +25,12 @@
     </div>
   </section>
 
-  <!-- BENEFICIOS mejorados: con hover effects -->
+  <!-- BENEFICIOS -->
   <section class="py-5 bg-white">
     <div class="container py-5">
       <div class="row text-center g-5">
         <div class="col-md-4">
-          <div class="benefit-card">
+          <div class="benefit-card p-4 rounded-4 shadow-sm bg-light h-100">
             <div class="text-primary mb-4 icon-hover">
               <i class="bi bi-lightning-charge-fill display-1"></i>
             </div>
@@ -37,7 +39,7 @@
           </div>
         </div>
         <div class="col-md-4">
-          <div class="benefit-card">
+          <div class="benefit-card p-4 rounded-4 shadow-sm bg-light h-100">
             <div class="text-success mb-4 icon-hover">
               <i class="bi bi-gift-fill display-1"></i>
             </div>
@@ -46,7 +48,7 @@
           </div>
         </div>
         <div class="col-md-4">
-          <div class="benefit-card">
+          <div class="benefit-card p-4 rounded-4 shadow-sm bg-light h-100">
             <div class="text-warning mb-4 icon-hover">
               <i class="bi bi-whatsapp display-1"></i>
             </div>
@@ -58,7 +60,7 @@
     </div>
   </section>
 
-  <!-- TIENDAS (mantenido, con mejoras menores en responsive) -->
+  <!-- TIENDAS PÚBLICAS -->
   <section class="py-5 bg-light">
     <div class="container py-5">
       <div class="text-center mb-5">
@@ -80,7 +82,7 @@
         </div>
       </div>
 
-      <!-- Loading -->
+      <!-- Loading tiendas -->
       <div class="text-center py-5" *ngIf="loading">
         <div class="spinner-border text-primary" style="width: 4rem; height: 4rem;">
           <span class="visually-hidden">Cargando...</span>
@@ -89,104 +91,78 @@
       </div>
 
       <!-- Lista de tiendas -->
-      <div *ngIf="!loading && page?.content?.length">
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">  <!-- Mejor responsive -->
-          <div class="col" *ngFor="let tienda of page?.content">
-            <div class="card h-100 border-0 shadow-sm card-hover rounded-4 overflow-hidden">
-              <div class="card-body text-center p-4 d-flex flex-column">
-                <div class="bg-primary bg-opacity-10 rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center"
-                     style="width: 90px; height: 90px;">
-                  <i class="bi bi-shop-window fs-2 text-primary"></i>
-                </div>
-                <h5 class="card-title fw-bold mb-2">{{ tienda.nombre }}</h5>
-                <p class="text-muted small flex-grow-1 mb-3">
-                  {{ tienda.descripcion || 'Tienda online' }}
-                </p>
-
-                <div class="small text-muted mb-3 text-start">
-                  <div class="d-flex align-items-center gap-2 mb-1">
-                    <i class="bi bi-geo-alt-fill text-danger"></i>
-                    <span>{{ tienda.direccion || '100% Online' }}</span>
-                  </div>
-                  <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-clock-fill text-success"></i>
-                    <span>{{ tienda.horarios || '24/7' }}</span>
-                  </div>
-                </div>
-
-                <div class="d-flex justify-content-center gap-2 mb-3 flex-wrap">
-                  <span class="badge rounded-pill fw-bold fs-6"
-                        [ngClass]="{
-                          'bg-success': tienda.planNombre === 'Enterprise',
-                          'bg-primary': tienda.planNombre === 'Pro',
-                          'bg-warning text-dark': tienda.planNombre === 'Básico',
-                          'bg-light text-dark border': !tienda.planNombre || tienda.planNombre === 'Gratis'
-                        }">
-                    {{ tienda.planNombre || 'Gratis' }}
-                  </span>
-                  <span class="badge bg-secondary rounded-pill">{{ tienda.moneda }}</span>
-                </div>
-
-                <a [routerLink]="['/', tienda.slug]"
-                   class="btn btn-outline-primary rounded-pill mt-auto fw-bold stretched-link">
-                  Visitar tienda →
-                </a>
+      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4" *ngIf="!loading && page?.content?.length">
+        <div class="col" *ngFor="let tienda of page?.content">
+          <div class="card h-100 border-0 shadow-sm card-hover rounded-4 overflow-hidden">
+            <div class="card-body text-center p-4 d-flex flex-column">
+              <div class="bg-primary bg-opacity-10 rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center"
+                   style="width: 90px; height: 90px;">
+                <i class="bi bi-shop-window fs-2 text-primary"></i>
               </div>
+              <h5 class="card-title fw-bold mb-2">{{ tienda.nombre }}</h5>
+              <p class="text-muted small flex-grow-1 mb-3">
+                {{ tienda.descripcion || 'Tienda online' }}
+              </p>
+
+              <div class="small text-muted mb-3 text-start">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <i class="bi bi-geo-alt-fill text-danger"></i>
+                  <span>{{ tienda.direccion || '100% Online' }}</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-clock-fill text-success"></i>
+                  <span>{{ tienda.horarios || '24/7' }}</span>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-center gap-2 mb-3 flex-wrap">
+                <span class="badge rounded-pill fw-bold fs-6 bg-light text-dark border">
+                  {{ tienda.moneda }}
+                </span>
+              </div>
+
+              <a [routerLink]="['/', tienda.slug]"
+                 class="btn btn-outline-primary rounded-pill mt-auto fw-bold stretched-link">
+                Visitar tienda →
+              </a>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Paginación mejorada: más elegante -->
-      <!-- Paginación visible y bonita -->
-<div class="text-center mt-5" *ngIf="page && page.totalPages > 1">
-  <nav aria-label="Paginación de tiendas">
-    <ul class="pagination pagination-lg justify-content-center">
-      <!-- Anterior -->
-      <li class="page-item" [class.disabled]="page.first">
-        <button 
-          class="page-link rounded-pill px-4 shadow-sm" 
-          (click)="goToPage(currentPage - 1)"
-          [disabled]="page.first"
-          aria-label="Página anterior">
-          <i class="bi bi-chevron-left"></i>
-        </button>
-      </li>
+      <!-- Paginación -->
+      <div class="text-center mt-5" *ngIf="page && page.totalPages > 1">
+        <nav aria-label="Paginación de tiendas">
+          <ul class="pagination pagination-lg justify-content-center">
+            <li class="page-item" [class.disabled]="page.first">
+              <button class="page-link rounded-pill px-4 shadow-sm" 
+                      (click)="goToPage(currentPage - 1)" 
+                      [disabled]="page.first">
+                <i class="bi bi-chevron-left"></i>
+              </button>
+            </li>
 
-      <!-- Números de página -->
-      <li 
-        class="page-item" 
-        *ngFor="let num of getVisiblePages()" 
-        [class.active]="num === currentPage">
-        <button 
-          class="page-link rounded-pill shadow-sm" 
-          (click)="goToPage(num)">
-          {{ num + 1 }}
-        </button>
-      </li>
+            <li class="page-item" 
+                *ngFor="let num of getVisiblePages()" 
+                [class.active]="num === currentPage">
+              <button class="page-link rounded-pill shadow-sm" (click)="goToPage(num)">
+                {{ num + 1 }}
+              </button>
+            </li>
 
-      <!-- Siguiente -->
-      <li class="page-item" [class.disabled]="page.last">
-        <button 
-          class="page-link rounded-pill px-4 shadow-sm" 
-          (click)="goToPage(currentPage + 1)"
-          [disabled]="page.last"
-          aria-label="Página siguiente">
-          <i class="bi bi-chevron-right"></i>
-        </button>
-      </li>
-    </ul>
-  </nav>
-
-  <!-- Texto informativo -->
-  <p class="text-muted small mt-3">
-    Mostrando página {{ currentPage + 1 }} de {{ page.totalPages }} 
-    ({{ page.totalElements }} tiendas en total)
-  </p>
-</div>
-
-        <div class="text-center text-muted mt-3">
-          Mostrando {{ page?.numberOfElements || 0 }} de {{ page?.totalElements || 0 }} tiendas
-        </div>
+            <li class="page-item" [class.disabled]="page.last">
+              <button class="page-link rounded-pill px-4 shadow-sm" 
+                      (click)="goToPage(currentPage + 1)" 
+                      [disabled]="page.last">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
+        <p class="text-muted small mt-3">
+          Mostrando página {{ currentPage + 1 }} de {{ page.totalPages }} 
+          ({{ page.totalElements }} tiendas)
+        </p>
       </div>
 
       <!-- Sin resultados -->
@@ -200,7 +176,7 @@
     </div>
   </section>
 
-  <!-- PRECIOS DINÁMICOS: ahora carga desde API y filtra vigentes -->
+  <!-- PRECIOS DINÁMICOS -->
   <section id="precios" class="py-5 bg-white">
     <div class="container py-5">
       <div class="text-center mb-5">
@@ -216,38 +192,76 @@
 
       <!-- Planes dinámicos -->
       <div class="row g-5 justify-content-center" *ngIf="!loadingPlanes && planes.length > 0">
-        <div class="col-md-4" *ngFor="let plan of planes; let i = index">
+        <div class="col-md-6 col-lg-4" *ngFor="let plan of planes; let i = index">
           <div class="card border-0 shadow h-100 rounded-4 position-relative plan-card-hover"
-               [ngClass]="{'border-primary border-3 shadow-lg': plan.nombre.toLowerCase().includes('pro')}">
+               [class.border-primary]="plan.nombre.toLowerCase().includes('pro')"
+               [class.border-3]="plan.nombre.toLowerCase().includes('pro')"
+               [class.shadow-lg]="plan.nombre.toLowerCase().includes('pro')">
+            
+            <!-- Etiqueta "MÁS POPULAR" -->
             <div *ngIf="plan.nombre.toLowerCase().includes('pro')" 
-                 class="position-absolute top-0 start-50 translate-middle-x bg-primary text-white px-4 py-2 rounded-bottom shadow-sm">
+                 class="position-absolute top-0 start-50 translate-middle-x bg-primary text-white px-4 py-2 rounded-bottom shadow-sm z-3">
               <small class="fw-bold">MÁS POPULAR</small>
             </div>
-            <div class="card-body text-center p-5 pt-6">
-              <h4 class="fw-bold mb-3">{{ plan.nombre }}</h4>
-              <div class="display-4 fw-bold text-primary">
-                S/ {{ plan.precio | number:'1.0-0' }}
+
+            <div class="card-body text-center p-5 pt-6 d-flex flex-column">
+              <h4 class="fw-bold mb-4">{{ plan.nombre }}</h4>
+
+              <!-- Precio mensual -->
+              <div class="display-4 fw-bold text-primary mb-2">
+                S/ {{ plan.precioMensual | number:'1.0-2' }}
               </div>
               <p class="text-muted small mb-4">por mes</p>
+
+              <!-- Precio anual (si existe) -->
+              <p class="fs-5 text-success fw-bold mb-4" *ngIf="plan.precioAnual != null && plan.precioAnual > 0">
+                S/ {{ plan.precioAnual | number:'1.0-2' }} <small class="text-muted">/ año</small>
+                <br><small class="badge bg-success">Ahorra {{ ((plan.precioMensual * 12 - plan.precioAnual) / (plan.precioMensual * 12) * 100) | number:'1.0-0' }}%</small>
+              </p>
+
               <hr class="my-4">
-              <ul class="list-unstyled text-start mt-4 fs-6">
-                <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> Hasta {{ plan.maxProductos }} productos</li>
-                <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> Vigente: {{ getMesesTexto(plan.mesInicio, plan.mesFin) }}</li>
-                <!-- Agrega más features dinámicas si tienes en el modelo -->
-                <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> Soporte básico</li>
-                <li class="mb-3" *ngIf="plan.precio > 0"><i class="bi bi-check-circle-fill text-primary me-2"></i> Dominio personalizado</li>
+
+              <!-- Características -->
+              <ul class="list-unstyled text-start mt-4 fs-6 flex-grow-1">
+                <li class="mb-3">
+                  <i class="bi bi-check-circle-fill text-success me-2"></i>
+                  Hasta <strong>{{ plan.maxProductos }}</strong> productos
+                </li>
+                <li class="mb-3">
+                  <i class="bi bi-check-circle-fill text-success me-2"></i>
+                  Hasta <strong>{{ plan.maxVariantes }}</strong> variantes
+                </li>
+                <li class="mb-3" *ngIf="plan.esTrial">
+                  <i class="bi bi-gift-fill text-warning me-2"></i>
+                  <strong>{{ plan.diasTrial }} días de prueba</strong> gratis
+                </li>
+                <li class="mb-3">
+                  <i class="bi bi-check-circle-fill text-success me-2"></i>
+                  Soporte por WhatsApp
+                </li>
+                <li class="mb-3" *ngIf="plan.precioMensual > 0">
+                  <i class="bi bi-globe text-primary me-2"></i>
+                  Dominio personalizado
+                </li>
               </ul>
-              <a [routerLink]="plan.precio === 0 ? '/register' : '/contacto'" 
-                 class="btn btn-lg w-100 mt-auto rounded-pill shadow-sm"
-                 [ngClass]="{'btn-outline-primary': plan.precio === 0, 'btn-primary': plan.precio > 0 && !plan.nombre.toLowerCase().includes('enterprise'), 'btn-dark': plan.nombre.toLowerCase().includes('enterprise')}">
-                {{ plan.precio === 0 ? 'Empezar gratis' : (plan.nombre.toLowerCase().includes('enterprise') ? 'Contactar' : 'Elegir ' + plan.nombre) }}
+
+              <!-- Botón de acción -->
+              <a [routerLink]="plan.precioMensual === 0 ? '/register' : '/register'"
+                 class="btn btn-lg w-100 mt-auto rounded-pill shadow-sm fw-bold"
+                 [ngClass]="{
+                   'btn-outline-primary': plan.precioMensual === 0,
+                   'btn-primary': plan.precioMensual > 0 && !plan.nombre.toLowerCase().includes('enterprise'),
+                   'btn-dark': plan.nombre.toLowerCase().includes('enterprise')
+                 }">
+                {{ plan.precioMensual === 0 ? 'Empezar GRATIS' : 
+                   (plan.nombre.toLowerCase().includes('enterprise') ? 'Contactar ventas' : 'Elegir ' + plan.nombre) }}
               </a>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Sin planes disponibles -->
+      <!-- Sin planes -->
       <div class="text-center py-5" *ngIf="!loadingPlanes && planes.length === 0">
         <i class="bi bi-info-circle display-1 text-warning opacity-50"></i>
         <p class="lead mt-4">No hay planes disponibles en este momento</p>
@@ -258,7 +272,7 @@
     </div>
   </section>
 
-  <!-- FOOTER mejorado: con social links -->
+  <!-- FOOTER -->
   <footer class="bg-dark text-white py-5">
     <div class="container">
       <div class="row align-items-center">

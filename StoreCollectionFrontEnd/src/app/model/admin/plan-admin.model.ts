@@ -1,21 +1,41 @@
 // src/app/model/admin/plan-admin.model.ts
-
 export interface PlanResponse {
   id: number;
   nombre: string;
-  precio: number; // BigDecimal se mapea a number en JSON
+  slug: string;
+  descripcion?: string | null;
+  precioMensual: number;
+  precioAnual?: number | null;        // ← Añade | null
+  intervaloBilling: string;
+  intervaloCantidad: number;
+  duracionDias?: number | null;       // ← Añade | null
   maxProductos: number;
-  mesInicio: number;
-  mesFin: number;
-  activo: boolean;  // ← Asegúrate de tener este campo
+  maxVariantes: number;
+  esTrial: boolean;
+  diasTrial: number;
+  esVisiblePublico: boolean;
+  orden: number;
+  activo: boolean;
+  createdAt?: string | null;
+  updatedAt?: string | null;
 }
 
 export interface PlanRequest {
   nombre: string;
-  precio: number;
+  slug: string;
+  descripcion?: string | null;
+  precioMensual: number;
+  precioAnual?: number | null;        // ← Añade | null
+  intervaloBilling: string;
+  intervaloCantidad: number;
+  duracionDias?: number | null;       // ← Añade | null
   maxProductos: number;
-  mesInicio: number;
-  mesFin: number;
+  maxVariantes: number;
+  esTrial?: boolean;
+  diasTrial?: number;
+  esVisiblePublico?: boolean;
+  orden?: number;
+  activo?: boolean;
 }
 
 export interface PlanPage {

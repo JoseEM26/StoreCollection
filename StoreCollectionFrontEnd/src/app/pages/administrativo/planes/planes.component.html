@@ -1,35 +1,35 @@
-<div class="container-fluid py-4">
+<div class="container-fluid py-5">
   <!-- Header -->
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4">
     <div>
-      <h1 class="h2 fw-bold text-dark mb-2">
+      <h1 class="display-6 fw-bold text-dark mb-2">
         <i class="bi bi-credit-card-2-back-fill text-primary me-3"></i>
         Gestión de Planes
       </h1>
-      <p class="text-muted mb-0">
-        Administra los planes de suscripción disponibles
-        <span class="badge bg-primary fs-6 ms-2">
-          {{ pageData()?.totalElements || 0 }} planes
+      <p class="text-muted mb-0 fs-5">
+        Administra los planes de suscripción de tu tienda
+        <span class="badge bg-primary rounded-pill ms-2 px-3 py-2 fs-6">
+          {{ pageData()?.totalElements || 0 }} planes activos
         </span>
       </p>
     </div>
-    <button class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm" (click)="abrirCrear()">
-      <i class="bi bi-plus-circle me-2"></i>
+    <button class="btn btn-primary btn-lg rounded-pill px-5 shadow-lg" (click)="abrirCrear()">
+      <i class="bi bi-plus-circle-fill me-2"></i>
       Nuevo Plan
     </button>
   </div>
 
   <!-- Search Bar -->
-  <div class="row mb-4">
+  <div class="row mb-5">
     <div class="col-lg-6 col-xl-5">
-      <div class="input-group input-group-lg shadow-sm">
-        <span class="input-group-text bg-white border-end-0">
-          <i class="bi bi-search text-muted"></i>
+      <div class="input-group input-group-lg shadow rounded-4 overflow-hidden border border-light">
+        <span class="input-group-text bg-transparent border-0 text-muted">
+          <i class="bi bi-search fs-5"></i>
         </span>
         <input
           type="text"
-          class="form-control border-start-0 ps-0"
-          placeholder="Buscar por nombre del plan..."
+          class="form-control border-0 fs-5 py-3"
+          placeholder="Buscar por nombre, slug o descripción..."
           [(ngModel)]="searchTerm"
           (keyup)="onSearch()"
         />
@@ -39,65 +39,153 @@
 
   <!-- Loading -->
   <div *ngIf="loading()" class="text-center py-5 my-5">
-    <div class="spinner-border text-primary" style="width: 4rem; height: 4rem;" role="status">
+    <div class="spinner-border text-primary" style="width: 5rem; height: 5rem;" role="status">
       <span class="visually-hidden">Cargando...</span>
     </div>
-    <p class="mt-4 text-muted fs-5">Cargando planes...</p>
+    <p class="mt-4 text-muted fs-4">Cargando planes...</p>
   </div>
 
-  <!-- Table Card -->
-  <div *ngIf="!loading() && planes().length > 0" class="card shadow border-0 rounded-4 overflow-hidden">
-    <div class="card-body p-0">
+  <!-- Lista de Planes (estilo tarjetas en tabla) -->
+  <div *ngIf="!loading() && planes().length > 0" class="row g-4">
+    <div class="col-12">
       <div class="table-responsive">
-        <table class="table table-hover mb-0 align-middle">
-          <thead class="bg-light">
-            <tr>
-              <th class="ps-4 py-3 fw-semibold text-uppercase text-secondary small">Plan</th>
-              <th class="py-3 fw-semibold text-uppercase text-secondary small">Precio</th>
-              <th class="py-3 fw-semibold text-uppercase text-secondary small">Máx. Productos</th>
-              <th class="py-3 fw-semibold text-uppercase text-secondary small">Período Vigente</th>
-              <th class="text-end pe-4 py-3 fw-semibold text-uppercase text-secondary small">Acciones</th>
-            </tr>
-          </thead>
+        <table class="table table-borderless align-middle">
           <tbody>
-            <tr *ngFor="let p of planes(); trackBy: trackById" class="border-bottom">
-              <td class="ps-4 py-4">
-                <div class="fw-bold text-dark">{{ p.nombre }}</div>
-              </td>
-              <td class="py-4">
-                <span class="fs-5 fw-bold text-primary">
-                  {{ formatPrecio(p.precio) }}
-                </span>
-              </td>
-              <td class="py-4">
-                <span class="badge bg-info text-dark fs-6 px-3 py-2">
-                  {{ p.maxProductos }} productos
-                </span>
-              </td>
-              <td class="py-4 text-muted">
-                {{ getMesesTexto(p.mesInicio, p.mesFin) }}
-              </td>
-             <td class="text-end pe-4 py-4">
-  <div class="d-flex justify-content-end align-items-center gap-2">
-    <!-- Toggle Activo/Inactivo -->
-    <button
-      class="btn btn-sm rounded-circle shadow-sm"
-      [class.btn-success]="p.activo"
-      [class.btn-danger]="!p.activo"
-      (click)="toggleActivo(p)"
-      [title]="p.activo ? 'Desactivar plan' : 'Activar plan'"
-    >
-      <i class="bi fs-5" [class.bi-toggle-on]="p.activo" [class.bi-toggle-off]="!p.activo"></i>
-    </button>
+            <tr *ngFor="let p of planes(); trackBy: trackById"
+                class="shadow-sm rounded-4 overflow-hidden mb-4"
+                [class.border-start-5]="true"
+                [class.border-primary]="p.nombre === 'Pro'"
+                [class.border-warning]="p.nombre === 'Premium'"
+                [class.border-dark]="p.nombre === 'Enterprise'"
+                [class.border-success]="p.nombre === 'Gratis'"
+                [class.border-info]="p.nombre === 'Básico'">
+              <td class="bg-white p-4">
+                <div class="row align-items-center">
+                  <!-- Icono + Info del Plan -->
+                  <div class="col-md-4 col-lg-3">
+                    <div class="d-flex align-items-center gap-4">
+                      <div class="flex-shrink-0">
+                        <div class="bg-gradient rounded-4 p-4 shadow-sm text-white"
+                             [class.bg-primary]="p.nombre === 'Pro' || p.nombre === 'Premium'"
+                             [class.bg-warning]="p.nombre === 'Enterprise'"
+                             [class.bg-success]="p.nombre === 'Gratis'"
+                             [class.bg-info]="p.nombre === 'Básico'">
+                          <i class="bi fs-1"
+                             [class.bi-gem]="p.nombre === 'Premium' || p.nombre === 'Enterprise'"
+                             [class.bi-star-fill]="p.nombre === 'Pro'"
+                             [class.bi-gift-fill]="p.nombre === 'Gratis'"
+                             [class.bi-box-seam-fill]="p.nombre === 'Básico'"></i>
+                        </div>
+                      </div>
+                      <div>
+                        <h3 class="fw-bold mb-1 fs-4">{{ p.nombre }}</h3>
+                        <p class="text-muted mb-1 small">{{ p.slug }}</p>
+                        <p class="text-muted small mb-0">{{ p.descripcion }}</p>
+                      </div>
+                    </div>
+                  </div>
 
-    <!-- Editar -->
-    <button class="btn btn-outline-primary btn-sm rounded-circle" (click)="abrirEditar(p)" title="Editar">
-      <i class="bi bi-pencil"></i>
-    </button>
+                  <!-- Precio -->
+                  <div class="col-md-3 col-lg-2 text-center text-md-start">
+                    <div class="fw-bold fs-3 text-dark">
+                      {{ formatPrecio(p.precioMensual) }}
+                      <small class="text-muted fs-6">/mes</small>
+                    </div>
+                    <ng-container *ngIf="p.precioAnual != null">
+                      <div class="text-success small fw-semibold mt-2">
+                        <i class="bi bi-tag-fill me-1"></i>
+                        {{ formatPrecio(p.precioAnual) }}/año
+                        <span class="badge bg-success rounded-pill ms-2">
+                          Ahorra {{ calcularAhorro(p) }}%
+                        </span>
+                      </div>
+                    </ng-container>
+                  </div>
 
-  
-  </div>
-</td>
+                  <!-- Límites -->
+                  <div class="col-md-3 col-lg-2 text-center">
+                    <div class="d-flex flex-column gap-3">
+                      <div>
+                        <div class="fw-bold fs-4">{{ p.maxProductos | number }}</div>
+                        <small class="text-muted">productos</small>
+                      </div>
+                      <div>
+                        <div class="fw-bold fs-4">{{ p.maxVariantes | number }}</div>
+                        <small class="text-muted">variantes</small>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Trial + Público + Orden -->
+                  <div class="col-md-3 col-lg-3 text-center text-md-start">
+                    <div class="d-flex flex-column gap-3 align-items-center align-items-md-start">
+                      <!-- Trial -->
+                      <div>
+                        <ng-container *ngIf="p.esTrial; else noTrial">
+                          <span class="badge bg-success rounded-pill px-4 py-2 fs-6 shadow-sm">
+                            <i class="bi bi-clock-history me-2"></i>
+                            {{ p.diasTrial }} días gratis
+                          </span>
+                        </ng-container>
+                        <ng-template #noTrial>
+                          <span class="text-muted small">Sin trial</span>
+                        </ng-template>
+                      </div>
+
+                      <!-- Visible Público -->
+                      <div>
+                        <i class="bi fs-4"
+                           [class.bi-eye-fill]="p.esVisiblePublico"
+                           [class.bi-eye-slash]="!p.esVisiblePublico"
+                           [class.text-success]="p.esVisiblePublico"
+                           [class.text-danger]="!p.esVisiblePublico"></i>
+                        <small class="text-muted ms-2">
+                          {{ p.esVisiblePublico ? 'Visible al público' : 'Oculto' }}
+                        </small>
+                      </div>
+
+                      <!-- Orden -->
+                      <div>
+                        <span class="badge bg-secondary rounded-pill px-3 py-2">
+                          Orden #{{ p.orden }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Estado + Acciones -->
+                  <div class="col-md-3 col-lg-2 text-center text-md-end">
+                    <div class="d-flex flex-column gap-3 align-items-center align-items-md-end">
+                      <!-- Estado -->
+                      <span class="badge fs-6 px-4 py-3 rounded-pill shadow-sm"
+                            [class.bg-success]="p.activo"
+                            [class.bg-danger]="!p.activo">
+                        {{ p.activo ? 'Activo' : 'Inactivo' }}
+                      </span>
+
+                      <!-- Botones -->
+                      <div class="d-flex gap-2">
+                        <button
+                          class="btn rounded-circle shadow-sm btn-lg"
+                          [class.btn-success]="p.activo"
+                          [class.btn-outline-danger]="!p.activo"
+                          (click)="toggleActivo(p)"
+                          [title]="p.activo ? 'Desactivar plan' : 'Activar plan'">
+                          <i class="bi fs-4"
+                             [class.bi-toggle-on]="p.activo"
+                             [class.bi-toggle-off]="!p.activo"></i>
+                        </button>
+
+                        <button class="btn btn-outline-primary rounded-circle shadow-sm btn-lg"
+                                (click)="abrirEditar(p)"
+                                title="Editar plan">
+                          <i class="bi bi-pencil-fill fs-5"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -107,41 +195,37 @@
 
   <!-- Empty State -->
   <div *ngIf="!loading() && planes().length === 0" class="text-center py-5 my-5">
-    <div class="mb-4">
-      <i class="bi bi-credit-card-2-back display-1 text-muted opacity-25"></i>
-    </div>
-    <h3 class="text-dark fw-semibold">No se encontraron planes</h3>
-    <p class="text-muted lead" *ngIf="searchTerm">
-      No hay resultados para "<strong>{{ searchTerm }}</strong>"
+    <i class="bi bi-credit-card-2-back display-1 text-muted opacity-20 mb-4"></i>
+    <h3 class="fw-bold text-dark">No hay planes disponibles</h3>
+    <p class="lead text-muted mb-4" *ngIf="searchTerm">
+      No se encontraron resultados para "<strong>{{ searchTerm }}</strong>"
     </p>
-    <p class="text-muted lead" *ngIf="!searchTerm">
-      Aún no has creado ningún plan de suscripción
+    <p class="lead text-muted mb-4" *ngIf="!searchTerm">
+      Aún no has creado ningún plan de suscripción.
     </p>
-    <button class="btn btn-primary btn-lg rounded-pill px-5 mt-3" (click)="abrirCrear()">
+    <button class="btn btn-primary btn-lg rounded-pill px-5 shadow" (click)="abrirCrear()">
       <i class="bi bi-plus-circle me-2"></i>
-      Crear primer plan
+      Crear mi primer plan
     </button>
   </div>
 
-  <!-- Pagination -->
-  <div *ngIf="pageData() && pageData()!.totalPages > 1" class="d-flex flex-column flex-sm-row justify-content-between align-items-center mt-5 gap-3">
+  <!-- Paginación -->
+  <div *ngIf="pageData() && pageData()!.totalPages > 1" class="d-flex justify-content-between align-items-center mt-5 flex-wrap gap-3">
     <p class="text-muted mb-0">
-      Mostrando {{ startItem }} - {{ endItem }} de {{ pageData()?.totalElements }} planes
+      Mostrando {{ startItem }} al {{ endItem }} de {{ pageData()?.totalElements }} planes
     </p>
     <nav>
-      <ul class="pagination pagination-lg mb-0">
+      <ul class="pagination pagination-lg">
         <li class="page-item" [class.disabled]="currentPage() === 0">
-          <button class="page-link" (click)="goToPage(currentPage() - 1)">
+          <button class="page-link rounded-pill" (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 0">
             <i class="bi bi-chevron-left"></i>
           </button>
         </li>
-
         <li class="page-item" *ngFor="let page of getPageNumbers()" [class.active]="page === currentPage()">
-          <button class="page-link" (click)="goToPage(page)">{{ page + 1 }}</button>
+          <button class="page-link rounded-pill" (click)="goToPage(page)">{{ page + 1 }}</button>
         </li>
-
         <li class="page-item" [class.disabled]="currentPage() === (pageData()!.totalPages - 1)">
-          <button class="page-link" (click)="goToPage(currentPage() + 1)">
+          <button class="page-link rounded-pill" (click)="goToPage(currentPage() + 1)">
             <i class="bi bi-chevron-right"></i>
           </button>
         </li>
@@ -151,8 +235,8 @@
 
   <!-- Modal -->
   <div class="modal fade" tabindex="-1" [ngClass]="{'show d-block': showModal(), 'd-none': !showModal()}">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content border-0 shadow-lg rounded-4">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
         <div class="modal-header border-0 pb-0">
           <button type="button" class="btn-close" (click)="closeModal()" aria-label="Cerrar"></button>
         </div>
@@ -166,7 +250,5 @@
       </div>
     </div>
   </div>
-
-  <!-- Backdrop -->
   <div class="modal-backdrop fade show" *ngIf="showModal()" (click)="closeModal()"></div>
 </div>

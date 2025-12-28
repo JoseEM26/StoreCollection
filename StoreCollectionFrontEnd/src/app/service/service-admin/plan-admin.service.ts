@@ -13,15 +13,17 @@ export class PlanAdminService {
 
   constructor(private http: HttpClient) {}
 
-  // Lista paginada para admin (incluye campo 'activo')
-  listar(page: number = 0, size: number = 10, search?: string): Observable<PlanPage> {
+  // Lista paginada para admin (todos los planes, activos e inactivos)
+  listar(
+    page: number = 0,
+    size: number = 10,
+    sort: string[] = ['id,desc']  // Valor por defecto del backend
+  ): Observable<PlanPage> {
     let params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString());
 
-    if (search?.trim()) {
-      params = params.set('search', search.trim());
-    }
+    sort.forEach(s => params = params.append('sort', s));
 
     return this.http.get<PlanPage>(this.adminUrl, { params });
   }
@@ -40,5 +42,9 @@ export class PlanAdminService {
 
   toggleActivo(id: number): Observable<PlanResponse> {
     return this.http.patch<PlanResponse>(`${this.adminUrl}/${id}/toggle-activo`, {});
+  }
+
+  eliminar(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.adminUrl}/${id}`);
   }
 }

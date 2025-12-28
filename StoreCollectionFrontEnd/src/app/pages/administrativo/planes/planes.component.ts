@@ -35,7 +35,11 @@ export class PlanesComponent implements OnInit {
 
   loadPlanes(): void {
     this.loading.set(true);
-    this.planService.listar(this.currentPage(), this.pageSize, this.searchTerm)
+    
+    // Usamos el sort por defecto del backend: id,desc
+    const sort = ['id,desc'];
+    
+    this.planService.listar(this.currentPage(), this.pageSize, sort)
       .subscribe({
         next: (data) => {
           this.pageData.set(data);
@@ -43,7 +47,9 @@ export class PlanesComponent implements OnInit {
           this.loading.set(false);
         },
         error: (err) => {
-          console.error(err);
+          console.error('Error al cargar los planes', err);
+          this.planes.set([]);
+          this.pageData.set(null);
           this.loading.set(false);
           alert('Error al cargar los planes');
         }
@@ -67,11 +73,11 @@ export class PlanesComponent implements OnInit {
 
   onFormSuccess(): void {
     this.closeModal();
-    this.loadPlanes();
+    this.loadPlanes();  // Recargar lista después de crear/editar
   }
 
   goToPage(page: number): void {
-    if (page >= 0 && page < (this.pageData()?.totalPages || 0)) {
+    if (page >= 0 && this.pageData() && page < this.pageData()!.totalPages) {
       this.currentPage.set(page);
       this.loadPlanes();
     }
@@ -97,10 +103,15 @@ export class PlanesComponent implements OnInit {
 
   getPageNumbers(): number[] {
     const total = this.pageData()?.totalPages || 0;
+    if (total <= 1) return [];
+
     const current = this.currentPage();
     const delta = 2;
     const range = [];
-    for (let i = Math.max(0, current - delta); i <= Math.min(total - 1, current + delta); i++) {
+    const start = Math.max(0, current - delta);
+    const end = Math.min(total - 1, current + delta);
+
+    for (let i = start; i <= end; i++) {
       range.push(i);
     }
     return range;
@@ -110,10 +121,31 @@ export class PlanesComponent implements OnInit {
     return plan.id;
   }
 
-  formatPrecio(precio: number): string {
-    return new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(precio);
+  // Formatear precio en soles peruanos
+  formatPrecio(precio: number | null | undefined): string {
+    if (precio == null) return 'Gratis';
+    return new Intl.NumberFormat('es-PE', {
+      style: 'currency',
+      currency: 'PEN',
+      minimumFractionDigits: 0
+    }).format(precio);
   }
 
+  // Mostrar precio mensual y anual si existe
+  getPrecioTexto(plan: PlanResponse): string {
+    const mensual = this.formatPrecio(plan.precioMensual);
+    if (plan.precioAnual) {
+      const anual = this.formatPrecio(plan.precioAnual);
+      return `${mensual}/mes | ${anual}/año`;
+    }
+    return mensual + '/mes';
+  }
+calcularAhorro(plan: PlanResponse): number {
+  if (!plan.precioAnual || plan.precioMensual === 0) return 0;
+  const anualEquivalente = plan.precioMensual * 12;
+  const ahorro = ((anualEquivalente - plan.precioAnual) / anualEquivalente) * 100;
+  return Math.round(ahorro);
+}
   toggleActivo(plan: PlanResponse): void {
     this.planService.toggleActivo(plan.id).subscribe({
       next: (updatedPlan) => {
@@ -121,14 +153,10 @@ export class PlanesComponent implements OnInit {
           list.map(p => p.id === updatedPlan.id ? updatedPlan : p)
         );
       },
-      error: () => {
+      error: (err) => {
+        console.error('Error al toggle activo', err);
         alert('Error al cambiar el estado del plan');
       }
     });
-  }
-
-  getMesesTexto(mesInicio: number, mesFin: number): string {
-    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    return `${meses[mesInicio - 1]} - ${meses[mesFin - 1]}`;
   }
 }

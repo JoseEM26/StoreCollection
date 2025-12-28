@@ -46,19 +46,17 @@ getMesesTexto(mesInicio: number, mesFin: number): string {
 
   return `${inicio} - ${fin}`;
 }
-  // NUEVO: Cargar planes públicos vigentes
-  loadPlanes(): void {
+loadPlanes(): void {
     this.loadingPlanes = true;
-    this.planService.listarVigentes(0, 10).subscribe({
-      next: (data) => {
-        // Filtrar solo activos y vigentes en frontend (por seguridad extra)
-        this.planes = data.content.filter(plan => 
-          plan.activo && this.isPlanVigente(plan.mesInicio, plan.mesFin)
-        );
+    this.planService.obtenerPlanesPublicos().subscribe({
+      next: (planes) => {
+        // El backend ya filtra por activo=true y esVisiblePublico=true
+        // Además están ordenados por el campo 'orden'
+        this.planes = planes;
         this.loadingPlanes = false;
       },
       error: (err) => {
-        console.error('Error al cargar planes', err);
+        console.error('Error al cargar planes públicos', err);
         this.planes = [];
         this.loadingPlanes = false;
       }

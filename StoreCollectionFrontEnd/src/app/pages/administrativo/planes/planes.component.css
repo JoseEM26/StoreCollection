@@ -1,8 +1,31 @@
-.btn-delete {
-  color: #dc3545;
+/* Fondo degradado para íconos premium */
+.bg-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-.btn-delete:hover {
-  background-color: #f8d7da;
-  color: #b02a37;
+/* Hover suave en filas */
+table tr {
+  transition: all 0.3s ease;
+}
+
+table tr:hover {
+  transform: translateY(-2px);
+}
+
+/* Bordes más suaves */
+.rounded-4 {
+  border-radius: 1rem !important;
+}
+
+.border-start-5 {
+  border-left-width: 6px !important;
+}
+
+/* Botones más grandes y elegantes */
+.btn-lg {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
