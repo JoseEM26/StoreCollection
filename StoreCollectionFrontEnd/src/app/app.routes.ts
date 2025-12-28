@@ -25,10 +25,10 @@ import { SuscripcionExpiradaComponentComponent } from './componente/suscripcion-
 // === GUARDS & RESOLVERS ===
 import { TiendaResolver } from './service/tienda.resolver';
 import { authGuard } from '../auth/auth.guard';
-import { tiendaExistsGuard } from '../auth/tienda-exists.guard';
 import { resourceActiveGuard } from '../auth/resource-active.guard'; // ← IMPORTANTE: el guard para productos inactivos
 import { CarritoComponent } from './componente/carrito/carrito.component';
 import { BoletaComponent } from './pages/administrativo/boleta/boleta.component';
+import { tiendaAccessGuard } from '../auth/tienda-access.guard';
 
 export const routes: Routes = [
 
@@ -62,7 +62,7 @@ export const routes: Routes = [
 
   {
     path: ':tiendaSlug',
-    canMatch: [tiendaExistsGuard], 
+    canMatch: [tiendaAccessGuard], 
     component: PublicLayaoutComponent,
     resolve: { tienda: TiendaResolver },
     children: [

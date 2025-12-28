@@ -39,6 +39,7 @@ export interface Tienda {
   updatedAt?: string;
   logo_img_url?:string;
   mapa_url?:string;
+  activo?:boolean;
 }
 
 export interface Categoria {
