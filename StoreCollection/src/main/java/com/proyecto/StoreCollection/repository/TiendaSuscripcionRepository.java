@@ -35,4 +35,6 @@ public interface TiendaSuscripcionRepository extends JpaRepository<TiendaSuscrip
             "WHERE ts.tienda.id = :tiendaId " +
             "ORDER BY ts.fechaInicio DESC LIMIT 1")
     Optional<TiendaSuscripcion> findSuscripcionMasReciente(@Param("tiendaId") Integer tiendaId);
+
+
 }

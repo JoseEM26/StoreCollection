@@ -9,7 +9,6 @@ export interface TiendaPublic {
   descripcion?: string;
   direccion?: string;
   horarios?: string;
-  planId?: number;
   planNombre: 'Gratis' | 'Básico' | 'Pro' | 'Enterprise';
   userId?: number;
   userEmail?: string;

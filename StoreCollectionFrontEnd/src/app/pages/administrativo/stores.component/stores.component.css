@@ -496,4 +496,15 @@
   .stores-grid { grid-template-columns: 1fr; }
   .modal-card { max-width: 95vw; max-height: 94vh; border-radius: 1.6rem; }
   .btn-close-modal { top: 1rem; right: 1rem; width: 48px; height: 48px; }
+}/* Mejora leve en hover de tarjetas */
+.card:hover {
+  transform: translateY(-8px);
+  transition: transform 0.3s ease;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15) !important;
+}
+
+/* Asegurar que botones sean clicables */
+.card-footer button {
+  position: relative;
+  z-index: 3;
 }

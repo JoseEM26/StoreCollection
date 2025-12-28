@@ -120,6 +120,7 @@
             </div>
           </div>
 
+          <!-- WhatsApp y Moneda -->
           <div class="col-md-6">
             <label class="form-label">WhatsApp</label>
             <input 
@@ -145,35 +146,23 @@
             </select>
           </div>
 
-          <!-- Plan -->
-          <div class="col-12" *ngIf="esAdmin">
-            <label class="form-label required">Plan de la tienda</label>
-            <select 
-              formControlName="planId" 
-              class="form-select"
-              [class.is-invalid]="form.get('planId')?.invalid && form.get('planId')?.touched"
-              [disabled]="planesLoading"
-            >
-              <option [value]="null" disabled>
-                {{ planesLoading ? 'Cargando planes...' : 'Selecciona un plan' }}
-              </option>
-              <option *ngFor="let p of planes" [value]="p.id">
-                {{ p.descripcion }}
-              </option>
-            </select>
-            <div class="invalid-feedback">
-              Debes seleccionar un plan
+          <!-- Plan actual (solo lectura) -->
+          <div class="col-12">
+            <label class="form-label fw-semibold text-primary">
+              <i class="bi bi-credit-card-2-back me-2"></i>
+              Plan de suscripción
+            </label>
+            <div class="bg-light rounded-4 p-3 border">
+              <div class="d-flex align-items-center justify-content-between">
+                <div>
+                  <strong>{{ planActualTexto }}</strong>
+                  <small class="text-muted d-block">
+                    {{ isEditMode ? 'El plan se gestiona por separado' : 'Se asignará automáticamente al crear la tienda' }}
+                  </small>
+                </div>
+                <i class="bi bi-info-circle text-primary fs-4"></i>
+              </div>
             </div>
-          </div>
-
-          <div class="col-12" *ngIf="!esAdmin">
-            <label class="form-label">Plan actual</label>
-            <input 
-              type="text" 
-              class="form-control bg-light" 
-              [value]="nombrePlanActual" 
-              disabled
-            />
           </div>
 
           <!-- Descripción -->
@@ -187,6 +176,7 @@
             ></textarea>
           </div>
 
+          <!-- Dirección y Horarios -->
           <div class="col-md-6">
             <label class="form-label">Dirección física</label>
             <input 
@@ -207,8 +197,9 @@
             />
           </div>
 
+          <!-- Mapa -->
           <div class="col-12">
-            <label class="form-label">Enlace Google Maps</label>
+            <label class="form-label">Enlace Google Maps (opcional)</label>
             <input 
               formControlName="mapa_url"
               type="url" 

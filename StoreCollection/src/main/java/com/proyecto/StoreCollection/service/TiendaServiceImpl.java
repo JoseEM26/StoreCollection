@@ -357,6 +357,32 @@ public class TiendaServiceImpl implements TiendaService {
         dto.setActivo(t.getActivo());
         dto.setUserId(t.getUser().getId());
         dto.setUserEmail(t.getUser().getEmail());
+
+        // ==================== CARGAR PLAN ACTIVO ====================
+        LocalDateTime ahora = LocalDateTime.now();
+        Set<String> estadosVigentes = Set.of("active", "trial", "grace");
+
+        try {
+            tiendaSuscripcionService.findSuscripcionActiva(t.getId())
+                    .ifPresent(suscripcion -> {
+                        dto.setPlanNombre(suscripcion.getPlan().getNombre());
+                        dto.setPlanSlug(suscripcion.getPlan().getSlug());
+                        dto.setEstadoSuscripcion(suscripcion.getEstado());
+                        dto.setTrialEndsAt(suscripcion.getTrialEndsAt() != null ? suscripcion.getTrialEndsAt().toString() : null);
+                        dto.setFechaFin(suscripcion.getFechaFin() != null ? suscripcion.getFechaFin().toString() : null);
+                        dto.setMaxProductos(suscripcion.getPlan().getMaxProductos());
+                        dto.setMaxVariantes(suscripcion.getPlan().getMaxVariantes());
+                    });
+        } catch (Exception e) {
+            System.err.println("Error al cargar suscripción activa para tienda " + t.getId() + ": " + e.getMessage());
+        }
+
+        // Valor por defecto si no hay suscripción activa
+        if (dto.getPlanNombre() == null) {
+            dto.setPlanNombre("Sin plan activo");
+            dto.setEstadoSuscripcion("inactive");
+        }
+
         return dto;
     }
 }

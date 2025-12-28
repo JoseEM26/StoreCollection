@@ -12,8 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Set;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -25,8 +25,10 @@ public class TiendaSuscripcionService {
 
     // Estados considerados "vigentes"
     private static final Set<String> ESTADOS_VIGENTES = Set.of("trial", "active", "grace");
-    private static final Set<String> ESTADOS_ACTIVOS_O_TRIAL = Set.of("trial", "active");
 
+    /**
+     * Crea la suscripción inicial al crear una nueva tienda
+     */
     @Transactional
     public TiendaSuscripcion crearSuscripcionInicial(Integer tiendaId, Integer planId) {
         Tienda tienda = obtenerTienda(tiendaId);
@@ -36,18 +38,31 @@ public class TiendaSuscripcionService {
             throw new IllegalStateException("La tienda ya tiene una suscripción vigente");
         }
 
-        TiendaSuscripcion suscripcion = new TiendaSuscripcion();
-        suscripcion.setTienda(tienda);
-        suscripcion.setPlan(plan);
-        suscripcion.setEstado(plan.getEsTrial() == Boolean.TRUE && plan.getDiasTrial() > 0 ? "trial" : "active");
-        suscripcion.setFechaInicio(LocalDateTime.now());
-        suscripcion.setPaymentProvider("manual");
-        suscripcion.setNotas("Suscripción inicial creada");
+        TiendaSuscripcion suscripcion = TiendaSuscripcion.builder()
+                .tienda(tienda)
+                .plan(plan)
+                .estado(plan.getEsTrial() == Boolean.TRUE && plan.getDiasTrial() > 0 ? "trial" : "active")
+                .fechaInicio(LocalDateTime.now())
+                .paymentProvider("manual")
+                .notas("Suscripción inicial creada automáticamente")
+                .build();
 
         configurarFechas(suscripcion, plan);
         return suscripcionRepository.save(suscripcion);
     }
 
+    /**
+     * Método que usaremos desde TiendaService para obtener el plan activo
+     */
+    @Transactional(readOnly = true)
+    public Optional<TiendaSuscripcion> findSuscripcionActiva(Integer tiendaId) {
+        LocalDateTime ahora = LocalDateTime.now();
+        return suscripcionRepository.findPrimeraSuscripcionVigente(tiendaId, ahora, ESTADOS_VIGENTES);
+    }
+
+    /**
+     * Cambiar de plan (ej: de Básico a Pro)
+     */
     @Transactional
     public TiendaSuscripcion cambiarPlan(Integer tiendaId, Integer nuevoPlanId, String provider, String externalId) {
         TiendaSuscripcion suscripcion = obtenerSuscripcionVigente(tiendaId)
@@ -55,17 +70,19 @@ public class TiendaSuscripcionService {
 
         Plan nuevoPlan = obtenerPlan(nuevoPlanId);
 
-        // Actualizar plan y proveedor
         suscripcion.setPlan(nuevoPlan);
-        suscripcion.setPaymentProvider(provider != null ? provider : suscripcion.getPaymentProvider());
+        if (provider != null) suscripcion.setPaymentProvider(provider);
         suscripcion.setExternalSubscriptionId(externalId);
-        suscripcion.setEstado("active"); // sale del trial si estaba
+        suscripcion.setEstado("active");
         suscripcion.setNotas("Cambio de plan a " + nuevoPlan.getNombre());
 
         configurarFechas(suscripcion, nuevoPlan);
         return suscripcionRepository.save(suscripcion);
     }
 
+    /**
+     * Cancelar suscripción
+     */
     @Transactional
     public TiendaSuscripcion cancelarSuscripcion(Integer tiendaId, boolean cancelacionInmediata, String motivo) {
         TiendaSuscripcion suscripcion = obtenerSuscripcionVigente(tiendaId)
@@ -75,16 +92,16 @@ public class TiendaSuscripcionService {
             suscripcion.setEstado("cancelled");
             suscripcion.setFechaFin(LocalDateTime.now());
         } else {
-            suscripcion.setEstado("active"); // sigue activa hasta fin de período
+            suscripcion.setEstado("active");
             suscripcion.setCancelAtPeriodEnd(true);
             suscripcion.setCancelAt(suscripcion.getPeriodoActualFin());
         }
 
-        suscripcion.setNotas("Cancelación solicitada: " + (motivo != null ? motivo : "sin motivo"));
+        suscripcion.setNotas("Cancelación: " + (motivo != null ? motivo : "sin motivo"));
         return suscripcionRepository.save(suscripcion);
     }
 
-    // ======================== CONSULTAS ========================
+    // ======================== CONSULTAS AUXILIARES ========================
 
     @Transactional(readOnly = true)
     public boolean tieneSuscripcionVigente(Integer tiendaId) {
@@ -94,8 +111,7 @@ public class TiendaSuscripcionService {
 
     @Transactional(readOnly = true)
     public Optional<TiendaSuscripcion> obtenerSuscripcionVigente(Integer tiendaId) {
-        return suscripcionRepository.findPrimeraSuscripcionVigente(
-                tiendaId, LocalDateTime.now(), ESTADOS_VIGENTES);
+        return findSuscripcionActiva(tiendaId); // Reutilizamos el mismo método
     }
 
     @Transactional(readOnly = true)
@@ -105,7 +121,7 @@ public class TiendaSuscripcionService {
                 .orElse(false);
     }
 
-    // ======================== PRIVADOS ========================
+    // ======================== MÉTODOS PRIVADOS ========================
 
     private Tienda obtenerTienda(Integer id) {
         return tiendaRepository.findById(id)
@@ -121,7 +137,6 @@ public class TiendaSuscripcionService {
         LocalDateTime ahora = LocalDateTime.now();
         sus.setPeriodoActualInicio(ahora);
 
-        // Trial
         if ("trial".equals(sus.getEstado()) && plan.getDiasTrial() > 0) {
             LocalDateTime finTrial = ahora.plusDays(plan.getDiasTrial());
             sus.setTrialEndsAt(finTrial);
@@ -130,7 +145,6 @@ public class TiendaSuscripcionService {
             return;
         }
 
-        // Duración fija
         if (plan.getDuracionDias() != null && plan.getDuracionDias() > 0) {
             sus.setFechaFin(ahora.plusDays(plan.getDuracionDias()));
         } else {

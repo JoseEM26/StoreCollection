@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, effect } from '@angular/core';
+import { Component, OnInit, signal, effect, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TiendaPage } from '../../../model/tienda-public.model';
@@ -14,21 +14,22 @@ import { FormStoresComponent } from './form-stores/form-stores.component';
   templateUrl: './stores.component.html',
   styleUrl: './stores.component.css'
 })
-export class StoresComponent implements OnInit {
+export class StoresComponent implements OnInit, OnDestroy {
   tiendasPage = signal<TiendaPage | null>(null);
   tiendas = signal<TiendaResponse[]>([]);
   loading = signal(true);
-
+// Para el modal de detalles
+showDetailsModal = false;
+selectedTienda: TiendaResponse | null = null;
   currentPage = signal(0);
   pageSize = 12;
   sort = signal('nombre,asc');
-
-  // Signal para lo que escribe el usuario (actualiza al instante en el input)
+searchInputValue = '';
+  // Búsqueda con debounce
   searchInput = signal<string>('');
-
-  // Signal para el término que se envía al backend (con debounce)
   searchTerm = signal<string>('');
 
+  // Modales
   showCreateModal = false;
   showEditModal = false;
   editingStore = signal<TiendaResponse | undefined>(undefined);
@@ -39,7 +40,7 @@ export class StoresComponent implements OnInit {
     private tiendaService: TiendaAdminService,
     public auth: AuthService
   ) {
-    // Effect principal: recarga cuando cambie página, orden o término de búsqueda (debounced)
+    // Recarga automática cuando cambian página, orden o búsqueda
     effect(() => {
       this.currentPage();
       this.sort();
@@ -47,7 +48,7 @@ export class StoresComponent implements OnInit {
       this.loadTiendas();
     });
 
-    // Effect para debounce: actualiza searchTerm 500ms después de que el usuario deje de escribir
+    // Debounce de 500ms para la búsqueda
     effect(() => {
       const term = this.searchInput().trim();
 
@@ -55,23 +56,39 @@ export class StoresComponent implements OnInit {
       this.debounceTimer = setTimeout(() => {
         if (this.searchTerm() !== term) {
           this.searchTerm.set(term);
-          this.currentPage.set(0); // Reinicia paginación al buscar
+          this.currentPage.set(0);
         }
       }, 500);
     });
   }
-
+getEstadoSuscripcion(tienda: TiendaResponse | null): string {
+  if (!tienda || !tienda.estadoSuscripcion) {
+    return 'Inactivo';
+  }
+  return tienda.estadoSuscripcion.charAt(0).toUpperCase() + tienda.estadoSuscripcion.slice(1).toLowerCase();
+}
   ngOnInit(): void {
     this.loadTiendas();
   }
 
   ngOnDestroy(): void {
-    // Limpia el timer si el componente se destruye
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
     }
   }
 
+
+verDetalles(tienda: TiendaResponse): void {
+  this.selectedTienda = tienda;
+  this.showDetailsModal = true;
+}
+
+closeDetailsModal(): void {
+  this.showDetailsModal = false;
+  this.selectedTienda = null;
+}
+
+// Ya tienes estas funciones (formatDate e isPlanPremium) del mensaje anterior
   loadTiendas(): void {
     this.loading.set(true);
 
@@ -140,18 +157,9 @@ export class StoresComponent implements OnInit {
     this.showCreateModal = true;
   }
 
-  closeCreateModal(): void {
-    this.showCreateModal = false;
-  }
-
   openEditModal(tienda: TiendaResponse): void {
     this.editingStore.set(tienda);
     this.showEditModal = true;
-  }
-
-  closeEditModal(): void {
-    this.showEditModal = false;
-    this.editingStore.set(undefined);
   }
 
   toggleActive(tienda: TiendaResponse): void {
@@ -176,6 +184,57 @@ export class StoresComponent implements OnInit {
         console.error('Error al toggle activo:', err);
         alert('No tienes permisos para realizar esta acción o ocurrió un error');
       }
+    });
+  }
+
+  // ================================================================
+  // MÉTODOS PARA EL NUEVO DISEÑO DEL PLAN
+  // ================================================================
+
+  /**
+   * Devuelve la clase CSS del badge según el plan y estado
+   */
+  getPlanBadgeClass(tienda: TiendaResponse): string {
+    if (!tienda.planNombre) return 'bg-secondary';
+
+    const plan = tienda.planNombre.toLowerCase();
+    const estado = tienda.estadoSuscripcion;
+
+    // Trial siempre amarillo
+    if (estado === 'trial') return 'bg-warning text-dark';
+
+    // Planes premium
+    if (plan.includes('enterprise')) return 'bg-dark';
+    if (plan.includes('premium') || plan.includes('pro')) return 'bg-gradient-purple';
+
+    // Planes estándar
+    if (plan.includes('básico') || plan.includes('basico')) return 'bg-primary';
+    if (plan.includes('gratis')) return 'bg-success';
+
+    // Por defecto
+    return 'bg-info';
+  }
+
+  /**
+   * Detecta si es un plan premium para mostrar estrella o icono especial
+   */
+  isPlanPremium(tienda: TiendaResponse): boolean {
+    if (!tienda.planNombre) return false;
+    const plan = tienda.planNombre.toLowerCase();
+    return plan.includes('pro') || plan.includes('premium') || plan.includes('enterprise');
+  }
+
+  /**
+   * Formatea fecha ISO (2025-12-27T...) a formato legible en español
+   * Ejemplo: "27 dic 2025"
+   */
+  formatDate(isoDate: string | undefined): string {
+    if (!isoDate) return '';
+    const date = new Date(isoDate);
+    return date.toLocaleDateString('es-PE', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
     });
   }
 }

@@ -4,17 +4,23 @@ export interface TiendaResponse {
   nombre: string;
   slug: string;
   whatsapp?: string;
-  moneda: string;
+  moneda: 'SOLES' | 'DOLARES';
   descripcion?: string;
   direccion?: string;
   horarios?: string;
-  mapa_url?: string;
-  logo_img_url?: string;
-  planId?: number;
-  planNombre?: string;
-  userId: number;
-  userEmail: string;
+  mapaUrl?: string;
+  logoImgUrl?: string;
   activo: boolean;
+  userId: number;
+  userEmail?: string; // ← Ya lo tienes, bien
+  // NUEVOS CAMPOS PARA LA SUSCRIPCIÓN ACTIVA
+  planNombre?: string;          // Nombre del plan actual
+  planSlug?: string;
+  estadoSuscripcion?: string;   // 'trial', 'active', 'canceled', etc.
+  trialEndsAt?: string;
+  fechaFin?: string;
+  maxProductos?: number;        // Opcional: límites del plan actual
+  maxVariantes?: number;
 }
 
 export interface TiendaPage {

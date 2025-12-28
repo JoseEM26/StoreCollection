@@ -17,7 +17,6 @@ public class TiendaRequest {
     private String horarios;
     private String mapa_url;
     private MultipartFile logoImg;
-    private Integer planId;
     private Integer userId;
     private Boolean activo;
 }

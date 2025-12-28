@@ -45,8 +45,7 @@ public interface TiendaRepository extends JpaRepository<Tienda, Integer> {
             @Param("estadosValidos") Set<String> estadosValidos,
             Pageable pageable
     );
-
-    // Versión sin paginación (para búsquedas rápidas si es necesario)
+  
     @Query("""
         SELECT t FROM Tienda t
         WHERE t.activo = true
