@@ -1,8 +1,6 @@
-<div class="min-vh-100 d-flex align-items-center justify-content-center position-relative overflow-hidden"
-     style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">
-
-  <!-- Fondo sutil con patrón geométrico (opcional, muy tenue) -->
-  <div class="position-absolute top-0 start-0 w-100 h-100 opacity-5">
+<div class="min-vh-100 d-flex align-items-center justify-content-center bg-gradient-subtle position-relative overflow-hidden">
+  <!-- Fondo sutil geométrico (muy tenue) -->
+  <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10 pointer-events-none">
     <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
@@ -15,89 +13,80 @@
 
   <div class="container position-relative z-10">
     <div class="row justify-content-center">
-      <div class="col-xl-4 col-lg-5 col-md-6 col-sm-8">
+      <div class="col-xl-4 col-lg-5 col-md-7 col-sm-9">
 
         <!-- Logo + Título -->
         <div class="text-center mb-5" data-aos="fade-down">
-          <div class="d-inline-flex align-items-center justify-content-center rounded-4 bg-primary bg-opacity-10 mb-4"
-               style="width: 90px; height: 90px;">
-            <i class="bi bi-buildings text-primary" style="font-size: 2.8rem;"></i>
+          <div class="d-inline-flex align-items-center justify-content-center rounded-4 bg-primary-subtle p-4 mb-4">
+            <i class="bi bi-buildings text-primary fs-1"></i>
           </div>
           <h1 class="display-5 fw-bold text-dark mb-2">Store Collection</h1>
           <p class="lead text-muted fw-medium">Panel de Administración Empresarial</p>
         </div>
 
-        <!-- Formulario -->
-        <form (ngSubmit)="onSubmit()" class="bg-white rounded-4 shadow-xl p-5 p-lg-6" data-aos="fade-up" data-aos-delay="100">
+        <!-- Tarjeta de login -->
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden" data-aos="fade-up" data-aos-delay="100">
+          <div class="card-body p-5 p-lg-6">
 
-          <!-- Email -->
-          <div class="mb-4">
-            <label for="email" class="form-label fw-semibold text-dark">
-              Correo electrónico
-            </label>
-            <div class="position-relative">
-              <i class="bi bi-envelope position-absolute top-50 start-4 translate-middle-y text-muted z-10"></i>
-              <input type="email"
-                     id="email"
-                     class="form-control form-control-lg ps-5 rounded-3 border-0 shadow-sm"
-                     [(ngModel)]="credentials.email"
-                     name="email"
-                     placeholder="nombre@empresa.com"
-                     required
-                     autofocus>
-            </div>
-          </div>
+            <form (ngSubmit)="onSubmit()">
 
-          <!-- Contraseña -->
-          <div class="mb-5">
-            <label for="password" class="form-label fw-semibold text-dark">
-              Contraseña
-            </label>
-            <div class="position-relative">
-              <i class="bi bi-lock position-absolute top-50 start-4 translate-middle-y text-muted z-10"></i>
-              <input [type]="showPassword ? 'text' : 'password'"
-                     id="password"
-                     class="form-control form-control-lg ps-5 pe-5 rounded-3 border-0 shadow-sm"
-                     [(ngModel)]="credentials.password"
-                     name="password"
-                     placeholder="••••••••••••"
-                     required>
-              <button type="button"
-                      class="btn btn-link position-absolute top-50 end-0 translate-middle-y text-muted"
-                      (click)="showPassword = !showPassword">
-                <i [class]="'bi ' + (showPassword ? 'bi-eye-slash' : 'bi-eye')"></i>
+              <!-- Email -->
+              <div class="mb-4">
+                <label for="email" class="form-label fw-semibold text-dark">Correo electrónico</label>
+                <div class="input-group input-group-lg">
+                  <span class="input-group-text bg-white border-end-0">
+                    <i class="bi bi-envelope text-muted"></i>
+                  </span>
+                  <input type="email" class="form-control border-start-0 shadow-none"
+                         id="email" [(ngModel)]="credentials.email" name="email"
+                         placeholder="nombre@empresa.com" required autofocus>
+                </div>
+              </div>
+
+              <!-- Contraseña -->
+              <div class="mb-5">
+                <label for="password" class="form-label fw-semibold text-dark">Contraseña</label>
+                <div class="input-group input-group-lg">
+                  <span class="input-group-text bg-white border-end-0">
+                    <i class="bi bi-lock text-muted"></i>
+                  </span>
+                  <input [type]="showPassword ? 'text' : 'password'" class="form-control border-0 shadow-none"
+                         id="password" [(ngModel)]="credentials.password" name="password"
+                         placeholder="••••••••••••" required>
+                  <button class="btn btn-outline-secondary border-0" type="button"
+                          (click)="showPassword = !showPassword">
+                    <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Botón con loading -->
+              <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill fw-semibold shadow-lg"
+                      [disabled]="isLoading">
+                <span *ngIf="!isLoading">
+                  <i class="bi bi-box-arrow-in-right me-2"></i> Iniciar sesión
+                </span>
+                <span *ngIf="isLoading">
+                  <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                  Verificando...
+                </span>
               </button>
+            </form>
+
+            <!-- Footer -->
+            <div class="text-center mt-5 pt-4 border-top">
+              <p class="text-muted small mb-2">
+                <i class="bi bi-shield-lock-fill text-success me-1"></i>
+                Conexión segura • Cifrado TLS 1.3
+              </p>
+              <p class="text-muted small mb-0">
+                © {{ currentYear }} Store Collection • Plataforma SaaS empresarial
+              </p>
             </div>
           </div>
+        </div>
 
-          <!-- Botón principal -->
-          <button type="submit"
-                  class="btn btn-primary btn-lg w-100 fw-semibold rounded-3 py-3 d-flex align-items-center justify-content-center gap-3"
-                  [disabled]="isLoading">
-            <span *ngIf="!isLoading">
-              <i class="bi bi-box-arrow-in-right"></i>
-              Iniciar sesión
-            </span>
-            <span *ngIf="isLoading">
-              <span class="spinner-border spinner-border-sm"></span>
-              Verificando credenciales...
-            </span>
-          </button>
-
-          <!-- Footer -->
-          <div class="text-center mt-5 pt-4 border-top border-light">
-            <p class="text-muted small mb-2">
-              <i class="bi bi-shield-lock-fill text-success me-1"></i>
-              Conexión segura • Cifrado TLS 1.3
-            </p>
-            <p class="text-muted small mb-0">
-              © {{ currentYear }} Store Collection • Plataforma SaaS empresarial
-            </p>
-          </div>
-
-        </form>
-
-        <!-- Texto inferior (opcional) -->
+        <!-- Texto inferior -->
         <div class="text-center mt-4">
           <small class="text-muted">
             Gestión multimarca para empresas líderes del retail

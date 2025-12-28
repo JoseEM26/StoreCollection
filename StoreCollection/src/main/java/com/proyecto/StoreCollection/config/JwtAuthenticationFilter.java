@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,13 +17,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.regex.Pattern;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final UserDetailsService userDetailsService;
+    private final UserDetailsService userDetailsService;  // Este debe retornar isEnabled correctamente
 
     private static final Pattern[] PUBLIC_PATHS = {
             Pattern.compile("^/api/auth/(login|register)$"),
@@ -32,9 +34,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Pattern.compile("^/h2-console(/.*)?$"),
             Pattern.compile("^/favicon\\.ico$")
     };
-
-    // === NO ponemos shouldNotFilter para /api/owner/productos ===
-    // El JWT debe autenticar siempre en rutas owner
 
     @Override
     protected void doFilterInternal(
@@ -65,26 +64,56 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt = authHeader.substring(7);
         final String username = jwtService.extractUsername(jwt);
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (username == null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                if (jwtService.isTokenValid(jwt, userDetails)) {
-                    var authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                    log.debug("Usuario autenticado con JWT: {}", username);
+                // 1. Token válido?
+                if (!jwtService.isTokenValid(jwt, userDetails)) {
+                    log.warn("Token inválido para usuario: {}", username);
+                    sendErrorResponse(response, "Token inválido o expirado");
+                    return;
                 }
+
+                // 2. Usuario activo? (esto depende de que tu UserDetailsService retorne isEnabled = activo)
+                if (!userDetails.isEnabled()) {
+                    log.warn("Intento de acceso con usuario inactivo: {}", username);
+                    sendErrorResponse(response, "Cuenta desactivada/inactiva. Contacta al administrador.");
+                    return;
+                }
+
+                // Todo OK
+                var authToken = new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        userDetails.getAuthorities()
+                );
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+                log.debug("Usuario autenticado con JWT: {}", username);
+
             } catch (Exception e) {
-                log.error("Error al procesar JWT: {}", e.getMessage());
+                log.error("Error procesando JWT para {}: {}", username, e.getMessage());
+                sendErrorResponse(response, "Error de autenticación: " + e.getMessage());
+                return;
             }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void sendErrorResponse(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        String json = String.format("{\"error\": \"%s\", \"timestamp\": \"%s\"}",
+                message, java.time.Instant.now().toString());
+        response.getWriter().write(json);
+        response.getWriter().flush();
     }
 
     private boolean isPublicPath(String uri) {

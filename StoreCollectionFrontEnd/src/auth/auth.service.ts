@@ -15,7 +15,10 @@ export interface AuthResponse {
   email: string;
   rol: 'ADMIN' | 'OWNER' | 'CUSTOMER';
 }
-
+export interface ErrorResponse {
+  code: string;
+  message: string;
+}
 export interface CurrentUser {
   id: number;
   nombre: string;
@@ -76,11 +79,11 @@ export class AuthService {
     });
   }
 
-  login(credentials: LoginRequest) {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials).pipe(
-      tap(res => this.setSession(res))
-    );
-  }
+ login(credentials: LoginRequest) {
+  return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials).pipe(
+    tap(res => this.setSession(res))
+  );
+}
 
   register(data: RegisterRequest) {
     return this.http.post<AuthResponse>(`${this.apiUrl}/register`, data).pipe(

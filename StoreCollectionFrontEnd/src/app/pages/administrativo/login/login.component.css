@@ -1,58 +1,51 @@
 /* Fondo degradado sutil */
-.min-vh-100 {
+.bg-gradient-subtle {
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
 }
 
-/* Sombra premium */
-.shadow-xl {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.12);
+/* Sombra premium para la tarjeta */
+.shadow-lg {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.12) !important;
 }
 
 /* Botón primario elegante */
 .btn-primary {
-  background: #1d4ed8;
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
   border: none;
-  font-weight: 600;
-  letter-spacing: 0.5px;
   transition: all 0.3s ease;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #1e40af;
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
   transform: translateY(-3px);
   box-shadow: 0 15px 35px rgba(29, 78, 216, 0.3);
 }
 
-.btn-primary:active {
-  transform: translateY(-1px);
-}
-
-/* Inputs con ícono interno */
-.form-control {
-  background-color: #f8fafc;
+/* Inputs más limpios */
+.input-group-lg .form-control {
   border: 1.5px solid #e2e8f0;
+  background-color: #f8fafc;
   transition: all 0.25s ease;
 }
 
-.form-control:focus {
-  background-color: #ffffff;
+.input-group-lg .form-control:focus {
+  background-color: white;
   border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
-  outline: none;
+  box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.15);
 }
 
-/* Iconos dentro del input */
-.position-relative i:not(.btn i) {
-  font-size: 1.1rem;
-  pointer-events: none;
+/* Íconos dentro del input */
+.input-group-text {
+  background-color: white !important;
+  border-color: #e2e8f0;
 }
 
-/* Responsivo perfecto */
+/* Responsivo */
 @media (max-width: 576px) {
+  .card-body {
+    padding: 2rem !important;
+  }
   .display-5 {
     font-size: 2.5rem;
-  }
-  .p-5.p-lg-6 {
-    padding: 2rem !important;
   }
 }
