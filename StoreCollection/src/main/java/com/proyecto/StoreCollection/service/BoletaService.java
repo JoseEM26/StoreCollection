@@ -11,7 +11,7 @@ public interface BoletaService {
 
     // Listado paginado por tienda (ADMIN o OWNER de esa tienda)
     Page<BoletaResponse> findByTiendaId(Integer tiendaId, Pageable pageable);
-
+    String generarMensajeConfirmacionCliente(Integer boletaId);
     // Filtros avanzados
     Page<BoletaResponse> findByEstado(String estado, Pageable pageable);
     Page<BoletaResponse> findBySessionId(String sessionId, Pageable pageable);

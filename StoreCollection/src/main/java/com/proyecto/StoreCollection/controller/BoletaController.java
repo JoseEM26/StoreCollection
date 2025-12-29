@@ -64,6 +64,17 @@ public class BoletaController {
 
         return ResponseEntity.ok(resultado);
     }
+
+    @GetMapping("/{id}/whatsapp-confirmacion")
+    public ResponseEntity<String> generarWhatsappConfirmacionCliente(@PathVariable Integer id) {
+        try {
+            String whatsappUrl = service.generarMensajeConfirmacionCliente(id);
+            return ResponseEntity.ok(whatsappUrl);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @GetMapping("/{id}/factura-pdf")
     public ResponseEntity<byte[]> descargarFacturaPdf(@PathVariable Integer id) {
         BoletaResponse boleta = service.findByIdConPermisos(id);

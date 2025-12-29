@@ -1,3 +1,5 @@
+// src/app/services/boleta.service.ts
+
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
@@ -63,26 +65,50 @@ export class BoletaService {
         console.error(`[BoletaService] Error al actualizar estado de boleta #${id}:`, error);
         let mensaje = 'No se pudo actualizar el estado de la boleta.';
         if (error.status === 400) {
-          mensaje = 'Datos inválidos al cambiar el estado.';
+          mensaje = error.error?.message || 'Estado inválido.';
         } else if (error.status === 403) {
           mensaje = 'No tienes permiso para realizar esta acción.';
+        } else if (error.status === 404) {
+          mensaje = 'Boleta no encontrada.';
         }
         return throwError(() => new Error(mensaje));
       })
     );
   }
 
-  marcarComoAtendida(id: number): Observable<BoletaResponse> {
+  public marcarComoAtendida(id: number): Observable<BoletaResponse> {
     return this.actualizarEstado(id, 'ATENDIDA');
   }
 
-  cancelarBoleta(id: number): Observable<BoletaResponse> {
+  public cancelarBoleta(id: number): Observable<BoletaResponse> {
     return this.actualizarEstado(id, 'CANCELADA');
   }
 
-volverAPendiente(id: number): Observable<BoletaResponse> {
-  return this.actualizarEstado(id, 'PENDIENTE');
-}
+  public volverAPendiente(id: number): Observable<BoletaResponse> {
+    return this.actualizarEstado(id, 'PENDIENTE');
+  }
+
+  // =============================================
+  // ENVÍO DE CONFIRMACIÓN POR WHATSAPP AL CLIENTE
+  // =============================================
+  generarWhatsappConfirmacionCliente(id: number): Observable<string> {
+    return this.http.get<string>(`${this.apiUrl}/${id}/whatsapp-confirmacion`, { responseType: 'text' as 'json' }).pipe(
+      map(url => url.trim()),  // Aseguramos que no haya espacios
+      catchError(error => {
+        console.error(`[BoletaService] Error generando WhatsApp para boleta #${id}:`, error);
+        let mensaje = 'No se pudo generar el mensaje de WhatsApp.';
+        if (error.status === 400) {
+          mensaje = error.error || 'El cliente no tiene teléfono registrado o es inválido.';
+        } else if (error.status === 403) {
+          mensaje = 'No tienes permiso para esta acción.';
+        } else if (error.status === 404) {
+          mensaje = 'Boleta no encontrada.';
+        }
+        return throwError(() => new Error(mensaje));
+      })
+    );
+  }
+
   // =============================================
   // DESCARGA DE FACTURA PDF
   // =============================================
@@ -94,7 +120,7 @@ volverAPendiente(id: number): Observable<BoletaResponse> {
     });
 
     return this.http.get(`${this.apiUrl}/${id}/factura-pdf`, {
-      responseType: 'blob',  // ¡CRÍTICO! Para archivos binarios
+      responseType: 'blob',
       headers,
       observe: 'response'
     }).pipe(
@@ -115,6 +141,8 @@ volverAPendiente(id: number): Observable<BoletaResponse> {
           mensaje = 'No tienes permiso para descargar esta factura.';
         } else if (error.status >= 500) {
           mensaje = 'Error en el servidor al generar la factura.';
+        } else if (error.message) {
+          mensaje = error.message;
         }
         console.error('[BoletaService] Error descarga PDF:', error);
         return throwError(() => new Error(mensaje));

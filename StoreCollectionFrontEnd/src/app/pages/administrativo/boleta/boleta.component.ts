@@ -51,6 +51,7 @@ export class BoletaComponent implements OnInit {
         error: () => {
           this.errorMessage = 'No se pudieron cargar los pedidos. Intenta nuevamente.';
           this.isLoading = false;
+          Swal.fire('Error', this.errorMessage, 'error');
         }
       });
   }
@@ -83,132 +84,132 @@ export class BoletaComponent implements OnInit {
     this.boletaSeleccionada = null;
   }
 
-  async cambiarEstado(boleta: BoletaResponse, nuevoEstado: 'PENDIENTE' | 'ATENDIDA' | 'CANCELADA'): Promise<void> {
-    const textos = {
-      PENDIENTE: 'volver a pendiente',
-      ATENDIDA: 'marcar como atendido',
-      CANCELADA: 'cancelar'
-    };
+async cambiarEstado(boleta: BoletaResponse, nuevoEstado: 'PENDIENTE' | 'ATENDIDA' | 'CANCELADA'): Promise<void> {
+  const textos = {
+    PENDIENTE: { verbo: 'volver a pendiente', titulo: 'Volver a pendiente' },
+    ATENDIDA: { verbo: 'marcar como atendido', titulo: 'Marcar como atendida' },
+    CANCELADA: { verbo: 'cancelar', titulo: 'Cancelar pedido' }
+  };
 
-    const result = await Swal.fire({
-      title: '¿Confirmar acción?',
-      text: `Vas a ${textos[nuevoEstado]} el pedido #${boleta.id}?`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, continuar',
-      cancelButtonText: 'No, cancelar',
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33'
+  const result = await Swal.fire({
+    title: textos[nuevoEstado].titulo,
+    text: `¿Estás seguro de que deseas ${textos[nuevoEstado].verbo} el pedido #${boleta.id}?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, confirmar',
+    cancelButtonText: 'No, cancelar',
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33'
+  });
+
+  if (!result.isConfirmed) return;
+
+  this.isLoading = true;
+
+  let serviceCall: Observable<BoletaResponse>;
+
+  // ← AQUÍ ESTÁ LA CORRECCIÓN
+  switch (nuevoEstado) {
+    case 'ATENDIDA':
+      serviceCall = this.boletaService.marcarComoAtendida(boleta.id);
+      break;
+    case 'CANCELADA':
+      serviceCall = this.boletaService.cancelarBoleta(boleta.id);
+      break;
+    case 'PENDIENTE':
+      serviceCall = this.boletaService.volverAPendiente(boleta.id);
+      break;
+    default:
+      this.isLoading = false;
+      return;
+  }
+
+  serviceCall.subscribe({
+    next: (actualizada) => {
+      const index = this.boletas.findIndex(b => b.id === actualizada.id);
+      if (index !== -1) this.boletas[index] = actualizada;
+
+      if (this.boletaSeleccionada?.id === actualizada.id) {
+        this.boletaSeleccionada = actualizada;
+      }
+
+      this.cdr.detectChanges();
+      this.isLoading = false;
+
+      Swal.fire({
+        title: '¡Listo!',
+        text: `El pedido #${actualizada.id} ha sido ${textos[nuevoEstado].verbo} correctamente.`,
+        icon: 'success',
+        timer: 3000,
+        showConfirmButton: false
+      });
+    },
+    error: (err) => {
+      this.isLoading = false;
+      let mensaje = err.message || 'No se pudo completar la acción.';
+
+      if (mensaje.toLowerCase().includes('stock insuficiente')) {
+        Swal.fire('Stock insuficiente', 'No hay suficiente stock para atender este pedido.', 'warning');
+      } else {
+        Swal.fire('Error', mensaje, 'error');
+      }
+    }
+  });
+}
+  // =============================================
+  // ENVÍO DE CONFIRMACIÓN POR WHATSAPP AL CLIENTE
+  // =============================================
+  enviarConfirmacionWhatsapp(boleta: BoletaResponse): void {
+    Swal.fire({
+      title: 'Enviando mensaje...',
+      text: 'Generando enlace de WhatsApp para el cliente',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
     });
 
-    if (!result.isConfirmed) return;
-
-    this.isLoading = true;
-
-    let serviceCall: Observable<BoletaResponse>;
-
-    switch (nuevoEstado) {
-      case 'ATENDIDA':
-        serviceCall = this.boletaService.marcarComoAtendida(boleta.id);
-        break;
-      case 'CANCELADA':
-        serviceCall = this.boletaService.cancelarBoleta(boleta.id);
-        break;
-      case 'PENDIENTE':
-        serviceCall = this.boletaService.volverAPendiente(boleta.id);
-        break;
-      default:
-        this.isLoading = false;
-        return;
-    }
-
-    serviceCall.subscribe({
-      next: (actualizada) => {
-        const index = this.boletas.findIndex(b => b.id === actualizada.id);
-        if (index !== -1) this.boletas[index] = actualizada;
-
-        if (this.boletaSeleccionada?.id === actualizada.id) {
-          this.boletaSeleccionada = actualizada;
-        }
-
-        this.cdr.detectChanges();
-        this.isLoading = false;
+    this.boletaService.generarWhatsappConfirmacionCliente(boleta.id).subscribe({
+      next: (whatsappUrl) => {
+        Swal.close();
+        window.open(whatsappUrl, '_blank');
 
         Swal.fire({
-          title: '¡Éxito!',
-          text: `El pedido #${actualizada.id} ha sido ${textos[nuevoEstado]} correctamente.`,
+          title: '¡Enlace generado!',
+          text: `Se abrió WhatsApp con el mensaje para el cliente del pedido #${boleta.id}`,
           icon: 'success',
-          timer: 2500,
+          timer: 3000,
           showConfirmButton: false
         });
       },
       error: (err) => {
-        this.isLoading = false;
-
-        let titulo = 'Error';
-        let mensaje = 'No se pudo cambiar el estado del pedido.';
-        let icono: 'error' | 'warning' = 'error';
-
-        const errorBody = err.error;
-        let detalleError = '';
-
-        if (errorBody) {
-          if (typeof errorBody === 'string') {
-            detalleError = errorBody;
-          } else if (errorBody?.message) {
-            detalleError = errorBody.message;
-          } else if (errorBody?.error || errorBody?.detail) {
-            detalleError = errorBody.error || errorBody.detail;
-          }
-        }
-
-        if (detalleError.includes('Stock insuficiente') || 
-            detalleError.toLowerCase().includes('stock insuficiente') ||
-            (detalleError.includes('IllegalStateException') && detalleError.includes('Stock'))) {
-          
-          titulo = 'Stock insuficiente';
-          mensaje = detalleError || 
-                   'No hay stock disponible para atender este pedido.\n' +
-                   'Algún producto tiene menos unidades de las solicitadas.';
-          icono = 'warning';
-        }
-        else if (detalleError.includes('No se encontró') || 
-                 detalleError.includes('not found') || 
-                 err.status === 404) {
-          mensaje = 'El pedido no existe o ya fue modificado.';
-        }
-        else if (err.status === 403) {
-          mensaje = 'No tienes permisos para realizar esta acción.';
-        }
-        else if (err.status === 400) {
-          mensaje = 'Solicitud inválida. ' + (detalleError || 'Revisa los datos del pedido.');
-        }
-        else if (err.status === 409) {
-          mensaje = 'Conflicto: ' + (detalleError || 'El estado del pedido no permite esta acción.');
-        }
-        else if (detalleError) {
-          mensaje = detalleError;
-        }
-        else if (err.status) {
-          mensaje += ` (Error ${err.status})`;
-        }
-
         Swal.fire({
-          title: titulo,
-          text: mensaje,
-          icon: icono,
-          confirmButtonText: 'Entendido',
-          confirmButtonColor: icono === 'warning' ? '#f39c12' : '#d33'
+          title: 'No se pudo enviar',
+          text: err.message || 'El cliente no tiene un número de teléfono válido.',
+          icon: 'error',
+          confirmButtonText: 'Entendido'
         });
-
-        this.errorMessage = mensaje;
       }
     });
   }
 
+  // =============================================
+  // DESCARGA DE FACTURA PDF
+  // =============================================
   descargarFactura(id: number): void {
+    Swal.fire({
+      title: 'Generando factura...',
+      text: 'Por favor espera',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
     this.boletaService.descargarFacturaPdf(id).subscribe({
       next: (blob: Blob) => {
+        Swal.close();
+
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -219,20 +220,35 @@ export class BoletaComponent implements OnInit {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
 
-        Swal.fire('¡Descargado!', 'La factura se ha guardado correctamente.', 'success');
+        Swal.fire({
+          title: '¡Factura descargada!',
+          text: `Se ha guardado el PDF del pedido #${id}`,
+          icon: 'success',
+          timer: 2500,
+          showConfirmButton: false
+        });
       },
-      error: (err: Error) => {
-        Swal.fire('Error', err.message || 'No se pudo generar la factura.', 'error');
+      error: (err) => {
+        Swal.close();
+        Swal.fire({
+          title: 'Error',
+          text: err.message || 'No se pudo generar la factura. Asegúrate de que el pedido esté atendido.',
+          icon: 'error'
+        });
       }
     });
   }
 
+  // =============================================
+  // UTILIDADES VISUALES
+  // =============================================
   getEstadoBadge(estado: string): { text: string; class: string } {
-    return {
+    const badges: Record<string, { text: string; class: string }> = {
       'PENDIENTE': { text: 'Pendiente', class: 'bg-warning text-dark' },
       'ATENDIDA':  { text: 'Atendida',  class: 'bg-success text-white' },
       'CANCELADA': { text: 'Cancelada', class: 'bg-danger text-white' }
-    }[estado] || { text: estado, class: 'bg-secondary text-white' };
+    };
+    return badges[estado] || { text: estado, class: 'bg-secondary text-white' };
   }
 
   formatDate(fecha: string): string {

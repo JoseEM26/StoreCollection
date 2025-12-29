@@ -7,140 +7,153 @@
     <style>
         @page {
             size: A4 portrait;
-            margin: 12mm 10mm;
+            margin: 15mm 12mm;
         }
         body {
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
             margin: 0;
             padding: 0;
-            color: #222;
+            color: #1f2937;
             font-size: 11pt;
-            line-height: 1.45;
+            line-height: 1.6;
+            background: #f9fafb;
         }
         .container {
-            max-width: 190mm;
+            max-width: 210mm;
             margin: 0 auto;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border-radius: 16px;
+            overflow: hidden;
         }
 
-        /* Header */
+        /* Header moderno y sutil */
         .header {
-            background: linear-gradient(135deg, #ff6b6b, #ee5253);
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
             color: white;
             text-align: center;
-            padding: 22px 18px 18px;
-            border-radius: 12px 12px 0 0;
+            padding: 32px 24px;
         }
         .header h1 {
             margin: 0;
-            font-size: 2.1em;
-            font-weight: 800;
-            letter-spacing: 1px;
+            font-size: 2.4em;
+            font-weight: 700;
+            letter-spacing: -0.5px;
         }
         .header .subtitle {
-            margin: 8px 0 0;
-            font-size: 1.05em;
+            margin: 12px 0 0;
+            font-size: 1.1em;
             opacity: 0.95;
         }
 
-        /* Info grid */
+        /* Info cards */
         .info-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 18px;
-            padding: 22px 18px;
-            background: #fff;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 28px;
+            background: #f8fafc;
         }
         .info-card {
-            background: #fafafa;
-            border: 1px solid #eee;
-            border-radius: 10px;
-            padding: 18px;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
         .info-card h3 {
-            margin: 0 0 10px;
-            color: #ee5253;
-            font-size: 1.25em;
-            border-bottom: 2px solid #ffebeb;
-            padding-bottom: 6px;
+            margin: 0 0 14px;
+            color: #6366f1;
+            font-size: 1.1em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e0e7ff;
+            padding-bottom: 8px;
         }
+
+        /* Estado badge moderno */
         .estado {
             display: inline-block;
             padding: 8px 20px;
             border-radius: 50px;
-            font-weight: bold;
-            font-size: 1.1em;
-            margin: 8px 0;
+            font-weight: 600;
+            font-size: 1em;
+            margin-top: 8px;
         }
-        .estado-atendida  { background: #e8f5e9; color: #2e7d32; }
-        .estado-pendiente { background: #fff3e0; color: #ef6c00; }
-        .estado-cancelada { background: #ffebee; color: #c62828; }
+        .estado-pendiente { background: #fef3c7; color: #92400e; }
+        .estado-atendida  { background: #d1fae5; color: #065f46; }
+        .estado-cancelada { background: #fee2e2; color: #991b1b; }
 
-        /* Sections */
+        /* Secciones */
         .section {
-            padding: 0 18px 22px;
+            padding: 0 28px 28px;
         }
         .section-title {
-            color: #d32f2f;
-            font-size: 1.45em;
-            margin: 24px 0 14px;
-            border-left: 5px solid #ee5253;
-            padding-left: 12px;
+            color: #6366f1;
+            font-size: 1.4em;
+            font-weight: 600;
+            margin: 32px 0 18px;
+            padding-left: 4px;
         }
 
-        /* Compact table */
+        /* Tabla limpia */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 16px 0 24px;
-            font-size: 0.98em;
+            margin: 20px 0;
+            font-size: 1em;
         }
         th {
-            background: #ee5253;
-            color: white;
-            padding: 10px 12px;
+            background: #eef2ff;
+            color: #4f46e5;
+            padding: 14px 16px;
             text-align: left;
             font-weight: 600;
+            border-bottom: 2px solid #6366f1;
         }
         td {
-            padding: 10px 12px;
-            border-bottom: 1px solid #f0f0f0;
+            padding: 16px;
+            border-bottom: 1px solid #e2e8f0;
         }
-        tr:nth-child(even) {
-            background-color: #fdf8f8;
+        tr:hover {
+            background-color: #f8fafc;
         }
-        .text-right  { text-align: right; }
+        .text-right { text-align: right; }
         .text-center { text-align: center; }
-        .strong      { font-weight: 700; }
+        .strong { font-weight: 700; color: #1f2937; }
 
-        /* Total */
+        /* Total destacado */
         .total-box {
-            background: #ee5253;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
             color: white;
             text-align: right;
-            padding: 20px 24px;
-            border-radius: 0 0 12px 12px;
-            margin-top: 8px;
+            padding: 28px 32px;
+            margin: 32px 28px 0;
+            border-radius: 12px;
         }
         .total-box .label {
             font-size: 1.3em;
-            opacity: 0.92;
+            opacity: 0.95;
         }
         .total-box .amount {
-            font-size: 2.4em;
-            font-weight: 900;
-            margin-top: 4px;
+            font-size: 3em;
+            font-weight: 800;
+            margin-top: 8px;
+            letter-spacing: -1px;
         }
 
         /* Footer */
         .footer {
             text-align: center;
-            padding: 20px 18px;
-            color: #555;
-            font-size: 0.9em;
-            border-top: 1px solid #eee;
-            margin-top: 16px;
+            padding: 32px 28px;
+            color: #64748b;
+            font-size: 1em;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
         }
-        .footer .heart { color: #ee5253; }
+        .footer .heart {
+            color: #ec4899;
+        }
     </style>
 </head>
 <body>
@@ -149,83 +162,94 @@
 
     <!-- Header -->
     <div class="header">
-        <h1>¡GRACIAS POR TU COMPRA!</h1>
+        <h1>¡Gracias por tu compra!</h1>
         <div class="subtitle">
             Comprobante N° <strong>[[${boleta.id}]]</strong> •
-            <span th:text="${#temporals.format(boleta.fecha, 'dd/MM/yyyy HH:mm')}">25/12/2025 18:00</span>
+            <span th:text="${#temporals.format(boleta.fecha, 'dd MMMM yyyy - HH:mm')}">29 diciembre 2025 - 14:30</span>
         </div>
     </div>
 
-    <!-- Info principal -->
+    <!-- Información principal -->
     <div class="info-grid">
         <div class="info-card">
             <h3>Tienda</h3>
-            <div style="font-size:1.5em; font-weight:800; color:#d32f2f; margin:8px 0;">
-                [[${boleta.tiendaNombre ?: 'Mi Tienda TikTok'}]]
+            <div class="fw-bold fs-4 text-indigo mt-2">
+                [[${boleta.tiendaNombre ?: 'Mi Tienda'}]]
             </div>
-            <span style="background:#ffebee; color:#d32f2f; padding:4px 12px; border-radius:20px; font-size:0.9em;">
-                Venta por Redes Sociales
-            </span>
+            <small class="text-muted">Venta por redes sociales</small>
         </div>
 
         <div class="info-card">
             <h3>Estado del pedido</h3>
             <span th:classappend="${boleta.estado == 'ATENDIDA' ? 'estado-atendida' :
                                   boleta.estado == 'CANCELADA' ? 'estado-cancelada' :
-                                  'estado-pendiente'}" class="estado"
-                  th:text="${boleta.estado}">ATENDIDA</span>
-            <div style="margin-top:12px;">
-                <strong>Fecha:</strong><br>
-                <span th:text="${#temporals.format(boleta.fecha, 'dd MMMM yyyy')}">25 diciembre 2025</span>
-                <span th:text="${#temporals.format(boleta.fecha, ' - HH:mm')}"> - 18:00</span>
+                                  'estado-pendiente'}"
+                  class="estado"
+                  th:text="${boleta.estado == 'PENDIENTE' ? 'Pendiente' :
+                            boleta.estado == 'ATENDIDA' ? 'Atendido' : 'Cancelado'}">
+                Atendido
+            </span>
+            <div class="mt-3">
+                <small class="text-muted d-block">
+                    Fecha del pedido:<br>
+                    <strong th:text="${#temporals.format(boleta.fecha, 'dd MMMM yyyy')}">29 diciembre 2025</strong>
+                    <span th:text="${#temporals.format(boleta.fecha, 'HH:mm')}">14:30</span>
+                </small>
             </div>
         </div>
     </div>
 
-    <!-- Datos comprador + dirección (más compacto) -->
+    <!-- Datos del comprador y envío -->
     <div class="section">
         <h2 class="section-title">Datos del Comprador y Envío</h2>
-
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; font-size:0.98em;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; font-size: 1.05em;">
             <div>
-                <strong>Nombre:</strong> [[${boleta.compradorNombre}]]<br>
-                <strong>Email:</strong> [[${boleta.compradorEmail}]]<br>
-                <div th:if="${boleta.compradorTelefono}">
+                <div class="mb-3"><strong>Nombre:</strong> [[${boleta.compradorNombre}]]</div>
+                <div class="mb-3"><strong>Email:</strong> [[${boleta.compradorEmail}]]</div>
+                <div th:if="${boleta.compradorTelefono}" class="mb-3">
                     <strong>WhatsApp:</strong> [[${boleta.compradorTelefono}]]
                 </div>
             </div>
-
             <div>
-                <strong>Dirección:</strong><br>
-                [[${boleta.direccionEnvio}]]<br>
-                <div th:if="${boleta.referenciaEnvio}">Ref: [[${boleta.referenciaEnvio}]]</div>
-                [[${boleta.distrito}]], [[${boleta.provincia}]], [[${boleta.departamento}]]<br>
-                <div th:if="${boleta.codigoPostal}">CP: [[${boleta.codigoPostal}]]</div>
-                <strong>Entrega:</strong>
-                <span th:if="${boleta.tipoEntrega == 'DOMICILIO'}">A domicilio</span>
-                <span th:if="${boleta.tipoEntrega == 'RECOGIDA_EN_TIENDA'}">Recojo en tienda</span>
-                <span th:if="${boleta.tipoEntrega == 'AGENCIA'}">Agencia</span>
+                <div class="mb-3"><strong>Dirección de envío:</strong></div>
+                <div>[[${boleta.direccionEnvio}]]</div>
+                <div th:if="${boleta.referenciaEnvio}" class="text-muted small">Ref: [[${boleta.referenciaEnvio}]]</div>
+                <div class="mt-2">
+                    [[${boleta.distrito}]], [[${boleta.provincia}]], [[${boleta.departamento}]]
+                </div>
+                <div th:if="${boleta.codigoPostal}" class="text-muted small">CP: [[${boleta.codigoPostal}]]</div>
+                <div class="mt-3">
+                    <strong>Tipo de entrega:</strong>
+                    <span class="badge bg-primary-subtle text-primary ms-2 px-3 py-2 rounded-pill">
+                        <span th:if="${boleta.tipoEntrega == 'DOMICILIO'}">Envío a domicilio</span>
+                        <span th:if="${boleta.tipoEntrega == 'RECOGIDA_EN_TIENDA'}">Recojo en tienda</span>
+                        <span th:if="${boleta.tipoEntrega == 'AGENCIA'}">Envío por agencia</span>
+                    </span>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Productos -->
     <div class="section">
-        <h2 class="section-title">Productos</h2>
+        <h2 class="section-title">Productos Incluidos</h2>
 
         <table>
             <thead>
             <tr>
                 <th>Producto</th>
-                <th class="text-center">Cant.</th>
-                <th class="text-right">P. Unit</th>
+                <th class="text-center">Cantidad</th>
+                <th class="text-right">Precio Unitario</th>
                 <th class="text-right">Subtotal</th>
             </tr>
             </thead>
             <tbody>
             <tr th:each="item : ${boleta.detalles}">
-                <td><strong>[[${item.nombreProducto}]]</strong></td>
-                <td class="text-center">×[[${item.cantidad}]]</td>
+                <td>
+                    <div class="fw-semibold">[[${item.nombreProducto}]]</div>
+                    <small class="text-muted" th:if="${item.sku}">SKU: [[${item.sku}]]</small>
+                </td>
+                <td class="text-center fw-bold">×[[${item.cantidad}]]</td>
                 <td class="text-right">S/ [[${#numbers.formatDecimal(item.precioUnitario,1,2,'POINT')}]]</td>
                 <td class="text-right strong">S/ [[${#numbers.formatDecimal(item.subtotal,1,2,'POINT')}]]</td>
             </tr>
@@ -239,11 +263,11 @@
         </div>
     </div>
 
-    <!-- Footer simple -->
+    <!-- Footer -->
     <div class="footer">
-        ¡Gracias por tu confianza! 💖 Te esperamos pronto de nuevo
+        ¡Gracias por confiar en nosotros! Esperamos verte pronto de nuevo.<br>
+        <span class="heart">♥</span> Tu equipo de <strong>[[${boleta.tiendaNombre}]]</strong>
     </div>
-
 </div>
 </body>
 </html>
