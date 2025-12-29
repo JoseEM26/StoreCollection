@@ -217,7 +217,7 @@ public class CarritoServiceImpl implements CarritoService {
     }
 
     private String buildEmailHtmlForOwner(Boleta boleta) {
-        StringBuilder sb = new StringBuilder(2048);
+        StringBuilder sb = new StringBuilder(4096);
 
         sb.append("<!DOCTYPE html>")
                 .append("<html lang=\"es\">")
@@ -226,43 +226,83 @@ public class CarritoServiceImpl implements CarritoService {
                 .append("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">")
                 .append("  <title>Nuevo Pedido #").append(boleta.getId()).append("</title>")
                 .append("  <style>")
-                .append("    body { font-family: Arial, Helvetica, sans-serif; margin:0; padding:0; background:#f6f9fc; color:#333; }")
-                .append("    .container { max-width:600px; margin:40px auto; background:white; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.08); overflow:hidden; }")
-                .append("    .header { background:#6366f1; color:white; padding:24px 32px; text-align:center; }")
+                .append("    body { font-family: 'Segoe UI', Arial, sans-serif; margin:0; padding:0; background:#f8fafc; color:#1e293b; }")
+                .append("    .container { max-width:640px; margin:30px auto; background:white; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.1); overflow:hidden; }")
+                .append("    .header { background: linear-gradient(135deg, #6366f1, #8b5cf6); color:white; padding:32px; text-align:center; }")
+                .append("    .header h1 { margin:0; font-size:28px; }")
                 .append("    .content { padding:32px; }")
-                .append("    table { width:100%; border-collapse:collapse; margin:20px 0; }")
-                .append("    th, td { padding:12px; text-align:left; border-bottom:1px solid #e5e7eb; }")
-                .append("    th { background:#f3f4f6; }")
-                .append("    .total { text-align:right; font-size:20px; font-weight:bold; margin:24px 0; }")
-                .append("    .footer { background:#f9fafb; padding:24px; text-align:center; font-size:13px; color:#6b7280; }")
+                .append("    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:24px 0; font-size:15px; }")
+                .append("    .info-item strong { color:#475569; }")
+                .append("    table { width:100%; border-collapse:collapse; margin:24px 0; font-size:15px; }")
+                .append("    th { background:#f1f5f9; text-align:left; padding:14px 12px; color:#475569; font-weight:600; }")
+                .append("    td { padding:14px 12px; border-bottom:1px solid #e2e8f0; }")
+                .append("    .text-right { text-align:right; }")
+                .append("    .text-center { text-align:center; }")
+                .append("    .total { background:#f8fafc; padding:20px; text-align:right; font-size:22px; font-weight:bold; color:#1e293b; border-top:3px solid #6366f1; }")
+                .append("    .badge { display:inline-block; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:bold; background:#e0e7ff; color:#4338ca; }")
+                .append("    .footer { background:#f1f5f9; padding:24px; text-align:center; font-size:13px; color:#64748b; }")
                 .append("  </style>")
                 .append("</head>")
                 .append("<body>")
                 .append("<div class=\"container\">")
-                .append("  <div class=\"header\"><h1>Nuevo Pedido #").append(boleta.getId()).append("</h1></div>")
+                .append("  <div class=\"header\">")
+                .append("    <h1>¡Nuevo Pedido Recibido!</h1>")
+                .append("    <p style=\"margin:8px 0 0; font-size:18px;\">Pedido #").append(boleta.getId()).append("</p>")
+                .append("  </div>")
                 .append("  <div class=\"content\">")
-                .append("    <p><strong>Tienda:</strong> ").append(escapeHtml(boleta.getTienda().getNombre())).append("</p>")
-                .append("    <p><strong>Fecha:</strong> ").append(boleta.getFecha().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))).append("</p>")
-                .append("    <p><strong>Cliente:</strong> ").append(escapeHtml(boleta.getCompradorNombre())).append("</p>")
-                .append("    <p><strong>Email:</strong> ").append(escapeHtml(boleta.getCompradorEmail())).append("</p>")
-                .append("    <p><strong>Teléfono:</strong> ").append(escapeHtml(boleta.getCompradorTelefono() != null ? boleta.getCompradorTelefono() : "-")).append("</p>")
-                .append("    <p><strong>Dirección:</strong> ").append(escapeHtml(boleta.getDireccionCompleta())).append("</p>")
-                .append("    <h3>Productos</h3>")
-                .append(buildProductsTable(boleta))
-                .append("    <div class=\"total\">Total: S/ ").append(boleta.getTotal()).append("</div>")
+
+                // Información del pedido
+                .append("    <div class=\"info-grid\">")
+                .append("      <div><strong>Tienda:</strong> ").append(escapeHtml(boleta.getTienda().getNombre())).append("</div>")
+                .append("      <div><strong>Fecha:</strong> ").append(boleta.getFecha().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))).append("</div>")
+                .append("      <div><strong>Cliente:</strong> ").append(escapeHtml(boleta.getCompradorNombre())).append("</div>")
+                .append("      <div><strong>Email:</strong> ").append(escapeHtml(boleta.getCompradorEmail())).append("</div>")
+                .append("      <div><strong>Teléfono:</strong> ").append(escapeHtml(orDash(boleta.getCompradorTelefono()))).append("</div>");
+
+        // Tipo de entrega
+        if (boleta.getTipoEntrega() != null) {
+            String tipoTexto = switch (boleta.getTipoEntrega()) {
+                case DOMICILIO -> "Envío a domicilio";
+                case RECOGIDA_EN_TIENDA -> "Recoger en tienda";
+                case AGENCIA -> "Envío por agencia";
+            };
+            sb.append("      <div><strong>Tipo de entrega:</strong> <span class=\"badge\">").append(tipoTexto).append("</span></div>");
+        }
+        sb.append("    </div>");
+
+        // Dirección (solo si existe)
+        if (boleta.getDireccionEnvio() != null && !boleta.getDireccionEnvio().trim().isEmpty()) {
+            sb.append("    <p><strong>Dirección de envío:</strong><br>")
+                    .append(escapeHtml(boleta.getDireccionEnvio().trim()));
+            if (boleta.getReferenciaEnvio() != null && !boleta.getReferenciaEnvio().trim().isEmpty()) {
+                sb.append(" - ").append(escapeHtml(boleta.getReferenciaEnvio().trim()));
+            }
+            if (boleta.getDistrito() != null) {
+                sb.append("<br>").append(escapeHtml(boleta.getDistrito()));
+                if (boleta.getDepartamento() != null) sb.append(" - ").append(escapeHtml(boleta.getDepartamento()));
+            }
+            sb.append("</p>");
+        } else {
+            sb.append("    <p><strong>Entrega:</strong> Se coordinará por WhatsApp con el cliente.</p>");
+        }
+
+        sb.append("    <h3 style=\"border-bottom:2px solid #e2e8f0; padding-bottom:8px;\">Productos Pedidos</h3>")
+                .append(buildProductsTableEnhanced(boleta))
+                .append("    <div class=\"total\">")
+                .append("      Total: S/ ").append(formatPrice(boleta.getTotal())).append("")
+                .append("    </div>")
                 .append("  </div>")
                 .append("  <div class=\"footer\">")
-                .append("    <p>StoreCollection © ").append(LocalDate.now().getYear()).append(" | Mensaje automático</p>")
+                .append("    <p>StoreCollection © ").append(LocalDate.now().getYear()).append(" • Mensaje automático</p>")
                 .append("  </div>")
                 .append("</div>")
-                .append("</body>")
-                .append("</html>");
+                .append("</body></html>");
 
         return sb.toString();
     }
 
     private String buildEmailHtmlForCustomer(Boleta boleta) {
-        StringBuilder sb = new StringBuilder(2048);
+        StringBuilder sb = new StringBuilder(4096);
 
         sb.append("<!DOCTYPE html>")
                 .append("<html lang=\"es\">")
@@ -271,63 +311,96 @@ public class CarritoServiceImpl implements CarritoService {
                 .append("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">")
                 .append("  <title>¡Gracias por tu compra! #").append(boleta.getId()).append("</title>")
                 .append("  <style>")
-                .append("    body { font-family: Arial, Helvetica, sans-serif; margin:0; padding:0; background:#f6f9fc; color:#333; }")
-                .append("    .container { max-width:600px; margin:40px auto; background:white; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.08); overflow:hidden; }")
-                .append("    .header { background:#10b981; color:white; padding:32px 24px; text-align:center; }")
-                .append("    .content { padding:32px; }")
-                .append("    table { width:100%; border-collapse:collapse; margin:20px 0; }")
-                .append("    th, td { padding:12px; text-align:left; border-bottom:1px solid #e5e7eb; }")
-                .append("    th { background:#f3f4f6; }")
-                .append("    .total { text-align:right; font-size:20px; font-weight:bold; margin:24px 0; }")
-                .append("    .footer { background:#f9fafb; padding:24px; text-align:center; font-size:13px; color:#6b7280; }")
+                .append("    body { font-family: 'Segoe UI', Arial, sans-serif; margin:0; padding:0; background:#f0fdf4; color:#166534; }")
+                .append("    .container { max-width:640px; margin:30px auto; background:white; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.1); overflow:hidden; }")
+                .append("    .header { background: linear-gradient(135deg, #10b981, #34d399); color:white; padding:40px 32px; text-align:center; }")
+                .append("    .header h1 { margin:0; font-size:30px; }")
+                .append("    .content { padding:32px; color:#1e293b; }")
+                .append("    table { width:100%; border-collapse:collapse; margin:24px 0; font-size:15px; }")
+                .append("    th { background:#f0fdf4; text-align:left; padding:14px 12px; color:#166534; font-weight:600; }")
+                .append("    td { padding:14px 12px; border-bottom:1px solid #bbf7d0; }")
+                .append("    .text-right { text-align:right; }")
+                .append("    .text-center { text-align:center; }")
+                .append("    .total { background:#ecfdf5; padding:20px; text-align:right; font-size:22px; font-weight:bold; color:#166534; border-top:3px solid #10b981; }")
+                .append("    .footer { background:#f0fdf4; padding:24px; text-align:center; font-size:13px; color:#166534; }")
                 .append("  </style>")
                 .append("</head>")
                 .append("<body>")
                 .append("<div class=\"container\">")
-                .append("  <div class=\"header\"><h2>¡Gracias por tu compra!</h2></div>")
+                .append("  <div class=\"header\">")
+                .append("    <h1>¡Gracias por tu compra!</h1>")
+                .append("    <p style=\"margin:10px 0 0; font-size:19px;\">Pedido #").append(boleta.getId()).append("</p>")
+                .append("  </div>")
                 .append("  <div class=\"content\">")
-                .append("    <h3>Hola ").append(escapeHtml(boleta.getCompradorNombre())).append("</h3>")
-                .append("    <p>Hemos recibido correctamente tu pedido <strong>#").append(boleta.getId()).append("</strong></p>")
-                .append("    <p>Te contactaremos muy pronto por WhatsApp o correo para coordinar la entrega.</p>")
-                .append("    <h3>Resumen de tu pedido</h3>")
-                .append(buildProductsTable(boleta))
-                .append("    <div class=\"total\">Total: S/ ").append(boleta.getTotal()).append("</div>")
-                .append("    <p style=\"margin-top:32px;\">¡Esperamos que disfrutes mucho tus productos! 🛍️</p>")
+                .append("    <h2 style=\"color:#166534;\">¡Hola ").append(escapeHtml(boleta.getCompradorNombre())).append("! 👋</h2>")
+                .append("    <p>Hemos recibido tu pedido correctamente. ¡Gracias por confiar en nosotros!</p>")
+                .append("    <p><strong>Pronto nos pondremos en contacto contigo por WhatsApp</strong> para coordinar la entrega y confirmarte los detalles.</p>")
+
+                .append("    <h3 style=\"border-bottom:2px solid #bbf7d0; padding-bottom:8px; color:#166534;\">Resumen de tu pedido</h3>")
+                .append(buildProductsTableEnhanced(boleta))
+                .append("    <div class=\"total\">")
+                .append("      Total: S/ ").append(formatPrice(boleta.getTotal())).append("")
+                .append("    </div>")
+                .append("    <p style=\"margin-top:32px; font-size:16px;\">¡Estamos preparando todo con mucho cariño! 🎁</p>")
+                .append("    <p>Si tienes alguna duda, responde este correo o escríbenos por WhatsApp.</p>")
                 .append("  </div>")
                 .append("  <div class=\"footer\">")
-                .append("    <p>").append(escapeHtml(boleta.getTienda().getNombre())).append(" © ").append(LocalDate.now().getYear()).append("</p>")
-                .append("    <p>Mensaje automático – no responder</p>")
+                .append("    <p><strong>").append(escapeHtml(boleta.getTienda().getNombre())).append("</strong> © ").append(LocalDate.now().getYear()).append("</p>")
+                .append("    <p>Mensaje automático – Puedes responder si necesitas ayuda</p>")
                 .append("  </div>")
                 .append("</div>")
-                .append("</body>")
-                .append("</html>");
+                .append("</body></html>");
 
         return sb.toString();
     }
 
-    private String buildProductsTable(Boleta boleta) {
+    // Tabla mejorada: muestra variantes si existen
+    private String buildProductsTableEnhanced(Boleta boleta) {
         StringBuilder sb = new StringBuilder();
         sb.append("<table>")
                 .append("<thead><tr>")
                 .append("<th>Producto</th>")
-                .append("<th style=\"text-align:center;\">Cant.</th>")
-                .append("<th style=\"text-align:right;\">Precio</th>")
-                .append("<th style=\"text-align:right;\">Subtotal</th>")
+                .append("<th class=\"text-center\">Cant.</th>")
+                .append("<th class=\"text-right\">Precio</th>")
+                .append("<th class=\"text-right\">Subtotal</th>")
                 .append("</tr></thead>")
                 .append("<tbody>");
 
         for (BoletaDetalle d : boleta.getDetalles()) {
-            String nombre = escapeHtml(d.getVariante().getProducto().getNombre());
+            ProductoVariante v = d.getVariante();
+            String nombre = escapeHtml(v.getProducto().getNombre());
+
+            // Variantes
+            String variantes = "";
+            if (v.getAtributos() != null && !v.getAtributos().isEmpty()) {
+                StringBuilder vars = new StringBuilder("<br><small style=\"color:#64748b;\">");
+                for (AtributoValor av : v.getAtributos()) {
+                    String attrName = av.getAtributo() != null ? av.getAtributo().getNombre() : "";
+                    vars.append(attrName).append(": ").append(escapeHtml(av.getValor())).append(" • ");
+                }
+                variantes = vars.substring(0, vars.length() - 3) + "</small>";
+            }
+
             sb.append("<tr>")
-                    .append("<td>").append(nombre).append("</td>")
-                    .append("<td style=\"text-align:center;\">").append(d.getCantidad()).append("</td>")
-                    .append("<td style=\"text-align:right;\">S/ ").append(d.getPrecioUnitario()).append("</td>")
-                    .append("<td style=\"text-align:right;\">S/ ").append(d.getSubtotal()).append("</td>")
+                    .append("<td>").append(nombre).append(variantes).append("</td>")
+                    .append("<td class=\"text-center\">").append(d.getCantidad()).append("</td>")
+                    .append("<td class=\"text-right\">S/ ").append(formatPrice(d.getPrecioUnitario())).append("</td>")
+                    .append("<td class=\"text-right\">S/ ").append(formatPrice(d.getSubtotal())).append("</td>")
                     .append("</tr>");
         }
 
         sb.append("</tbody></table>");
         return sb.toString();
+    }
+
+    // Helpers útiles
+    private String orDash(String value) {
+        return value != null && !value.trim().isEmpty() ? value.trim() : "—";
+    }
+
+    private String formatPrice(BigDecimal price) {
+        if (price == null) return "0.00";
+        return String.format(Locale.forLanguageTag("es-PE"), "%.2f", price);
     }
 
     private static String escapeHtml(String input) {
@@ -339,15 +412,16 @@ public class CarritoServiceImpl implements CarritoService {
                 .replace("'", "&#39;");
     }
 
-    // ===================== CHECKOUT WHATSAPP =====================
 
+
+    // ===================== CHECKOUT WHATSAPP =====================
     @Override
     @Transactional(readOnly = true)
     public String checkoutWhatsapp(BoletaRequest request) {
         List<Carrito> items = repository.findBySessionIdWithDetails(request.getSessionId());
 
         if (items == null || items.isEmpty()) {
-            throw new IllegalStateException("El carrito está vacío o la sesión no existe");
+            throw new IllegalStateException("El carrito está vacío");
         }
 
         Tienda tienda = tiendaRepository.findById(request.getTiendaId())
@@ -359,80 +433,81 @@ public class CarritoServiceImpl implements CarritoService {
         }
 
         StringBuilder msg = new StringBuilder();
-        msg.append("🛒 *¡NUEVO PEDIDO EN ").append(tienda.getNombre().toUpperCase()).append("!*\n\n");
+
+        // Encabezado
+        msg.append("🛒 *¡NUEVO PEDIDO RECIBIDO!*\n");
+        msg.append("*").append(escapeMarkdown(tienda.getNombre().toUpperCase())).append("*\n");
+        msg.append("📅 ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))).append("\n\n");
+
+        // Detalle de productos
+        msg.append("📦 *PRODUCTOS SOLICITADOS*\n\n");
 
         BigDecimal total = BigDecimal.ZERO;
         int itemNumber = 1;
-        int validItems = 0;
 
         for (Carrito item : items) {
             ProductoVariante variante = item.getVariante();
-            if (variante == null || variante.getProducto() == null) {
-                continue;
-            }
+            if (variante == null || variante.getProducto() == null) continue;
 
-            validItems++;
             Producto producto = variante.getProducto();
-
-            msg.append("*").append(itemNumber).append(".* ")
-                    .append(producto.getNombre())
-                    .append(" × ").append(item.getCantidad()).append(" und.\n");
-
             BigDecimal precioUnit = variante.getPrecio();
             BigDecimal subtotal = precioUnit.multiply(BigDecimal.valueOf(item.getCantidad()));
             total = total.add(subtotal);
 
-            msg.append("   💵 Precio: S/ ").append(formatPrice(precioUnit))
-                    .append("   → Subtotal: S/ ").append(formatPrice(subtotal)).append("\n");
+            msg.append(itemNumber++).append(". *").append(escapeMarkdown(producto.getNombre())).append("*\n");
+            msg.append("   Cantidad: ").append(item.getCantidad()).append(" und.\n");
 
-            if (variante.getSku() != null && !variante.getSku().isBlank()) {
-                msg.append("   🏷️ SKU: ").append(variante.getSku()).append("\n");
-            }
-
+            // Variantes
             if (variante.getAtributos() != null && !variante.getAtributos().isEmpty()) {
-                msg.append("   🎨 *Variantes:*\n");
+                msg.append("   🎨 Opciones seleccionadas:\n");
                 for (AtributoValor av : variante.getAtributos()) {
-                    String nombreAttr = av.getAtributo() != null ? av.getAtributo().getNombre() : "Atributo";
-                    msg.append("      • ").append(nombreAttr).append(": *").append(av.getValor()).append("*\n");
+                    String attrName = av.getAtributo() != null ? av.getAtributo().getNombre() : "Opción";
+                    msg.append("      • ").append(escapeMarkdown(attrName)).append(": *").append(escapeMarkdown(av.getValor())).append("*\n");
                 }
             }
 
-            if (variante.getImagenUrl() != null && !variante.getImagenUrl().isBlank()) {
-                msg.append("   📸 ").append(shortenUrl(variante.getImagenUrl())).append("\n");
+            // SKU si existe
+            if (variante.getSku() != null && !variante.getSku().trim().isEmpty()) {
+                msg.append("   🏷️ SKU: ").append(variante.getSku().trim()).append("\n");
             }
 
-            msg.append("\n");
-            itemNumber++;
+            msg.append("   💵 Precio: S/ ").append(formatPrice(precioUnit))
+                    .append(" → Subtotal: S/ ").append(formatPrice(subtotal)).append("\n\n");
         }
 
-        if (validItems == 0) {
-            throw new IllegalStateException("No hay ítems válidos en el carrito");
-        }
-
-        msg.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+        // Resumen
+        msg.append("━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
         msg.append("📊 *RESUMEN DEL PEDIDO*\n");
-        msg.append("Items: ").append(validItems).append("\n");
-        msg.append("💰 *TOTAL: S/ ").append(formatPrice(total)).append("*\n");
-        msg.append("📅 ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm", Locale.forLanguageTag("es-PE")))).append("\n\n");
+        msg.append("💰 *TOTAL: S/ ").append(formatPrice(total)).append("*\n\n");
 
-        msg.append("👤 *DATOS PARA COORDINAR:*\n");
-        msg.append("• Nombre: ______________________\n");
-        msg.append("• Teléfono: ____________________\n");
-        msg.append("• Dirección: ___________________\n\n");
-        msg.append("✅ Responde para confirmar el pedido 🙌");
+        // Datos para coordinar (espacios en blanco)
+        msg.append("👤 *POR FAVOR, COORDINA CON EL CLIENTE:*\n\n");
+        msg.append("• Nombre completo: ______________________________\n");
+        msg.append("• Teléfono / WhatsApp: __________________________\n");
+        msg.append("• Dirección completa (calle, número, referencia): ______________________________\n");
+        msg.append("• Distrito: ___________________   Departamento: ___________________\n");
+        msg.append("• DNI (para recojo en agencia o tienda): ________________\n");
+        msg.append("• Método de entrega: ☐ Domicilio   ☐ Recojo en tienda   ☐ Agencia\n");
+        msg.append("• Forma de pago: ☐ Transferencia   ☐ Yape/Plin   ☐ Contra entrega   ☐ Tarjeta\n\n");
 
-        String encodedMessage;
-        try {
-            encodedMessage = URLEncoder.encode(msg.toString(), StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            encodedMessage = URLEncoder.encode(msg.toString().replaceAll("[^\\p{ASCII}]", "?"), StandardCharsets.UTF_8);
-        }
+        // Cierre
+        msg.append("✅ *Responde este mensaje para confirmar disponibilidad, total final y coordinar la entrega.*\n\n");
+        msg.append("¡Gracias por atender rápido! 🙌");
 
+        String encodedMessage = URLEncoder.encode(msg.toString(), StandardCharsets.UTF_8);
+
+        // Limpiar carrito
         limpiarCarrito(request.getSessionId());
 
         return "https://wa.me/" + numeroWhats + "?text=" + encodedMessage;
     }
-
+    // Pequeño helper para evitar problemas con _ * en nombres de productos o atributos
+    private String escapeMarkdown(String text) {
+        if (text == null) return "";
+        return text.replace("_", "\\_")
+                .replace("*", "\\*")
+                .replace("`", "\\`");
+    }
     // ===================== MÉTODOS AUXILIARES =====================
 
     private String normalizeWhatsappNumber(String raw) {
@@ -442,15 +517,6 @@ public class CarritoServiceImpl implements CarritoService {
         if (cleaned.startsWith("+")) cleaned = cleaned.substring(1);
         if (cleaned.length() == 9 && !cleaned.startsWith("51")) cleaned = "51" + cleaned;
         return (cleaned.length() >= 10 && cleaned.length() <= 14) ? cleaned : null;
-    }
-
-    private String formatPrice(BigDecimal price) {
-        if (price == null) return "0.00";
-        return String.format(Locale.forLanguageTag("es-PE"), "%.2f", price);
-    }
-
-    private String shortenUrl(String url) {
-        return (url != null && url.length() > 50) ? url.substring(0, 47) + "..." : url;
     }
 
     private CarritoResponse toResponse(Carrito c) {
