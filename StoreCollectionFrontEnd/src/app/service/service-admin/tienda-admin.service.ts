@@ -4,36 +4,34 @@ import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http'
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../../../environment';
-import { TiendaPage } from '../../model/tienda-public.model';
-import { TiendaResponse } from '../../model/admin/tienda-admin.model';
+import { TiendaAdminPage, TiendaResponse } from '../../model/admin/tienda-admin.model';
 
-// src/app/service/service-admin/tienda-admin.service.ts (o donde tengas las interfaces)
-
+// Interfaces para crear y actualizar (se mantienen igual, pero ahora compatibles)
 export interface TiendaCreateRequest {
   nombre: string;
   slug: string;
   whatsapp?: string;
-  moneda?: 'SOLES' | 'DOLARES';        // Opcional en creación (puede tener valor por defecto)
+  moneda?: 'SOLES' | 'DOLARES';
   descripcion?: string;
   direccion?: string;
   horarios?: string;
-  mapa_url?: string;
+  mapa_url?: string;              // ← snake_case para coincidir con backend
   planId?: number;
-  userId?: number;                     
-  activo?: boolean;                    
+  userId?: number;
+  activo?: boolean;
 }
 
 export interface TiendaUpdateRequest {
   nombre: string;
   slug: string;
   whatsapp?: string;
-  moneda?: 'SOLES' | 'DOLARES';       
+  moneda?: 'SOLES' | 'DOLARES';
   descripcion?: string;
   direccion?: string;
   horarios?: string;
   mapa_url?: string;
   planId?: number | null;
-  activo?: boolean;                   
+  activo?: boolean;
 }
 
 @Injectable({
@@ -50,7 +48,7 @@ export class TiendaAdminService {
     size: number = 12,
     sort: string = 'nombre,asc',
     search?: string
-  ): Observable<TiendaPage> {
+  ): Observable<TiendaAdminPage> {  // ← Corregido: usa TiendaAdminPage
     let params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString())
@@ -60,11 +58,11 @@ export class TiendaAdminService {
       params = params.set('search', search.trim());
     }
 
-    return this.http.get<TiendaPage>(`${this.BASE_URL}/admin-list`, { params })
+    return this.http.get<TiendaAdminPage>(`${this.BASE_URL}/admin-list`, { params })
       .pipe(catchError(this.handleError));
   }
 
-  // === OBTENER UNA TIENDA POR ID (con verificación de permisos en backend) ===
+  // === OBTENER UNA TIENDA POR ID ===
   obtenerTiendaPorId(id: number): Observable<TiendaResponse> {
     return this.http.get<TiendaResponse>(`${this.BASE_URL}/${id}`)
       .pipe(catchError(this.handleError));
@@ -92,10 +90,10 @@ export class TiendaAdminService {
       .pipe(catchError(this.handleError));
   }
 
-   // === TOGGLE ACTIVO (SOLO ADMIN) ===
+  // === TOGGLE ACTIVO (SOLO ADMIN) ===
   toggleActivo(id: number): Observable<TiendaResponse> {
     const url = `${this.BASE_URL}/${id}/toggle-activo`;
-    return this.http.patch<TiendaResponse>(url, {}) // PATCH con cuerpo vacío
+    return this.http.patch<TiendaResponse>(url, {})
       .pipe(catchError(this.handleError));
   }
 
@@ -104,10 +102,10 @@ export class TiendaAdminService {
     return nombre
       .toLowerCase()
       .trim()
-      .replace(/[^a-z0-9\s-]/g, '')           // Quita caracteres especiales
-      .replace(/\s+/g, '-')                   // Espacios → guiones
-      .replace(/-+/g, '-')                    // Evita guiones duplicados
-      .substring(0, 50);                      // Máx 50 caracteres
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .substring(0, 50);
   }
 
   // === MANEJO DE ERRORES ===
@@ -115,10 +113,8 @@ export class TiendaAdminService {
     let mensaje = 'Ocurrió un error inesperado';
 
     if (error.error instanceof ErrorEvent) {
-      // Error del cliente
       mensaje = error.error.message;
     } else {
-      // Error del servidor
       if (error.status === 400) {
         mensaje = error.error?.message || 'Datos inválidos';
       } else if (error.status === 403) {

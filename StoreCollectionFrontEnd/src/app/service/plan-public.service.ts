@@ -35,8 +35,4 @@ export class PlanPublicService {
     return this.http.get<any>(`${this.publicUrl}/paginado`, { params });
   }
 
-  // Para dropdown de selección rápida (ej: al crear tienda o cambiar plan)
-  obtenerDropdown(): Observable<DropTownStandar[]> {
-    return this.http.get<DropTownStandar[]>(this.dropdownUrl);
-  }
 }

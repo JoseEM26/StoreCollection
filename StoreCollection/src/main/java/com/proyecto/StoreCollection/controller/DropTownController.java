@@ -33,7 +33,7 @@ public class DropTownController {
 
     @GetMapping("/planesDropTown")
     public ResponseEntity<List<DropTownStandar>> getPlanesDropdown() {
-        List<DropTownStandar> lista = planService.findOnlyTwoActiveForDropdown();
+        List<DropTownStandar> lista = planService.findDropdownPlanesActivos();
         return ResponseEntity.ok(lista);
     }
 

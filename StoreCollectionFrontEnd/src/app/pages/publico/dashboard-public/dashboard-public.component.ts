@@ -3,9 +3,10 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { TiendaPage, TiendaPublic } from '../../../model/tienda-public.model';
+
 import { TiendaPublicService } from '../../../service/tienda-public.service';
-import { PlanPublicService } from '../../../service/plan-public.service';  // ← NUEVO
+import { PlanPublicService } from '../../../service/plan-public.service';
+import { TiendaPublicPage } from '../../../model/admin/tienda-admin.model';
 import { PlanResponse } from '../../../model/admin/plan-admin.model';
 
 @Component({
@@ -16,42 +17,30 @@ import { PlanResponse } from '../../../model/admin/plan-admin.model';
   styleUrl: './dashboard-public.component.css'
 })
 export class DashboardPublicComponent implements OnInit {
-  page?: TiendaPage;
+  page?: TiendaPublicPage;
   searchTerm = '';
   currentPage = 0;
   loading = true;
   loadingPlanes = true;
-  planes: PlanResponse[] = [];  // ← NUEVO: planes dinámicos
+  planes: PlanResponse[] = [];
 
   constructor(
     private tiendaService: TiendaPublicService,
-    private planService: PlanPublicService  // ← NUEVO
+    private planService: PlanPublicService
   ) {}
 
   ngOnInit(): void {
     this.loadTiendas();
-    this.loadPlanes();  // ← NUEVO
+    this.loadPlanes();
   }
-// Dentro de src/app/pages/public-dashboard/public-dashboard.component.ts
 
-getMesesTexto(mesInicio: number, mesFin: number): string {
-  const meses = [
-    'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
-  ];
-
-  // Validación por si vienen valores fuera de rango (seguridad extra)
-  const inicio = meses[mesInicio - 1] || 'Ene';
-  const fin = meses[mesFin - 1] || 'Dic';
-
-  return `${inicio} - ${fin}`;
-}
-loadPlanes(): void {
+  // ========================================
+  // CARGA DE PLANES PROMOCIONALES
+  // ========================================
+  loadPlanes(): void {
     this.loadingPlanes = true;
     this.planService.obtenerPlanesPublicos().subscribe({
       next: (planes) => {
-        // El backend ya filtra por activo=true y esVisiblePublico=true
-        // Además están ordenados por el campo 'orden'
         this.planes = planes;
         this.loadingPlanes = false;
       },
@@ -63,17 +52,28 @@ loadPlanes(): void {
     });
   }
 
-  // NUEVO: Verificar vigencia basado en mes actual (diciembre = 12)
+  // Verifica si un plan promocional está vigente según el mes actual
   private isPlanVigente(mesInicio: number, mesFin: number): boolean {
-    const mesActual = new Date().getMonth() + 1;  // 1-12
+    const mesActual = new Date().getMonth() + 1; // 1 = enero, 12 = diciembre
     if (mesInicio <= mesFin) {
       return mesActual >= mesInicio && mesActual <= mesFin;
     } else {
-      // Rango que cruza fin de año
+      // Cruza fin de año (ej: dic - feb)
       return mesActual >= mesInicio || mesActual <= mesFin;
     }
   }
 
+  getMesesTexto(mesInicio: number, mesFin: number): string {
+    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+                   'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const inicio = meses[mesInicio - 1] || 'Ene';
+    const fin = meses[mesFin - 1] || 'Dic';
+    return `${inicio} - ${fin}`;
+  }
+
+  // ========================================
+  // CARGA DE TIENDAS PÚBLICAS
+  // ========================================
   loadTiendas(page = 0): void {
     this.loading = true;
     this.currentPage = page;
@@ -86,17 +86,30 @@ loadPlanes(): void {
         },
         error: (err) => {
           console.error('Error al cargar tiendas públicas', err);
-          this.page = {
+
+          // Objeto vacío completo y correcto (con sort en raíz)
+          const emptyPage: TiendaPublicPage = {
             content: [],
+            pageable: {
+              sort: { sorted: false, unsorted: true, empty: true },
+              pageNumber: page,
+              pageSize: 12,
+              offset: 0,
+              paged: true,
+              unpaged: false
+            },
             totalElements: 0,
             totalPages: 0,
-            number: 0,
-            numberOfElements: 0,
-            first: true,
             last: true,
+            first: true,
+            numberOfElements: 0,
             size: 12,
-            pageable: { pageNumber: 0, pageSize: 12, sort: { sorted: true, unsorted: false, empty: false } }
-          } as TiendaPage;
+            number: page,
+            sort: { sorted: false, unsorted: true, empty: true },
+            empty: true
+          };
+
+          this.page = emptyPage;
           this.loading = false;
         }
       });
@@ -106,39 +119,27 @@ loadPlanes(): void {
     this.loadTiendas(0);
   }
 
-  getPageRange(): number[] {
-    if (!this.page) return [];
+  // ========================================
+  // PAGINACIÓN MEJORADA
+  // ========================================
+  getVisiblePages(): number[] {
+    if (!this.page || this.page.totalPages <= 1) return [];
+
     const total = this.page.totalPages;
     const current = this.currentPage;
-    const range = [];
+    const maxVisible = 7;
 
-    const start = Math.max(0, current - 2);
-    const end = Math.min(total, current + 3);
+    let start = Math.max(0, current - Math.floor(maxVisible / 2));
+    let end = start + maxVisible;
 
-    for (let i = start; i < end; i++) {
-      range.push(i);
+    if (end > total) {
+      end = total;
+      start = Math.max(0, end - maxVisible);
     }
-    return range;
-  }
-// En DashboardPublicComponent (dentro del .ts)
 
-getVisiblePages(): number[] {
-  if (!this.page || this.page.totalPages <= 1) return [];
-
-  const total = this.page.totalPages;
-  const current = this.currentPage;
-  const maxVisible = 7; // Máximo 7 botones visibles
-
-  let start = Math.max(0, current - Math.floor(maxVisible / 2));
-  let end = start + maxVisible;
-
-  if (end > total) {
-    end = total;
-    start = Math.max(0, end - maxVisible);
+    return Array.from({ length: end - start }, (_, i) => start + i);
   }
 
-  return Array.from({ length: end - start }, (_, i) => start + i);
-}
   goToPage(page: number): void {
     if (this.page && page >= 0 && page < this.page.totalPages) {
       this.loadTiendas(page);

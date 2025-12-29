@@ -49,28 +49,26 @@ public class PlanServiceImpl implements PlanService {
                 .orElseThrow(() -> new EntityNotFoundException("Plan no encontrado con ID: " + id));
         return toResponse(plan);
     }
-
+    @Override
+    public List<DropTownStandar> findDropdownPlanesActivos() {
+        return repository.findByActivoTrueOrderByOrdenAsc()
+                .stream()
+                .map(plan -> {
+                    DropTownStandar dto = new DropTownStandar();
+                    dto.setId(plan.getId());
+                    dto.setDescripcion(plan.getNombre()); // Puedes personalizar aquí si quieres
+                    // Ejemplo alternativo con precio:
+                    // dto.setDescripcion(formatNombreConPrecio(plan));
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
     /** Planes públicos visibles ordenados por campo 'orden' (para página de precios) */
     @Override
     public List<PlanResponse> findPlanesPublicosVisibles() {
         return repository.findByActivoTrueAndEsVisiblePublicoTrueOrderByOrdenAsc()
                 .stream()
                 .map(this::toResponse)
-                .collect(Collectors.toList());
-    }
-
-    /** Solo los 2 planes activos más relevantes para dropdown (heredado) */
-    @Override
-    public List<DropTownStandar> findOnlyTwoActiveForDropdown() {
-        return repository.findByActivoTrueOrderByOrdenAsc()
-                .stream()
-                .limit(2)
-                .map(plan -> {
-                    DropTownStandar dto = new DropTownStandar();
-                    dto.setId(plan.getId());
-                    dto.setDescripcion(formatNombreConPrecio(plan));
-                    return dto;
-                })
                 .collect(Collectors.toList());
     }
 

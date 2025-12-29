@@ -30,9 +30,11 @@ export class DropTownService {
   getPlanes(): Observable<DropTownStandar[]> {
     return this.http.get<DropTownStandar[]>(`${this.API_URL}/planesDropTown`);
   }
+ 
 
  getAtributosConValores(): Observable<AtributoConValores[]> {
   return this.http.get<AtributoConValores[]>(`${this.API_URL}/atributosDropTown`);
   }
+
 
 }

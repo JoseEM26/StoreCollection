@@ -1,15 +1,15 @@
+// src/app/pages/admin/stores/form-stores/form-stores.component.ts
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
-import { TiendaResponse } from '../../../../model/admin/tienda-admin.model';
-import { 
-  TiendaAdminService, 
-  TiendaCreateRequest, 
-  TiendaUpdateRequest 
-} from '../../../../service/service-admin/tienda-admin.service';
+
+
+
 import { lastValueFrom } from 'rxjs';
 import { DropTownService, DropTownStandar } from '../../../../service/droptown.service';
 import { AuthService } from '../../../../../auth/auth.service';
+import { TiendaResponse } from '../../../../model/admin/tienda-admin.model';
+import { TiendaAdminService, TiendaCreateRequest, TiendaUpdateRequest } from '../../../../service/service-admin/tienda-admin.service';
 
 @Component({
   selector: 'app-form-stores',
@@ -33,6 +33,9 @@ export class FormStoresComponent implements OnInit, OnChanges {
   usuarios: DropTownStandar[] = [];
   usuariosLoading = false;
 
+  planes: DropTownStandar[] = [];
+  planesLoading = false;
+
   esAdmin = false;
 
   form = new FormGroup({
@@ -50,7 +53,8 @@ export class FormStoresComponent implements OnInit, OnChanges {
     direccion: new FormControl<string>(''),
     horarios: new FormControl<string>('Lun - Sáb 9:00 - 21:00'),
     mapa_url: new FormControl<string>('', [Validators.pattern(/^https?:\/\/.+/)]),
-    userId: new FormControl<number>(0),
+    userId: new FormControl<number | null>(null),
+    planId: new FormControl<number | null>(null),
     activo: new FormControl<boolean>(true)
   });
 
@@ -58,30 +62,27 @@ export class FormStoresComponent implements OnInit, OnChanges {
     private tiendaService: TiendaAdminService,
     private dropTownService: DropTownService,
     private auth: AuthService
-  ) {
-    this.esAdmin = this.auth.isAdmin();
-  }
+  ) {}
 
   ngOnInit(): void {
     this.esAdmin = this.auth.isAdmin();
     this.configurarValidadores();
 
-    // Slug habilitado por defecto
     this.form.get('slug')?.enable();
 
-    // Cargar usuarios solo si es admin
     if (this.esAdmin) {
       this.cargarUsuarios();
+      this.cargarPlanes();
     }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['tienda']) {
+    if (changes['tienda'] && changes['tienda'].currentValue !== changes['tienda'].previousValue) {
       if (this.tienda) {
         // === MODO EDICIÓN ===
         this.isEditMode = true;
         this.serverError = null;
-        this.logoPreview = this.tienda.logoImgUrl || null;
+        this.logoPreview = this.tienda.logo_img_url || null;
         this.selectedFile = null;
 
         this.form.patchValue({
@@ -92,13 +93,15 @@ export class FormStoresComponent implements OnInit, OnChanges {
           descripcion: this.tienda.descripcion || '',
           direccion: this.tienda.direccion || '',
           horarios: this.tienda.horarios || 'Lun - Sáb 9:00 - 21:00',
-          mapa_url: this.tienda.mapaUrl || '',
+          mapa_url: this.tienda.mapa_url || '',
           userId: this.tienda.userId,
           activo: this.tienda.activo
         });
 
-        // Slug NO editable en edición
         this.form.get('slug')?.disable({ emitEvent: false });
+
+        // ← Selección segura del plan (se ejecuta después de cargar los planes)
+        this.seleccionarPlanActual();
       } else {
         // === MODO CREACIÓN ===
         this.isEditMode = false;
@@ -114,23 +117,30 @@ export class FormStoresComponent implements OnInit, OnChanges {
           direccion: '',
           horarios: 'Lun - Sáb 9:00 - 21:00',
           mapa_url: '',
-          userId: 0,
+          userId: null,
+          planId: null,
           activo: true
         });
 
-        // Slug SÍ editable en creación
         this.form.get('slug')?.enable({ emitEvent: false });
       }
     }
   }
 
   private configurarValidadores() {
+    const userIdControl = this.form.get('userId');
+    const planIdControl = this.form.get('planId');
+
     if (this.esAdmin) {
-      this.form.get('userId')?.setValidators([Validators.required, Validators.min(1)]);
+      userIdControl?.setValidators([Validators.required, Validators.min(1)]);
+      planIdControl?.setValidators([Validators.required, Validators.min(1)]);
     } else {
-      this.form.get('userId')?.clearValidators();
+      userIdControl?.clearValidators();
+      planIdControl?.clearValidators();
     }
-    this.form.get('userId')?.updateValueAndValidity();
+
+    userIdControl?.updateValueAndValidity();
+    planIdControl?.updateValueAndValidity();
   }
 
   private cargarUsuarios() {
@@ -148,44 +158,91 @@ export class FormStoresComponent implements OnInit, OnChanges {
     });
   }
 
-  // Generar slug automático al escribir nombre (solo en creación)
-  onNombreChange() {
-    if (!this.isEditMode && this.form.get('nombre')?.valid) {
-      const slug = this.tiendaService.generarSlug(this.form.get('nombre')?.value || '');
-      this.form.get('slug')?.setValue(slug);
+  private cargarPlanes() {
+    this.planesLoading = true;
+    this.dropTownService.getPlanes().subscribe({
+      next: (data) => {
+        this.planes = data;
+        this.planesLoading = false;
+
+        // Pre-seleccionar el más barato en creación
+        if (!this.isEditMode && this.planes.length > 0 && !this.form.get('planId')?.value) {
+          this.form.get('planId')?.setValue(this.planes[0].id);
+        }
+
+        // Si estamos editando, intentar seleccionar el plan actual
+        if (this.isEditMode) {
+          this.seleccionarPlanActual();
+        }
+      },
+      error: (err) => {
+        console.error('Error cargando planes:', err);
+        this.serverError = 'No se pudieron cargar los planes disponibles';
+        this.planesLoading = false;
+      }
+    });
+  }
+
+  /**
+   * Busca y selecciona el plan actual de la tienda en el dropdown
+   * Usa planSlug o planNombre para coincidir (seguro contra undefined)
+   */
+  private seleccionarPlanActual(): void {
+    if (!this.tienda || this.planes.length === 0) return;
+
+    const planSlug = this.tienda.planSlug?.toLowerCase();
+    const planNombre = this.tienda.planNombre?.toLowerCase();
+
+    if (!planSlug && !planNombre) return;
+
+    const planEncontrado = this.planes.find(p => {
+      const descLower = p.descripcion.toLowerCase();
+      return (planSlug && descLower.includes(planSlug)) ||
+             (planNombre && descLower.includes(planNombre));
+    });
+
+    if (planEncontrado) {
+      this.form.get('planId')?.setValue(planEncontrado.id);
     }
   }
 
-  // Manejo de logo
-  onFileSelected(event: any) {
+  onNombreChange(): void {
+    if (!this.isEditMode) {
+      const nombre = this.form.get('nombre')?.value || '';
+      if (nombre.length >= 3) {
+        const slug = this.tiendaService.generarSlug(nombre);
+        this.form.get('slug')?.setValue(slug, { emitEvent: false });
+      }
+    }
+  }
+
+  onFileSelected(event: Event): void {
     this.fileError = null;
-    const file = event.target.files[0] as File;
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
 
-    if (file) {
-      const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-      if (!validTypes.includes(file.type)) {
-        this.fileError = 'Formato inválido. Solo JPG, PNG, GIF o WEBP.';
-        return;
-      }
-
-      if (file.size > 5 * 1024 * 1024) {
-        this.fileError = 'La imagen es demasiado grande. Máximo 5MB.';
-        return;
-      }
-
-      this.selectedFile = file;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.logoPreview = e.target?.result as string;
-      };
-      reader.readAsDataURL(file);
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      this.fileError = 'Formato inválido. Solo JPG, PNG, GIF o WEBP.';
+      return;
     }
+    if (file.size > 5 * 1024 * 1024) {
+      this.fileError = 'Imagen demasiado grande. Máximo 5MB.';
+      return;
+    }
+
+    this.selectedFile = file;
+    const reader = new FileReader();
+    reader.onload = () => this.logoPreview = reader.result as string;
+    reader.readAsDataURL(file);
   }
 
-  removeLogo() {
+  removeLogo(): void {
     this.selectedFile = null;
-    this.logoPreview = this.isEditMode ? this.tienda?.logoImgUrl || null : null;
-    (document.getElementById('logoInput') as HTMLInputElement).value = '';
+    this.logoPreview = this.isEditMode ? this.tienda?.logo_img_url || null : null;
+    const input = document.getElementById('logoInput') as HTMLInputElement;
+    if (input) input.value = '';
     this.fileError = null;
   }
 
@@ -195,21 +252,20 @@ export class FormStoresComponent implements OnInit, OnChanges {
 
     if (control.errors['required']) return 'Este campo es obligatorio';
     if (control.errors['minlength']) return 'Mínimo 3 caracteres';
+    if (control.errors['maxlength']) return 'Máximo 50 caracteres';
+    if (control.errors['min']) return 'Seleccione una opción válida';
     if (control.errors['pattern']) {
       switch (controlName) {
         case 'slug': return 'Solo letras minúsculas, números y guiones';
         case 'whatsapp': return 'Formato inválido (ej: +51999999999)';
-        case 'mapa_url': return 'Debe ser una URL válida';
+        case 'mapa_url': return 'Debe comenzar con http:// o https://';
         default: return 'Formato inválido';
       }
     }
-    if (control.errors['maxlength']) return 'Máximo 50 caracteres';
-    if (control.errors['min']) return 'Seleccione un usuario válido';
-
     return 'Valor inválido';
   }
 
-  async onSubmit() {
+  async onSubmit(): Promise<void> {
     if (this.form.invalid || this.fileError) {
       this.form.markAllAsTouched();
       return;
@@ -221,36 +277,33 @@ export class FormStoresComponent implements OnInit, OnChanges {
     try {
       let resultado: TiendaResponse;
 
+      const commonData = {
+        nombre: this.form.value.nombre!.trim(),
+        slug: this.isEditMode ? this.tienda!.slug : this.form.value.slug!.trim(),
+        whatsapp: this.form.value.whatsapp?.trim() || undefined,
+        moneda: this.form.value.moneda!,
+        descripcion: this.form.value.descripcion?.trim() || undefined,
+        direccion: this.form.value.direccion?.trim() || undefined,
+        horarios: this.form.value.horarios?.trim() || undefined,
+        mapa_url: this.form.value.mapa_url?.trim() || undefined,
+      };
+
       if (this.isEditMode && this.tienda?.id) {
-        // EDICIÓN
         const updateRequest: TiendaUpdateRequest = {
-          nombre: this.form.value.nombre!.trim(),
-          slug: this.form.value.slug!,
-          whatsapp: this.form.value.whatsapp?.trim() || undefined,
-          moneda: this.form.value.moneda!,
-          descripcion: this.form.value.descripcion?.trim() || undefined,
-          direccion: this.form.value.direccion?.trim() || undefined,
-          horarios: this.form.value.horarios?.trim() || undefined,
-          mapa_url: this.form.value.mapa_url?.trim() || undefined,
-activo: this.esAdmin ? !!this.form.value.activo : undefined  // ← CORREGIDO
+          ...commonData,
+          planId: this.esAdmin ? this.form.value.planId ?? undefined : undefined,
+          activo: this.esAdmin ? this.form.value.activo ?? undefined : undefined
         };
 
         resultado = await lastValueFrom(
           this.tiendaService.actualizarTienda(this.tienda.id, updateRequest, this.selectedFile || undefined)
         );
       } else {
-        // CREACIÓN
         const createRequest: TiendaCreateRequest = {
-          nombre: this.form.value.nombre!.trim(),
-          slug: this.form.value.slug!,
-          whatsapp: this.form.value.whatsapp?.trim() || undefined,
-          moneda: this.form.value.moneda!,
-          descripcion: this.form.value.descripcion?.trim() || undefined,
-          direccion: this.form.value.direccion?.trim() || undefined,
-          horarios: this.form.value.horarios?.trim() || undefined,
-          mapa_url: this.form.value.mapa_url?.trim() || undefined,
+          ...commonData,
           userId: this.esAdmin ? this.form.value.userId ?? undefined : undefined,
-          activo: this.esAdmin ? this.form.value.activo ?? undefined : undefined
+          planId: this.esAdmin ? this.form.value.planId ?? undefined : undefined,
+          activo: this.esAdmin ? this.form.value.activo ?? true : undefined
         };
 
         resultado = await lastValueFrom(
@@ -261,26 +314,27 @@ activo: this.esAdmin ? !!this.form.value.activo : undefined  // ← CORREGIDO
       this.success.emit(resultado);
     } catch (err: any) {
       console.error('Error al guardar tienda:', err);
-      this.serverError = err.message || 'Error desconocido al guardar la tienda';
+      this.serverError = err.message || 'Error al guardar la tienda';
 
       if (err.message?.toLowerCase().includes('slug')) {
         this.serverError = 'El slug ya está en uso por otra tienda';
-        this.form.get('slug')?.setErrors({ serverError: true });
+        this.form.get('slug')?.setErrors({ duplicate: true });
       }
     } finally {
       this.loading = false;
     }
   }
 
-  // Mostrar el plan actual (solo lectura)
   get planActualTexto(): string {
-    if (!this.tienda?.planNombre) {
-      return this.isEditMode ? 'Sin plan activo' : 'Se asignará el plan inicial automáticamente';
+    if (!this.esAdmin) {
+      return this.isEditMode 
+        ? `Plan actual: ${this.tienda?.planNombre || 'Desconocido'}`
+        : 'Se asignará el plan básico al crear la tienda';
     }
-    return this.tienda.planNombre;
+    return '';
   }
 
-  onCancel() {
+  onCancel(): void {
     this.cancel.emit();
   }
 }

@@ -4,9 +4,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { TiendaService } from './tienda.service';
 import { Observable, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { Tienda } from '../model';
-import { TiendaPage } from '../model/tienda-public.model';
 import { environment } from '../../../environment';
+import { TiendaPublic, TiendaPublicPage } from '../model/admin/tienda-admin.model';
 
 @Injectable({
   providedIn: 'root'
@@ -18,43 +17,81 @@ export class TiendaPublicService {
     private http: HttpClient,
     private tiendaService: TiendaService
   ) {}
+getAllTiendas(
+  page = 0,
+  size = 12,
+  sort = 'nombre,asc',
+  search?: string
+): Observable<TiendaPublicPage> {
+  let params = new HttpParams()
+    .set('page', page.toString())
+    .set('size', size.toString())
+    .set('sort', sort);
 
-  // Lista todas las tiendas (paginado)
-  getAllTiendas(
-    page = 0,
-    size = 12,
-    sort = 'nombre,asc',
-    search?: string
-  ): Observable<TiendaPage> {
-    let params = new HttpParams()
-      .set('page', page.toString())
-      .set('size', size.toString())
-      .set('sort', sort);
-
-    if (search?.trim()) {
-      params = params.set('search', search.trim());
-    }
-
-    return this.http.get<TiendaPage>(this.apiUrl, { params });
+  if (search?.trim()) {
+    params = params.set('search', search.trim());
   }
 
-  // Obtiene una tienda por slug (sin actualizar el estado global)
-  getTiendaBySlug(slug: string): Observable<Tienda | null> {
-    return this.http.get<Tienda>(`${this.apiUrl}/${slug}`).pipe(
-      catchError(() => of(null))
+  return this.http.get<TiendaPublicPage>(this.apiUrl, { params }).pipe(
+    catchError((error) => {
+      console.error('Error al cargar tiendas públicas:', error);
+
+      const emptyPage: TiendaPublicPage = {
+        content: [],
+        pageable: {
+          sort: { sorted: false, unsorted: true, empty: true },
+          pageNumber: page,
+          pageSize: size,
+          offset: 0,
+          paged: true,
+          unpaged: false
+        },
+        totalElements: 0,
+        totalPages: 0,
+        last: true,
+        first: true,
+        numberOfElements: 0,
+        size: size,
+        number: page,
+        empty: true,
+        sort: { sorted: false, unsorted: true, empty: true }  // ← Campo agregado
+      };
+
+      return of(emptyPage);
+    })
+  );
+}
+  /**
+   * Obtiene una tienda pública por slug
+   * No afecta el estado global de la app
+   */
+  getTiendaBySlug(slug: string): Observable<TiendaPublic | null> {
+    return this.http.get<TiendaPublic>(`${this.apiUrl}/${slug}`).pipe(
+      catchError((error) => {
+        console.error(`Error al cargar tienda con slug ${slug}:`, error);
+        return of(null);
+      })
     );
   }
 
-  // Carga la tienda actual usando el slug guardado y actualiza el estado global
-  cargarTiendaActual(): Observable<Tienda | null> {
+  /**
+   * Carga la tienda actual usando la URL base guardada
+   * Actualiza el estado global a través de TiendaService
+   */
+  cargarTiendaActual(): Observable<TiendaPublic | null> {
     const url = this.tiendaService.getBaseUrl();
     if (!url) {
       return of(null);
     }
 
-    return this.http.get<Tienda>(url).pipe(
-      tap(tienda => this.tiendaService.setTienda(tienda)),
-      catchError(() => {
+    return this.http.get<TiendaPublic>(url).pipe(
+      tap(tienda => {
+        if (tienda) {
+          this.tiendaService.setTienda(tienda);
+        }
+      }),
+      catchError((error) => {
+        console.error('Error al cargar tienda actual:', error);
         this.tiendaService.setTienda(null);
         return of(null);
       })

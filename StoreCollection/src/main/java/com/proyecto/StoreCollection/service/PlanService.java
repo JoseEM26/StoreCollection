@@ -10,14 +10,13 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface PlanService {
-    // MÉTODOS ORIGINALES (mantengo compatibilidad)
+    List<DropTownStandar> findDropdownPlanesActivos();
     Page<PlanResponse> findAll(Pageable pageable);
     PlanResponse findById(Integer id);
     PlanResponse save(PlanRequest request);
     PlanResponse save(PlanRequest request, Integer id);
     void deleteById(Integer id);
     PlanResponse toggleActivo(Integer id);
-    List<DropTownStandar> findOnlyTwoActiveForDropdown();
     Page<PlanResponse> findAllPublicos(Pageable pageable);
     List<PlanResponse> findPlanesPublicosVisibles();
 }

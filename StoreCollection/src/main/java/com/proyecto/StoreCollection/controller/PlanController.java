@@ -108,16 +108,6 @@ public class PlanController {
     }
 
     // ────────────────────────────────────────────────────────────────
-    // Dropdown / Selección rápida (público o protegido)
-    // ────────────────────────────────────────────────────────────────
-
-    @Operation(summary = "Obtener 2 planes activos para dropdown (selección rápida)")
-    @GetMapping("/planes/dropdown")
-    public ResponseEntity<List<DropTownStandar>> obtenerDropdown() {
-        return ResponseEntity.ok(planService.findOnlyTwoActiveForDropdown());
-    }
-
-    // ────────────────────────────────────────────────────────────────
     // Utilitarios privados
     // ────────────────────────────────────────────────────────────────
 
