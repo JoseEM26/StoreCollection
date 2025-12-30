@@ -12,10 +12,13 @@ import {
   providedIn: 'root'
 })
 export class ProductoAdminService {
-    private baseUrl = `${environment.apiUrl}/api/owner/productos`;
+
+  // Ruta base correcta (sin "/admin-list")
+  private baseUrl = `${environment.apiUrl}/api/owner/productos`;
 
   constructor(private http: HttpClient) {}
 
+  // ======================== LISTAR PRODUCTOS ========================
   listarProductos(
     page: number = 0,
     size: number = 20,
@@ -31,26 +34,32 @@ export class ProductoAdminService {
       params = params.set('search', search.trim());
     }
 
-    return this.http.get<ProductoPage>(this.baseUrl+"/admin-list", { params });
+    // Ruta correcta: solo /api/owner/productos
+    return this.http.get<ProductoPage>(this.baseUrl, { params });
   }
 
-  // === CREAR PRODUCTO ===
- crearProducto(request: FormData): Observable<ProductoResponse> {
-  return this.http.post<ProductoResponse>(this.baseUrl, request);
-}
+  // ======================== CREAR PRODUCTO ========================
+  crearProducto(request: FormData): Observable<ProductoResponse> {
+    return this.http.post<ProductoResponse>(this.baseUrl, request);
+  }
 
-  // === OBTENER PRODUCTO PARA EDICIÓN (con verificación de permisos) ===
+  // ======================== OBTENER PARA EDICIÓN ========================
   obtenerParaEdicion(id: number): Observable<ProductoResponse> {
     return this.http.get<ProductoResponse>(`${this.baseUrl}/${id}`);
   }
 
-  // === ACTUALIZAR PRODUCTO ===
+  // ======================== ACTUALIZAR PRODUCTO ========================
   actualizarProducto(id: number, request: FormData): Observable<ProductoResponse> {
-  return this.http.put<ProductoResponse>(`${this.baseUrl}/${id}`, request);
-}
+    return this.http.put<ProductoResponse>(`${this.baseUrl}/${id}`, request);
+  }
 
-  // === TOGGLE ACTIVO / INACTIVO (solo ADMIN) ===
+  // ======================== TOGGLE ACTIVO ========================
   toggleActivo(id: number): Observable<ProductoResponse> {
     return this.http.patch<ProductoResponse>(`${this.baseUrl}/${id}/toggle-activo`, null);
+  }
+
+  // ======================== ELIMINAR PRODUCTO (opcional, si lo usas) ========================
+  eliminarProducto(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 }

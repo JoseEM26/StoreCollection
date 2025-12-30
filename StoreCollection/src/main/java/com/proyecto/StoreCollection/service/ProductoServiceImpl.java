@@ -1,5 +1,3 @@
-// src/main/java/com/proyecto/StoreCollection/service/ProductoServiceImpl.java
-
 package com.proyecto.StoreCollection.service;
 
 import com.cloudinary.utils.ObjectUtils;
@@ -7,10 +5,7 @@ import com.proyecto.StoreCollection.dto.DropTown.DropTownStandar;
 import com.proyecto.StoreCollection.dto.request.AtributoValorRequest;
 import com.proyecto.StoreCollection.dto.request.ProductoRequest;
 import com.proyecto.StoreCollection.dto.request.VarianteRequest;
-import com.proyecto.StoreCollection.dto.response.AtributoValorResponse;
-import com.proyecto.StoreCollection.dto.response.ProductoCardResponse;
-import com.proyecto.StoreCollection.dto.response.ProductoResponse;
-import com.proyecto.StoreCollection.dto.response.VarianteResponse;
+import com.proyecto.StoreCollection.dto.response.*;
 import com.proyecto.StoreCollection.entity.*;
 import com.proyecto.StoreCollection.repository.*;
 import com.proyecto.StoreCollection.service.Cloudinary.CloudinaryService;
@@ -42,18 +37,15 @@ public class ProductoServiceImpl implements ProductoService {
     private final AtributoRepository atributoRepository;
     private final AtributoValorRepository atributoValorRepository;
     private final CloudinaryService cloudinaryService;
-    private final PlanService suscripcionService; // Inyectado para restricciones de plan
 
-    // ======================== RESTRICCIONES DE PLAN ========================
-// ==================== VALIDACIONES DE PLAN Y LÍMITES ====================
+    // ======================== VALIDACIONES CON MENSAJES CLAROS ========================
 
     private void validarPlanPermitidoParaAccion(Tienda tienda) {
         if (!tienda.tienePlanPermitido()) {
-            String mensaje = tienda.getPlan() == null
-                    ? "Tu tienda no tiene un plan asignado."
-                    : String.format("Tu plan actual '%s' no permite esta acción. Necesitas Básico o Pro.", tienda.getPlan().getNombre());
-
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, mensaje);
+            String nombrePlan = tienda.getPlan() != null ? tienda.getPlan().getNombre() : "ninguno";
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "¡Acción no permitida! Tu plan actual es '" + nombrePlan +
+                            "'. Necesitas un plan Básico o Pro para crear o editar productos. Actualiza tu plan para continuar.");
         }
     }
 
@@ -62,14 +54,10 @@ public class ProductoServiceImpl implements ProductoService {
         int maxPermitido = tienda.getPlan().getMaxProductos();
 
         if (conteoActual >= maxPermitido) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    String.format(
-                            "Has alcanzado el límite de %d productos en tu plan '%s'.",
-                            maxPermitido,
-                            tienda.getPlan().getNombre()
-                    )
-            );
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "¡Límite de productos alcanzado! Tu plan '" + tienda.getPlan().getNombre() +
+                            "' permite un máximo de " + maxPermitido + " productos y ya tienes " + conteoActual +
+                            ". Para agregar más, actualiza a un plan superior.");
         }
     }
 
@@ -87,15 +75,11 @@ public class ProductoServiceImpl implements ProductoService {
         int maxPermitido = tienda.getPlan().getMaxVariantes();
 
         if (variantesExistentes + variantesNuevas > maxPermitido) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    String.format(
-                            "Excederías el límite de %d variantes (plan '%s'). Actualmente tienes %d.",
-                            maxPermitido,
-                            tienda.getPlan().getNombre(),
-                            variantesExistentes
-                    )
-            );
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "¡Límite de variantes excedido! Tu plan '" + tienda.getPlan().getNombre() +
+                            "' permite máximo " + maxPermitido + " variantes en total. Actualmente tienes " +
+                            variantesExistentes + " y estás intentando agregar " + variantesNuevas +
+                            " más. Actualiza tu plan para tener más variantes.");
         }
     }
 
@@ -104,9 +88,8 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     public Page<ProductoResponse> buscarPorNombreYEmailUsuario(String nombre, String email, Pageable pageable) {
         Integer tenantId = TenantContext.getTenantId();
-        if (tenantId == null) {
-            return Page.empty(pageable);
-        }
+        if (tenantId == null) return Page.empty(pageable);
+
         return productoRepository.findByNombreContainingIgnoreCaseAndTenantId(nombre.trim(), tenantId, pageable)
                 .map(this::toResponse);
     }
@@ -152,11 +135,12 @@ public class ProductoServiceImpl implements ProductoService {
         Tienda tiendaAsignada;
 
         if (id == null) {
+            // ==================== CREACIÓN ====================
             producto = new Producto();
 
             if (esAdmin) {
                 if (request.getTiendaId() == null) {
-                    throw new RuntimeException("tiendaId requerido para ADMIN");
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El campo 'tiendaId' es obligatorio cuando eres administrador.");
                 }
                 tiendaAsignada = tiendaService.getEntityById(request.getTiendaId());
             } else {
@@ -167,42 +151,58 @@ public class ProductoServiceImpl implements ProductoService {
             validarLimiteProductos(tiendaAsignada);
 
             if (productoRepository.findBySlugAndTiendaId(request.getSlug(), tiendaAsignada.getId()).isPresent()) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Slug duplicado: " + request.getSlug());
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "¡Slug duplicado! Ya existe un producto con el slug '" + request.getSlug() +
+                                "' en tu tienda. Por favor, elige uno diferente.");
             }
         } else {
+            // ==================== EDICIÓN ====================
             producto = productoRepository.findById(id)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "Producto no encontrado. Es posible que haya sido eliminado."));
 
             tiendaAsignada = producto.getTienda();
             validarPlanPermitidoParaAccion(tiendaAsignada);
 
             Optional<Producto> otro = productoRepository.findBySlugAndTiendaId(request.getSlug(), tiendaAsignada.getId());
             if (otro.isPresent() && !otro.get().getId().equals(id)) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Slug duplicado: " + request.getSlug());
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "¡Slug en uso! Ya existe otro producto con el slug '" + request.getSlug() +
+                                "'. Usa un slug único para cada producto.");
             }
         }
 
+        // Validar variantes si se envían
         if (request.getVariantes() != null && !request.getVariantes().isEmpty()) {
             validarLimiteVariantes(tiendaAsignada, request.getVariantes(), id);
         }
 
+        // ==================== DATOS BÁSICOS ====================
         producto.setNombre(request.getNombre().trim());
         producto.setSlug(request.getSlug().trim());
 
         Categoria categoria = categoriaRepository.findById(request.getCategoriaId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoría no encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Categoría no encontrada. Verifica que la categoría exista en tu tienda."));
 
         if (!categoria.getTienda().getId().equals(tiendaAsignada.getId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Categoría no pertenece a esta tienda");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "¡Error de seguridad! La categoría seleccionada no pertenece a tu tienda.");
         }
 
         producto.setCategoria(categoria);
         producto.setTienda(tiendaAsignada);
 
+        // ==================== VARIANTEs ====================
         manejarVariantes(producto, request.getVariantes(), tiendaAsignada);
 
-        return toResponse(productoRepository.save(producto));
+        // ==================== GUARDAR ====================
+        Producto saved = productoRepository.save(producto);
+        return toResponse(saved);
     }
+
+    // ==================== MANEJO DE VARIANTEs (sin cambios importantes) ====================
+
     private void manejarVariantes(Producto producto, List<VarianteRequest> variantesRequests, Tienda tienda) {
         if (variantesRequests == null || variantesRequests.isEmpty()) {
             varianteRepository.deleteAll(producto.getVariantes());
@@ -241,7 +241,7 @@ public class ProductoServiceImpl implements ProductoService {
             ProductoVariante variante = req.getId() != null
                     ? varianteRepository.findById(req.getId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            "Variante con ID " + req.getId() + " no encontrada"))
+                            "Variante con ID " + req.getId() + " no encontrada. Refresca la página e inténtalo de nuevo."))
                     : new ProductoVariante();
 
             variante.setProducto(producto);
@@ -251,7 +251,6 @@ public class ProductoServiceImpl implements ProductoService {
             variante.setStock(req.getStock() != null ? req.getStock() : 0);
             variante.setActivo(req.getActivo() != null ? req.getActivo() : true);
 
-            // Manejo de imagen
             String imagenUrlFinal;
             if (req.getImagen() != null && !req.getImagen().isEmpty()) {
                 try {
@@ -268,7 +267,7 @@ public class ProductoServiceImpl implements ProductoService {
                     imagenUrlFinal = cloudinaryService.getResizedUrl(publicId, 800, 800);
                 } catch (IOException e) {
                     throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                            "Error al subir imagen a Cloudinary");
+                            "Error al subir la imagen a Cloudinary. Inténtalo de nuevo o usa una imagen existente.");
                 }
             } else if (req.getImagenUrl() != null && !req.getImagenUrl().isEmpty()
                     && !req.getImagenUrl().contains("placehold.co")) {
@@ -334,7 +333,7 @@ public class ProductoServiceImpl implements ProductoService {
         }
     }
 
-    // ======================== RESTO DE MÉTODOS (sin cambios relevantes) ========================
+    // ==================== RESTO DE MÉTODOS (sin cambios mayores) ====================
 
     @Override
     @Transactional(readOnly = true)
@@ -360,10 +359,8 @@ public class ProductoServiceImpl implements ProductoService {
             varianteRepository.desactivarTodasPorProductoId(id);
         }
 
-        productoRepository.flush();
         return toResponse(productoRepository.findById(id).get());
     }
-
     @Override
     public void deleteById(Integer id) {
         productoRepository.delete(productoRepository.getByIdAndTenant(id));
