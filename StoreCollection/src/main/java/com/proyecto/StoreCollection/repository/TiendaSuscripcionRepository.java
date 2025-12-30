@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Set;
 
-public interface TiendaSuscripcionRepository extends JpaRepository<TiendaSuscripcion, Long> {
+public interface TiendaSuscripcionRepository extends JpaRepository<TiendaSuscripcion, Integer> {
 
     @Query("SELECT CASE WHEN COUNT(ts) > 0 THEN true ELSE false END " +
             "FROM TiendaSuscripcion ts " +
@@ -22,6 +22,7 @@ public interface TiendaSuscripcionRepository extends JpaRepository<TiendaSuscrip
             @Param("estados") Set<String> estados);
 
     @Query("SELECT ts FROM TiendaSuscripcion ts " +
+            "JOIN FETCH ts.plan " +  // ← Esto es clave: carga el Plan en la misma consulta
             "WHERE ts.tienda.id = :tiendaId " +
             "AND ts.estado IN :estados " +
             "AND (ts.fechaFin IS NULL OR ts.fechaFin > :ahora) " +
@@ -35,6 +36,4 @@ public interface TiendaSuscripcionRepository extends JpaRepository<TiendaSuscrip
             "WHERE ts.tienda.id = :tiendaId " +
             "ORDER BY ts.fechaInicio DESC LIMIT 1")
     Optional<TiendaSuscripcion> findSuscripcionMasReciente(@Param("tiendaId") Integer tiendaId);
-
-
 }

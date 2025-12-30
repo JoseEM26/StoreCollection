@@ -20,7 +20,7 @@ public class TiendaSuscripcion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     // Relación con la tienda (tenant)
     @ManyToOne(fetch = FetchType.LAZY)
