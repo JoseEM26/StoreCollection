@@ -42,58 +42,59 @@ public class ProductoServiceImpl implements ProductoService {
     private final AtributoRepository atributoRepository;
     private final AtributoValorRepository atributoValorRepository;
     private final CloudinaryService cloudinaryService;
-    private final TiendaSuscripcionService suscripcionService; // Inyectado para restricciones de plan
+    private final PlanService suscripcionService; // Inyectado para restricciones de plan
 
     // ======================== RESTRICCIONES DE PLAN ========================
+// ==================== VALIDACIONES DE PLAN Y LÍMITES ====================
 
-    private void validarPlanActivoYPermitido(Tienda tienda) {
-        suscripcionService.obtenerSuscripcionVigente(tienda.getId())
-                .filter(sus -> {
-                    String slug = sus.getPlan().getSlug();
-                    return "basico".equalsIgnoreCase(slug) || "pro".equalsIgnoreCase(slug);
-                })
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.FORBIDDEN,
-                        "Necesitas un plan Básico o Pro activo para realizar esta acción."
-                ));
+    private void validarPlanPermitidoParaAccion(Tienda tienda) {
+        if (!tienda.tienePlanPermitido()) {
+            String mensaje = tienda.getPlan() == null
+                    ? "Tu tienda no tiene un plan asignado."
+                    : String.format("Tu plan actual '%s' no permite esta acción. Necesitas Básico o Pro.", tienda.getPlan().getNombre());
+
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, mensaje);
+        }
     }
 
     private void validarLimiteProductos(Tienda tienda) {
         long conteoActual = productoRepository.countByTiendaId(tienda.getId());
-        int maxPermitido = suscripcionService.obtenerSuscripcionVigente(tienda.getId())
-                .map(sus -> sus.getPlan().getMaxProductos())
-                .orElse(10); // valor conservador si no hay plan
+        int maxPermitido = tienda.getPlan().getMaxProductos();
 
         if (conteoActual >= maxPermitido) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
-                    "Has alcanzado el límite de " + maxPermitido + " productos en tu plan actual."
+                    String.format(
+                            "Has alcanzado el límite de %d productos en tu plan '%s'.",
+                            maxPermitido,
+                            tienda.getPlan().getNombre()
+                    )
             );
         }
     }
 
     private void validarLimiteVariantes(Tienda tienda, List<VarianteRequest> requests, Integer productoIdActual) {
-        // Contar variantes existentes en la tienda
         long variantesExistentes = varianteRepository.countByTiendaId(tienda.getId());
 
-        // Restar las del producto que estamos editando (para no contarlas como "existentes" al validar nuevas)
         if (productoIdActual != null) {
             variantesExistentes -= varianteRepository.countByProductoId(productoIdActual);
         }
 
-        // Contar cuántas variantes nuevas se están creando (sin id)
         long variantesNuevas = requests.stream()
                 .filter(req -> req.getId() == null)
                 .count();
 
-        int maxPermitido = suscripcionService.obtenerSuscripcionVigente(tienda.getId())
-                .map(sus -> sus.getPlan().getMaxVariantes())
-                .orElse(50);
+        int maxPermitido = tienda.getPlan().getMaxVariantes();
 
         if (variantesExistentes + variantesNuevas > maxPermitido) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
-                    "La operación excedería el límite de " + maxPermitido + " variantes en tu plan actual."
+                    String.format(
+                            "Excederías el límite de %d variantes (plan '%s'). Actualmente tienes %d.",
+                            maxPermitido,
+                            tienda.getPlan().getNombre(),
+                            variantesExistentes
+                    )
             );
         }
     }
@@ -151,7 +152,6 @@ public class ProductoServiceImpl implements ProductoService {
         Tienda tiendaAsignada;
 
         if (id == null) {
-            // CREACIÓN DE PRODUCTO
             producto = new Producto();
 
             if (esAdmin) {
@@ -163,39 +163,29 @@ public class ProductoServiceImpl implements ProductoService {
                 tiendaAsignada = tiendaService.getTiendaDelUsuarioActual();
             }
 
-            // RESTRICCIONES DE PLAN
-            validarPlanActivoYPermitido(tiendaAsignada);
+            validarPlanPermitidoParaAccion(tiendaAsignada);
             validarLimiteProductos(tiendaAsignada);
 
-            // Validar slug único
             if (productoRepository.findBySlugAndTiendaId(request.getSlug(), tiendaAsignada.getId()).isPresent()) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT,
-                        "Slug duplicado en esta tienda: " + request.getSlug());
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Slug duplicado: " + request.getSlug());
             }
         } else {
-            // EDICIÓN DE PRODUCTO
             producto = productoRepository.findById(id)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado"));
 
             tiendaAsignada = producto.getTienda();
+            validarPlanPermitidoParaAccion(tiendaAsignada);
 
-            // RESTRICCIONES DE PLAN (también en edición, por si se añaden variantes)
-            validarPlanActivoYPermitido(tiendaAsignada);
-
-            // Validar slug único excluyendo este producto
-            Optional<Producto> otroConSlug = productoRepository.findBySlugAndTiendaId(request.getSlug(), tiendaAsignada.getId());
-            if (otroConSlug.isPresent() && !otroConSlug.get().getId().equals(id)) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT,
-                        "Slug duplicado en esta tienda: " + request.getSlug());
+            Optional<Producto> otro = productoRepository.findBySlugAndTiendaId(request.getSlug(), tiendaAsignada.getId());
+            if (otro.isPresent() && !otro.get().getId().equals(id)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Slug duplicado: " + request.getSlug());
             }
         }
 
-        // Validar límite de variantes ANTES de procesarlas
         if (request.getVariantes() != null && !request.getVariantes().isEmpty()) {
             validarLimiteVariantes(tiendaAsignada, request.getVariantes(), id);
         }
 
-        // Setear campos básicos
         producto.setNombre(request.getNombre().trim());
         producto.setSlug(request.getSlug().trim());
 
@@ -203,19 +193,16 @@ public class ProductoServiceImpl implements ProductoService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoría no encontrada"));
 
         if (!categoria.getTienda().getId().equals(tiendaAsignada.getId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La categoría no pertenece a esta tienda");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Categoría no pertenece a esta tienda");
         }
 
         producto.setCategoria(categoria);
         producto.setTienda(tiendaAsignada);
 
-        // Procesar variantes
         manejarVariantes(producto, request.getVariantes(), tiendaAsignada);
 
-        // Guardar
         return toResponse(productoRepository.save(producto));
     }
-
     private void manejarVariantes(Producto producto, List<VarianteRequest> variantesRequests, Tienda tienda) {
         if (variantesRequests == null || variantesRequests.isEmpty()) {
             varianteRepository.deleteAll(producto.getVariantes());

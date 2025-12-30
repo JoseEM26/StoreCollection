@@ -16,6 +16,7 @@ public class  TiendaResponse {
     private String logo_img_url;
     private String planNombre;
     private Integer userId;
+    private Integer planId;
     private String userEmail;
     private boolean activo;
     // En TiendaResponse.java

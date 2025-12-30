@@ -14,11 +14,13 @@ import com.proyecto.StoreCollection.service.Cloudinary.CloudinaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -38,7 +40,6 @@ public class TiendaServiceImpl implements TiendaService {
     private final PlanRepository planRepository;
     private final UsuarioRepository usuarioRepository;
     private final CloudinaryService cloudinaryService;
-    private final TiendaSuscripcionService tiendaSuscripcionService;  // ← NUEVA DEPENDENCIA
 
     // ======================== CONSULTAS ========================
 
@@ -51,12 +52,7 @@ public class TiendaServiceImpl implements TiendaService {
     @Override
     @Transactional(readOnly = true)
     public Page<TiendaResponse> findAllPublicasActivas(Pageable pageable) {
-        LocalDateTime ahora = LocalDateTime.now();
-        Page<Tienda> tiendasPage = tiendaRepository.findTiendasConSuscripcionVigente(
-                ahora,
-                Set.of("active", "trial", "grace"),
-                pageable
-        );
+        Page<Tienda> tiendasPage = tiendaRepository.findAllPublicasActivas(pageable);
         return tiendasPage.map(this::toResponse);
     }
 
@@ -172,64 +168,96 @@ public class TiendaServiceImpl implements TiendaService {
     public TiendaResponse save(TiendaRequest request, Integer id) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String emailActual = auth.getName();
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
         Tienda t;
 
         if (id == null) {
-            // CREACIÓN
+            // ======================== CREACIÓN ========================
             t = new Tienda();
 
-            if (request.getUserId() == null) {
-                throw new RuntimeException("userId es requerido para crear una tienda");
+            // Determinar usuario propietario
+            Integer userId = request.getUserId();
+            if (userId == null) {
+                // Si no envía userId, usar el usuario autenticado
+                userId = usuarioRepository.findByEmail(emailActual)
+                        .map(Usuario::getId)
+                        .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
             }
 
-            Usuario usuario = usuarioRepository.findById(request.getUserId())
-                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            Usuario usuario = usuarioRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID"));
 
-            boolean esAdmin = auth.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
+            // Solo admin puede crear tienda para otro usuario
             if (!esAdmin && !usuario.getEmail().equals(emailActual)) {
-                throw new RuntimeException("No puedes crear una tienda para otro usuario");
+                throw new AccessDeniedException("No puedes crear una tienda para otro usuario");
             }
 
+            // Validar slug único
             if (tiendaRepository.findBySlug(request.getSlug()).isPresent()) {
-                throw new RuntimeException("Ya existe una tienda con ese slug: " + request.getSlug());
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "El slug '" + request.getSlug() + "' ya está en uso por otra tienda");
             }
 
             t.setUser(usuario);
+
+            // Asignar plan por defecto (ej. plan Básico con ID 2)
+            Plan planDefault = planRepository.findById(1) // Cambia el 2 por el ID real de tu plan "Básico"
+                    .orElseThrow(() -> new RuntimeException("Plan por defecto no encontrado. Contacta al administrador."));
+            t.setPlan(planDefault);
+
         } else {
-            // EDICIÓN
+            // ======================== EDICIÓN ========================
             t = tiendaRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Tienda no encontrada"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tienda no encontrada"));
 
-            boolean esAdmin = auth.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
-            if (!t.getUser().getEmail().equals(emailActual) && !esAdmin) {
-                throw new RuntimeException("No tienes permisos para editar esta tienda");
+            // Verificar permisos
+            if (!esAdmin && !t.getUser().getEmail().equals(emailActual)) {
+                throw new AccessDeniedException("No tienes permisos para editar esta tienda");
             }
 
-            Optional<Tienda> mismaSlug = tiendaRepository.findBySlug(request.getSlug());
-            if (mismaSlug.isPresent() && !mismaSlug.get().getId().equals(id)) {
-                throw new RuntimeException("Ya existe otra tienda con ese slug: " + request.getSlug());
+            // Validar slug único (excluyendo la tienda actual)
+            Optional<Tienda> otraConMismoSlug = tiendaRepository.findBySlug(request.getSlug());
+            if (otraConMismoSlug.isPresent() && !otraConMismoSlug.get().getId().equals(id)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "El slug '" + request.getSlug() + "' ya está en uso por otra tienda");
             }
         }
 
-        // Campos comunes
-        t.setNombre(request.getNombre());
-        t.setSlug(request.getSlug());
+        // ======================== CAMPOS COMUNES ========================
+
+        t.setNombre(request.getNombre().trim());
+        t.setSlug(request.getSlug().trim());
         t.setWhatsapp(request.getWhatsapp());
         t.setDescripcion(request.getDescripcion());
         t.setDireccion(request.getDireccion());
         t.setHorarios(request.getHorarios());
-        t.setMapa_url(request.getMapa_url());
+        t.setMapaUrl(request.getMapa_url());  // Coincide con el campo del request
 
+        // Moneda
         if (request.getMoneda() != null && !request.getMoneda().isEmpty()) {
-            t.setMoneda(Tienda.Moneda.valueOf(request.getMoneda()));
+            try {
+                t.setMoneda(Tienda.Moneda.valueOf(request.getMoneda().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Moneda inválida: " + request.getMoneda());
+            }
         }
 
-        // Logo con Cloudinary
+        // ======================== CAMBIO DE PLAN (solo admin) ========================
+        if (request.getPlanId() != null) {
+            if (!esAdmin) {
+                throw new AccessDeniedException("Solo los administradores pueden cambiar el plan de una tienda");
+            }
+
+            Plan nuevoPlan = planRepository.findById(request.getPlanId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "Plan no encontrado con ID: " + request.getPlanId()));
+
+            t.setPlan(nuevoPlan);
+        }
+
+        // ======================== LOGO CON CLOUDINARY ========================
         if (request.getLogoImg() != null && !request.getLogoImg().isEmpty()) {
             try {
                 Map<String, Object> options = Map.of(
@@ -237,46 +265,39 @@ public class TiendaServiceImpl implements TiendaService {
                         "overwrite", true,
                         "resource_type", "image"
                 );
+
                 Map uploadResult = cloudinaryService.upload(request.getLogoImg(), options);
                 String secureUrl = (String) uploadResult.get("secure_url");
 
-                // Borrar anterior si existe
-                if (t.getLogo_img_url() != null && !t.getLogo_img_url().isEmpty()) {
-                    String oldPublicId = extractPublicId(t.getLogo_img_url());
+                // Eliminar logo anterior si existe
+                if (t.getLogoImgUrl() != null && !t.getLogoImgUrl().isEmpty()) {
+                    String oldPublicId = extractPublicId(t.getLogoImgUrl());
                     if (oldPublicId != null) {
                         try {
                             cloudinaryService.delete(oldPublicId);
                         } catch (Exception e) {
-                            System.out.println("No se pudo eliminar logo anterior: " + e.getMessage());
+                            // Loggear pero no fallar la operación
+                            System.err.println("No se pudo eliminar el logo anterior: " + e.getMessage());
                         }
                     }
                 }
-                t.setLogo_img_url(secureUrl);
+
+                t.setLogoImgUrl(secureUrl);
             } catch (IOException e) {
-                throw new RuntimeException("Error al subir logo: " + e.getMessage());
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Error al subir el logo a Cloudinary: " + e.getMessage());
             }
         }
 
-        // Solo admin puede cambiar activo
-        boolean esAdmin = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        // ======================== ESTADO ACTIVO (solo admin) ========================
         if (esAdmin && request.getActivo() != null) {
             t.setActivo(request.getActivo());
         }
 
+        // ======================== GUARDAR ========================
         Tienda saved = tiendaRepository.save(t);
-
-        // ==== SUSCRIPCIÓN INICIAL AL CREAR NUEVA TIENDA ====
-        if (id == null) {
-            Plan planDefecto = planRepository.findFirstByActivoTrueAndEsVisiblePublicoTrueOrderByPrecioMensualAsc()
-                    .orElseThrow(() -> new RuntimeException("No hay planes disponibles para nuevas tiendas"));
-
-            tiendaSuscripcionService.crearSuscripcionInicial(saved.getId(), planDefecto.getId());
-        }
-
         return toResponse(saved);
     }
-
     // ======================== OTROS ========================
 
     @Override
@@ -342,6 +363,7 @@ public class TiendaServiceImpl implements TiendaService {
         }
     }
 
+
     private TiendaResponse toResponse(Tienda t) {
         TiendaResponse dto = new TiendaResponse();
         dto.setId(t.getId());
@@ -352,35 +374,22 @@ public class TiendaServiceImpl implements TiendaService {
         dto.setDescripcion(t.getDescripcion());
         dto.setDireccion(t.getDireccion());
         dto.setHorarios(t.getHorarios());
-        dto.setMapa_url(t.getMapa_url());
-        dto.setLogo_img_url(t.getLogo_img_url());
+        dto.setMapa_url(t.getMapaUrl());
+        dto.setLogo_img_url(t.getLogoImgUrl());
         dto.setActivo(t.getActivo());
         dto.setUserId(t.getUser().getId());
         dto.setUserEmail(t.getUser().getEmail());
 
-        // ==================== CARGAR PLAN ACTIVO ====================
-        LocalDateTime ahora = LocalDateTime.now();
-        Set<String> estadosVigentes = Set.of("active", "trial", "grace");
-
-        try {
-            tiendaSuscripcionService.findSuscripcionActiva(t.getId())
-                    .ifPresent(suscripcion -> {
-                        dto.setPlanNombre(suscripcion.getPlan().getNombre());
-                        dto.setPlanSlug(suscripcion.getPlan().getSlug());
-                        dto.setEstadoSuscripcion(suscripcion.getEstado());
-                        dto.setTrialEndsAt(suscripcion.getTrialEndsAt() != null ? suscripcion.getTrialEndsAt().toString() : null);
-                        dto.setFechaFin(suscripcion.getFechaFin() != null ? suscripcion.getFechaFin().toString() : null);
-                        dto.setMaxProductos(suscripcion.getPlan().getMaxProductos());
-                        dto.setMaxVariantes(suscripcion.getPlan().getMaxVariantes());
-                    });
-        } catch (Exception e) {
-            System.err.println("Error al cargar suscripción activa para tienda " + t.getId() + ": " + e.getMessage());
-        }
-
-        // Valor por defecto si no hay suscripción activa
-        if (dto.getPlanNombre() == null) {
-            dto.setPlanNombre("Sin plan activo");
-            dto.setEstadoSuscripcion("inactive");
+        // PLAN ACTUAL (directo desde la relación)
+        if (t.getPlan() != null) {
+            dto.setPlanId(t.getPlan().getId());
+            dto.setPlanNombre(t.getPlan().getNombre());
+            dto.setPlanSlug(t.getPlan().getSlug());
+            dto.setMaxProductos(t.getPlan().getMaxProductos());
+            dto.setMaxVariantes(t.getPlan().getMaxVariantes());
+        } else {
+            dto.setPlanNombre("Sin plan");
+            dto.setPlanSlug("none");
         }
 
         return dto;

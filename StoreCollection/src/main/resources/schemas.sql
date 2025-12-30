@@ -52,45 +52,20 @@ CREATE TABLE tienda (
     nombre VARCHAR(100) NOT NULL,
     slug VARCHAR(120) UNIQUE NOT NULL,
     whatsapp VARCHAR(20),
-    moneda ENUM('SOLES', 'DOLARES') DEFAULT 'SOLES',
+    moneda VARCHAR(20) DEFAULT 'SOLES' NOT NULL,
     descripcion TEXT,
     direccion TEXT,
     horarios TEXT,
     mapa_url TEXT,
     logo_img_url TEXT,
-    activo BOOLEAN DEFAULT true NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    activo BOOLEAN DEFAULT TRUE NOT NULL,
     user_id INT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES usuario(id) ON DELETE CASCADE
+    plan_id INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES usuario(id) ON DELETE CASCADE,
+    FOREIGN KEY (plan_id) REFERENCES plan(id) ON DELETE CASCADE
 );
-
--- ========================================
--- TABLAS QUE DEPENDEN DE LAS ANTERIORES
--- ========================================
-
-CREATE TABLE tienda_suscripcion (
-    id                        BIGINT AUTO_INCREMENT PRIMARY KEY,
-    tienda_id                 INT NOT NULL,
-    plan_id                   INT NOT NULL,
-    estado                    VARCHAR(30) NOT NULL DEFAULT 'trial',
-    fecha_inicio              DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    fecha_fin                 DATETIME DEFAULT NULL,
-    trial_ends_at             DATETIME DEFAULT NULL,
-    periodo_actual_inicio     DATETIME,
-    periodo_actual_fin        DATETIME,
-    cancel_at                 DATETIME DEFAULT NULL,
-    cancel_at_period_end      BOOLEAN DEFAULT FALSE,
-    payment_provider          VARCHAR(30) DEFAULT 'manual',
-    external_subscription_id  VARCHAR(100) DEFAULT NULL,
-    notas                     TEXT,
-    created_at                TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at                TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (tienda_id) REFERENCES tienda(id) ON DELETE CASCADE,
-    FOREIGN KEY (plan_id)   REFERENCES plan(id)   ON DELETE RESTRICT,
-    INDEX idx_tienda_estado (tienda_id, estado),
-    INDEX idx_external_id (external_subscription_id)
-);
-
 CREATE TABLE categoria (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,

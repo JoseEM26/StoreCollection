@@ -58,93 +58,59 @@ INSERT INTO usuario (nombre, email, password, celular, rol) VALUES
 -- ========================================
 
 INSERT INTO tienda (
-    nombre, slug, whatsapp, moneda, descripcion, direccion, horarios,
-    mapa_url, logo_img_url, user_id, activo
+    nombre,
+    slug,
+    whatsapp,
+    moneda,
+    descripcion,
+    direccion,
+    horarios,
+    mapa_url,
+    logo_img_url,
+    user_id,
+    activo,
+    plan_id
 ) VALUES
-('ZapaTik', 'zapatik', '987654321', 'SOLES', 'Zapatillas virales de TikTok', 'Av. Brasil 1234, Lima', 'Lun-Sab 10am-9pm', 'https://maps.google.com/?q=zapatik', 'https://res.cloudinary.com/dqznlmig0/image/upload/v1766703356/tiendas/logos/yxwdoveun3nb7zndbv2s.png', 2, TRUE),
-('TechPro Perú', 'techpro-peru', '911223344', 'DOLARES', 'Gadgets importados premium', 'Tienda online', '24/7', 'https://maps.google.com/?q=techpro', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/techpro.png', 3, TRUE),
-('Moda Fashion', 'moda-fashion', '955667788', 'SOLES', 'Ropa trendy 2025', 'Jr. de la Unión 890', 'Lun-Dom 9am-10pm', 'https://maps.google.com/?q=modafashion', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/modafashion.png', 4, TRUE),
-('PetFood Premium', 'petfood-premium', '933445566', 'SOLES', 'Alimento para mascotas', 'Av. Larco 123, Miraflores', 'Lun-Vie 9am-7pm', 'https://maps.google.com/?q=petfood', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/petfood.png', 5, TRUE),
-('Plata & Joyas', 'plata-joyas', '977889900', 'SOLES', 'Joyería en plata 925', 'Tienda virtual', '24/7', 'https://maps.google.com/?q=platajoyas', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/platajoyas.png', 6, TRUE),
-('Deportes Xtreme', 'deportes-xtreme', '922334455', 'SOLES', 'Ropa deportiva', 'Av. Canadá 567', 'Lun-Sab 10am-8pm', 'https://maps.google.com/?q=deportesxtreme', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/deportesxtreme.png', 7, TRUE),
-('Cosméticos Naturales', 'cosmeticos-naturales', '966778899', 'SOLES', 'Productos 100% orgánicos', 'Tienda online', '24/7', 'https://maps.google.com/?q=cosmeticos', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/cosmeticosnaturales.png', 8, TRUE),
-('Gadgets Perú', 'gadgets-peru', '944556677', 'DOLARES', 'Accesorios para celular', 'Av. Primavera 800', 'Lun-Sab 11am-9pm', 'https://maps.google.com/?q=gadgetsperu', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/gadgetsperu.png', 9, TRUE),
-('Belleza Natural', 'belleza-natural', '988990011', 'SOLES', 'Cremas y aceites naturales', 'Tienda virtual', '24/7', 'https://maps.google.com/?q=bellezanatural', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/bellezanatural.png', 10, TRUE),
-('Accesorios Cel', 'accesorios-cel', '911224455', 'SOLES', 'Todo para tu celular', 'Mall del Sur', 'Lun-Dom 10am-10pm', 'https://maps.google.com/?q=accesorioscel', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/accesorioscel.png', 11, TRUE),
-('Ropa Infantil', 'ropa-infantil', '999887766', 'SOLES', 'Ropita para bebés y niños', 'Av. La Marina 200', 'Lun-Sab 10am-8pm', 'https://maps.google.com/?q=ropainfantil', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/ropainfantil.png', 12, TRUE),
-('Celulares Import', 'celulares-import', '988776655', 'DOLARES', 'iPhone y Samsung originales', 'Tienda online', '24/7', 'https://maps.google.com/?q=celularesimport', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/celularesimport.png', 13, TRUE),
-('Maquillaje Pro', 'maquillaje-pro', '977665544', 'SOLES', 'Marcas internacionales', 'Real Plaza Salaverry', 'Lun-Dom 11am-9pm', 'https://maps.google.com/?q=maquillajepro', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/maquillajepro.png', 14, TRUE),
-('Suplementos Gym', 'suplementos-gym', '966554433', 'SOLES', 'Proteínas, creatina, BCAAs', 'Av. Benavides 456', 'Lun-Sab 9am-8pm', 'https://maps.google.com/?q=suplementosgym', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/suplementosgym.png', 15, TRUE),
-('Perfumes Originales', 'perfumes-originales', '955443322', 'SOLES', 'Fragancias importadas', 'Jockey Plaza', 'Lun-Dom 10am-10pm', 'https://maps.google.com/?q=perfumes', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/perfumes.png', 16, TRUE),
-('Relojes Perú', 'relojes-peru', '944332211', 'DOLARES', 'Rolex, Casio, Seiko', 'Larcomar', 'Lun-Dom 11am-9pm', 'https://maps.google.com/?q=relojesperu', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/relojesperu.png', 17, TRUE),
-('Libros Digitales', 'libros-digitales', '933221100', 'SOLES', 'Ebooks y cursos', 'Tienda virtual', '24/7', 'https://maps.google.com/?q=librosdigitales', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/librosdigitales.png', 18, TRUE),
-('Juguetes Didácticos', 'juguetes-didacticos', '922110099', 'SOLES', 'Aprende jugando', 'Av. Salaverry 789', 'Lun-Sab 10am-7pm', 'https://maps.google.com/?q=juguetes', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/juguetes.png', 19, TRUE),
-('Velas Artesanales', 'velas-artesanales', '911009988', 'SOLES', 'Aromaterapia y decoración', 'Tienda virtual', '24/7', 'https://maps.google.com/?q=velas', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/velas.png', 20, TRUE),
-('Herramientas Pro', 'herramientas-pro', '900998877', 'SOLES', 'Para obra y hogar', 'Av. Industrial 123', 'Lun-Vie 8am-6pm', 'https://maps.google.com/?q=herramientas', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/herramientas.png', 21, TRUE),
-('DecorHogar', 'decorhogar', '999887766', 'SOLES', 'Todo para tu casa', 'MegaPlaza', 'Lun-Dom 10am-10pm', 'https://maps.google.com/?q=decorhogar', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/decorhogar.png', 22, TRUE),
-('Camping Perú', 'camping-peru', '988776655', 'SOLES', 'Carpa, sleeping, mochilas', 'Av. La Molina 456', 'Lun-Sab 10am-7pm', 'https://maps.google.com/?q=camping', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/camping.png', 23, TRUE),
-('Plantas Interior', 'plantas-interior', '977665544', 'SOLES', 'Plantas y macetas', 'Tienda virtual', '24/7', 'https://maps.google.com/?q=plantas', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/plantas.png', 24, TRUE),
-('Baterías Portátiles', 'baterias-portatil', '966554433', 'SOLES', 'Power banks premium', 'Tienda online', '24/7', 'https://maps.google.com/?q=baterias', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/baterias.png', 25, TRUE),
-('Artesanías Perú', 'artesanias-peru', '955443322', 'SOLES', 'Productos típicos', 'Cusco y Lima', 'Lun-Sab 9am-6pm', 'https://maps.google.com/?q=artesanias', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/artesanias.png', 26, TRUE),
-('Bici Urbana', 'bici-urbana', '944332211', 'SOLES', 'Bicicletas y accesorios', 'Av. Arequipa 1234', 'Lun-Sab 10am-8pm', 'https://maps.google.com/?q=biciurbana', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/biciurbana.png', 27, TRUE),
-('Ropa Embarazada', 'ropa-embarazada', '933221100', 'SOLES', 'Maternidad cómoda', 'Tienda virtual', '24/7', 'https://maps.google.com/?q=ropaembarazada', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/ropaembarazada.png', 28, TRUE),
-('Gaming Periféricos', 'gaming-perifericos', '922110099', 'SOLES', 'Teclados, mouse, sillas', 'Av. Javier Prado 5678', 'Lun-Sab 11am-9pm', 'https://maps.google.com/?q=gaming', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/gaming.png', 29, TRUE),
-('Cuidado Facial', 'cuidado-facial', '911009988', 'SOLES', 'Kits coreanos y más', 'Tienda online', '24/7', 'https://maps.google.com/?q=cuidadofacial', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/cuidadofacial.png', 30, TRUE),
-('Audífonos Pro', 'audifonos-pro', '900998877', 'DOLARES', 'Sony, Bose, Apple', 'Jockey Plaza', 'Lun-Dom 11am-10pm', 'https://maps.google.com/?q=audifonospro', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/audifonospro.png', 31, TRUE),
-('Skincare Korea', 'skincare-korea', '988776655', 'SOLES', 'Cosmética coreana', 'Tienda virtual', '24/7', 'https://maps.google.com/?q=skincare', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/skincare.png', 32, TRUE),
-('Café Artesanal', 'cafe-artesanal', '977665544', 'SOLES', 'Granos premium', 'Av. Pardo 789', 'Lun-Sab 8am-8pm', 'https://maps.google.com/?q=cafe', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/cafe.png', 33, TRUE),
-('Joyeria Plata', 'joyeria-plata', '966554433', 'SOLES', 'Diseños exclusivos', 'Miraflores', 'Lun-Sab 11am-8pm', 'https://maps.google.com/?q=joyeria', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/joyeriaplata.png', 34, TRUE),
-('ActiveWear Fit', 'activewear-fit', '955443322', 'SOLES', 'Ropa deportiva mujer', 'Tienda online', '24/7', 'https://maps.google.com/?q=activewear', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/activewear.png', 35, TRUE),
-('PC Gaming Pro', 'pc-gaming-pro', '944332211', 'DOLARES', 'Arma tu setup', 'Av. Primavera 123', 'Lun-Sab 10am-9pm', 'https://maps.google.com/?q=pcgaming', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/pcgaming.png', 36, TRUE),
-('Accesorios Mujer', 'accesorios-mujer', '933221100', 'SOLES', 'Carteras, collares', 'Mall Aventura', 'Lun-Dom 10am-10pm', 'https://maps.google.com/?q=accesorios', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/accesoriosmujer.png', 37, TRUE),
-('Zapatos Formal', 'zapatos-formal', '922110099', 'SOLES', 'Hombre y mujer', 'San Isidro', 'Lun-Vie 10am-7pm', 'https://maps.google.com/?q=zapatosformal', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/zapatosformal.png', 38, TRUE),
-('Belleza Infantil', 'belleza-infantil', '911009988', 'SOLES', 'Productos para niños', 'Tienda virtual', '24/7', 'https://maps.google.com/?q=bellezainfantil', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/bellezainfantil.png', 39, TRUE),
-('Vinos Importados', 'vinos-importados', '900998877', 'SOLES', 'Chilenos, argentinos', 'Surco', 'Lun-Sab 11am-9pm', 'https://maps.google.com/?q=vinos', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/vinos.png', 40, TRUE),
-('Libros Físicos', 'libros-fisicos', '999887766', 'SOLES', 'Novelas y más', 'Lince', 'Lun-Sab 10am-8pm', 'https://maps.google.com/?q=librosfisicos', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/librosfisicos.png', 41, TRUE);
-
-
-INSERT INTO tienda_suscripcion (tienda_id, plan_id, estado, fecha_inicio, trial_ends_at) VALUES
-(1, 3, 'active', NOW(), NULL),   -- ZapaTik → Pro
-(2, 4, 'active', NOW(), NULL),   -- TechPro Perú → Premium
-(3, 3, 'active', NOW(), NULL),   -- Moda Fashion → Pro
-(4, 2, 'active', NOW(), NULL),   -- PetFood Premium → Básico
-(5, 4, 'active', NOW(), NULL),   -- Plata & Joyas → Premium
-(6, 3, 'active', NOW(), NULL),   -- Deportes Xtreme → Pro
-(7, 3, 'active', NOW(), NULL),   -- Cosméticos Naturales → Pro
-(8, 4, 'active', NOW(), NULL),   -- Gadgets Perú → Premium
-(9, 1, 'trial', NOW(), DATE_ADD(NOW(), INTERVAL 14 DAY)), -- Belleza Natural → Trial Gratis
-(10, 2, 'active', NOW(), NULL),  -- Accesorios Cel → Básico
-(11, 2, 'active', NOW(), NULL),  -- Ropa Infantil → Básico
-(12, 5, 'active', NOW(), NULL),  -- Celulares Import → Enterprise
-(13, 3, 'active', NOW(), NULL),  -- Maquillaje Pro → Pro
-(14, 2, 'active', NOW(), NULL),  -- Suplementos Gym → Básico
-(15, 4, 'active', NOW(), NULL),  -- Perfumes Originales → Premium
-(16, 5, 'active', NOW(), NULL),  -- Relojes Perú → Enterprise
-(17, 1, 'active', NOW(), NULL),   -- Libros Digitales → Gratis
-(18, 2, 'active', NOW(), NULL),  -- Juguetes Didácticos → Básico
-(19, 1, 'active', NOW(), NULL),   -- Velas Artesanales → Gratis
-(20, 3, 'active', NOW(), NULL),  -- Herramientas Pro → Pro
-(21, 2, 'active', NOW(), NULL),  -- DecorHogar → Básico
-(22, 2, 'active', NOW(), NULL),  -- Camping Perú → Básico
-(23, 1, 'active', NOW(), NULL),   -- Plantas Interior → Gratis
-(24, 2, 'active', NOW(), NULL),  -- Baterías Portátiles → Básico
-(25, 2, 'active', NOW(), NULL),  -- Artesanías Perú → Básico
-(26, 3, 'active', NOW(), NULL),  -- Bici Urbana → Pro
-(27, 1, 'active', NOW(), NULL),   -- Ropa Embarazada → Gratis
-(28, 4, 'active', NOW(), NULL),  -- Gaming Periféricos → Premium
-(29, 2, 'active', NOW(), NULL),  -- Cuidado Facial → Básico
-(30, 5, 'active', NOW(), NULL),  -- Audífonos Pro → Enterprise
-(31, 3, 'active', NOW(), NULL),  -- Skincare Korea → Pro
-(32, 2, 'active', NOW(), NULL),  -- Café Artesanal → Básico
-(33, 3, 'active', NOW(), NULL),  -- Joyeria Plata → Pro
-(34, 2, 'active', NOW(), NULL),  -- ActiveWear Fit → Básico
-(35, 4, 'active', NOW(), NULL),  -- PC Gaming Pro → Premium
-(36, 2, 'active', NOW(), NULL),  -- Accesorios Mujer → Básico
-(37, 3, 'active', NOW(), NULL),  -- Zapatos Formal → Pro
-(38, 1, 'active', NOW(), NULL),   -- Belleza Infantil → Gratis
-(39, 3, 'active', NOW(), NULL),  -- Vinos Importados → Pro
-(40, 2, 'active', NOW(), NULL);  -- Libros Físicos → Básico
-
+('ZapaTik', 'zapatik', '987654321', 'SOLES', 'Zapatillas virales de TikTok', 'Av. Brasil 1234, Lima', 'Lun-Sab 10am-9pm', 'https://maps.google.com/?q=zapatik', 'https://res.cloudinary.com/dqznlmig0/image/upload/v1766703356/tiendas/logos/yxwdoveun3nb7zndbv2s.png', 2, TRUE, 2),
+('TechPro Perú', 'techpro-peru', '911223344', 'DOLARES', 'Gadgets importados premium', 'Tienda online', '24/7', 'https://maps.google.com/?q=techpro', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/techpro.png', 3, TRUE, 3),
+('Moda Fashion', 'moda-fashion', '955667788', 'SOLES', 'Ropa trendy 2025', 'Jr. de la Unión 890', 'Lun-Dom 9am-10pm', 'https://maps.google.com/?q=modafashion', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/modafashion.png', 4, TRUE, 2),
+('PetFood Premium', 'petfood-premium', '933445566', 'SOLES', 'Alimento para mascotas', 'Av. Larco 123, Miraflores', 'Lun-Vie 9am-7pm', 'https://maps.google.com/?q=petfood', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/petfood.png', 5, TRUE, 1),
+('Plata & Joyas', 'plata-joyas', '977889900', 'SOLES', 'Joyería en plata 925', 'Tienda virtual', '24/7', 'https://maps.google.com/?q=platajoyas', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/platajoyas.png', 6, TRUE, 3),
+('Deportes Xtreme', 'deportes-xtreme', '922334455', 'SOLES', 'Ropa deportiva', 'Av. Canadá 567', 'Lun-Sab 10am-8pm', 'https://maps.google.com/?q=deportesxtreme', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/deportesxtreme.png', 7, TRUE, 2),
+('Cosméticos Naturales', 'cosmeticos-naturales', '966778899', 'SOLES', 'Productos 100% orgánicos', 'Tienda online', '24/7', 'https://maps.google.com/?q=cosmeticos', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/cosmeticosnaturales.png', 8, TRUE, 1),
+('Gadgets Perú', 'gadgets-peru', '944556677', 'DOLARES', 'Accesorios para celular', 'Av. Primavera 800', 'Lun-Sab 11am-9pm', 'https://maps.google.com/?q=gadgetsperu', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/gadgetsperu.png', 9, TRUE, 3),
+('Belleza Natural', 'belleza-natural', '988990011', 'SOLES', 'Cremas y aceites naturales', 'Tienda virtual', '24/7', 'https://maps.google.com/?q=bellezanatural', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/bellezanatural.png', 10, TRUE, 2),
+('Accesorios Cel', 'accesorios-cel', '911224455', 'SOLES', 'Todo para tu celular', 'Mall del Sur', 'Lun-Dom 10am-10pm', 'https://maps.google.com/?q=accesorioscel', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/accesorioscel.png', 11, TRUE, 1),
+('Ropa Infantil', 'ropa-infantil', '999887766', 'SOLES', 'Ropita para bebés y niños', 'Av. La Marina 200', 'Lun-Sab 10am-8pm', 'https://maps.google.com/?q=ropainfantil', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/ropainfantil.png', 12, TRUE, 2),
+('Celulares Import', 'celulares-import', '988776655', 'DOLARES', 'iPhone y Samsung originales', 'Tienda online', '24/7', 'https://maps.google.com/?q=celularesimport', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/celularesimport.png', 13, TRUE, 4),
+('Maquillaje Pro', 'maquillaje-pro', '977665544', 'SOLES', 'Marcas internacionales', 'Real Plaza Salaverry', 'Lun-Dom 11am-9pm', 'https://maps.google.com/?q=maquillajepro', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/maquillajepro.png', 14, TRUE, 3),
+('Suplementos Gym', 'suplementos-gym', '966554433', 'SOLES', 'Proteínas, creatina, BCAAs', 'Av. Benavides 456', 'Lun-Sab 9am-8pm', 'https://maps.google.com/?q=suplementosgym', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/suplementosgym.png', 15, TRUE, 2),
+('Perfumes Originales', 'perfumes-originales', '955443322', 'SOLES', 'Fragancias importadas', 'Jockey Plaza', 'Lun-Dom 10am-10pm', 'https://maps.google.com/?q=perfumes', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/perfumes.png', 16, TRUE, 3),
+('Relojes Perú', 'relojes-peru', '944332211', 'DOLARES', 'Rolex, Casio, Seiko', 'Larcomar', 'Lun-Dom 11am-9pm', 'https://maps.google.com/?q=relojesperu', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/relojesperu.png', 17, TRUE, 5),
+('Libros Digitales', 'libros-digitales', '933221100', 'SOLES', 'Ebooks y cursos', 'Tienda virtual', '24/7', 'https://maps.google.com/?q=librosdigitales', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/librosdigitales.png', 18, TRUE, 1),
+('Juguetes Didácticos', 'juguetes-didacticos', '922110099', 'SOLES', 'Aprende jugando', 'Av. Salaverry 789', 'Lun-Sab 10am-7pm', 'https://maps.google.com/?q=juguetes', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/juguetes.png', 19, TRUE, 2),
+('Velas Artesanales', 'velas-artesanales', '911009988', 'SOLES', 'Aromaterapia y decoración', 'Tienda virtual', '24/7', 'https://maps.google.com/?q=velas', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/velas.png', 20, TRUE, 1),
+('Herramientas Pro', 'herramientas-pro', '900998877', 'SOLES', 'Para obra y hogar', 'Av. Industrial 123', 'Lun-Vie 8am-6pm', 'https://maps.google.com/?q=herramientas', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/herramientas.png', 21, TRUE, 3),
+('DecorHogar', 'decorhogar', '999887766', 'SOLES', 'Todo para tu casa', 'MegaPlaza', 'Lun-Dom 10am-10pm', 'https://maps.google.com/?q=decorhogar', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/decorhogar.png', 22, TRUE, 2),
+('Camping Perú', 'camping-peru', '988776655', 'SOLES', 'Carpa, sleeping, mochilas', 'Av. La Molina 456', 'Lun-Sab 10am-7pm', 'https://maps.google.com/?q=camping', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/camping.png', 23, TRUE, 2),
+('Plantas Interior', 'plantas-interior', '977665544', 'SOLES', 'Plantas y macetas', 'Tienda virtual', '24/7', 'https://maps.google.com/?q=plantas', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/plantas.png', 24, TRUE, 1),
+('Baterías Portátiles', 'baterias-portatil', '966554433', 'SOLES', 'Power banks premium', 'Tienda online', '24/7', 'https://maps.google.com/?q=baterias', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/baterias.png', 25, TRUE, 3),
+('Artesanías Perú', 'artesanias-peru', '955443322', 'SOLES', 'Productos típicos', 'Cusco y Lima', 'Lun-Sab 9am-6pm', 'https://maps.google.com/?q=artesanias', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/artesanias.png', 26, TRUE, 2),
+('Bici Urbana', 'bici-urbana', '944332211', 'SOLES', 'Bicicletas y accesorios', 'Av. Arequipa 1234', 'Lun-Sab 10am-8pm', 'https://maps.google.com/?q=biciurbana', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/biciurbana.png', 27, TRUE, 2),
+('Ropa Embarazada', 'ropa-embarazada', '933221100', 'SOLES', 'Maternidad cómoda', 'Tienda virtual', '24/7', 'https://maps.google.com/?q=ropaembarazada', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/ropaembarazada.png', 28, TRUE, 1),
+('Gaming Periféricos', 'gaming-perifericos', '922110099', 'SOLES', 'Teclados, mouse, sillas', 'Av. Javier Prado 5678', 'Lun-Sab 11am-9pm', 'https://maps.google.com/?q=gaming', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/gaming.png', 29, TRUE, 4),
+('Cuidado Facial', 'cuidado-facial', '911009988', 'SOLES', 'Kits coreanos y más', 'Tienda online', '24/7', 'https://maps.google.com/?q=cuidadofacial', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/cuidadofacial.png', 30, TRUE, 2),
+('Audífonos Pro', 'audifonos-pro', '900998877', 'DOLARES', 'Sony, Bose, Apple', 'Jockey Plaza', 'Lun-Dom 11am-10pm', 'https://maps.google.com/?q=audifonospro', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/audifonospro.png', 31, TRUE, 5),
+('Skincare Korea', 'skincare-korea', '988776655', 'SOLES', 'Cosmética coreana', 'Tienda virtual', '24/7', 'https://maps.google.com/?q=skincare', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/skincare.png', 32, TRUE, 3),
+('Café Artesanal', 'cafe-artesanal', '977665544', 'SOLES', 'Granos premium', 'Av. Pardo 789', 'Lun-Sab 8am-8pm', 'https://maps.google.com/?q=cafe', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/cafe.png', 33, TRUE, 2),
+('Joyeria Plata', 'joyeria-plata', '966554433', 'SOLES', 'Diseños exclusivos', 'Miraflores', 'Lun-Sab 11am-8pm', 'https://maps.google.com/?q=joyeria', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/joyeriaplata.png', 34, TRUE, 3),
+('ActiveWear Fit', 'activewear-fit', '955443322', 'SOLES', 'Ropa deportiva mujer', 'Tienda online', '24/7', 'https://maps.google.com/?q=activewear', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/activewear.png', 35, TRUE, 2),
+('PC Gaming Pro', 'pc-gaming-pro', '944332211', 'DOLARES', 'Arma tu setup', 'Av. Primavera 123', 'Lun-Sab 10am-9pm', 'https://maps.google.com/?q=pcgaming', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/pcgaming.png', 36, TRUE, 5),
+('Accesorios Mujer', 'accesorios-mujer', '933221100', 'SOLES', 'Carteras, collares', 'Mall Aventura', 'Lun-Dom 10am-10pm', 'https://maps.google.com/?q=accesorios', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/accesoriosmujer.png', 37, TRUE, 2),
+('Zapatos Formal', 'zapatos-formal', '922110099', 'SOLES', 'Hombre y mujer', 'San Isidro', 'Lun-Vie 10am-7pm', 'https://maps.google.com/?q=zapatosformal', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/zapatosformal.png', 38, TRUE, 3),
+('Belleza Infantil', 'belleza-infantil', '911009988', 'SOLES', 'Productos para niños', 'Tienda virtual', '24/7', 'https://maps.google.com/?q=bellezainfantil', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/bellezainfantil.png', 39, TRUE, 1),
+('Vinos Importados', 'vinos-importados', '900998877', 'SOLES', 'Chilenos, argentinos', 'Surco', 'Lun-Sab 11am-9pm', 'https://maps.google.com/?q=vinos', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/vinos.png', 40, TRUE, 4),
+('Libros Físicos', 'libros-fisicos', '999887766', 'SOLES', 'Novelas y más', 'Lince', 'Lun-Sab 10am-8pm', 'https://maps.google.com/?q=librosfisicos', 'https://res.cloudinary.com/tucloud/image/upload/v1/logos/librosfisicos.png', 41, TRUE, 2);
 INSERT INTO categoria (nombre, slug, tienda_id) VALUES
 ('Zapatillas Hombre', 'hombre', 1),
 ('Zapatillas Mujer', 'mujer', 1),
