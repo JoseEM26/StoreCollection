@@ -12,6 +12,11 @@ import { ProductoAdminService } from '../../../../service/service-admin/producto
 import { AuthService } from '../../../../../auth/auth.service';
 import Swal from 'sweetalert2';
 
+interface AtributoTemp extends AtributoValorRequest {
+  atributoNombreTemp?: string;
+  valorTemp?: string;
+}
+
 @Component({
   selector: 'app-product-form',
   standalone: true,
@@ -24,25 +29,24 @@ export class ProductFormComponent implements OnChanges {
   @Input() producto?: ProductoResponse;
   @Output() saved = new EventEmitter<void>();
   @Output() closed = new EventEmitter<void>();
+  errorMessage = signal<string | null>(null);
 
   nombre = signal<string>('');
   slug = signal<string>('');
   categoriaId = signal<number | null>(null);
   tiendaId = signal<number | null>(null);
   activo = signal<boolean>(true);
+  tiendaActual = signal<DropTownStandar | null>(null);
+
+  categorias = signal<DropTownStandar[]>([]);
+  tiendas = signal<DropTownStandar[]>([]);
   atributosDisponibles = signal<AtributoConValores[]>([]);
 
   variantes = signal<VarianteRequest[]>([]);
   collapsed = signal<boolean[]>([]);
-
   imagenPreviews = signal<Map<number, string>>(new Map());
 
-  categorias = signal<DropTownStandar[]>([]);
-  tiendas = signal<DropTownStandar[]>([]);
-  tiendaActual = signal<DropTownStandar | null>(null);
-
   loading = signal<boolean>(false);
-  errorMessage = signal<string | null>(null);
 
   constructor(
     private productoService: ProductoAdminService,
@@ -75,15 +79,15 @@ export class ProductFormComponent implements OnChanges {
         this.tiendaId.set(this.producto.tiendaId);
         this.activo.set(this.producto.activo);
 
-        const vars = this.producto.variantes?.map((v, index) => {
+        const vars = (this.producto.variantes || []).map((v, index) => {
           const variante: VarianteRequest = {
             id: v.id,
             sku: v.sku,
             precio: v.precio,
             stock: v.stock,
-            imagenUrl: v.imagenUrl,
             activo: v.activo,
-            atributos: v.atributos.map(a => ({
+            imagenUrl: v.imagenUrl,
+            atributos: (v.atributos || []).map(a => ({
               atributoNombre: a.atributoNombre || '',
               valor: a.valor || ''
             }))
@@ -92,17 +96,10 @@ export class ProductFormComponent implements OnChanges {
             this.imagenPreviews.update(map => map.set(index, v.imagenUrl!));
           }
           return variante;
-        }) || [];
+        });
 
         this.variantes.set(vars);
         this.collapsed.set(vars.map(() => true));
-
-        if (!this.auth.isAdmin() && this.producto.tiendaId) {
-          this.dropTownService.getTiendas().subscribe(tiendas => {
-            const miTienda = tiendas.find(t => t.id === this.producto!.tiendaId);
-            this.tiendaActual.set(miTienda || null);
-          });
-        }
       } else {
         this.resetForm();
       }
@@ -118,17 +115,21 @@ export class ProductFormComponent implements OnChanges {
     this.variantes.set([]);
     this.collapsed.set([]);
     this.imagenPreviews.set(new Map());
-    this.tiendaActual.set(null);
   }
 
   generarSlugDesdeNombre(): void {
-    const nombreNormalizado = this.nombre().trim().toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    const slug = this.nombre()
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '');
-    this.slug.set(nombreNormalizado);
+
+    this.slug.set(slug);
   }
 
   agregarVariante(): void {
@@ -148,7 +149,7 @@ export class ProductFormComponent implements OnChanges {
     this.collapsed.update(c => c.filter((_, i) => i !== index));
     this.imagenPreviews.update(map => {
       map.delete(index);
-      return new Map(map);
+      return map;
     });
   }
 
@@ -158,64 +159,54 @@ export class ProductFormComponent implements OnChanges {
 
   onImagenChange(event: Event, index: number): void {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
+    if (!input.files?.[0]) return;
 
-      if (!file.type.startsWith('image/')) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'Archivo no permitido',
-          text: 'Solo se aceptan imágenes.',
-          confirmButtonText: 'Entendido'
-        });
-        return;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'Imagen demasiado grande',
-          text: 'La imagen no puede superar los 5 MB.',
-          confirmButtonText: 'OK'
-        });
-        return;
-      }
+    const file = input.files[0];
 
-      this.variantes.update(v => {
-        const copy = [...v];
-        copy[index].imagen = file;
-        copy[index].imagenUrl = undefined;
-        return copy;
-      });
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.imagenPreviews.update(map => map.set(index, e.target?.result as string));
-      };
-      reader.readAsDataURL(file);
+    if (!file.type.startsWith('image/')) {
+      Swal.fire('Archivo inválido', 'Solo imágenes permitidas', 'warning');
+      return;
     }
+    if (file.size > 5 * 1024 * 1024) {
+      Swal.fire('Imagen muy grande', 'Máximo 5 MB', 'warning');
+      return;
+    }
+
+    this.variantes.update(v => {
+      const copy = [...v];
+      copy[index].imagen = file;
+      copy[index].imagenUrl = undefined;
+      return copy;
+    });
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.imagenPreviews.update(map => map.set(index, reader.result as string));
+    };
+    reader.readAsDataURL(file);
   }
 
-eliminarImagen(index: number): void {
-  this.variantes.update(v => {
-    const copy = [...v];
-    delete copy[index].imagen;
-    copy[index].imagenUrl = undefined;
-    return copy;
-  });
+  eliminarImagen(index: number): void {
+    this.variantes.update(v => {
+      const copy = [...v];
+      delete copy[index].imagen;
+      copy[index].imagenUrl = undefined;
+      return copy;
+    });
+    this.imagenPreviews.update(map => {
+      map.delete(index);
+      return map;
+    });
+  }
 
-  this.imagenPreviews.update(map => {
-    map.delete(index);
-    return map;
-  });
-}
+  // ======================== ATRIBUTOS (métodos requeridos por tu HTML) ========================
+
   agregarAtributo(varianteIndex: number): void {
     this.variantes.update(v => {
       const copy = [...v];
       copy[varianteIndex].atributos.push({
         atributoNombre: '',
-        valor: '',
-        atributoNombreTemp: '',
-        valorTemp: ''
+        valor: ''
       });
       return copy;
     });
@@ -232,19 +223,16 @@ eliminarImagen(index: number): void {
   onAtributoChange(varianteIndex: number, attrIndex: number, value: string): void {
     this.variantes.update(v => {
       const copy = [...v];
-      const attr = copy[varianteIndex].atributos[attrIndex];
+      const attr = copy[varianteIndex].atributos[attrIndex] as AtributoTemp;
 
       if (value === '__new__') {
         attr.atributoNombre = '__new__';
         attr.atributoNombreTemp = '';
-        attr.valor = '';
-        attr.valorTemp = undefined;
       } else {
         attr.atributoNombre = value;
-        delete (attr as any).atributoNombreTemp;
-        attr.valor = '';
-        attr.valorTemp = undefined;
+        delete attr.atributoNombreTemp;
       }
+      attr.valor = '';
       return copy;
     });
   }
@@ -252,17 +240,16 @@ eliminarImagen(index: number): void {
   finalizarNuevoAtributo(varianteIndex: number, attrIndex: number): void {
     this.variantes.update(v => {
       const copy = [...v];
-      const attr = copy[varianteIndex].atributos[attrIndex];
-      const texto = attr.atributoNombreTemp?.trim();
-      if (texto && texto.length > 0) {
-        attr.atributoNombre = texto;
-        delete (attr as any).atributoNombreTemp;
-        attr.valor = '';
-        attr.valorTemp = undefined;
+      const attr = copy[varianteIndex].atributos[attrIndex] as AtributoTemp;
+      const nuevoNombre = attr.atributoNombreTemp?.trim();
+
+      if (nuevoNombre) {
+        attr.atributoNombre = nuevoNombre;
       } else {
         attr.atributoNombre = '';
-        attr.valor = '';
       }
+      delete attr.atributoNombreTemp;
+      attr.valor = '';
       return copy;
     });
   }
@@ -270,14 +257,14 @@ eliminarImagen(index: number): void {
   onValorChange(varianteIndex: number, attrIndex: number, value: string): void {
     this.variantes.update(v => {
       const copy = [...v];
-      const attr = copy[varianteIndex].atributos[attrIndex];
+      const attr = copy[varianteIndex].atributos[attrIndex] as AtributoTemp;
 
       if (value === '__new__') {
         attr.valor = '__new__';
         attr.valorTemp = '';
       } else {
         attr.valor = value;
-        delete (attr as any).valorTemp;
+        delete attr.valorTemp;
       }
       return copy;
     });
@@ -286,168 +273,78 @@ eliminarImagen(index: number): void {
   finalizarNuevoValor(varianteIndex: number, attrIndex: number): void {
     this.variantes.update(v => {
       const copy = [...v];
-      const attr = copy[varianteIndex].atributos[attrIndex];
-      const texto = attr.valorTemp?.trim();
-      if (texto && texto.length > 0) {
-        attr.valor = texto;
-        delete (attr as any).valorTemp;
+      const attr = copy[varianteIndex].atributos[attrIndex] as AtributoTemp;
+      const nuevoValor = attr.valorTemp?.trim();
+
+      if (nuevoValor) {
+        attr.valor = nuevoValor;
       } else {
         attr.valor = '';
       }
+      delete attr.valorTemp;
       return copy;
     });
   }
 
-  isAtributoPersonalizado(attr: any): boolean {
-    return !!attr.atributoNombre && 
-           attr.atributoNombre !== '__new__' &&
-           !this.atributosDisponibles().some(a => a.descripcion === attr.atributoNombre);
-  }
-
-  isValorPersonalizado(attr: any): boolean {
-    if (!attr.atributoNombre || attr.atributoNombre === '__new__' || attr.valor === '__new__') {
-      return false;
-    }
-    const valoresExistentes = this.getValoresForAtributo(attr.atributoNombre);
-    return !!attr.valor && !valoresExistentes.some(v => v.descripcion === attr.valor);
-  }
-
   getValoresForAtributo(nombre: string): DropTownStandar[] {
     const attr = this.atributosDisponibles().find(a => a.descripcion === nombre);
-    return attr ? attr.valores : [];
+    return attr?.valores || [];
   }
-
-  variantesOrdenadas = computed(() => {
-    return this.variantes().map((v, i) => ({ variante: v, index: i }));
-  });
+  // ======================== GUARDAR ========================
 
   save(): void {
     this.errorMessage.set(null);
     this.loading.set(true);
 
-    const nombreTrim = this.nombre().trim();
-    if (!nombreTrim) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Falta el nombre del producto',
-        text: 'El nombre es obligatorio para identificar el producto en la tienda.',
-        confirmButtonText: 'Entendido'
-      });
-      this.loading.set(false);
+    // Validaciones previas
+    if (!this.nombre().trim()) {
+      this.mostrarAlerta('warning', 'Nombre requerido', 'El nombre del producto es obligatorio.');
       return;
     }
 
-    const slugTrim = this.slug().trim();
-    if (!slugTrim) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Slug requerido',
-        text: 'El slug forma parte de la URL del producto. Puedes generarlo automáticamente desde el nombre.',
-        confirmButtonText: 'Corregir'
-      });
-      this.loading.set(false);
+    if (!this.slug().trim()) {
+      this.mostrarAlerta('warning', 'Slug requerido', 'El slug es necesario para la URL del producto. Puedes generarlo desde el nombre.');
       return;
     }
-    if (!/^[a-z0-9-]+$/.test(slugTrim)) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Formato de slug inválido',
-        text: 'Solo se permiten letras minúsculas, números y guiones (-). Ejemplo válido: zapatillas-nike-air-2024',
-        confirmButtonText: 'Corregir'
-      });
-      this.loading.set(false);
+
+    if (!/^[a-z0-9-]+$/.test(this.slug().trim())) {
+      this.mostrarAlerta('warning', 'Slug inválido', 'Solo letras minúsculas, números y guiones (-). Ej: camiseta-nike-2025');
       return;
     }
 
     if (!this.categoriaId()) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Selecciona una categoría',
-        text: 'La categoría ayuda a organizar y mostrar el producto correctamente en la tienda.',
-        confirmButtonText: 'Seleccionar'
-      });
-      this.loading.set(false);
-      return;
-    }
-
-    if (!this.isEdit && this.auth.isAdmin() && !this.tiendaId()) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Tienda no seleccionada',
-        text: 'Como administrador, debes asignar este producto a una tienda específica.',
-        confirmButtonText: 'Seleccionar tienda'
-      });
-      this.loading.set(false);
+      this.mostrarAlerta('warning', 'Categoría obligatoria', 'Selecciona una categoría para organizar el producto.');
       return;
     }
 
     if (this.variantes().length === 0) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'No hay variantes',
-        text: 'Todo producto necesita al menos una variante con precio, stock y SKU.',
-        confirmButtonText: 'Agregar variante'
-      });
-      this.loading.set(false);
+      this.mostrarAlerta('warning', 'Faltan variantes', 'Todo producto necesita al menos una variante con precio y SKU.');
       return;
     }
 
+    // Validar cada variante
     for (let i = 0; i < this.variantes().length; i++) {
       const v = this.variantes()[i];
 
       if (!v.sku?.trim()) {
-        Swal.fire({
-          icon: 'warning',
-          title: `Variante ${i + 1}: SKU vacío`,
-          text: 'Cada variante debe tener un código SKU único (ej: ZAP-NEG-42).',
-          confirmButtonText: 'Corregir'
-        });
-        this.loading.set(false);
+        this.mostrarAlerta('warning', `Variante ${i + 1}: SKU vacío`, 'Cada variante debe tener un código único (ej: CAM-ROJ-40).');
         return;
       }
 
       if (!v.precio || v.precio <= 0) {
-        Swal.fire({
-          icon: 'warning',
-          title: `Variante ${i + 1}: Precio inválido`,
-          text: 'El precio debe ser mayor que cero.',
-          confirmButtonText: 'Corregir'
-        });
-        this.loading.set(false);
+        this.mostrarAlerta('warning', `Variante ${i + 1}: Precio inválido`, 'El precio debe ser mayor a 0.');
         return;
       }
 
       if (v.stock == null || v.stock < 0) {
-        Swal.fire({
-          icon: 'warning',
-          title: `Variante ${i + 1}: Stock inválido`,
-          text: 'El stock no puede ser negativo. Usa 0 si no hay disponibilidad.',
-          confirmButtonText: 'Corregir'
-        });
-        this.loading.set(false);
+        this.mostrarAlerta('warning', `Variante ${i + 1}: Stock inválido`, 'El stock no puede ser negativo.');
         return;
       }
 
       for (let j = 0; j < v.atributos.length; j++) {
         const a = v.atributos[j];
-        if (a.atributoNombre && !a.valor?.trim()) {
-          Swal.fire({
-            icon: 'warning',
-            title: `Variante ${i + 1}: Valor de atributo faltante`,
-            text: `Has seleccionado el atributo "${a.atributoNombre}" pero no has indicado su valor.`,
-            confirmButtonText: 'Completar'
-          });
-          this.loading.set(false);
-          return;
-        }
-        if (!a.atributoNombre?.trim() && a.valor?.trim()) {
-          Swal.fire({
-            icon: 'warning',
-            title: `Variante ${i + 1}: Atributo incompleto`,
-            text: 'Has indicado un valor pero no has seleccionado o escrito el nombre del atributo.',
-            confirmButtonText: 'Corregir'
-          });
-          this.loading.set(false);
+        if ((a.atributoNombre?.trim() && !a.valor?.trim()) || (!a.atributoNombre?.trim() && a.valor?.trim())) {
+          this.mostrarAlerta('warning', `Variante ${i + 1}: Atributo incompleto`, 'Completa tanto el atributo como su valor.');
           return;
         }
       }
@@ -455,7 +352,9 @@ eliminarImagen(index: number): void {
 
     this.enviarFormulario();
   }
-
+  variantesOrdenadas = computed(() => {
+    return this.variantes().map((v, i) => ({ variante: v, index: i }));
+  });
   private enviarFormulario(): void {
     const formData = new FormData();
 
@@ -464,12 +363,12 @@ eliminarImagen(index: number): void {
     formData.append('categoriaId', this.categoriaId()!.toString());
     formData.append('activo', this.activo().toString());
 
-    if (this.isEdit) {
-      formData.append('tiendaId', this.producto!.tiendaId.toString());
-    } else if (this.auth.isAdmin()) {
+    // Tienda: solo admin la envía
+    if (this.auth.isAdmin()) {
       formData.append('tiendaId', this.tiendaId()!.toString());
     }
 
+    // Variantes
     this.variantes().forEach((v, i) => {
       if (v.id) formData.append(`variantes[${i}].id`, v.id.toString());
       formData.append(`variantes[${i}].sku`, v.sku.trim());
@@ -484,7 +383,7 @@ eliminarImagen(index: number): void {
       }
 
       v.atributos.forEach((a, j) => {
-        if (a.atributoNombre?.trim() && a.valor?.trim() && a.atributoNombre !== '__new__') {
+        if (a.atributoNombre?.trim() && a.valor?.trim()) {
           formData.append(`variantes[${i}].atributos[${j}].atributoNombre`, a.atributoNombre.trim());
           formData.append(`variantes[${i}].atributos[${j}].valor`, a.valor.trim());
         }
@@ -500,24 +399,34 @@ eliminarImagen(index: number): void {
         this.loading.set(false);
         Swal.fire({
           icon: 'success',
-          title: '¡Guardado!',
-          text: this.isEdit ? 'Producto actualizado correctamente.' : 'Producto creado correctamente.',
+          title: '¡Éxito!',
+          text: this.isEdit ? 'Producto actualizado correctamente' : 'Producto creado exitosamente',
           timer: 2000,
           showConfirmButton: false
         });
         this.saved.emit();
       },
       error: (err) => {
-        console.error(err);
-        const mensaje = err.error?.message || 'Error al guardar el producto.';
+        this.loading.set(false);
+        const mensaje = err.error?.message || 'Error al guardar el producto. Revisa los datos.';
         Swal.fire({
           icon: 'error',
-          title: 'Error',
+          title: 'Error al guardar',
           text: mensaje,
-          confirmButtonText: 'OK'
+          confirmButtonText: 'Entendido'
         });
-        this.loading.set(false);
       }
+    });
+  }
+
+  private mostrarAlerta(icon: 'warning' | 'error' | 'info', title: string, text: string) {
+    this.loading.set(false);
+    Swal.fire({
+      icon,
+      title,
+      text,
+      confirmButtonText: 'Corregir',
+      confirmButtonColor: '#3085d6'
     });
   }
 

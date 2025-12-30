@@ -18,7 +18,6 @@ export class ProductoAdminService {
 
   constructor(private http: HttpClient) {}
 
-  // ======================== LISTAR PRODUCTOS ========================
   listarProductos(
     page: number = 0,
     size: number = 20,
@@ -34,10 +33,8 @@ export class ProductoAdminService {
       params = params.set('search', search.trim());
     }
 
-    // Ruta correcta: solo /api/owner/productos
-    return this.http.get<ProductoPage>(this.baseUrl, { params });
+    return this.http.get<ProductoPage>(this.baseUrl+"/admin-list", { params });
   }
-
   // ======================== CREAR PRODUCTO ========================
   crearProducto(request: FormData): Observable<ProductoResponse> {
     return this.http.post<ProductoResponse>(this.baseUrl, request);
