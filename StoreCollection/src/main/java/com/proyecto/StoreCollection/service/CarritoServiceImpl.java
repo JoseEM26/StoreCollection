@@ -8,6 +8,7 @@ import com.proyecto.StoreCollection.repository.*;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 @Service
@@ -177,40 +179,82 @@ public class CarritoServiceImpl implements CarritoService {
             sendToCustomer(boleta, customerEmail);
         }
     }
+    private JavaMailSender getConfiguredMailSender(Tienda tienda) {
+        String authEmail = tienda.getUser().getEmail(); // siempre usamos el email del usuario para autenticación
+        String appPassword = tienda.getEmailAppPassword();
 
-    private void sendToOwner(Boleta boleta, String toEmail) {
+        // Si no hay contraseña de app configurada → usamos el mailSender global (por ahora)
+        if (appPassword == null || appPassword.trim().isEmpty()) {
+            return mailSender; // ← el que inyectaste por Spring (application.yml)
+        }
+
+        // Creamos un sender específico para esta tienda
+        JavaMailSenderImpl customSender = new JavaMailSenderImpl();
+        customSender.setHost("smtp.gmail.com");
+        customSender.setPort(587);
+
+        customSender.setUsername(authEmail);
+        customSender.setPassword(appPassword);
+
+        Properties props = customSender.getJavaMailProperties();
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.starttls.required", "true");
+        // Opcional: props.put("mail.debug", "true"); // para depuración
+
+        return customSender;
+    }private void sendToOwner(Boleta boleta, String toEmail) {
+        Tienda tienda = boleta.getTienda();
+        JavaMailSender sender = getConfiguredMailSender(tienda);
+
         try {
-            MimeMessage msg = mailSender.createMimeMessage();
+            MimeMessage msg = sender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
 
-            helper.setFrom("StoreCollection <joseangelespinozamorales@hotmail.com>");
+            // Prioridad: email_remitente de la tienda > email del usuario
+            String fromEmail = tienda.getEmailRemitente() != null && !tienda.getEmailRemitente().trim().isEmpty()
+                    ? tienda.getEmailRemitente()
+                    : tienda.getUser().getEmail();
+
+            String fromName = tienda.getNombre(); // o "Tienda " + tienda.getNombre()
+
+            helper.setFrom(fromEmail, fromName); // ← formato profesional: "Tienda X <ventas@mitienda.com>"
             helper.setTo(toEmail);
-            helper.setSubject("¡NUEVO PEDIDO! #" + boleta.getId() + " - " + boleta.getTienda().getNombre());
+            helper.setSubject("¡NUEVO PEDIDO! #" + boleta.getId() + " - " + tienda.getNombre());
 
             String html = buildEmailHtmlForOwner(boleta);
             helper.setText(html, true);
 
-            mailSender.send(msg);
-            System.out.println("Email enviado al dueño: " + toEmail);
+            sender.send(msg);
+            System.out.println("Email enviado al dueño: " + toEmail + " desde: " + fromEmail);
         } catch (Exception e) {
             System.err.println("Error enviando email al dueño (" + toEmail + "): " + e.getMessage());
         }
     }
 
     private void sendToCustomer(Boleta boleta, String toEmail) {
+        Tienda tienda = boleta.getTienda();
+        JavaMailSender sender = getConfiguredMailSender(tienda);
+
         try {
-            MimeMessage msg = mailSender.createMimeMessage();
+            MimeMessage msg = sender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
 
-            helper.setFrom("StoreCollection <joseangelespinozamorales@hotmail.com>");
+            String fromEmail = tienda.getEmailRemitente() != null && !tienda.getEmailRemitente().trim().isEmpty()
+                    ? tienda.getEmailRemitente()
+                    : tienda.getUser().getEmail();
+
+            String fromName = tienda.getNombre();
+
+            helper.setFrom(fromEmail, fromName);
             helper.setTo(toEmail);
-            helper.setSubject("¡Gracias por tu compra! Pedido #" + boleta.getId());
+            helper.setSubject("¡Gracias por tu compra! Pedido #" + boleta.getId() + " - " + tienda.getNombre());
 
             String html = buildEmailHtmlForCustomer(boleta);
             helper.setText(html, true);
 
-            mailSender.send(msg);
-            System.out.println("Email de confirmación enviado al cliente: " + toEmail);
+            sender.send(msg);
+            System.out.println("Email de confirmación enviado al cliente: " + toEmail + " desde: " + fromEmail);
         } catch (Exception e) {
             System.err.println("Error enviando email de confirmación al cliente (" + toEmail + "): " + e.getMessage());
         }

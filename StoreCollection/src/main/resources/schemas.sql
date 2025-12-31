@@ -63,6 +63,8 @@ CREATE TABLE tienda (
     activo BOOLEAN DEFAULT TRUE NOT NULL,
     user_id INT NOT NULL,
     plan_id INT NOT NULL,
+    email_remitente      VARCHAR(150)          NULL,          -- ej: dueno@mitienda.com
+    email_app_password   VARCHAR(255)          NULL,          -- ¡Nunca en texto plano en producción!
     FOREIGN KEY (user_id) REFERENCES usuario(id) ON DELETE CASCADE,
     FOREIGN KEY (plan_id) REFERENCES plan(id) ON DELETE CASCADE
 );
