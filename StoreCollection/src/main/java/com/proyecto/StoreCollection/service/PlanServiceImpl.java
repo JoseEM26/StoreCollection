@@ -32,11 +32,10 @@ public class PlanServiceImpl implements PlanService {
     /** Admin: todos los planes activos paginados */
     @Override
     public Page<PlanResponse> findAll(Pageable pageable) {
-        return repository.findByActivoTrue(pageable)
+        return repository.findAll(pageable)
                 .map(this::toResponse);
     }
 
-    /** Público: solo planes activos y visibles al público */
     @Override
     public Page<PlanResponse> findAllPublicos(Pageable pageable) {
         return repository.findByActivoTrueAndEsVisiblePublicoTrue(pageable)

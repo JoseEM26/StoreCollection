@@ -1,9 +1,9 @@
 server:
   port: 8080
   tomcat:
-    max-part-count: 100          # ← ¡Esta es la propiedad correcta! (con guiones)
-    max-swallow-size: -1         # importante para no cortar uploads grandes
-    max-parameter-count: 10000   # por si acaso (default suele ser 10000)
+    max-part-count: 100
+    max-swallow-size: -1
+    max-parameter-count: 10000
 
 spring:
   datasource:
@@ -30,7 +30,7 @@ spring:
   mvc:
     formcontent:
       filter:
-        enabled: false   # ← ¡CLAVE PRINCIPAL! Desactiva el filtro que causa el error
+        enabled: false
 
   mail:
     host: smtp.gmail.com
