@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 @Transactional
 public class CarritoServiceImpl implements CarritoService {
 
-    private final JavaMailSender mailSender;
     private final CarritoRepository repository;
     private final ProductoVarianteRepository varianteRepository;
     private final BoletaRepository boletaRepository;
@@ -168,57 +167,107 @@ public class CarritoServiceImpl implements CarritoService {
     // ===================== EMAILS =====================
 
     private void sendEmailNotifications(Boleta boleta) {
-        String ownerEmail = boleta.getTienda().getUser().getEmail();
+        Tienda tienda = boleta.getTienda();
+
+        // Creamos el sender DINÁMICO usando las credenciales de ESTA TIENDA
+        JavaMailSender sender = createMailSenderForTienda(tienda);
+
+        String ownerEmail = tienda.getUser().getEmail();
         String customerEmail = boleta.getCompradorEmail();
 
-        // Siempre enviamos al dueño
-        sendToOwner(boleta, ownerEmail);
-
-        // Enviamos al cliente solo si hay email válido
+        sendToOwner(boleta, ownerEmail, sender);
         if (customerEmail != null && !customerEmail.trim().isEmpty() && customerEmail.contains("@")) {
-            sendToCustomer(boleta, customerEmail);
+            sendToCustomer(boleta, customerEmail, sender);
         }
     }
-    private JavaMailSender getConfiguredMailSender(Tienda tienda) {
-        String authEmail = tienda.getUser().getEmail(); // siempre usamos el email del usuario para autenticación
-        String appPassword = tienda.getEmailAppPassword();
-
-        // Si no hay contraseña de app configurada → usamos el mailSender global (por ahora)
-        if (appPassword == null || appPassword.trim().isEmpty()) {
-            return mailSender; // ← el que inyectaste por Spring (application.yml)
+    private JavaMailSender createMailSenderForTienda(Tienda tienda) {
+        // Validación básica
+        if (tienda.getEmailRemitente() == null || tienda.getEmailAppPassword() == null ||
+                tienda.getEmailRemitente().trim().isEmpty() || tienda.getEmailAppPassword().trim().isEmpty()) {
+            throw new IllegalStateException("La tienda " + tienda.getNombre() +
+                    " no tiene configurado correo y contraseña de aplicación");
         }
 
-        // Creamos un sender específico para esta tienda
+        JavaMailSenderImpl sender = new JavaMailSenderImpl();
+        sender.setHost("smtp.gmail.com");
+        sender.setPort(587);
+
+        // Usamos el correo y contraseña de la TIENDA
+        sender.setUsername(tienda.getEmailRemitente());
+        sender.setPassword(tienda.getEmailAppPassword());
+
+        Properties props = sender.getJavaMailProperties();
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.starttls.required", "true");
+
+        // Opcional: para debug en desarrollo
+        // props.put("mail.debug", "true");
+
+        return sender;
+    }
+    private JavaMailSender getTiendaMailSender(Tienda tienda) {
+        if (tienda.getEmailRemitente() == null || tienda.getEmailAppPassword() == null) {
+            throw new IllegalStateException("La tienda no tiene configurado correo y contraseña de aplicación");
+        }
+
+        JavaMailSenderImpl sender = new JavaMailSenderImpl();
+        sender.setHost("smtp.gmail.com");
+        sender.setPort(587);
+
+        sender.setUsername(tienda.getEmailRemitente());
+        sender.setPassword(tienda.getEmailAppPassword());
+
+        Properties props = sender.getJavaMailProperties();
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.starttls.required", "true");
+
+        return sender;
+    }
+    private JavaMailSender getConfiguredMailSender(Tienda tienda) {
+        String authEmail = tienda.getUser().getEmail(); // email de autenticación (del usuario)
+        String appPassword = tienda.getEmailAppPassword();
+
+        // Validación estricta: si no hay credenciales configuradas → error claro
+        if (appPassword == null || appPassword.trim().isEmpty()) {
+            throw new IllegalStateException(
+                    "La tienda '" + tienda.getNombre() +
+                            "' no tiene configurada contraseña de aplicación de Gmail. " +
+                            "El dueño debe configurarla en su perfil."
+            );
+        }
+
+        // Creamos un sender específico para ESTA tienda
         JavaMailSenderImpl customSender = new JavaMailSenderImpl();
         customSender.setHost("smtp.gmail.com");
         customSender.setPort(587);
 
-        customSender.setUsername(authEmail);
-        customSender.setPassword(appPassword);
+        customSender.setUsername(authEmail);      // ← email del usuario (autenticación)
+        customSender.setPassword(appPassword);    // ← contraseña de app de la tienda
 
         Properties props = customSender.getJavaMailProperties();
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
         props.put("mail.smtp.starttls.required", "true");
-        // Opcional: props.put("mail.debug", "true"); // para depuración
+
+        // Opcional (útil para debug):
+        // props.put("mail.debug", "true");
 
         return customSender;
-    }private void sendToOwner(Boleta boleta, String toEmail) {
-        Tienda tienda = boleta.getTienda();
-        JavaMailSender sender = getConfiguredMailSender(tienda);
+    }
 
+    private void sendToOwner(Boleta boleta, String toEmail, JavaMailSender sender) {
         try {
             MimeMessage msg = sender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
 
-            // Prioridad: email_remitente de la tienda > email del usuario
-            String fromEmail = tienda.getEmailRemitente() != null && !tienda.getEmailRemitente().trim().isEmpty()
+            Tienda tienda = boleta.getTienda();
+            String fromEmail = tienda.getEmailRemitente() != null && !tienda.getEmailRemitente().isBlank()
                     ? tienda.getEmailRemitente()
                     : tienda.getUser().getEmail();
 
-            String fromName = tienda.getNombre(); // o "Tienda " + tienda.getNombre()
-
-            helper.setFrom(fromEmail, fromName); // ← formato profesional: "Tienda X <ventas@mitienda.com>"
+            helper.setFrom(fromEmail, tienda.getNombre());
             helper.setTo(toEmail);
             helper.setSubject("¡NUEVO PEDIDO! #" + boleta.getId() + " - " + tienda.getNombre());
 
@@ -232,21 +281,17 @@ public class CarritoServiceImpl implements CarritoService {
         }
     }
 
-    private void sendToCustomer(Boleta boleta, String toEmail) {
-        Tienda tienda = boleta.getTienda();
-        JavaMailSender sender = getConfiguredMailSender(tienda);
-
+    private void sendToCustomer(Boleta boleta, String toEmail, JavaMailSender sender) {
         try {
             MimeMessage msg = sender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
 
-            String fromEmail = tienda.getEmailRemitente() != null && !tienda.getEmailRemitente().trim().isEmpty()
+            Tienda tienda = boleta.getTienda();
+            String fromEmail = tienda.getEmailRemitente() != null && !tienda.getEmailRemitente().isBlank()
                     ? tienda.getEmailRemitente()
                     : tienda.getUser().getEmail();
 
-            String fromName = tienda.getNombre();
-
-            helper.setFrom(fromEmail, fromName);
+            helper.setFrom(fromEmail, tienda.getNombre());
             helper.setTo(toEmail);
             helper.setSubject("¡Gracias por tu compra! Pedido #" + boleta.getId() + " - " + tienda.getNombre());
 
@@ -256,7 +301,7 @@ public class CarritoServiceImpl implements CarritoService {
             sender.send(msg);
             System.out.println("Email de confirmación enviado al cliente: " + toEmail + " desde: " + fromEmail);
         } catch (Exception e) {
-            System.err.println("Error enviando email de confirmación al cliente (" + toEmail + "): " + e.getMessage());
+            System.err.println("Error enviando email al cliente (" + toEmail + "): " + e.getMessage());
         }
     }
 
