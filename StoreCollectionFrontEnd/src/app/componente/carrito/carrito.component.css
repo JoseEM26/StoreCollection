@@ -1,113 +1,68 @@
-/* src/app/componente/carrito/carrito.component.css */
-
-.card {
-  border-radius: 1rem;
-  overflow: hidden;
-}
-
-.hover-bg-light:hover {
-  background-color: #f8fafc !important;
-  transition: background-color 0.2s ease;
-}
-
-.btn-whatsapp {
-  background-color: #25d366;
-  color: white;
-  border: none;
-}
-
-.btn-whatsapp:hover {
-  background-color: #128c7e;
-  color: white;
-}
-
-.btn-success {
-  background: #16a34a;
-}
-
-.btn-success:hover {
-  background: #15803d;
-}
-
-.badge {
-  font-size: 0.85rem;
-  padding: 0.5em 0.8em;
-}
-
-.img-fluid {
-  transition: transform 0.3s ease;
-}
-
-.img-fluid:hover {
-  transform: scale(1.08);
-}
-
-hr {
-  opacity: 0.3;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .row.g-5 {
-    row-gap: 2rem;
-  }
-}/* ... mantener lo que ya tienes y agregar/mejorar ... */
-
-.card {
-  border: none;
-  border-radius: 1.25rem;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08) !important;
-  transition: all 0.3s ease;
-}
-
-.card:hover {
-  box-shadow: 0 15px 40px rgba(0,0,0,0.12) !important;
-}
-
+/* Gradiente verde WhatsApp premium */
 .btn-whatsapp {
   background: linear-gradient(135deg, #25d366 0%, #20b958 100%);
   border: none;
+  color: white;
   font-weight: 600;
-  transition: all 0.25s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 25px rgba(37, 211, 102, 0.3);
 }
 
 .btn-whatsapp:hover {
   background: linear-gradient(135deg, #128c7e 0%, #0f7a6d 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(37, 211, 102, 0.35);
+  transform: translateY(-3px);
+  box-shadow: 0 15px 40px rgba(37, 211, 102, 0.45);
 }
 
-.btn-success {
-  background: linear-gradient(135deg, #198754 0%, #157347 100%);
-  border: none;
-  font-weight: 600;
-  transition: all 0.25s ease;
-}
-
-.btn-success:hover {
-  background: linear-gradient(135deg, #146c43 0%, #115c37 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(25, 135, 84, 0.35);
-}
-
+/* Hover effect en items */
 .product-item {
-  transition: all 0.25s ease;
+  transition: all 0.3s ease;
 }
 
 .product-item:hover {
-  background-color: #f8f9fa;
-  transform: translateX(6px);
+  background: rgba(25, 135, 84, 0.05);
+  transform: translateX(8px);
 }
 
-.quantity-btn {
-  width: 42px;
-  font-weight: bold;
+/* Quantity control */
+.quantity-control {
+  background: white;
+  border: 1px solid #ced4da;
 }
 
-.btn-outline-danger {
-  transition: all 0.2s ease;
+.quantity-control button {
+  background: transparent;
+  border: none;
+  color: #495057;
+  font-size: 1.2rem;
 }
 
-.btn-outline-danger:hover {
-  background-color: #dc35451a;
+/* Avatar y glow */
+.avatar-circle {
+  width: 70px;
+  height: 70px;
+  border-radius: 1.5rem;
+  background: linear-gradient(135deg, #198754, #2ecc71);
+  box-shadow: 0 8px 25px rgba(25, 135, 84, 0.35);
+}
+
+/* Card premium */
+.card {
+  border-radius: 1.5rem;
+  overflow: hidden;
+  transition: all 0.4s ease;
+}
+
+.card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.12) !important;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .row.g-5 { row-gap: 3rem; }
+}
+
+@media (max-width: 576px) {
+  .btn-lg { width: 100%; margin-bottom: 1rem; }
 }

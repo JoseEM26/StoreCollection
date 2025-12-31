@@ -1,79 +1,95 @@
 <div class="container py-5">
-  <h2 class="fw-bold text-center mb-5 text-dark">
-    <i class="bi bi-cart4 me-3"></i> Mi Carrito
-  </h2>
-
-  @if (loading) {
-    <div class="text-center py-5">
-      <div class="spinner-border text-success" role="status">
-        <span class="visually-hidden">Cargando carrito...</span>
-      </div>
+  <!-- Header -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-5 gap-4">
+    <div class="text-center text-md-start">
+      <h1 class="display-5 fw-bold mb-1" style="background: linear-gradient(90deg, #198754, #2ecc71); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+        <i class="bi bi-cart4 me-3"></i> Mi Carrito
+      </h1>
+      <p class="text-muted fs-5 mb-0">
+        {{ totalItems }} productos • Total: 
+        <strong class="text-success">S/ {{ totalPrecio | number:'1.2-2' }}</strong>
+      </p>
     </div>
-  } @else if (items.length === 0) {
-    <div class="text-center py-5 bg-light rounded-4 shadow-sm">
-      <i class="bi bi-cart-x display-1 text-muted mb-4"></i>
-      <h4 class="text-muted">Tu carrito está vacío</h4>
-      <p class="text-muted mb-4">¡Agrega productos increíbles desde el catálogo!</p>
-      <a [routerLink]="['../catalogo']" class="btn btn-success btn-lg px-5">
-        <i class="bi bi-shop me-2"></i> Explorar productos
+
+    <div class="d-flex gap-3 flex-wrap justify-content-center">
+      <button class="btn btn-success btn-lg rounded-pill px-5 shadow-lg" 
+              (click)="abrirFormularioCheckout()"
+              [disabled]="loading || items.length === 0 || isProcessingOnline">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        Confirmar Pedido (Online)
+      </button>
+
+      <button class="btn btn-whatsapp btn-lg rounded-pill px-5 shadow-lg" 
+              (click)="checkoutWhatsapp()"
+              [disabled]="loading || items.length === 0 || isProcessingWhatsapp">
+        <i class="bi bi-whatsapp me-2"></i>
+        Enviar por WhatsApp
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center py-5 my-5">
+    <div class="spinner-grow text-success" style="width: 5rem; height: 5rem;" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+    <h4 class="mt-4 fw-bold text-success">Cargando tu carrito...</h4>
+  </div>
+
+  <!-- Empty State -->
+  <ng-container *ngIf="!loading">
+    <div *ngIf="items.length === 0" class="text-center py-5 my-5 bg-light rounded-4 shadow-sm">
+      <i class="bi bi-cart-x display-1 text-success opacity-50 mb-4"></i>
+      <h3 class="fw-bold text-dark mb-3">Tu carrito está vacío</h3>
+      <p class="lead text-muted mb-4">¡Descubre productos increíbles y llénalo!</p>
+      <a routerLink="/catalogo" class="btn btn-outline-success btn-lg px-5 rounded-pill">
+        <i class="bi bi-arrow-left-circle me-2"></i> Explorar catálogo
       </a>
     </div>
-  } @else {
-    <div class="row g-5">
-      <!-- Lista de productos -->
+
+    <!-- Lista de productos + Resumen -->
+    <div *ngIf="items.length > 0" class="row g-5">
+      <!-- Productos -->
       <div class="col-lg-8">
-        <div class="card shadow border-0 rounded-4 overflow-hidden">
-          <div class="card-header bg-white border-0 py-3">
-            <h5 class="mb-0 fw-bold">Productos seleccionados ({{ totalItems }})</h5>
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+          <div class="card-header bg-white border-0 py-4">
+            <h5 class="mb-0 fw-bold text-success">
+              <i class="bi bi-basket2-fill me-2"></i>
+              Productos seleccionados ({{ totalItems }})
+            </h5>
           </div>
+
           <div class="card-body p-0">
             @for (item of items; track item.id) {
-              <div class="p-4 border-bottom hover-bg-light transition-all">
+              <div class="product-item p-4 border-bottom hover-bg-light transition-all">
                 <div class="row align-items-center g-4">
                   <!-- Imagen -->
-                  <div class="col-4 col-md-3 col-lg-2">
-                    <img [src]="item.imagenUrl || 'https://via.placeholder.com/220x220?text=Producto'"
-                         [alt]="item.nombreProducto"
-                         class="img-fluid rounded-4 shadow-sm"
-                         style="height: 140px; object-fit: cover; width: 100%;">
+                  <div class="col-4 col-md-3">
+                    <div class="ratio ratio-1x1 rounded-4 overflow-hidden shadow-sm">
+                      <img 
+                        [src]="item.imagenUrl || 'https://via.placeholder.com/300x300?text=Producto'"
+                        [alt]="item.nombreProducto"
+                        class="img-fluid object-fit-cover"
+                      />
+                    </div>
                   </div>
 
                   <!-- Detalles -->
-                  <div class="col-8 col-md-9 col-lg-10">
+                  <div class="col-8 col-md-9">
                     <div class="d-flex justify-content-between align-items-start">
-                      <div class="flex-grow-1">
+                      <div>
                         <h6 class="fw-bold mb-1">{{ item.nombreProducto }}</h6>
-                        <small class="text-muted">SKU: {{ item.sku || '—' }}</small>
+                        <small class="text-muted d-block mb-2">SKU: {{ item.sku || '—' }}</small>
 
                         @if (item.atributos?.length) {
-                          <div class="mt-2 flex-wrap d-flex gap-2">
+                          <div class="d-flex flex-wrap gap-2 mb-3">
                             @for (attr of item.atributos; track attr.id) {
                               <span class="badge bg-light text-dark border">
-                                <strong>{{ attr.nombre }}:</strong> {{ attr.valor }}
+                                {{ attr.nombre }}: {{ attr.valor }}
                               </span>
                             }
                           </div>
                         }
-
-                        <div class="mt-3 d-flex align-items-center gap-3">
-                          <div class="d-flex align-items-center border rounded-3 bg-white">
-                            <button class="btn btn-outline-secondary btn-sm rounded-0 px-3"
-                                    (click)="actualizarCantidad(item.id, -1)"
-                                    [disabled]="item.cantidad <= 1">
-                              <i class="bi bi-dash-lg"></i>
-                            </button>
-                            <span class="px-4 fw-bold fs-5">{{ item.cantidad }}</span>
-                            <button class="btn btn-outline-secondary btn-sm rounded-0 px-3"
-                                    (click)="actualizarCantidad(item.id, 1)">
-                              <i class="bi bi-plus-lg"></i>
-                            </button>
-                          </div>
-
-                          <button class="btn btn-link text-danger p-0 small fw-medium"
-                                  (click)="eliminarItem(item.id)">
-                            <i class="bi bi-trash me-1"></i> Eliminar
-                          </button>
-                        </div>
                       </div>
 
                       <div class="text-end">
@@ -83,76 +99,98 @@
                         <small class="text-muted">S/ {{ item.precio | number:'1.2-2' }} c/u</small>
                       </div>
                     </div>
+
+                    <!-- Cantidad y eliminar -->
+                    <div class="d-flex align-items-center gap-3 mt-3">
+                      <div class="quantity-control d-flex align-items-center border rounded-pill overflow-hidden">
+                        <button class="btn btn-outline-secondary px-3 py-1" 
+                                (click)="actualizarCantidad(item.id, -1)"
+                                [disabled]="item.cantidad <= 1">
+                          <i class="bi bi-dash-lg"></i>
+                        </button>
+                        <span class="px-4 fw-bold fs-5">{{ item.cantidad }}</span>
+                        <button class="btn btn-outline-secondary px-3 py-1" 
+                                (click)="actualizarCantidad(item.id, 1)">
+                          <i class="bi bi-plus-lg"></i>
+                        </button>
+                      </div>
+
+                      <button class="btn btn-link text-danger p-0" (click)="eliminarItem(item.id)">
+                        <i class="bi bi-trash me-1"></i> Eliminar
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             }
           </div>
 
-          <div class="card-footer bg-white text-end py-3">
-            <button class="btn btn-outline-danger" (click)="vaciarCarrito()">
+          <div class="card-footer bg-white border-0 text-end py-4">
+            <button class="btn btn-outline-danger rounded-pill px-5" (click)="vaciarCarrito()">
               <i class="bi bi-trash me-2"></i> Vaciar carrito
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Resumen y checkout -->
+      <!-- Resumen -->
       <div class="col-lg-4">
-        <div class="card shadow border-0 rounded-4 sticky-top" style="top: 100px;">
+        <div class="card border-0 shadow-lg rounded-4 sticky-top" style="top: 100px;">
           <div class="card-body p-4">
-            <h5 class="fw-bold mb-4">Resumen del pedido</h5>
+            <h5 class="fw-bold mb-4 text-success">
+              <i class="bi bi-receipt me-2"></i> Resumen del pedido
+            </h5>
 
             <div class="d-flex justify-content-between mb-3 text-muted">
               <span>Productos ({{ totalItems }})</span>
               <span>S/ {{ totalPrecio | number:'1.2-2' }}</span>
             </div>
 
-            <hr>
+            <hr class="my-3">
 
-            <div class="d-flex justify-content-between mb-4 fw-bold fs-4 text-success">
-              <span>Total a pagar</span>
-              <span>S/ {{ totalPrecio | number:'1.2-2' }}</span>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h4 class="fw-bold text-dark mb-0">Total a pagar</h4>
+              <h3 class="fw-bold text-success mb-0">S/ {{ totalPrecio | number:'1.2-2' }}</h3>
             </div>
 
-            <!-- Botón Confirmar pedido Online -->
-            <button class="btn btn-success btn-lg w-100 mb-3 shadow-sm py-3"
-                    (click)="abrirFormularioCheckout()"
-                    [disabled]="isProcessingOnline || isProcessingWhatsapp || loading || items.length === 0">
-              <span *ngIf="isProcessingOnline" class="spinner-border spinner-border-sm me-2"></span>
-              <i class="bi bi-check-circle-fill me-2"></i>
-              {{ isProcessingOnline ? 'Procesando...' : 'Confirmar pedido (Online)' }}
-            </button>
+            <div class="d-grid gap-3">
+              <button class="btn btn-success btn-lg rounded-pill shadow" 
+                      (click)="abrirFormularioCheckout()"
+                      [disabled]="isProcessingOnline">
+                <i class="bi bi-credit-card-2-front-fill me-2"></i>
+                Pagar Online
+              </button>
 
-            <!-- Botón Enviar por WhatsApp -->
-            <button class="btn btn-whatsapp btn-lg w-100 shadow-sm py-3"
-                    (click)="checkoutWhatsapp()"
-                    [disabled]="isProcessingWhatsapp || isProcessingOnline || loading || items.length === 0">
-              <span *ngIf="isProcessingWhatsapp" class="spinner-border spinner-border-sm me-2"></span>
-              <i class="bi bi-whatsapp me-2"></i>
-              {{ isProcessingWhatsapp ? 'Generando enlace...' : 'Enviar por WhatsApp' }}
-            </button>
+              <button class="btn btn-whatsapp btn-lg rounded-pill shadow" 
+                      (click)="checkoutWhatsapp()"
+                      [disabled]="isProcessingWhatsapp">
+                <i class="bi bi-whatsapp me-2"></i>
+                Enviar por WhatsApp
+              </button>
+            </div>
+
             <hr class="my-4">
 
-            <a [routerLink]="['../catalogo']" class="btn btn-outline-secondary w-100">
-              <i class="bi bi-arrow-left me-2"></i> Seguir comprando
+            <a routerLink="/catalogo" class="btn btn-outline-secondary w-100 rounded-pill">
+              <i class="bi bi-arrow-left-circle me-2"></i> Seguir comprando
             </a>
           </div>
         </div>
       </div>
     </div>
-  }
+  </ng-container>
 </div>
 
-<!-- MODAL CON FORMULARIO DE CHECKOUT -->
+<!-- Modal Checkout -->
 <div class="modal fade" tabindex="-1" [class.show]="showCheckoutModal" [style.display]="showCheckoutModal ? 'block' : 'none'" (click)="cerrarFormularioCheckout()">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title">Completa tus datos para el envío</h5>
-        <button type="button" class="btn-close btn-close-white" (click)="cerrarFormularioCheckout()" aria-label="Close"></button>
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow-5 rounded-4 overflow-hidden" (click)="$event.stopPropagation()">
+      <div class="modal-header bg-gradient-success text-white border-0">
+        <h5 class="modal-title fw-bold fs-4">
+          <i class="bi bi-truck me-2"></i> Finalizar tu pedido
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="cerrarFormularioCheckout()"></button>
       </div>
-
       <div class="modal-body p-0">
         <app-checkout-form 
           [tiendaId]="tiendaId"
@@ -164,5 +202,5 @@
   </div>
 </div>
 
-<!-- Backdrop manual -->
+<!-- Backdrop -->
 <div class="modal-backdrop fade show" *ngIf="showCheckoutModal" (click)="cerrarFormularioCheckout()"></div>

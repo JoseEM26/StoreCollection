@@ -1,5 +1,6 @@
 package com.proyecto.StoreCollection.service;
 
+import com.proyecto.StoreCollection.Exceptions.MissingEmailConfigException;
 import com.proyecto.StoreCollection.dto.request.BoletaRequest;
 import com.proyecto.StoreCollection.dto.request.CarritoRequest;
 import com.proyecto.StoreCollection.dto.response.*;
@@ -181,13 +182,15 @@ public class CarritoServiceImpl implements CarritoService {
         }
     }
     private JavaMailSender createMailSenderForTienda(Tienda tienda) {
-        // Validación básica
         if (tienda.getEmailRemitente() == null || tienda.getEmailAppPassword() == null ||
                 tienda.getEmailRemitente().trim().isEmpty() || tienda.getEmailAppPassword().trim().isEmpty()) {
-            throw new IllegalStateException("La tienda " + tienda.getNombre() +
-                    " no tiene configurado correo y contraseña de aplicación");
-        }
 
+            throw new MissingEmailConfigException(
+                    "La tienda '" + tienda.getNombre() +
+                            "' no tiene configurado correo y contraseña de aplicación de Gmail. " +
+                            "El dueño debe ingresarlos en la edición de tienda para poder enviar correos."
+            );
+        }
         JavaMailSenderImpl sender = new JavaMailSenderImpl();
         sender.setHost("smtp.gmail.com");
         sender.setPort(587);
@@ -229,12 +232,11 @@ public class CarritoServiceImpl implements CarritoService {
         String authEmail = tienda.getUser().getEmail(); // email de autenticación (del usuario)
         String appPassword = tienda.getEmailAppPassword();
 
-        // Validación estricta: si no hay credenciales configuradas → error claro
         if (appPassword == null || appPassword.trim().isEmpty()) {
-            throw new IllegalStateException(
+            throw new MissingEmailConfigException(
                     "La tienda '" + tienda.getNombre() +
                             "' no tiene configurada contraseña de aplicación de Gmail. " +
-                            "El dueño debe configurarla en su perfil."
+                            "El dueño debe configurarla para poder enviar correos."
             );
         }
 

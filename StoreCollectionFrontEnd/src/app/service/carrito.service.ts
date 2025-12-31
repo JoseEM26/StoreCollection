@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap, catchError } from 'rxjs';
+import { BehaviorSubject, Observable, tap, catchError, throwError } from 'rxjs';
 import { CarritoSessionService } from './carrito-session.service';
 import { 
   CarritoItemResponse, 
@@ -145,15 +145,18 @@ checkoutOnline(
       tipoEntrega: datosComprador.tipoEntrega
     };
 
-    console.log('ENVIANDO checkoutOnline (completo):', JSON.stringify(request, null, 2));
-
-    return this.http.post<BoletaResponse>(`${this.apiUrl}/checkout/online`, request).pipe(
-      tap(() => this.cargarCarritoDesdeBackend()),
-      catchError(err => {
-        console.error('Error checkout online:', err);
-        throw err;
-      })
-    );
+   return this.http.post<BoletaResponse>(`${this.apiUrl}/checkout/online`, request).pipe(
+    tap(() => this.cargarCarritoDesdeBackend()),
+    catchError(err => {
+      if (err.status === 400 && err.error?.error === 'MISSING_EMAIL_CONFIG') {
+        return throwError(() => ({
+          type: 'missing_email_config',
+          message: err.error.message || 'Falta configurar tu correo y contraseña de aplicación'
+        }));
+      }
+      return throwError(() => err);
+    })
+  );
   }
 
 checkoutWhatsapp(

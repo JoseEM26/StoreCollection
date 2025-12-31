@@ -45,32 +45,65 @@ export class CarritoComponent implements OnInit, OnDestroy {
     this.carritoService.cargarCarritoDesdeBackend();
   }
 
-  // ── Métodos auxiliares ──────────────────────────────────────────
-  private showError(message: string = 'Ocurrió un error inesperado'): void {
-    Swal.fire({ icon: 'error', title: '¡Ups!', text: message, timer: 3500 });
+  // ── Métodos auxiliares con SweetAlert bonito ────────────────────────
+  private showSuccess(title: string, text: string): void {
+    Swal.fire({
+      icon: 'success',
+      title,
+      text,
+      timer: 3000,
+      timerProgressBar: true,
+      showConfirmButton: false,
+      toast: true,
+      position: 'top-end'
+    });
   }
 
-  private showSuccess(title: string, message: string): void {
-    Swal.fire({ icon: 'success', title, text: message, timer: 3500, showConfirmButton: false });
+  private showError(title: string, text: string): void {
+    Swal.fire({
+      icon: 'error',
+      title,
+      text,
+      confirmButtonColor: '#d33'
+    });
   }
 
-  // ── Acciones del carrito ────────────────────────────────────────
-  async eliminarItem(itemId: number): Promise<void> {
-    const { isConfirmed } = await Swal.fire({
-      title: '¿Eliminar producto?',
-      text: "No podrás revertir esto",
+  private showWarning(title: string, text: string): void {
+    Swal.fire({
       icon: 'warning',
+      title,
+      text,
+      confirmButtonColor: '#fd7e14'
+    });
+  }
+
+  private async showConfirm(title: string, text: string, confirmText: string = 'Sí'): Promise<boolean> {
+    const result = await Swal.fire({
+      title,
+      text,
+      icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Sí, eliminar',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: confirmText,
       cancelButtonText: 'Cancelar'
     });
+    return result.isConfirmed;
+  }
 
-    if (!isConfirmed) return;
+  // ── Acciones del carrito ────────────────────────────────────────────
+  async eliminarItem(itemId: number): Promise<void> {
+    const confirmed = await this.showConfirm(
+      '¿Eliminar producto?',
+      'No podrás revertir esta acción',
+      'Sí, eliminar'
+    );
+
+    if (!confirmed) return;
 
     this.carritoService.eliminarItem(itemId).subscribe({
-      error: () => this.showError('No pudimos eliminar el producto')
+      next: () => this.showSuccess('Eliminado', 'El producto fue removido del carrito'),
+      error: () => this.showError('Error', 'No pudimos eliminar el producto')
     });
   }
 
@@ -86,34 +119,30 @@ export class CarritoComponent implements OnInit, OnDestroy {
     }
 
     this.carritoService.actualizarCantidad(itemId, nuevaCantidad).subscribe({
-      error: () => this.showError('No pudimos actualizar la cantidad')
+      next: () => this.showSuccess('Actualizado', 'Cantidad modificada correctamente'),
+      error: () => this.showError('Error', 'No pudimos actualizar la cantidad')
     });
   }
 
   async vaciarCarrito(): Promise<void> {
-    const { isConfirmed } = await Swal.fire({
-      title: '¿Vaciar carrito?',
-      text: 'Se eliminarán todos los productos',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Sí, vaciar',
-      cancelButtonText: 'Cancelar'
-    });
+    const confirmed = await this.showConfirm(
+      '¿Vaciar carrito completo?',
+      'Se eliminarán todos los productos',
+      'Sí, vaciar todo'
+    );
 
-    if (!isConfirmed) return;
+    if (!confirmed) return;
 
     this.carritoService.vaciarCarrito().subscribe({
-      next: () => this.showSuccess('¡Listo!', 'El carrito ha sido vaciado'),
-      error: () => this.showError('No pudimos vaciar el carrito')
+      next: () => this.showSuccess('¡Carrito vacío!', 'Todos los productos han sido eliminados'),
+      error: () => this.showError('Error', 'No pudimos vaciar el carrito')
     });
   }
 
-  // ── Checkout Online con formulario modal ─────────────────────────
+  // ── Checkout Online con formulario modal ────────────────────────────
   abrirFormularioCheckout(): void {
     if (this.items.length === 0) {
-      Swal.fire({ icon: 'info', title: 'Carrito vacío', timer: 2200 });
+      this.showWarning('Carrito vacío', 'Agrega productos antes de continuar');
       return;
     }
 
@@ -126,28 +155,71 @@ export class CarritoComponent implements OnInit, OnDestroy {
     this.showCheckoutModal = false;
   }
 
-  procesarCheckout(datosComprador: any): void {
-    this.showCheckoutModal = false;
-    this.isProcessingOnline = true;
+procesarCheckout(datosComprador: any): void {
+  this.showCheckoutModal = false;
+  this.isProcessingOnline = true;
 
-    this.carritoService.checkoutOnline(this.tiendaId, datosComprador).subscribe({
-      next: (boleta) => {
-        this.showSuccess('¡Pedido registrado!', `Número: #${boleta.id}\nTe contactaremos pronto`);
-      },
-      error: (err) => {
-        console.error('Error checkout online:', err);
-        this.showError(err.message || 'No pudimos procesar el pedido');
-      },
-      complete: () => {
-        this.isProcessingOnline = false;
+  Swal.fire({
+    title: 'Procesando tu pedido...',
+    allowOutsideClick: false,
+    didOpen: () => Swal.showLoading()
+  });
+
+  this.carritoService.checkoutOnline(this.tiendaId, datosComprador).subscribe({
+    next: (boleta) => {
+      Swal.close();
+      Swal.fire({
+        icon: 'success',
+        title: '¡Pedido confirmado!',
+        html: `Tu boleta <strong>#${boleta.id}</strong> fue creada exitosamente.<br><br>Te contactaremos pronto por WhatsApp y email.`,
+        confirmButtonColor: '#198754',
+        timer: 5000,
+        timerProgressBar: true
+      });
+    },
+    error: (err) => {
+      Swal.close();
+
+      if (err.type === 'missing_email_config') {
+        Swal.fire({
+          icon: 'warning',
+          title: '¡Configura tu correo primero!',
+          html: `
+            <p>${err.message}</p>
+            <p class="mt-3 fw-bold text-danger">Sin esta configuración, no podemos enviar confirmaciones automáticas.</p>
+            <p class="mt-3">¿Quieres configurarlo ahora?</p>
+          `,
+          showCancelButton: true,
+          confirmButtonColor: '#6366f1',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: 'Sí, configurar ahora',
+          cancelButtonText: 'Más tarde',
+          allowOutsideClick: false
+        }).then(result => {
+          if (result.isConfirmed) {
+            // Redirige a edición de tienda (ajusta la ruta)
+            window.location.href = `/admin/tiendas/editar/${this.tiendaId}`;
+            // Mejor: usa Router si lo tienes injectado
+            // this.router.navigate(['/admin/tiendas/editar', this.tiendaId]);
+          }
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al procesar',
+          text: err.message || 'Intenta de nuevo o contacta soporte',
+          confirmButtonColor: '#d33'
+        });
       }
-    });
-  }
+    },
+    complete: () => this.isProcessingOnline = false
+  });
+}
 
-  // ── Checkout WhatsApp (con datos de prueba por ahora) ────────────
+  // ── Checkout WhatsApp ───────────────────────────────────────────────
   async checkoutWhatsapp(): Promise<void> {
     if (this.items.length === 0) {
-      Swal.fire({ icon: 'info', title: 'Carrito vacío', timer: 2200 });
+      this.showWarning('Carrito vacío', 'Agrega productos antes de continuar');
       return;
     }
 
@@ -168,29 +240,33 @@ export class CarritoComponent implements OnInit, OnDestroy {
 
     this.isProcessingWhatsapp = true;
 
+    Swal.fire({
+      title: 'Generando enlace de WhatsApp...',
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
     let whatsappUrl: string;
     try {
       whatsappUrl = await firstValueFrom(
         this.carritoService.checkoutWhatsapp(this.tiendaId, datosComprador)
       );
     } catch (err: any) {
-      console.error('Error generando URL WhatsApp:', err);
-      this.showError('No pudimos generar el enlace de WhatsApp');
+      Swal.close();
+      this.showError('Error generando enlace', 'No pudimos preparar el mensaje para WhatsApp');
       this.isProcessingWhatsapp = false;
       return;
     }
 
-    const { isConfirmed } = await Swal.fire({
-      title: '¿Enviar por WhatsApp?',
-      text: 'Se abrirá el chat con la tienda',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#25d366',
-      confirmButtonText: 'Sí, enviar ahora',
-      cancelButtonText: 'Cancelar'
-    });
+    Swal.close();
 
-    if (!isConfirmed) {
+    const confirmed = await this.showConfirm(
+      '¿Enviar por WhatsApp?',
+      'Se abrirá el chat directo con la tienda para coordinar el pedido',
+      'Sí, abrir WhatsApp'
+    );
+
+    if (!confirmed) {
       this.isProcessingWhatsapp = false;
       return;
     }
@@ -199,19 +275,19 @@ export class CarritoComponent implements OnInit, OnDestroy {
 
     if (newWindow) {
       newWindow.focus();
-      this.showSuccess('¡Abriendo WhatsApp!', 'Redirigiendo al chat...');
+      this.showSuccess('¡Redirigiendo!', 'Abriendo chat de WhatsApp...');
     } else {
       Swal.fire({
-        title: 'No se pudo abrir automáticamente',
+        icon: 'warning',
+        title: 'Ventana bloqueada',
         html: `
-          El navegador bloqueó la ventana.<br><br>
-          <strong>Haz clic aquí:</strong><br>
-          <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" style="color:#25d366; font-weight:600; word-break:break-all;">
-            Abrir chat de WhatsApp →
+          Tu navegador bloqueó la ventana emergente.<br><br>
+          <strong>Haz clic aquí para abrir el chat:</strong><br>
+          <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-success mt-3">
+            Abrir WhatsApp ahora
           </a>
         `,
-        showConfirmButton: false,
-        footer: '<small>Recomendación: permite ventanas emergentes</small>'
+        showConfirmButton: false
       });
     }
 

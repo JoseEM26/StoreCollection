@@ -1,13 +1,16 @@
 // CarritoController.java (modificado, agrega endpoint para checkout)
 package com.proyecto.StoreCollection.controller;
 
+import com.proyecto.StoreCollection.Exceptions.MissingEmailConfigException;
 import com.proyecto.StoreCollection.dto.request.CarritoRequest;
 import com.proyecto.StoreCollection.dto.request.BoletaRequest;
 import com.proyecto.StoreCollection.dto.response.CarritoResponse;
 import com.proyecto.StoreCollection.dto.response.BoletaResponse;
+import com.proyecto.StoreCollection.dto.special.ApiErrorResponse;
 import com.proyecto.StoreCollection.service.CarritoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
