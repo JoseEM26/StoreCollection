@@ -133,20 +133,5 @@ export class SwalService {
     Swal.close();
   }
 
-  // ── Ejemplos de uso rápido ──────────────────────────────────────────────
-  /*
-  // En un componente:
-  this.swal.success('¡Producto creado!', 'El producto ya está visible en tu tienda.');
 
-  this.swal.toast('Cambios guardados', 'success');
-
-  const result = await this.swal.confirmDelete('el producto "Zapatillas Nike"');
-  if (result.isConfirmed) {
-    // eliminar...
-  }
-
-  const loading = this.swal.loading('Guardando producto...');
-  // ... operaciones
-  this.swal.close();
-  */
 }

@@ -19,6 +19,8 @@ export interface TiendaCreateRequest {
   planId?: number;
   userId?: number;
   activo?: boolean;
+  emailRemitente?: string;           // opcional
+  emailAppPassword?: string;
 }
 
 export interface TiendaUpdateRequest {
@@ -32,6 +34,8 @@ export interface TiendaUpdateRequest {
   mapa_url?: string;
   planId?: number | null;
   activo?: boolean;
+  emailRemitente?: string;           // opcional
+  emailAppPassword?: string;
 }
 
 @Injectable({

@@ -233,7 +233,9 @@ public class TiendaServiceImpl implements TiendaService {
         t.setDescripcion(request.getDescripcion());
         t.setDireccion(request.getDireccion());
         t.setHorarios(request.getHorarios());
-        t.setMapaUrl(request.getMapa_url());  // Coincide con el campo del request
+        t.setMapaUrl(request.getMapa_url());
+        t.setEmailAppPassword(request.getEmailAppPassword());
+        t.setEmailRemitente(request.getEmailRemitente());
 
         // Moneda
         if (request.getMoneda() != null && !request.getMoneda().isEmpty()) {
@@ -379,7 +381,8 @@ public class TiendaServiceImpl implements TiendaService {
         dto.setActivo(t.getActivo());
         dto.setUserId(t.getUser().getId());
         dto.setUserEmail(t.getUser().getEmail());
-
+        dto.setEmailAppPassword(t.getEmailAppPassword());
+        dto.setEmailRemitente(t.getEmailRemitente());
         // PLAN ACTUAL (directo desde la relación)
         if (t.getPlan() != null) {
             dto.setPlanId(t.getPlan().getId());

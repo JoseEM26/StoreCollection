@@ -2,14 +2,12 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
-
-
-
 import { lastValueFrom } from 'rxjs';
 import { DropTownService, DropTownStandar } from '../../../../service/droptown.service';
 import { AuthService } from '../../../../../auth/auth.service';
 import { TiendaResponse } from '../../../../model/admin/tienda-admin.model';
 import { TiendaAdminService, TiendaCreateRequest, TiendaUpdateRequest } from '../../../../service/service-admin/tienda-admin.service';
+import { SwalService } from '../../../../service/SweetAlert/swal.service';
 
 @Component({
   selector: 'app-form-stores',
@@ -32,11 +30,13 @@ export class FormStoresComponent implements OnInit, OnChanges {
 
   usuarios: DropTownStandar[] = [];
   usuariosLoading = false;
-
   planes: DropTownStandar[] = [];
   planesLoading = false;
 
   esAdmin = false;
+
+  // Control para mostrar/ocultar contraseña de app
+  showAppPassword = false;
 
   form = new FormGroup({
     nombre: new FormControl<string>('', [Validators.required, Validators.minLength(3)]),
@@ -53,6 +53,18 @@ export class FormStoresComponent implements OnInit, OnChanges {
     direccion: new FormControl<string>(''),
     horarios: new FormControl<string>('Lun - Sáb 9:00 - 21:00'),
     mapa_url: new FormControl<string>('', [Validators.pattern(/^https?:\/\/.+/)]),
+    
+    // Nuevos campos
+    emailRemitente: new FormControl<string>('', [
+      Validators.email,
+      Validators.maxLength(150)
+    ]),
+    emailAppPassword: new FormControl<string>('', [
+      Validators.minLength(16),
+      Validators.maxLength(16),
+      Validators.pattern(/^[A-Za-z0-9]+$/)
+    ]),
+
     userId: new FormControl<number | null>(null),
     planId: new FormControl<number | null>(null),
     activo: new FormControl<boolean>(true)
@@ -61,7 +73,8 @@ export class FormStoresComponent implements OnInit, OnChanges {
   constructor(
     private tiendaService: TiendaAdminService,
     private dropTownService: DropTownService,
-    private auth: AuthService
+    private auth: AuthService,
+    private sweet: SwalService
   ) {}
 
   ngOnInit(): void {
@@ -77,9 +90,8 @@ export class FormStoresComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['tienda'] && changes['tienda'].currentValue !== changes['tienda'].previousValue) {
+    if (changes['tienda']?.currentValue !== changes['tienda']?.previousValue) {
       if (this.tienda) {
-        // === MODO EDICIÓN ===
         this.isEditMode = true;
         this.serverError = null;
         this.logoPreview = this.tienda.logo_img_url || null;
@@ -94,16 +106,16 @@ export class FormStoresComponent implements OnInit, OnChanges {
           direccion: this.tienda.direccion || '',
           horarios: this.tienda.horarios || 'Lun - Sáb 9:00 - 21:00',
           mapa_url: this.tienda.mapa_url || '',
+          emailRemitente: this.tienda.emailRemitente || '',
+          // ¡CAMBIO! Ahora SÍ mostramos la contraseña actual (como pediste)
+          emailAppPassword: this.tienda.emailAppPassword || '',
           userId: this.tienda.userId,
           activo: this.tienda.activo
         });
 
         this.form.get('slug')?.disable({ emitEvent: false });
-
-        // ← Selección segura del plan (se ejecuta después de cargar los planes)
         this.seleccionarPlanActual();
       } else {
-        // === MODO CREACIÓN ===
         this.isEditMode = false;
         this.logoPreview = null;
         this.selectedFile = null;
@@ -117,6 +129,8 @@ export class FormStoresComponent implements OnInit, OnChanges {
           direccion: '',
           horarios: 'Lun - Sáb 9:00 - 21:00',
           mapa_url: '',
+          emailRemitente: '',
+          emailAppPassword: '',
           userId: null,
           planId: null,
           activo: true
@@ -126,7 +140,6 @@ export class FormStoresComponent implements OnInit, OnChanges {
       }
     }
   }
-
   private configurarValidadores() {
     const userIdControl = this.form.get('userId');
     const planIdControl = this.form.get('planId');
@@ -150,9 +163,8 @@ export class FormStoresComponent implements OnInit, OnChanges {
         this.usuarios = data;
         this.usuariosLoading = false;
       },
-      error: (err) => {
-        console.error('Error cargando usuarios:', err);
-        this.serverError = 'No se pudieron cargar los usuarios';
+      error: () => {
+        this.sweet.error('Error', 'No se pudieron cargar los usuarios');
         this.usuariosLoading = false;
       }
     });
@@ -165,35 +177,26 @@ export class FormStoresComponent implements OnInit, OnChanges {
         this.planes = data;
         this.planesLoading = false;
 
-        // Pre-seleccionar el más barato en creación
-        if (!this.isEditMode && this.planes.length > 0 && !this.form.get('planId')?.value) {
+        if (!this.isEditMode && this.planes.length > 0) {
           this.form.get('planId')?.setValue(this.planes[0].id);
         }
 
-        // Si estamos editando, intentar seleccionar el plan actual
         if (this.isEditMode) {
           this.seleccionarPlanActual();
         }
       },
-      error: (err) => {
-        console.error('Error cargando planes:', err);
-        this.serverError = 'No se pudieron cargar los planes disponibles';
+      error: () => {
+        this.sweet.error('Error', 'No se pudieron cargar los planes');
         this.planesLoading = false;
       }
     });
   }
 
-  /**
-   * Busca y selecciona el plan actual de la tienda en el dropdown
-   * Usa planSlug o planNombre para coincidir (seguro contra undefined)
-   */
   private seleccionarPlanActual(): void {
     if (!this.tienda || this.planes.length === 0) return;
 
     const planSlug = this.tienda.planSlug?.toLowerCase();
     const planNombre = this.tienda.planNombre?.toLowerCase();
-
-    if (!planSlug && !planNombre) return;
 
     const planEncontrado = this.planes.find(p => {
       const descLower = p.descripcion.toLowerCase();
@@ -224,11 +227,13 @@ export class FormStoresComponent implements OnInit, OnChanges {
 
     const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!validTypes.includes(file.type)) {
-      this.fileError = 'Formato inválido. Solo JPG, PNG, GIF o WEBP.';
+      this.fileError = 'Solo se permiten JPG, PNG, GIF o WEBP';
+      this.sweet.warning('Formato inválido', this.fileError);
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      this.fileError = 'Imagen demasiado grande. Máximo 5MB.';
+      this.fileError = 'La imagen no debe superar los 5MB';
+      this.sweet.warning('Imagen demasiado grande', this.fileError);
       return;
     }
 
@@ -246,21 +251,25 @@ export class FormStoresComponent implements OnInit, OnChanges {
     this.fileError = null;
   }
 
+  toggleAppPasswordVisibility(): void {
+    this.showAppPassword = !this.showAppPassword;
+  }
+
   getErrorMessage(controlName: string): string {
     const control = this.form.get(controlName);
     if (!control || !control.touched || !control.errors) return '';
 
-    if (control.errors['required']) return 'Este campo es obligatorio';
+    if (control.errors['required']) return 'Campo obligatorio';
     if (control.errors['minlength']) return 'Mínimo 3 caracteres';
     if (control.errors['maxlength']) return 'Máximo 50 caracteres';
-    if (control.errors['min']) return 'Seleccione una opción válida';
+    if (control.errors['email']) return 'Correo electrónico inválido';
     if (control.errors['pattern']) {
-      switch (controlName) {
-        case 'slug': return 'Solo letras minúsculas, números y guiones';
-        case 'whatsapp': return 'Formato inválido (ej: +51999999999)';
-        case 'mapa_url': return 'Debe comenzar con http:// o https://';
-        default: return 'Formato inválido';
+      if (controlName === 'emailAppPassword') {
+        return 'Debe tener exactamente 16 caracteres alfanuméricos';
       }
+      if (controlName === 'slug') return 'Solo minúsculas, números y guiones';
+      if (controlName === 'whatsapp') return 'Formato inválido (+51 seguido de 9 dígitos)';
+      if (controlName === 'mapa_url') return 'Debe ser una URL válida';
     }
     return 'Valor inválido';
   }
@@ -268,11 +277,31 @@ export class FormStoresComponent implements OnInit, OnChanges {
   async onSubmit(): Promise<void> {
     if (this.form.invalid || this.fileError) {
       this.form.markAllAsTouched();
+      this.sweet.warning('Formulario incompleto', 'Revisa los campos marcados');
       return;
+    }
+
+    // Advertencia especial si se está intentando cambiar la contraseña de app
+    if (this.form.value.emailAppPassword && this.form.value.emailAppPassword.trim().length > 0) {
+      const result = await this.sweet.confirmAction({
+        title: '¿Estás seguro?',
+        text: 'Estás modificando la contraseña de aplicación de Gmail.\nEsta acción es sensible y afectará el envío de correos.',
+        confirmButtonText: 'Sí, cambiar contraseña',
+        icon: 'warning'
+      });
+
+      if (!result.isConfirmed) {
+        this.form.get('emailAppPassword')?.setValue('');
+        return;
+      }
     }
 
     this.loading = true;
     this.serverError = null;
+
+    const loadingSwal = this.sweet.loading(
+      this.isEditMode ? 'Actualizando tienda...' : 'Creando tienda...'
+    );
 
     try {
       let resultado: TiendaResponse;
@@ -286,6 +315,8 @@ export class FormStoresComponent implements OnInit, OnChanges {
         direccion: this.form.value.direccion?.trim() || undefined,
         horarios: this.form.value.horarios?.trim() || undefined,
         mapa_url: this.form.value.mapa_url?.trim() || undefined,
+        emailRemitente: this.form.value.emailRemitente?.trim() || undefined,
+        emailAppPassword: this.form.value.emailAppPassword?.trim() || undefined
       };
 
       if (this.isEditMode && this.tienda?.id) {
@@ -311,20 +342,36 @@ export class FormStoresComponent implements OnInit, OnChanges {
         );
       }
 
+      this.sweet.success(
+        this.isEditMode ? '¡Tienda actualizada!' : '¡Tienda creada!',
+        'Los cambios han sido guardados correctamente'
+      );
+
+      // Limpiamos el campo sensible después de guardar
+      this.form.get('emailAppPassword')?.setValue('');
+
       this.success.emit(resultado);
     } catch (err: any) {
       console.error('Error al guardar tienda:', err);
-      this.serverError = err.message || 'Error al guardar la tienda';
 
+      let mensaje = 'No se pudo guardar la tienda';
       if (err.message?.toLowerCase().includes('slug')) {
-        this.serverError = 'El slug ya está en uso por otra tienda';
+        mensaje = 'El slug ya está en uso por otra tienda';
         this.form.get('slug')?.setErrors({ duplicate: true });
+      } else if (err.message?.includes('16 caracteres')) {
+        mensaje = 'La contraseña de aplicación debe tener exactamente 16 caracteres';
       }
+
+      this.sweet.error('Error al guardar', mensaje);
+      this.serverError = mensaje;
     } finally {
       this.loading = false;
+      this.sweet.close(); // Cierra el loading
     }
   }
-
+get emailAppPasswordControl() {
+  return this.form.get('emailAppPassword')!; // Esto elimina la advertencia de TS
+}
   get planActualTexto(): string {
     if (!this.esAdmin) {
       return this.isEditMode 

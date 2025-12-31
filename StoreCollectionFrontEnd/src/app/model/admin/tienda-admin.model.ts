@@ -31,6 +31,8 @@ export interface TiendaResponse extends TiendaBase {
   fechaFin?: string | null;
   maxProductos?: number;
   maxVariantes?: number;
+        emailRemitente ?:string;
+      emailAppPassword ?:string;
 }
 
 // Para vistas públicas (menos datos, más restringido)

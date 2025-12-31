@@ -1,4 +1,4 @@
-// src/app/pages/admin/stores/stores.component.ts (o la ruta que tengas)
+// src/app/pages/admin/stores/stores.component.ts
 import { Component, OnInit, OnDestroy, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,6 +7,7 @@ import { AuthService } from '../../../../auth/auth.service';
 import { FormStoresComponent } from './form-stores/form-stores.component';
 import { TiendaAdminPage, TiendaResponse } from '../../../model/admin/tienda-admin.model';
 import { TiendaAdminService } from '../../../service/service-admin/tienda-admin.service';
+import { SwalService } from '../../../service/SweetAlert/swal.service';
 
 @Component({
   selector: 'app-stores',
@@ -16,39 +17,32 @@ import { TiendaAdminService } from '../../../service/service-admin/tienda-admin.
   styleUrl: './stores.component.css'
 })
 export class StoresComponent implements OnInit, OnDestroy {
-  // Página completa (para paginación)
   tiendasPage = signal<TiendaAdminPage | null>(null);
-  
-  // Solo el array de tiendas (para *ngFor)
   tiendas = signal<TiendaResponse[]>([]);
-  
-  loading = signal(true);
+  loading = signal<boolean>(true);
 
-  // Modal de detalles
   showDetailsModal = false;
   selectedTienda: TiendaResponse | null = null;
 
-  // Paginación y filtros
-  currentPage = signal(0);
+  currentPage = signal<number>(0);
   pageSize = 12;
-  sort = signal('nombre,asc');
-  
-  // Búsqueda
+  sort = signal<string>('nombre,asc');
+
   searchInput = signal<string>('');
   searchTerm = signal<string>('');
 
-  // Modales de crear/editar
   showCreateModal = false;
   showEditModal = false;
   editingStore = signal<TiendaResponse | undefined>(undefined);
 
-  private debounceTimer: any;
+  private debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private tiendaService: TiendaAdminService,
-    public auth: AuthService
+    public auth: AuthService,
+    private swal: SwalService
   ) {
-    // Recarga automática cuando cambian página, orden o término de búsqueda
+    // Efecto para recargar cuando cambian los filtros
     effect(() => {
       this.currentPage();
       this.sort();
@@ -56,15 +50,14 @@ export class StoresComponent implements OnInit, OnDestroy {
       this.loadTiendas();
     });
 
-    // Debounce de 500ms para la búsqueda
+    // Debounce para búsqueda
     effect(() => {
       const term = this.searchInput().trim();
-
-      clearTimeout(this.debounceTimer);
+      if (this.debounceTimer) clearTimeout(this.debounceTimer);
       this.debounceTimer = setTimeout(() => {
         if (this.searchTerm() !== term) {
           this.searchTerm.set(term);
-          this.currentPage.set(0); // Volver a página 1 al buscar
+          this.currentPage.set(0);
         }
       }, 500);
     });
@@ -75,72 +68,66 @@ export class StoresComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.debounceTimer) {
-      clearTimeout(this.debounceTimer);
-    }
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
   }
 
   // ================================================================
   // CARGA DE DATOS
   // ================================================================
-  loadTiendas(): void {
+  async loadTiendas(): Promise<void> {
     this.loading.set(true);
+    const loadingSwal = this.swal.loading('Cargando tiendas...');
 
-    this.tiendaService.listarTiendas(
-      this.currentPage(),
-      this.pageSize,
-      this.sort(),
-      this.searchTerm().length > 0 ? this.searchTerm() : undefined
-    ).subscribe({
-      next: (pageData) => {
+    try {
+      const pageData = await this.tiendaService.listarTiendas(
+        this.currentPage(),
+        this.pageSize,
+        this.sort(),
+        this.searchTerm().length > 0 ? this.searchTerm() : undefined
+      ).toPromise();
+
+      // Aseguramos que pageData no sea undefined
+      if (pageData) {
         this.tiendasPage.set(pageData);
-        this.tiendas.set(pageData.content);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        console.error('Error cargando tiendas:', err);
-        this.loading.set(false);
-        alert('Error al cargar las tiendas. Revisa la consola para más detalles.');
+        this.tiendas.set(pageData.content || []);
 
-        // Página vacía en caso de error
-        const emptyPage: TiendaAdminPage = {
-          content: [],
-          pageable: {
-            sort: { sorted: false, unsorted: true, empty: true },
-            pageNumber: 0,
-            pageSize: this.pageSize,
-            offset: 0,
-            paged: true,
-            unpaged: false
-          },
-          totalElements: 0,
-          totalPages: 0,
-          last: true,
-          first: true,
-          numberOfElements: 0,
-          size: this.pageSize,
-          number: 0,
-          sort: { sorted: false, unsorted: true, empty: true },
-          empty: true
-        };
-        this.tiendasPage.set(emptyPage);
+        if (pageData.content.length === 0 && this.searchTerm()) {
+          this.swal.info('Sin resultados', `No se encontraron tiendas con "${this.searchTerm()}"`);
+        }
+      } else {
+        this.tiendasPage.set(null);
         this.tiendas.set([]);
       }
-    });
+
+      this.swal.close();
+    } catch (err: any) {
+      console.error('Error cargando tiendas:', err);
+      this.swal.close();
+
+      this.swal.error(
+        'Error al cargar tiendas',
+        err.error?.message || 'No se pudieron cargar las tiendas. Intenta recargar la página.'
+      );
+
+      this.tiendasPage.set(null);
+      this.tiendas.set([]);
+    } finally {
+      this.loading.set(false);
+    }
   }
 
   // ================================================================
   // PAGINACIÓN
   // ================================================================
   goToPage(page: number): void {
-    const totalPages = this.tiendasPage()?.totalPages || 0;
+    const totalPages = this.tiendasPage()?.totalPages ?? 0;
     if (page >= 0 && page < totalPages) {
       this.currentPage.set(page);
     }
   }
 
   getPageNumbers(): number[] {
-    const total = this.tiendasPage()?.totalPages || 0;
+    const total = this.tiendasPage()?.totalPages ?? 0;
     const current = this.currentPage();
     const delta = 2;
     const range: number[] = [];
@@ -170,41 +157,50 @@ export class StoresComponent implements OnInit, OnDestroy {
     this.editingStore.set(undefined);
   }
 
-  onFormSuccess(tiendaActualizada: TiendaResponse): void {
+  async onFormSuccess(tiendaActualizada: TiendaResponse): Promise<void> {
     this.closeModal();
-    this.loadTiendas();
-    alert(
-      tiendaActualizada.id
-        ? `Tienda "${tiendaActualizada.nombre}" actualizada correctamente`
-        : `Tienda "${tiendaActualizada.nombre}" creada correctamente`
+    await this.loadTiendas();
+
+    const esNueva = !this.editingStore()?.id;
+    this.swal.success(
+      esNueva ? '¡Tienda creada!' : '¡Tienda actualizada!',
+      esNueva 
+        ? `La tienda <strong>${tiendaActualizada.nombre}</strong> ya está lista para recibir pedidos.`
+        : `Los cambios en <strong>${tiendaActualizada.nombre}</strong> se guardaron correctamente.`
     );
   }
 
   // ================================================================
   // ACCIONES
   // ================================================================
-  toggleActive(tienda: TiendaResponse): void {
-    if (!confirm(
-      tienda.activo
-        ? `¿Desactivar la tienda "${tienda.nombre}"?`
-        : `¿Activar la tienda "${tienda.nombre}"?`
-    )) {
-      return;
-    }
-
-    this.tiendaService.toggleActivo(tienda.id).subscribe({
-      next: (updated) => {
-        this.loadTiendas();
-        alert(updated.activo
-          ? `Tienda "${updated.nombre}" activada`
-          : `Tienda "${updated.nombre}" desactivada`
-        );
-      },
-      error: (err) => {
-        console.error('Error al cambiar estado:', err);
-        alert('No tienes permisos o ocurrió un error');
-      }
+  async toggleActive(tienda: TiendaResponse): Promise<void> {
+    const accion = tienda.activo ? 'desactivar' : 'activar';
+    const result = await this.swal.confirmAction({
+      title: `¿${accion.charAt(0).toUpperCase() + accion.slice(1)} tienda?`,
+      text: tienda.activo
+        ? `La tienda <strong>${tienda.nombre}</strong> dejará de estar visible públicamente.`
+        : `La tienda <strong>${tienda.nombre}</strong> volverá a estar visible y operativa.`,
+      confirmButtonText: tienda.activo ? 'Sí, desactivar' : 'Sí, activar',
+      icon: tienda.activo ? 'warning' : 'success'
     });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const updated = await this.tiendaService.toggleActivo(tienda.id).toPromise();
+      if (updated) {
+        await this.loadTiendas();
+        this.swal.toast(
+          updated.activo ? 'Tienda activada' : 'Tienda desactivada',
+          updated.activo ? 'success' : 'warning'
+        );
+      }
+    } catch (err: any) {
+      this.swal.error(
+        'Error al cambiar estado',
+        err.error?.message || 'No tienes permisos o ocurrió un problema.'
+      );
+    }
   }
 
   verDetalles(tienda: TiendaResponse): void {
@@ -221,11 +217,9 @@ export class StoresComponent implements OnInit, OnDestroy {
   // UTILIDADES VISUALES
   // ================================================================
   getEstadoSuscripcion(tienda: TiendaResponse | null): string {
-    if (!tienda || !tienda.estadoSuscripcion) {
-      return 'Inactivo';
-    }
+    if (!tienda?.estadoSuscripcion) return 'Inactivo';
     const estado = tienda.estadoSuscripcion.toLowerCase();
-    return estado.charAt(0).toUpperCase() + estado.slice(1);
+    return estado === 'trialing' ? 'En prueba' : estado.charAt(0).toUpperCase() + estado.slice(1);
   }
 
   getPlanBadgeClass(tienda: TiendaResponse): string {
@@ -234,7 +228,7 @@ export class StoresComponent implements OnInit, OnDestroy {
     const plan = tienda.planNombre.toLowerCase();
     const estado = tienda.estadoSuscripcion?.toLowerCase();
 
-    if (estado === 'trialing' || estado === 'trial') return 'bg-warning text-dark';
+    if (estado === 'trialing') return 'bg-warning text-dark';
     if (plan.includes('enterprise')) return 'bg-dark';
     if (plan.includes('pro') || plan.includes('premium')) return 'bg-gradient-purple';
     if (plan.includes('básico') || plan.includes('basico')) return 'bg-primary';
@@ -250,13 +244,13 @@ export class StoresComponent implements OnInit, OnDestroy {
   }
 
   formatDate(isoDate: string | undefined | null): string {
-    if (!isoDate) return '-';
+    if (!isoDate) return '—';
     const date = new Date(isoDate);
     return date.toLocaleDateString('es-PE', {
       day: 'numeric',
       month: 'short',
       year: 'numeric'
-    }).replace('.', ''); // Quita el punto que pone Angular en algunos locales
+    }).replace('.', '');
   }
 
   setSort(campo: string): void {

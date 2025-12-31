@@ -26,6 +26,7 @@ public class  TiendaResponse {
     private String fechaFin;
     private Integer maxProductos;
     private Integer maxVariantes;
-
+    private String emailRemitente;
+    private String emailAppPassword;
 // + getters y setters para todos
 }
