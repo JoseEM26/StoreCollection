@@ -28,6 +28,7 @@ export class ProductFormComponent implements OnChanges {
   @Input() isEdit = false;
   @Input() producto?: ProductoResponse;
   @Output() saved = new EventEmitter<void>();
+  @Input() isViewMode: boolean = false;        
   @Output() closed = new EventEmitter<void>();
   errorMessage = signal<string | null>(null);
 

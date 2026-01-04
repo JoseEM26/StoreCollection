@@ -2,7 +2,46 @@
 
 import { DropTownStandar } from "../../service/droptown.service";
 
-// === Respuesta del backend ===
+// === ITEM PARA LA LISTA ADMINISTRATIVA (coincide exactamente con el DTO del backend) ===
+export interface ProductoAdminListItem {
+  id: number;
+  nombre: string;
+  slug: string;
+  categoriaId: number;
+  categoriaNombre: string;
+  tiendaId: number;
+  tiendaNombre: string;          // ¡¡AÑADIDO!! Estaba faltando
+  activo: boolean;
+  precioMinimo: number;
+  precioMaximo: number;
+  stockTotal: number;
+  imagenPrincipal: string;
+  tieneVariantes: boolean;
+  cantidadVariantes: number;
+}
+
+// === Página para la lista administrativa ===
+export interface ProductoAdminListPage {
+  content: ProductoAdminListItem[];
+  pageable: {
+    sort: { sorted: boolean; unsorted: boolean; empty: boolean };
+    pageNumber: number;
+    pageSize: number;
+    offset: number;
+    paged: boolean;
+    unpaged: boolean;
+  };
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+  first: boolean;
+  numberOfElements: number;
+  size: number;
+  number: number;
+  empty: boolean;
+}
+
+// === Respuesta detallada de un producto individual (para edición, creación, etc.) ===
 export interface ProductoResponse {
   id: number;
   nombre: string;
@@ -11,7 +50,7 @@ export interface ProductoResponse {
   categoriaNombre: string;
   tiendaId: number;
   activo: boolean;
-  variantes: VarianteResponse[] | null; // Permite null si no hay variantes
+  variantes: VarianteResponse[] | null;
 }
 
 // === Request para crear o actualizar ===
@@ -19,7 +58,7 @@ export interface ProductoRequest {
   nombre: string;
   slug: string;
   categoriaId: number;
-  tiendaId?: number;     // Opcional: solo lo envía el ADMIN
+  tiendaId?: number;
   activo: boolean;
   variantes: VarianteRequest[];
 }
@@ -30,7 +69,7 @@ export interface VarianteResponse {
   sku: string;
   precio: number;
   stock: number;
-  imagenUrl?: string | null;    // Permite null o undefined (más flexible)
+  imagenUrl?: string | null;
   activo: boolean;
   atributos: AtributoValorResponse[];
 }
@@ -40,35 +79,32 @@ export interface VarianteRequest {
   sku: string;
   precio: number;
   stock: number;
-  imagen?: File;                
-  imagenUrl?: string | null;    
+  imagen?: File;
+  imagenUrl?: string | null;
   activo?: boolean;
   atributos: AtributoValorRequest[];
 }
 
 export interface AtributoValorResponse {
-  id: number;              // ID del AtributoValor
-  atributoNombre: string;  // Nombre del atributo (ej: "Color")
-  valor: string;           // Valor (ej: "Rojo")
+  id: number;
+  atributoNombre: string;
+  valor: string;
 }
 
-// Para dropdowns de atributos (si en el futuro lo necesitas)
 export interface AtributoConValores {
   id: number;
   descripcion: string;
-  valores: DropTownStandar[]; // { id: atributoValorId, descripcion: "Rojo" }
+  valores: DropTownStandar[];
 }
 
 export interface AtributoValorRequest {
   atributoNombre: string;
   valor: string;
-
-  // Campos temporales para crear nuevos atributos/valores (NO se envían al backend)
   atributoNombreTemp?: string;
   valorTemp?: string;
 }
 
-// === Paginación ===
+// === Página antigua (para otras vistas si aún la usas) ===
 export interface ProductoPage {
   content: ProductoResponse[];
   pageable: {

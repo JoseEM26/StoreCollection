@@ -3,7 +3,7 @@
 import { Component, OnInit, signal, effect, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ProductoPage, ProductoResponse } from '../../../model/admin/producto-admin.model';
+import { ProductoAdminListItem, ProductoAdminListPage, ProductoPage, ProductoResponse } from '../../../model/admin/producto-admin.model';
 import { ProductoAdminService } from '../../../service/service-admin/producto-admin.service';
 import { AuthService } from '../../../../auth/auth.service';
 import { ProductFormComponent } from './product-form/product-form.component';
@@ -17,16 +17,18 @@ import Swal from 'sweetalert2';
   styleUrl: './products.component.css'
 })
 export class ProductsComponent implements OnInit {
-  pageData = signal<ProductoPage | null>(null);
-  productos = signal<ProductoResponse[]>([]);
+pageData = signal<ProductoAdminListPage | null>(null);
+  productos = signal<ProductoAdminListItem[]>([]);  // ← Tipo correcto ahora
   loading = signal(true);
-
   // Modal
   showModal = signal(false);
   isEditMode = signal(false);
   selectedProducto = signal<ProductoResponse | undefined>(undefined);
   loadingEdicion = signal(false);
-
+// === AÑADE ESTOS NUEVOS SIGNALS cerca de los otros modales ===
+showDetailModal = signal(false);              // Nuevo: controla el modal de detalle
+selectedProductoDetail = signal<ProductoResponse | undefined>(undefined); // Producto en modo detalle
+loadingDetail = signal(false);                 // Loading mientras carga el detalle
   // Loading para toggle (evita clicks múltiples)
   loadingToggleId = signal<number | null>(null);
 
@@ -56,7 +58,33 @@ export class ProductsComponent implements OnInit {
     }
     return producto.variantes.length === 1 ? '1 variante' : `${producto.variantes.length} variantes`;
   }
+openDetailModal(id: number): void {
+  this.loadingDetail.set(true);
+  this.showDetailModal.set(true);
 
+  this.productoService.obtenerParaEdicion(id).subscribe({
+    next: (productoCompleto) => {
+      this.selectedProductoDetail.set(productoCompleto);
+      this.loadingDetail.set(false);
+    },
+    error: (err) => {
+      this.loadingDetail.set(false);
+      this.showDetailModal.set(false);
+      this.mostrarError(err, 'No se pudo cargar el detalle del producto');
+    }
+  });
+}
+handleImageError(event: Event): void {
+  if (event.target instanceof HTMLImageElement) {
+    event.target.src = 'https://via.placeholder.com/80?text=Sin+imagen';
+  }
+}
+// === MÉTODO PARA CERRAR EL MODAL DE DETALLE ===
+closeDetailModal(): void {
+  this.showDetailModal.set(false);
+  this.loadingDetail.set(false);
+  this.selectedProductoDetail.set(undefined);
+}
   loadProductos(): void {
     this.loading.set(true);
 
@@ -119,50 +147,71 @@ export class ProductsComponent implements OnInit {
     this.currentPage.set(0); // Volver a página 1 tras crear/editar
     this.loadProductos();
   }
-
-  toggleActivo(producto: ProductoResponse): void {
-    const nuevoEstado = !producto.activo;
-
-    // Loading en el botón
-    this.loadingToggleId.set(producto.id);
-
-    // Optimistic UI update
-    this.productos.update(list =>
-      list.map(p => p.id === producto.id ? { ...p, activo: nuevoEstado } : p)
-    );
-
-    this.productoService.toggleActivo(producto.id).subscribe({
-      next: (updated) => {
-        this.productos.update(list =>
-          list.map(p => p.id === updated.id ? updated : p)
-        );
-        this.loadingToggleId.set(null);
-
-        Swal.fire({
-          icon: 'success',
-          title: nuevoEstado ? 'Activado' : 'Desactivado',
-          text: `El producto "${updated.nombre}" ahora está ${nuevoEstado ? 'activo' : 'inactivo'}.`,
-          timer: 1500,
-          showConfirmButton: false
-        });
-      },
-      error: (err) => {
-        // Revertir cambio optimista
-        this.productos.update(list =>
-          list.map(p => p.id === producto.id ? { ...p, activo: !nuevoEstado } : p)
-        );
-        this.loadingToggleId.set(null);
-        this.mostrarError(err, 'Error al cambiar el estado del producto');
-      }
-    });
+formatPrecio(min: number, max: number): string {
+    const fmt = (n: number) => n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (min === max) {
+      return `S/ ${fmt(min)}`;
+    }
+    return `S/ ${fmt(min)} - S/ ${fmt(max)}`;
   }
 
+  // Badge de stock
+  getStockBadgeClass(stock: number): string {
+    if (stock === 0) return 'bg-danger text-white';
+    if (stock <= 10) return 'bg-warning text-dark';
+    return 'bg-success text-white';
+  }
+
+  getStockText(stock: number): string {
+    if (stock === 0) return 'Sin stock';
+    if (stock <= 10) return `${stock} en stock`;
+    return `${stock} disponibles`;
+  }
+toggleActivo(producto: ProductoAdminListItem): void {
+  const nuevoEstado = !producto.activo;
+
+  this.loadingToggleId.set(producto.id);
+
+  // Optimistic update
+  this.productos.update(list =>
+    list.map(p => p.id === producto.id ? { ...p, activo: nuevoEstado } : p)
+  );
+
+  this.productoService.toggleActivo(producto.id).subscribe({
+    next: (updatedResponse: ProductoResponse) => {
+      // Buscamos el producto actual en la lista para conservar las propiedades extras
+      this.productos.update(list =>
+        list.map(p =>
+          p.id === updatedResponse.id
+            ? { ...p, ...updatedResponse }  // merge: mantiene las props extras y actualiza las del response
+            : p
+        )
+      );
+
+      this.loadingToggleId.set(null);
+
+      Swal.fire({
+        icon: 'success',
+        title: nuevoEstado ? 'Activado' : 'Desactivado',
+        text: `El producto "${updatedResponse.nombre}" ahora está ${nuevoEstado ? 'activo' : 'inactivo'}.`,
+        timer: 1500,
+        showConfirmButton: false
+      });
+    },
+    error: (err) => {
+      this.productos.update(list =>
+        list.map(p => p.id === producto.id ? { ...p, activo: !nuevoEstado } : p)
+      );
+      this.loadingToggleId.set(null);
+      this.mostrarError(err, 'Error al cambiar el estado del producto');
+    }
+  });
+}
   // ======================== UTILIDADES ========================
 
-  trackByProductoId(index: number, producto: ProductoResponse): number {
-    return producto.id;
-  }
-
+ trackByProductoId(index: number, producto: ProductoAdminListItem): unknown {
+  return producto.id;
+}
   onSearch(): void {
     this.currentPage.set(0);
   }

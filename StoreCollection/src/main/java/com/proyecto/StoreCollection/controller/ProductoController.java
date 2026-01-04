@@ -6,6 +6,7 @@ import com.proyecto.StoreCollection.dto.response.PageResponse;
 import com.proyecto.StoreCollection.dto.response.PlanResponse;
 import com.proyecto.StoreCollection.dto.response.ProductoCardResponse;
 import com.proyecto.StoreCollection.dto.response.ProductoResponse;
+import com.proyecto.StoreCollection.dto.special.ProductoAdminListDTO;
 import com.proyecto.StoreCollection.entity.Producto;
 import com.proyecto.StoreCollection.service.ProductoService;
 import com.proyecto.StoreCollection.tenant.TenantContext;
@@ -44,7 +45,7 @@ public class ProductoController {
     //PRIVADO PARA LA PARTE ADMIN
 
     @GetMapping("/api/owner/productos/admin-list")
-    public ResponseEntity<Page<ProductoResponse>> listarProductosUsuarioOAdmin(
+    public ResponseEntity<Page<ProductoAdminListDTO>> listarProductosUsuarioOAdmin(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "nombre,asc") String sort,
@@ -56,23 +57,20 @@ public class ProductoController {
         boolean esAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-        Page<ProductoResponse> resultado;
+        Page<ProductoAdminListDTO> resultado;
 
         if (esAdmin) {
-            // ADMIN → ve TODOS los productos del sistema
             resultado = (search != null && !search.isBlank())
-                    ? service.buscarPorNombreContainingIgnoreCase(search.trim(), pageable)
-                    : service.findAll(pageable);
+                    ? service.buscarTodosPorNombreAdminList(search.trim(), pageable)
+                    : service.listarTodosAdminList(pageable);
         } else {
-            // OWNER → solo sus productos (tenant actual)
             Integer tenantId = TenantContext.getTenantId();
             if (tenantId == null) {
-                // Usuario nuevo sin tienda → devuelve vacío (nunca error)
                 resultado = Page.empty(pageable);
             } else {
                 resultado = (search != null && !search.isBlank())
-                        ? service.buscarPorNombreYEmailUsuario(search.trim(), auth.getName(), pageable)
-                        : service.findByUserEmail(auth.getName(), pageable);
+                        ? service.buscarPorNombreYTiendaAdminList(tenantId, search.trim(), pageable)
+                        : service.listarPorTiendaAdminList(tenantId, pageable);
             }
         }
 

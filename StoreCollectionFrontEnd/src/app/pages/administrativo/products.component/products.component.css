@@ -96,4 +96,25 @@
   .modal-inner {
     padding: 1.5rem;
   }
+}/* Mejoras sutiles sobre Bootstrap */
+.table-hover tbody tr:hover {
+  background-color: rgba(13, 110, 253, 0.04);
+}
+
+img.object-fit-cover {
+  object-fit: cover;
+}
+
+code {
+  font-size: 0.9em;
+}
+
+/* Scroll suave en modales */
+.modal-dialog-scrollable .modal-body {
+  overscroll-behavior: contain;
+}
+
+/* Transiciones suaves en badges */
+.badge {
+  transition: all 0.2s ease;
 }
