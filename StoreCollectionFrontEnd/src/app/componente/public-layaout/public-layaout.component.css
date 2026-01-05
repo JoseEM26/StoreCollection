@@ -1,4 +1,23 @@
-/* ====================== HEADER ====================== */
+/* Layout principal con flex para que footer quede abajo */
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+.public-main {
+  flex-grow: 1;
+  padding-top: 2rem;
+  padding-bottom: 3rem;
+}
+
+/* Header */
 .public-header {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);
@@ -11,7 +30,6 @@
 .public-header.scrolled {
   background: rgba(255, 255, 255, 0.98);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  padding: 0.5rem 0;
 }
 
 /* Logo */
@@ -30,10 +48,15 @@
   object-fit: cover;
 }
 
+.tienda-nombre {
+  font-size: 1.4rem;
+}
+
 /* Enlaces activos */
 .nav-link.active {
   background-color: #f0fdf4 !important;
   color: #16a34a !important;
+  font-weight: 600 !important;
 }
 
 /* Menú móvil */
@@ -41,20 +64,33 @@
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.4s ease;
+  background: white;
+  border-top: 1px solid #eee;
 }
 
 .mobile-menu.open {
-  max-height: 400px;
+  max-height: 500px;
 }
 
-/* ====================== MAIN ====================== */
-.public-main {
-  background: #f8fafc;
-  padding-top: 2rem;
-  padding-bottom: 4rem;
+/* Badge carrito */
+.badge-cart {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #dc3545;
+  color: white;
+  font-size: 0.7rem;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border: 2px solid white;
 }
 
-/* ====================== WHATSAPP FLOTANTE ====================== */
+/* WhatsApp flotante */
 .btn-whatsapp-flotante {
   position: fixed;
   bottom: 30px;
@@ -92,9 +128,16 @@
   border-radius: 50%;
 }
 
-/* ====================== FOOTER ====================== */
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.7; }
+  70% { transform: scale(1.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+/* Footer */
 .public-footer {
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  margin-top: auto;
 }
 
 .footer-logo-container {
@@ -102,6 +145,7 @@
   height: 70px;
   overflow: hidden;
   border: 3px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
 }
 
 .footer-logo-img {
@@ -118,6 +162,8 @@
 .social-btn {
   width: 50px;
   height: 50px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -130,42 +176,13 @@
   transform: translateY(-5px);
 }
 
-/* Animación pulse WhatsApp */
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 0.7; }
-  70% { transform: scale(1.5); opacity: 0; }
-  100% { transform: scale(1); opacity: 0; }
-}
-
-/* Responsive ajustes */
+/* Responsive */
 @media (max-width: 992px) {
   .logo-container { width: 60px; height: 60px; }
-  .tienda-nombre { font-size: 1.1rem; }
+  .tienda-nombre { font-size: 1.2rem; }
 }
 
 @media (max-width: 576px) {
   .footer-logo-container { width: 60px; height: 60px; }
   .social-btn { width: 45px; height: 45px; }
-}/* Ícono carrito en header */
-a[aria-label="Ver carrito"] {
-  margin-right: 1rem;
-}
-
-a[aria-label="Ver carrito"]:hover {
-  opacity: 0.8;
-}
-
-.badge {
-  min-width: 18px;
-  height: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* En móvil: ajustar margen */
-@media (max-width: 992px) {
-  a[aria-label="Ver carrito"] {
-    margin-right: 0.5rem;
-  }
 }

@@ -23,7 +23,7 @@ public interface TiendaRepository extends JpaRepository<Tienda, Integer> {
     Page<Tienda> findByNombreContainingIgnoreCase(String nombre, Pageable pageable);
 
     List<Tienda> findByUserId(Integer userId);
-
+    List<Tienda> findByUserEmail(String email);
     Page<Tienda> findByUserEmail(String email, Pageable pageable);
 
     Optional<Tienda> findFirstByUserEmail(String email);

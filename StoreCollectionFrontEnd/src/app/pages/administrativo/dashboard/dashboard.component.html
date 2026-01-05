@@ -1,115 +1,274 @@
-<!-- src/app/admin/dashboard/dashboard.component.html -->
-<div class="dashboard-page" [class.dark]="darkMode()">
-  <!-- Header + Dark Mode Toggle -->
-  <div class="header-container">
+<div class="dashboard-container">
+  <!-- Header -->
+  <header class="header">
     <div class="container-fluid">
-      <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="d-flex justify-content-between align-items-center py-4">
         <div>
-          <h1 class="title">Dashboard General</h1>
-          <p class="subtitle">Resumen completo de Store Collection v2.0</p>
+          <h1 class="title">
+            Dashboard {{ overview()?.rol === 'ADMIN' ? 'Administrador' : 'Propietario' }}
+          </h1>
+          <p class="subtitle text-muted">
+            {{ currentDate | date:'EEEE, d MMMM yyyy' }}
+          </p>
         </div>
-        <button class="btn-theme-toggle" (click)="toggleDarkMode()" [attr.aria-label]="'Modo ' + (darkMode() ? 'claro' : 'oscuro')">
-          <i class="bi" [class.bi-sun-fill]="darkMode()" [class.bi-moon-fill]="!darkMode()"></i>
-        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container-fluid py-5">
+    <!-- Loading Overlay -->
+    <div *ngIf="loading()" class="loading-overlay">
+      <div class="loading-content text-center">
+        <div class="spinner-border text-primary mb-4" style="width: 5rem; height: 5rem;"></div>
+        <h4 class="mb-3 fw-semibold">Cargando tu dashboard</h4>
+        <p class="text-muted">Obteniendo estadísticas, ingresos, tiendas y uso del plan...</p>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error() && !loading()" class="alert alert-danger d-flex align-items-center justify-content-center mx-auto my-5" style="max-width: 600px;">
+      <i class="bi bi-exclamation-triangle-fill me-3 fs-4"></i>
+      <div>{{ error() }}</div>
+    </div>
+
+    <!-- Contenido principal -->
+    <ng-container *ngIf="!loading() && overview()">
+      <!-- Stats Cards -->
+      <div class="row g-4 mb-5">
+        <div class="col-xl-3 col-lg-6" *ngFor="let stat of stats">
+          <div class="card stat-card glass-effect h-100 shadow-hover">
+            <div class="card-body d-flex align-items-center">
+              <div class="stat-icon me-4" [style.background]="stat.gradient">
+                <i [class]="stat.icon" class="text-white fs-3"></i>
+              </div>
+              <div>
+                <h3 class="mb-1 fw-bold stat-value">
+                  {{ stat.prefix || '' }}
+                  <ng-container [ngSwitch]="stat.type">
+                    <ng-container *ngSwitchCase="'currency'">
+                      {{ stat.value | number:'1.2-2':'es' }}
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'number'">
+                      {{ stat.value | number:'1.0-0':'es' }}
+                    </ng-container>
+                    <ng-container *ngSwitchCase="'text'">
+                      {{ stat.value }}
+                    </ng-container>
+                  </ng-container>
+                </h3>
+                <div class="text-muted small">{{ stat.label }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Uso del Plan – sección completa y elegante -->
+      <div class="row g-4 mb-5" *ngIf="planUsage()">
+        <div class="col-12">
+          <div class="card glass-effect shadow-sm">
+            <div class="card-header bg-transparent border-0 d-flex align-items-center">
+              <i class="bi bi-speedometer2 me-2 fs-4 text-primary"></i>
+              <h5 class="mb-0">Uso de tu plan: {{ planUsage()?.planNombre }}</h5>
+            </div>
+            <div class="card-body">
+              <div class="row g-4 mb-4">
+                <!-- Productos -->
+                <div class="col-md-4">
+                  <div class="progress-container">
+                    <div class="d-flex justify-content-between mb-2">
+                      <span class="fw-medium">Productos</span>
+                      <span class="fw-semibold">
+                        {{ planUsage()?.productosActuales ?? 0 }} / {{ planUsage()?.maxProductos ?? 0 }}
+                      </span>
+                    </div>
+                    <div class="progress rounded-pill" style="height: 24px;">
+                      <div class="progress-bar progress-bar-striped"
+                           [ngClass]="getProgressClass(planUsage()?.porcentajeProductos ?? 0)"
+                           role="progressbar"
+                           [style.width.%]="planUsage()?.porcentajeProductos ?? 0">
+                        {{ planUsage()?.porcentajeProductos ?? 0 | number:'1.0-0' }}%
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Variantes -->
+                <div class="col-md-4">
+                  <div class="progress-container">
+                    <div class="d-flex justify-content-between mb-2">
+                      <span class="fw-medium">Variantes</span>
+                      <span class="fw-semibold">
+                        {{ planUsage()?.variantesActuales ?? 0 }} / {{ planUsage()?.maxVariantes ?? 0 }}
+                      </span>
+                    </div>
+                    <div class="progress rounded-pill" style="height: 24px;">
+                      <div class="progress-bar progress-bar-striped"
+                           [ngClass]="getProgressClass(planUsage()?.porcentajeVariantes ?? 0)"
+                           role="progressbar"
+                           [style.width.%]="planUsage()?.porcentajeVariantes ?? 0">
+                        {{ planUsage()?.porcentajeVariantes ?? 0 | number:'1.0-0' }}%
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tiempo de prueba -->
+                <div class="col-md-4" *ngIf="planUsage() as usage">
+                  <ng-container *ngIf="usage.esTrial && usage.diasTrial > 0">
+                    <div class="progress-container">
+                      <div class="d-flex justify-content-between mb-2">
+                        <span class="fw-medium">Tiempo de prueba</span>
+                        <span class="fw-semibold">{{ usage.porcentajeTiempoTrial | number:'1.0-0' }}%</span>
+                      </div>
+                      <div class="progress rounded-pill" style="height: 24px;">
+                        <div class="progress-bar progress-bar-striped"
+                             [ngClass]="getProgressClass(usage.porcentajeTiempoTrial)"
+                             role="progressbar"
+                             [style.width.%]="usage.porcentajeTiempoTrial">
+                          {{ usage.porcentajeTiempoTrial | number:'1.0-0' }}%
+                        </div>
+                      </div>
+                      <small class="text-muted mt-1 d-block">
+                        <i class="bi bi-calendar-event me-1"></i>
+                        Hasta: {{ usage.fechaFinTrial | date:'dd/MM/yyyy' }}
+                      </small>
+                    </div>
+                  </ng-container>
+                </div>
+              </div>
+<!-- Renovación – SIEMPRE VISIBLE -->
+<div class="mt-4 pt-4 border-top">
+  <h6 class="mb-3 text-muted"><i class="bi bi-calendar-check me-2"></i>Próxima renovación</h6>
+  <div class="row g-3">
+    <!-- Tipo de plan -->
+    <div class="col-md-4">
+      <div class="card bg-light border-0 h-100 text-center p-3">
+        <i class="bi bi-repeat fs-3 text-primary mb-2"></i>
+        <h6 class="mb-1">Tipo</h6>
+        <p class="fw-bold mb-0 fs-5">
+          {{ planUsage()?.intervaloBilling === 'year' ? 'Anual' : 'Mensual' }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Fecha próxima -->
+    <div class="col-md-4">
+      <div class="card bg-light border-0 h-100 text-center p-3">
+        <i class="bi bi-calendar-event fs-3 text-primary mb-2"></i>
+        <h6 class="mb-1">Próxima fecha</h6>
+        <p class="fw-bold mb-0 fs-5">
+          {{ planUsage()?.fechaProximaRenovacion ? (planUsage()?.fechaProximaRenovacion | date:'dd/MM/yyyy') : '—' }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Días restantes -->
+    <div class="col-md-4">
+      <div class="card h-100 text-center p-3 shadow-sm" [ngClass]="{
+        'bg-danger-subtle text-danger border-danger': planUsage()?.proximoVencimientoCerca,
+        'bg-light border-light': !planUsage()?.proximoVencimientoCerca
+      }">
+        <i class="bi bi-hourglass-split fs-3 mb-2" [ngClass]="{
+          'text-danger': planUsage()?.proximoVencimientoCerca,
+          'text-primary': !planUsage()?.proximoVencimientoCerca
+        }"></i>
+        <h6 class="mb-1">Días restantes</h6>
+        <p class="fs-4 fw-bold mb-0">
+          {{ planUsage()?.diasRestantesRenovacion ?? '—' }}
+        </p>
+        <small *ngIf="planUsage()?.proximoVencimientoCerca" class="text-danger fw-bold mt-1">
+          ¡Renueva pronto!
+        </small>
       </div>
     </div>
   </div>
+</div>
 
-  <div class="container-fluid">
-
-    <!-- Stats Cards con efecto glassmorphism -->
-    <div class="row g-4 mb-5">
-      <div class="col-xl-3 col-md-6" *ngFor="let stat of stats(); let i = index" 
-           data-aos="fade-up" [attr.data-aos-delay]="i * 100">
-        <div class="stat-card glass">
-          <div class="stat-icon" [style.background]="stat.gradient">
-            <i [class]="stat.icon"></i>
-          </div>
-          <div class="stat-content">
-            <div class="stat-value">{{ stat.prefix }}{{ stat.value | number:'1.0-0' }}</div>
-            <div class="stat-label">{{ stat.label }}</div>
-            <div class="stat-change" [class.positive]="stat.change > 0" [class.negative]="stat.change < 0">
-              <i class="bi" [class.bi-arrow-up-right]="stat.change > 0" [class.bi-arrow-down-right]="stat.change < 0"></i>
-              {{ stat.change > 0 ? '+' : '' }}{{ stat.change }}%
-            </div>
-          </div>
-          <div class="stat-sparkline">
-            <canvas [id]="'sparkline-' + i"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Main Grid -->
-    <div class="row g-4">
-      <!-- Gráfico de ingresos (Chart.js) -->
-      <div class="col-lg-8">
-        <div class="chart-card glass">
-          <div class="card-header">
-            <h5>Ingresos Mensuales 2025</h5>
-            <div class="header-actions">
-              <button class="btn-sm active">Mes</button>
-              <button class="btn-sm">Año</button>
-            </div>
-          </div>
-          <canvas #revenueChart height="320"></canvas>
-        </div>
-      </div>
-
-      <!-- Últimas tiendas + Actividad reciente -->
-      <div class="col-lg-4">
-        <div class="activity-card glass mb-4">
-          <div class="card-header">
-            <h6>Tiendas Recientes</h6>
-            <span class="badge-success">+12 esta semana</span>
-          </div>
-          <div class="store-list">
-            <div class="store-item" *ngFor="let store of recentStores()">
-              <div class="store-avatar" [style.background-image]="'url(https://api.dicebear.com/7.x/shapes/svg?seed=' + store.name + ')'">
-              </div>
-              <div class="store-info">
-                <div class="store-name">{{ store.name }}</div>
-                <div class="store-domain">{{ store.domain }}</div>
-              </div>
-              <span class="status-dot" [class.active]="store.active"></span>
-            </div>
-          </div>
-        </div>
-
-        <div class="activity-card glass">
-          <div class="card-header">
-            <h6>Actividad Reciente</h6>
-          </div>
-          <div class="activity-list">
-            <div class="activity-item" *ngFor="let act of recentActivity()">
-              <div class="activity-icon" [style.background]="act.color">
-                <i [class]="act.icon"></i>
-              </div>
-              <div class="activity-text">
-                <div>{{ act.text }}</div>
-                <small>{{ act.time }}</small>
+              <!-- Alerta de límite -->
+              <div class="alert alert-warning mt-4 d-flex align-items-center" *ngIf="planUsage() && (
+                (planUsage()?.porcentajeProductos ?? 0) >= 80 ||
+                (planUsage()?.porcentajeVariantes ?? 0) >= 80 ||
+                (planUsage()?.porcentajeTiempoTrial ?? 0) >= 80)">
+                <i class="bi bi-exclamation-triangle-fill me-3 fs-4"></i>
+                <div>
+                  <strong>¡Atención!</strong> Estás cerca del límite en productos, variantes o tiempo de prueba.
+                  <a href="#" class="alert-link ms-2">Ver planes superiores</a>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Tarjeta motivacional épica -->
-    <div class="motivation-section mt-5">
-      <div class="motivation-card glass">
-        <div class="motivation-content">
-          <h2>¡Los creadores de TikTok ya tienen su tienda propia!</h2>
-          <p class="lead">Multitenant • Escalable • 100% Automatizado • Listo para millones</p>
-          <div class="badges">
-            <span class="badge-premium">Store Collection v2.0</span>
-            <span class="badge-live">EN VIVO</span>
+      <!-- Gráfico + Tiendas -->
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="card glass-effect h-100 shadow-sm">
+            <div class="card-header bg-transparent border-0 d-flex align-items-center">
+              <i class="bi bi-graph-up me-2 fs-4 text-primary"></i>
+              <h5 class="mb-0">Ingresos por Estado</h5>
+            </div>
+            <div class="card-body" style="height: 420px;">
+              <canvas 
+                baseChart
+                *ngIf="barChartData().datasets.length > 0; else noRevenue"
+                [data]="barChartData()"
+                [options]="barChartOptions"
+                [type]="barChartType">
+              </canvas>
+
+              <ng-template #noRevenue>
+                <div class="h-100 d-flex align-items-center justify-content-center text-muted">
+                  <div class="text-center">
+                    <i class="bi bi-bar-chart-line display-4 mb-3 text-muted"></i>
+                    <p class="lead">Aún no hay ingresos registrados</p>
+                    <small>Las ventas aparecerán aquí cuando lleguen las primeras órdenes</small>
+                  </div>
+                </div>
+              </ng-template>
+            </div>
           </div>
         </div>
-        <div class="motivation-decoration">
-          <i class="bi bi-rocket-takeoff-fill"></i>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+          <div class="card glass-effect mb-4 shadow-sm">
+            <div class="card-header bg-transparent border-0">
+              <h6 class="mb-0">Tiendas Recientes</h6>
+            </div>
+            <div class="card-body p-0">
+              <div class="store-list">
+                <div class="store-item" *ngFor="let store of tiendasRecientes()">
+                  <div class="store-avatar me-3" [style.backgroundImage]="'url(' + getAvatarUrl(store.nombre) + ')'"></div>
+                  <div class="store-info flex-grow-1">
+                    <div class="store-name fw-semibold">{{ store.nombre }}</div>
+                    <div class="store-slug text-muted small">{{ store.slug }}.storecollection.com</div>
+                  </div>
+                  <span class="status-dot" [class.active]="store.activo"></span>
+                </div>
+
+                <div *ngIf="tiendasRecientes().length === 0" class="text-center py-5 text-muted">
+                  <i class="bi bi-shop fs-3 mb-2"></i>
+                  <p>No hay tiendas recientes aún</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mensaje motivacional -->
+          <div class="card glass-effect text-center py-5 shadow-sm">
+            <i class="bi bi-rocket-takeoff-fill display-4 text-primary mb-3"></i>
+            <h5 class="mb-2">¡Store Collection crece contigo!</h5>
+            <p class="text-muted mb-4">Multitenant • Escalable • Moderno</p>
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
+              <span class="badge bg-primary px-3 py-2">v2.2</span>
+              <span class="badge bg-success px-3 py-2">2026</span>
+              <span class="badge bg-info px-3 py-2">+{{ overview()?.totalTiendas || 0 }} tiendas</span>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
+    </ng-container>
+  </main>
 </div>

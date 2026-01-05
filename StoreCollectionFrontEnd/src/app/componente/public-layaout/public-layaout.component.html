@@ -1,10 +1,10 @@
-<!-- Header sticky con efecto scroll -->
-<header class="public-header shadow-sm" [class.scrolled]="isScrolled">
+<!-- HEADER -->
+<header class="public-header" [class.scrolled]="isScrolled">
   <div class="container py-3">
     <div class="d-flex align-items-center justify-content-between">
 
-      <!-- Logo + Nombre Tienda -->
-      <a [routerLink]="['/', tienda?.slug]" class="d-flex align-items-center text-decoration-none gap-3 gap-lg-4">
+      <!-- Logo + Nombre -->
+      <a [routerLink]="['/', tienda?.slug]" class="d-flex align-items-center text-decoration-none gap-3">
         @if (tienda?.logo_img_url) {
           <div class="logo-container">
             <img [src]="tienda.logo_img_url"
@@ -20,185 +20,131 @@
         </div>
       </a>
 
-      <!-- Menú Desktop -->
+      <!-- Navegación Desktop -->
       <nav class="d-none d-lg-flex align-items-center gap-4">
-        <a class="nav-link px-3 py-2 rounded-3" 
+        <a class="nav-link px-4 py-2 rounded-3" 
            [routerLink]="['/', tienda?.slug]" 
-           routerLinkActive="active fw-bold bg-light">
-          <i class="bi bi-house-door-fill me-2"></i>Inicio
-        </a>
-        <a class="nav-link px-3 py-2 rounded-3" 
+           routerLinkActive="active">Inicio</a>
+        <a class="nav-link px-4 py-2 rounded-3" 
            [routerLink]="['/', tienda?.slug, 'catalogo']" 
-           routerLinkActive="active fw-bold bg-light">
-          <i class="bi bi-grid-3x3-gap-fill me-2"></i>Catálogo
-        </a>
-        <a class="nav-link px-3 py-2 rounded-3" 
+           routerLinkActive="active">Catálogo</a>
+        <a class="nav-link px-4 py-2 rounded-3" 
            [routerLink]="['/', tienda?.slug, 'conocenos']" 
-           routerLinkActive="active fw-bold bg-light">
-          <i class="bi bi-heart-fill me-2"></i>Conócenos
-        </a>
+           routerLinkActive="active">Conócenos</a>
       </nav>
-      <!-- ÍCONO CARRITO - Desktop y móvil -->
+
+      <!-- Carrito (siempre visible) -->
       <a [routerLink]="['/', tienda?.slug, 'carrito']"
-         class="position-relative text-dark text-decoration-none d-flex align-items-center"
+         class="position-relative text-dark text-decoration-none"
          aria-label="Ver carrito">
         <i class="bi bi-cart3 fs-3"></i>
-        
-        <!-- Badge con cantidad -->
         @if (totalItemsCarrito > 0) {
-          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                style="font-size: 0.65rem;">
-            {{ totalItemsCarrito }}
-            <span class="visually-hidden">productos en el carrito</span>
-          </span>
+          <span class="badge-cart">{{ totalItemsCarrito }}</span>
         }
       </a>
 
-      <!-- Botón menú móvil -->
-      <button class="btn btn-outline-dark d-lg-none rounded-circle p-2 ms-3" 
-              (click)="toggleMenu()" 
-              aria-label="Menú">
-        <i class="bi fs-4" [class.bi-list]="!menuOpen" [class.bi-x-lg]="menuOpen"></i>
-      </button>
-      <!-- Botón menú móvil -->
+      <!-- Botón menú móvil (solo uno) -->
       <button class="btn btn-outline-dark d-lg-none rounded-circle p-2" 
               (click)="toggleMenu()" 
-              aria-label="Menú">
+              aria-label="Abrir menú">
         <i class="bi fs-4" [class.bi-list]="!menuOpen" [class.bi-x-lg]="menuOpen"></i>
       </button>
     </div>
   </div>
 
   <!-- Menú móvil -->
-  <div class="mobile-menu bg-white border-top shadow-lg" [class.open]="menuOpen">
-    <div class="container py-3">
-      <a class="d-block py-3 text-dark text-decoration-none border-bottom" 
+  <div class="mobile-menu" [class.open]="menuOpen">
+    <div class="container py-4">
+      <a class="d-block py-3 text-dark border-bottom" 
          [routerLink]="['/', tienda?.slug]" 
          (click)="closeMenu()" 
-         routerLinkActive="active fw-bold">
-        <i class="bi bi-house-door-fill me-3"></i>Inicio
-      </a>
-      <a class="d-block py-3 text-dark text-decoration-none border-bottom" 
+         routerLinkActive="active fw-bold">Inicio</a>
+      <a class="d-block py-3 text-dark border-bottom" 
          [routerLink]="['/', tienda?.slug, 'catalogo']" 
          (click)="closeMenu()" 
-         routerLinkActive="active fw-bold">
-        <i class="bi bi-grid-3x3-gap-fill me-3"></i>Catálogo
-      </a>
-      <a class="d-block py-3 text-dark text-decoration-none" 
+         routerLinkActive="active fw-bold">Catálogo</a>
+      <a class="d-block py-3 text-dark" 
          [routerLink]="['/', tienda?.slug, 'conocenos']" 
          (click)="closeMenu()" 
-         routerLinkActive="active fw-bold">
-        <i class="bi bi-heart-fill me-3"></i>Conócenos
-      </a>
+         routerLinkActive="active fw-bold">Conócenos</a>
     </div>
   </div>
 </header>
 
-<!-- Contenido principal -->
-<main class="public-main min-vh-100">
+<!-- CONTENIDO PRINCIPAL -->
+<main class="public-main flex-grow-1">
   <router-outlet></router-outlet>
 </main>
 
-<!-- Botón WhatsApp flotante -->
+<!-- WhatsApp flotante -->
 @if (tienda?.whatsapp && getWhatsAppLink()) {
   <a [href]="getWhatsAppLink()"
      (click)="abrirWhatsApp(); $event.preventDefault()"
      class="btn-whatsapp-flotante shadow-lg rounded-circle d-flex align-items-center justify-content-center"
-     aria-label="Chatear por WhatsApp"
-     target="_blank"
-     rel="noopener noreferrer">
+     aria-label="Chatear por WhatsApp">
     <i class="bi bi-whatsapp fs-3"></i>
     <span class="pulse-ring"></span>
     <span class="online-dot"></span>
   </a>
 }
 
-<!-- FOOTER PREMIUM CON BOOTSTRAP -->
-<footer class="public-footer bg-dark text-light mt-5">
-  <div class="container py-5 py-lg-7">
+<!-- FOOTER -->
+<footer class="public-footer text-light">
+  <div class="container py-5">
     <div class="row g-5">
-
-      <!-- Columna 1: Marca + Descripción -->
       <div class="col-lg-4">
         <div class="d-flex align-items-center gap-4 mb-4">
           @if (tienda?.logo_img_url) {
             <div class="footer-logo-container">
-              <img [src]="tienda.logo_img_url" 
-                   [alt]="tienda.nombre" 
-                   class="footer-logo-img rounded-3">
+              <img [src]="tienda.logo_img_url" [alt]="tienda.nombre" class="footer-logo-img">
             </div>
           }
           <h4 class="fw-bold mb-0">{{ tienda?.nombre || 'STORE COLLECTION' }}</h4>
         </div>
-        <p class="text-light-emphasis small lh-lg">
-          {{ tienda?.descripcion || 'Tu tienda online favorita con productos exclusivos, tendencias virales y la mejor atención personalizada.' }}
+        <p class="text-light-emphasis small">
+          {{ tienda?.descripcion || 'Tu tienda online favorita con productos exclusivos y la mejor atención.' }}
         </p>
       </div>
 
-      <!-- Columna 2: Enlaces rápidos -->
       <div class="col-lg-2 col-md-6">
-        <h6 class="fw-bold mb-4 text-white">Enlaces</h6>
-        <ul class="list-unstyled">
+        <h6 class="fw-bold mb-4">Enlaces</h6>
+        <ul class="list-unstyled small">
           <li class="mb-3"><a [routerLink]="['/', tienda?.slug]" class="text-light-emphasis text-decoration-none hover-success">Inicio</a></li>
           <li class="mb-3"><a [routerLink]="['/', tienda?.slug, 'catalogo']" class="text-light-emphasis text-decoration-none hover-success">Catálogo</a></li>
           <li class="mb-3"><a [routerLink]="['/', tienda?.slug, 'conocenos']" class="text-light-emphasis text-decoration-none hover-success">Conócenos</a></li>
         </ul>
       </div>
 
-      <!-- Columna 3: Contacto -->
       <div class="col-lg-3 col-md-6">
-        <h6 class="fw-bold mb-4 text-white">Contacto</h6>
-        <ul class="list-unstyled">
+        <h6 class="fw-bold mb-4">Contacto</h6>
+        <ul class="list-unstyled small">
           @if (tienda?.direccion) {
-            <li class="mb-3 d-flex align-items-start gap-3">
-              <i class="bi bi-geo-alt-fill text-success mt-1"></i>
-              <span class="text-light-emphasis small">{{ tienda.direccion }}</span>
-            </li>
+            <li class="mb-3 d-flex gap-3"><i class="bi bi-geo-alt-fill text-success"></i> {{ tienda.direccion }}</li>
           }
           @if (tienda?.horarios) {
-            <li class="mb-3 d-flex align-items-start gap-3">
-              <i class="bi bi-clock-fill text-primary mt-1"></i>
-              <span class="text-light-emphasis small">{{ tienda.horarios }}</span>
-            </li>
+            <li class="mb-3 d-flex gap-3"><i class="bi bi-clock-fill text-success"></i> {{ tienda.horarios }}</li>
           }
           @if (tienda?.whatsapp) {
-            <li class="mb-3 d-flex align-items-center gap-3">
-              <i class="bi bi-whatsapp text-success"></i>
-              <span class="text-light-emphasis small">{{ tienda.whatsapp }}</span>
-            </li>
+            <li class="mb-3 d-flex gap-3"><i class="bi bi-whatsapp text-success"></i> {{ tienda.whatsapp }}</li>
           }
         </ul>
       </div>
 
-      <!-- Columna 4: Redes sociales -->
       <div class="col-lg-3">
-        <h6 class="fw-bold mb-4 text-white">Síguenos</h6>
+        <h6 class="fw-bold mb-4">Síguenos</h6>
         <div class="d-flex gap-3 mb-4">
-          <a href="#" target="_blank" class="social-btn bg-secondary-subtle text-dark rounded-3">
-            <i class="bi bi-tiktok fs-5"></i>
-          </a>
-          <a href="#" target="_blank" class="social-btn bg-secondary-subtle text-dark rounded-3">
-            <i class="bi bi-instagram fs-5"></i>
-          </a>
-          <a href="#" target="_blank" class="social-btn bg-secondary-subtle text-dark rounded-3">
-            <i class="bi bi-facebook fs-5"></i>
-          </a>
+          <a href="#" class="social-btn"><i class="bi bi-tiktok fs-5"></i></a>
+          <a href="#" class="social-btn"><i class="bi bi-instagram fs-5"></i></a>
+          <a href="#" class="social-btn"><i class="bi bi-facebook fs-5"></i></a>
         </div>
-        <p class="text-light-emphasis small">
-          ¡Ofertas exclusivas y novedades cada semana!
-        </p>
       </div>
     </div>
 
-    <hr class="my-5 border-secondary">
+    <hr class="border-secondary my-5">
 
-    <div class="text-center">
-      <p class="text-light-emphasis small mb-2">
-        © {{ currentYear }} <strong class="text-white">{{ tienda?.nombre || 'STORE COLLECTION' }}</strong> • Todos los derechos reservados
-      </p>
-      <p class="text-light-emphasis small opacity-75">
-        Hecho con <i class="bi bi-heart-fill text-danger"></i> en Perú
-      </p>
+    <div class="text-center small text-light-emphasis">
+      <p class="mb-2">© {{ currentYear }} <strong>{{ tienda?.nombre || 'STORE COLLECTION' }}</strong> • Todos los derechos reservados</p>
+      <p class="mb-0 opacity-75">Hecho con <i class="bi bi-heart-fill text-danger"></i> en Perú</p>
     </div>
   </div>
 </footer>

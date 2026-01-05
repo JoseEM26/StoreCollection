@@ -45,3 +45,22 @@ export interface PlanPage {
   totalElements: number;
   totalPages: number;
 }
+export interface PlanUsageDto {
+  planNombre: string;
+  precioMensual: number;
+
+  maxProductos: number;
+  maxVariantes: number;
+
+  esTrial: boolean;
+  diasTrial: number;
+  fechaInicio?: string | null;     // ISO string o null
+  fechaFin?: string | null;
+
+  productosActuales: number;
+  variantesActuales: number;
+
+  porcentajeProductos: number;
+  porcentajeVariantes: number;
+  porcentajeTiempoTrial: number;
+}

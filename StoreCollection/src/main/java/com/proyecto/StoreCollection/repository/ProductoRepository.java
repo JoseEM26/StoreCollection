@@ -20,10 +20,10 @@ public interface ProductoRepository extends TenantBaseRepository<Producto, Integ
       * Cuenta cuántos productos tiene una tienda específica.
       * Muy útil para validar límites del plan (max_productos).
       */
-     long countByTiendaId(Integer tiendaId);
+     //long countByTiendaId(Integer tiendaId);
 
      // ==================== BÚSQUEDAS BÁSICAS ====================
-
+     int countByTiendaId(Integer tiendaId);
      Optional<Producto> findBySlugAndTiendaId(String slug, Integer tiendaId);
 
      List<Producto> findAllByOrderByNombreAsc();

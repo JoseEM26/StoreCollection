@@ -17,8 +17,8 @@ public interface ProductoVarianteRepository extends TenantBaseRepository<Product
       * Cuenta cuántas variantes tiene una tienda específica.
       * Usado para validar el límite max_variantes del plan.
       */
-     long countByTiendaId(Integer tiendaId);
-
+     //long countByTiendaId(Integer tiendaId);
+     int countByTiendaId(Integer tiendaId);
      /**
       * Cuenta cuántas variantes tiene un producto específico.
       * Muy útil al editar un producto: restamos sus variantes actuales del conteo total

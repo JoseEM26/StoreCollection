@@ -21,9 +21,9 @@ public interface PlanRepository extends JpaRepository<Plan, Integer> {
 
     // Planes públicos visibles (página de precios)
     List<Plan> findByActivoTrueAndEsVisiblePublicoTrueOrderByOrdenAsc();
-
+    List<Plan> findByActivoTrue();  // ← AÑADE ESTO
     // Para paginación en admin
-    Page<Plan> findByActivoTrue(Pageable pageable);
+    //Page<Plan> findByActivoTrue(Pageable pageable);
     Page<Plan> findByActivoTrueAndEsVisiblePublicoTrue(Pageable pageable);
     // Plan por defecto (más barato)
     @Query("SELECT p FROM Plan p WHERE p.activo = true AND p.esVisiblePublico = true ORDER BY p.precioMensual ASC")
