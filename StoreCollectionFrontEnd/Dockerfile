@@ -15,8 +15,8 @@ FROM nginx:alpine
 WORKDIR /usr/share/nginx/html
 RUN rm -rf ./*
 
-# Copiar la carpeta correcta del build (mirar minúsculas y guiones)
-COPY --from=build /app/dist/store-collection-front-end /usr/share/nginx/html
+# Copiar el contenido del build al NGINX
+COPY --from=build /app/dist/store-collection-front-end/ /usr/share/nginx/html/
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
