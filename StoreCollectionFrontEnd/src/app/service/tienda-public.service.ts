@@ -74,13 +74,13 @@ getAllTiendas(
     );
   }
 
-  cargarTiendaActual(): Observable<TiendaPublic | null> {
-    const url = this.tiendaService.getBaseUrl();
-    if (!url) {
-      return of(null);
-    }
+cargarTiendaActual(): Observable<TiendaPublic | null> {
+  const slug = this.tiendaService.getCurrentSlug(); // o como lo llames
+  if (!slug) {
+    return of(null);
+  }
 
-   return this.http.get<TiendaPublic>(`https://zooming-quietude-production.up.railway.app/api/public/tiendas/${url}`).pipe(
+  return this.http.get<TiendaPublic>(`${environment.apiUrl}/api/public/tiendas/${slug}`).pipe(
     tap(tienda => {
       if (tienda) this.tiendaService.setTienda(tienda);
     }),
@@ -90,5 +90,5 @@ getAllTiendas(
       return of(null);
     })
   );
-  }
+}
 }
