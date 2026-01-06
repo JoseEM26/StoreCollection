@@ -1,4 +1,3 @@
-// src/app/services/categoria-public.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { TiendaService } from './tienda.service';
@@ -12,17 +11,18 @@ export class CategoriaPublicService {
 
   constructor(private http: HttpClient, private tiendaService: TiendaService) {}
 
+  // Obtiene todas las categorías de la tienda actual
   getAll(): Observable<Categoria[]> {
-    const base = this.tiendaService.getBaseUrl();
-    if (!base) {
-      return of([]);
-    }
-    // Usamos URL absoluta: backend + /categorias
-    return this.http.get<Categoria[]>(`${environment.apiUrl}${base}/categorias`);
+    const tiendaSlug = this.tiendaService.getBaseUrl(); // obtenemos slug
+    if (!tiendaSlug) return of([]);
+    return this.http.get<Categoria[]>(`${this.apiUrl}/${tiendaSlug}/categorias`).pipe(
+      catchError(() => of([]))
+    );
   }
 
-  isCategoriaActiva(tiendaSlug: string, categoriaSlug: string): Observable<boolean> {
-    // Este método ya usaba apiUrl correctamente (absoluta), lo dejamos igual
+ isCategoriaActiva(tiendaSlug: string, categoriaSlug: string): Observable<boolean> {
+    // Como no tienes endpoint individual por slug de categoría,
+    // usamos el listado y buscamos si aparece
     return this.http.get<any[]>(`${this.apiUrl}/${tiendaSlug}/categorias`).pipe(
       map(categorias => {
         return categorias.some(cat => 
