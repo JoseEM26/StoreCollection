@@ -25,7 +25,7 @@ import java.util.function.Function;
 @Slf4j
 public class JwtService {
 
-    @Value("${jwt.secret}")
+    @Value("${JWT_SECRET}")
     private String secret;
 
     @Value("${jwt.expiration:86400000}") // 24h por defecto
@@ -36,7 +36,7 @@ public class JwtService {
     @PostConstruct
     public void init() {
         if (secret == null || secret.isBlank()) {
-            throw new IllegalStateException("jwt.secret no está configurado");
+            throw new IllegalStateException("JWT_SECRET no está configurado");
         }
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         log.info("JwtService inicializado correctamente (secret: {} caracteres)", secret.length());
