@@ -10,7 +10,7 @@ RUN npm install --legacy-peer-deps
 COPY . .
 
 # Build Angular producción
-RUN npm run build -- -- --project StoreCollectionFrontEnd --configuration production
+RUN npm run build -- --project StoreCollectionFrontEnd --configuration production
 
 # ================= RUN IN NGINX =================
 FROM nginx:alpine
@@ -19,8 +19,8 @@ WORKDIR /usr/share/nginx/html
 # Limpiar contenido viejo
 RUN rm -rf ./*
 
-# Copiar el contenido correcto del build Angular
-COPY --from=build /app/dist/store-collection-front-end/ /usr/share/nginx/html/
+# Copiar la carpeta correcta del build (browser)
+COPY --from=build /app/dist/store-collection-front-end/browser/ /usr/share/nginx/html/
 
 EXPOSE 80
 
