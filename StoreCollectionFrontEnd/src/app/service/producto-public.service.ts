@@ -8,21 +8,21 @@ import { environment } from '../../../environment';
 
 @Injectable({ providedIn: 'root' })
 export class ProductoPublicService {
-  private apiUrl = `${environment.apiUrl}/api/public/tiendas`;
   constructor(
     private http: HttpClient,
     private tiendaService: TiendaService
   ) {}
 
-   getAll(): Observable<ProductoPublic[]> {
-    const tiendaSlug = this.tiendaService.getBaseUrl();
-    if (!tiendaSlug) return of([]);
-    return this.http.get<ProductoPublic[]>(`${this.apiUrl}/${tiendaSlug}/productos`).pipe(
-      catchError(() => of([]))
-    );
-  }
+  getAll(): Observable<ProductoPublic[]> {
+  const tiendaSlug = this.tiendaService.getBaseUrl(); // solo slug, ej: activewear-fit
+  if (!tiendaSlug) return of([]);
+  return this.http.get<ProductoPublic[]>(
+    `${environment.apiUrl}/api/public/tiendas/${tiendaSlug}/productos`
+  ).pipe(catchError(() => of([])));
+}
+
   isProductoActivo(tiendaSlug: string, productoSlug: string): Observable<boolean> {
-    return this.http.get<any>(`${this.apiUrl}/${tiendaSlug}/productos/${productoSlug}`).pipe(
+    return this.http.get<any>(`${environment.apiUrl}/api/public/tiendas/${tiendaSlug}/productos/${productoSlug}`).pipe(
       map(() => true), // Si llega respuesta → está activo
       catchError(() => of(false)) // 403, 404, etc → inactivo o no existe
     );
