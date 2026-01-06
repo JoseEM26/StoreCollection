@@ -80,7 +80,7 @@ getAllTiendas(
       return of(null);
     }
 
-   return this.http.get<TiendaPublic>(`${environment.apiUrl}/api/public/tiendas/${url}`).pipe(
+   return this.http.get<TiendaPublic>(`${environment.apiUrl}/${url}`).pipe(
     tap(tienda => {
       if (tienda) this.tiendaService.setTienda(tienda);
     }),
