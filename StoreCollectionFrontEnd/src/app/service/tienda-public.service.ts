@@ -11,7 +11,7 @@ import { TiendaPublic, TiendaPublicPage } from '../model/admin/tienda-admin.mode
   providedIn: 'root'
 })
 export class TiendaPublicService {
-  private readonly apiUrl = `${environment.apiUrl}/api/public/tiendas`;
+  private readonly apiUrl = `https://zooming-quietude-production.up.railway.app/api/public/tiendas`;
 
   constructor(
     private http: HttpClient,
