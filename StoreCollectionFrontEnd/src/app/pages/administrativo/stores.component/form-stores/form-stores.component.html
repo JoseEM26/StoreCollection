@@ -1,307 +1,351 @@
 <div class="modal-overlay" (click)="onCancel()">
   <div class="modal-container" (click)="$event.stopPropagation()">
     <!-- Header -->
-    <div class="modal-header bg-light border-0 px-4 pt-4 pb-3">
-      <h2 class="modal-title fw-bold fs-4 mb-0">
-        <i class="bi bi-shop me-2 text-primary"></i>
-        {{ isEditMode ? 'Editar Tienda' : 'Crear Nueva Tienda' }}
-      </h2>
+    <div class="modal-header bg-gradient-primary text-white border-0 px-5 py-4">
+      <div class="d-flex align-items-center gap-3">
+        <div class="icon-circle bg-white text-primary shadow d-flex align-items-center justify-content-center">
+          <i class="bi bi-shop fs-4"></i>
+        </div>
+        <h2 class="modal-title mb-0 fs-4 fw-bold">
+          {{ isEditMode ? 'Editar Tienda' : 'Crear Nueva Tienda' }}
+        </h2>
+      </div>
       <button 
         type="button" 
-        class="btn-close" 
-        aria-label="Cerrar" 
+        class="btn-close btn-close-white" 
+        aria-label="Cerrar modal" 
         (click)="onCancel()"
         [disabled]="loading"
       ></button>
     </div>
 
-    <!-- Body -->
-    <div class="modal-body px-4 pb-4">
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="store-form">
-        <!-- Sección Logo -->
-        <div class="card border-dashed mb-4">
-          <div class="card-body text-center py-4">
-            <div class="logo-preview-container mx-auto mb-3">
-              <img 
-                *ngIf="logoPreview" 
-                [src]="logoPreview" 
-                alt="Vista previa del logo" 
-                class="logo-preview shadow-sm"
+    <!-- Contenido con scroll interno -->
+    <div class="form-scroll-container">
+      <div class="modal-body px-5 pb-5 pt-4">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="store-form" novalidate>
+          <!-- Sección Logo -->
+          <div class="card logo-card border-dashed mb-5 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-body text-center py-5">
+              <div class="logo-preview-container mx-auto mb-5 position-relative">
+                <img 
+                  *ngIf="logoPreview" 
+                  [src]="logoPreview" 
+                  alt="Vista previa del logo"
+                  class="logo-preview rounded-circle shadow-lg border border-4 border-white"
+                  appGlobalImageFallback
+                />
+                <div *ngIf="!logoPreview" class="logo-placeholder rounded-circle shadow-lg d-flex align-items-center justify-content-center bg-light">
+                  <i class="bi bi-shop-window display-4 text-muted"></i>
+                </div>
+                
+                <label 
+                  for="logoInput" 
+                  class="btn btn-primary btn-lg change-logo-btn rounded-circle position-absolute bottom-0 end-0 shadow-lg"
+                  title="Cambiar o subir logo"
+                >
+                  <i class="bi bi-camera-fill fs-5"></i>
+                </label>
+                <input 
+                  id="logoInput" 
+                  type="file" 
+                  accept="image/jpeg,image/png,image/webp"
+                  class="d-none" 
+                  (change)="onFileSelected($event)"
+                  aria-label="Subir logo"
+                />
+              </div>
+
+              <div class="d-flex justify-content-center gap-3 flex-wrap mt-4">
+                <button 
+                  *ngIf="logoPreview" 
+                  type="button" 
+                  class="btn btn-outline-danger px-5 py-2 rounded-pill shadow-sm"
+                  (click)="removeLogo()"
+                >
+                  <i class="bi bi-trash3 me-2"></i>Quitar logo
+                </button>
+              </div>
+
+              <div class="form-text text-muted mt-4 small text-center fw-medium">
+                JPG, PNG o WebP • Máximo 5 MB • Ideal 512×512 px
+              </div>
+
+              <div *ngIf="fileError" class="alert alert-danger mt-4 py-3 d-inline-block rounded-3 shadow-sm">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ fileError }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Formulario principal -->
+          <div class="row g-4">
+            <!-- Nombre -->
+            <div class="col-12 col-md-8">
+              <label class="form-label fw-semibold required">Nombre de la tienda</label>
+              <input 
+                formControlName="nombre"
+                type="text" 
+                class="form-control form-control-lg rounded-3 shadow-sm"
+                placeholder="Ejemplo: Moda Urbana Chic"
+                [class.is-invalid]="form.get('nombre')?.invalid && (form.get('nombre')?.touched || formSubmitted)"
+                autofocus
               />
-              <div *ngIf="!logoPreview" class="logo-placeholder shadow-sm">
-                <i class="bi bi-shop-window display-4 text-muted"></i>
-                <p class="mt-2 mb-0 text-muted small">Sin logo seleccionado</p>
+              <div class="invalid-feedback">
+                {{ getErrorMessage('nombre') }}
               </div>
             </div>
 
-            <div class="d-flex justify-content-center gap-2 flex-wrap">
-              <label class="btn btn-outline-primary btn-sm px-4" for="logoInput">
-                <i class="bi bi-cloud-arrow-up me-2"></i>Subir logo
-              </label>
-              <input 
-                id="logoInput" 
-                type="file" 
-                accept="image/jpeg,image/png,image/gif,image/webp" 
-                class="d-none" 
-                (change)="onFileSelected($event)"
-              />
-              
-              <button 
-                *ngIf="logoPreview" 
-                type="button" 
-                class="btn btn-outline-danger btn-sm px-4"
-                (click)="removeLogo()"
+            <!-- Slug -->
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold required">Slug (URL amigable)</label>
+              <div class="input-group input-group-lg">
+                <span class="input-group-text bg-light text-muted fw-medium">storecollection.com/</span>
+                <input 
+                  formControlName="slug"
+                  type="text" 
+                  class="form-control rounded-3 shadow-sm"
+                  placeholder="moda-urbana-chic"
+                  [class.is-invalid]="form.get('slug')?.invalid && (form.get('slug')?.touched || formSubmitted)"
+                  [disabled]="isEditMode"
+                />
+              </div>
+              <div class="invalid-feedback">
+                {{ getErrorMessage('slug') }}
+              </div>
+              <div class="form-text text-muted small mt-2 fw-medium" *ngIf="!isEditMode">
+                Se genera automáticamente • solo minúsculas, números y guiones
+              </div>
+            </div>
+
+            <!-- Usuarios (solo admin) -->
+            <div class="col-12" *ngIf="esAdmin">
+              <label class="form-label fw-semibold required">Usuario dueño</label>
+              <select 
+                formControlName="userId" 
+                class="form-select form-select-lg rounded-3 shadow-sm"
+                [class.is-invalid]="form.get('userId')?.invalid && (form.get('userId')?.touched || formSubmitted)"
+                [disabled]="usuariosLoading"
               >
-                <i class="bi bi-trash me-2"></i>Quitar
-              </button>
+                <option [ngValue]="null" disabled>
+                  {{ usuariosLoading ? 'Cargando usuarios...' : 'Selecciona un usuario dueño' }}
+                </option>
+                <option *ngFor="let user of usuarios" [ngValue]="user.id">
+                  {{ user.descripcion }}
+                </option>
+              </select>
+              <div class="invalid-feedback">
+                {{ getErrorMessage('userId') }}
+              </div>
             </div>
 
-            <div class="form-text text-muted mt-3 small">
-              Formatos: JPG, PNG, GIF, WebP • Máximo 5MB • Recomendado 512×512 px
-            </div>
-
-            <div class="alert alert-danger mt-3 py-2 small" *ngIf="fileError" role="alert">
-              <i class="bi bi-exclamation-triangle me-2"></i>{{ fileError }}
-            </div>
-          </div>
-        </div>
-
-        <!-- Formulario principal -->
-        <div class="row g-3">
-          <!-- Nombre -->
-          <div class="col-12">
-            <label class="form-label fw-semibold required">Nombre de la tienda</label>
-            <input 
-              formControlName="nombre"
-              (input)="onNombreChange()"
-              type="text" 
-              class="form-control"
-              placeholder="Ej: Mi Tienda Online"
-              [class.is-invalid]="form.get('nombre')?.invalid && form.get('nombre')?.touched"
-            />
-            <div class="invalid-feedback">
-              {{ getErrorMessage('nombre') }}
-            </div>
-          </div>
-
-          <!-- Slug -->
-          <div class="col-12">
-            <label class="form-label fw-semibold required">Slug (URL amigable)</label>
-            <div class="input-group">
-              <span class="input-group-text bg-light">storecollection.com/</span>
+            <!-- WhatsApp -->
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">WhatsApp</label>
               <input 
-                formControlName="slug"
-                type="text" 
-                class="form-control"
-                placeholder="mi-tienda"
-                [class.is-invalid]="form.get('slug')?.invalid && form.get('slug')?.touched"
-                [disabled]="isEditMode"
+                formControlName="whatsapp"
+                type="tel" 
+                class="form-control form-control-lg rounded-3 shadow-sm"
+                placeholder="+51 987 654 321"
+                [class.is-invalid]="form.get('whatsapp')?.invalid && (form.get('whatsapp')?.touched || formSubmitted)"
               />
+              <div class="invalid-feedback">
+                {{ getErrorMessage('whatsapp') }}
+              </div>
             </div>
-            <div class="invalid-feedback">
-              {{ getErrorMessage('slug') }}
-            </div>
-            <div class="form-text text-muted small" *ngIf="!isEditMode">
-              Se genera automáticamente desde el nombre
-            </div>
-          </div>
 
-          <!-- Correo Remitente -->
-          <div class="col-md-6">
-            <label class="form-label fw-semibold">Correo remitente (From)</label>
-            <input 
-              formControlName="emailRemitente"
-              type="email" 
-              class="form-control"
-              placeholder="ventas@mitienda.com"
-              [class.is-invalid]="form.get('emailRemitente')?.invalid && form.get('emailRemitente')?.touched"
-            />
-            <div class="invalid-feedback">
-              {{ getErrorMessage('emailRemitente') }}
+            <!-- Moneda -->
+            <div class="col-md-6">
+              <label class="form-label fw-semibold required">Moneda principal</label>
+              <select formControlName="moneda" class="form-select form-select-lg rounded-3 shadow-sm">
+                <option value="SOLES">Soles (S/)</option>
+                <option value="DOLARES">Dólares ($)</option>
+              </select>
             </div>
-            <div class="form-text text-muted small">
-              Aparecerá como remitente en los correos enviados por la tienda
-            </div>
-          </div>
 
-       <!-- Contraseña de Aplicación -->
+            <!-- Correo Remitente -->
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Correo remitente</label>
+              <input 
+                formControlName="emailRemitente"
+                type="email" 
+                class="form-control form-control-lg rounded-3 shadow-sm"
+                placeholder="ventas@mitienda.com"
+                [class.is-invalid]="form.get('emailRemitente')?.invalid && (form.get('emailRemitente')?.touched || formSubmitted)"
+              />
+              <div class="invalid-feedback">
+                {{ getErrorMessage('emailRemitente') }}
+              </div>
+            </div>
+
+           <!-- Contraseña App Gmail -->
 <div class="col-md-6">
   <label class="form-label fw-semibold">Contraseña de aplicación Gmail</label>
-  <div class="input-group">
+  <div class="input-group input-group-lg">
     <input 
       [type]="showAppPassword ? 'text' : 'password'"
       formControlName="emailAppPassword"
-      class="form-control"
-      placeholder="16 caracteres alfanuméricos"
-      [class.is-invalid]="emailAppPasswordControl.invalid && emailAppPasswordControl.touched"
+      class="form-control rounded-3 shadow-sm"
+      placeholder="Ej: xxxxxxxxxxxxxxxxx (opcional)"
+      [class.is-invalid]="form.get('emailAppPassword')?.invalid && (form.get('emailAppPassword')?.touched || formSubmitted)"
     />
     <button 
-      class="btn btn-outline-secondary" 
+      class="btn btn-outline-secondary rounded-end-3 shadow-sm" 
       type="button" 
       (click)="toggleAppPasswordVisibility()"
-      title="Mostrar/Ocultar contraseña"
+      title="{{ showAppPassword ? 'Ocultar' : 'Mostrar' }}"
     >
       <i class="bi" [ngClass]="showAppPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
     </button>
   </div>
-  
-  <div class="invalid-feedback">
-    {{ getErrorMessage('emailAppPassword') }}
+  <!-- Muestra el mensaje sensible SIEMPRE que haya valor -->
+  <div class="form-text text-danger small mt-2" 
+       *ngIf="(form.get('emailAppPassword')?.value?.length ?? 0) > 0">
+    <i class="bi bi-shield-lock-fill me-1"></i>
+    Campo extremadamente sensible — solo se usa para enviar correos
   </div>
-
-  <div class="form-text text-danger small mt-1 fw-semibold" 
-       *ngIf="emailAppPasswordControl.value!.length > 0">
-    <i class="bi bi-shield-exclamation me-1"></i>
-    ¡Campo muy sensible! Nunca compartas esta contraseña.
-  </div>
-
-  <div class="form-text text-muted small">
-    <a href="https://support.google.com/accounts/answer/185833" target="_blank" class="text-muted">
-      ¿Cómo genero una contraseña de aplicación?
+  <div class="form-text text-muted small mt-1">
+    <a href="https://support.google.com/accounts/answer/185833" target="_blank" class="text-decoration-underline">
+      ¿Cómo generar una contraseña de app?
     </a>
   </div>
 </div>
 
-          <!-- Resto de campos (WhatsApp, Moneda, etc.) -->
-          <div class="col-md-6">
-            <label class="form-label">WhatsApp</label>
-            <input 
-              formControlName="whatsapp"
-              type="tel" 
-              class="form-control"
-              placeholder="+51 999 999 999"
-              [class.is-invalid]="form.get('whatsapp')?.touched && form.get('whatsapp')?.invalid"
-            />
-            <div class="invalid-feedback">
-              {{ getErrorMessage('whatsapp') }}
+            <!-- Plan (solo admin) -->
+            <div class="col-12" *ngIf="esAdmin">
+              <label class="form-label fw-semibold required">Plan de suscripción</label>
+              <select 
+                formControlName="planId" 
+                class="form-select form-select-lg rounded-3 shadow-sm"
+                [class.is-invalid]="form.get('planId')?.invalid && (form.get('planId')?.touched || formSubmitted)"
+              >
+                <option [ngValue]="null" disabled>
+                  {{ planesLoading ? 'Cargando planes...' : 'Selecciona un plan' }}
+                </option>
+                <option *ngFor="let plan of planes" [ngValue]="plan.id">
+                  {{ plan.descripcion }}
+                </option>
+              </select>
+              <div class="invalid-feedback">
+                {{ getErrorMessage('planId') }}
+              </div>
+            </div>
+
+            <!-- Info plan (no admin) -->
+            <div class="col-12" *ngIf="!esAdmin">
+              <ng-container *ngIf="tienda; else creationPlanInfo">
+                <div class="alert alert-info rounded-3 py-3 mb-4 shadow-sm">
+                  <i class="bi bi-info-circle-fill me-2"></i>
+                  <strong>Plan actual:</strong> {{ tienda.planNombre || 'Básico' }}
+                  <span *ngIf="tienda.fechaVencimiento" class="ms-2 fw-medium">
+                    (Vence: {{ tienda.fechaVencimiento | date:'dd/MM/yyyy' }})
+                  </span>
+                </div>
+              </ng-container>
+              <ng-template #creationPlanInfo>
+                <div class="alert alert-info rounded-3 py-3 mb-4 shadow-sm">
+                  <i class="bi bi-info-circle-fill me-2"></i>
+                  Se asignará automáticamente el plan <strong>Básico</strong>
+                </div>
+              </ng-template>
+            </div>
+
+            <!-- Descripción -->
+            <div class="col-12">
+              <label class="form-label fw-semibold">Descripción</label>
+              <textarea 
+                formControlName="descripcion"
+                class="form-control rounded-3 shadow-sm"
+                rows="4"
+                placeholder="Describe tu tienda, productos, valores, misión..."
+              ></textarea>
+            </div>
+
+            <!-- Dirección y Horarios -->
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Dirección física (opcional)</label>
+              <input 
+                formControlName="direccion"
+                type="text" 
+                class="form-control rounded-3 shadow-sm"
+                placeholder="Ej: Av. Principal 123, Miraflores, Lima"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Horarios de atención (opcional)</label>
+              <input 
+                formControlName="horarios"
+                type="text" 
+                class="form-control rounded-3 shadow-sm"
+                placeholder="Ej: Lun - Sáb 9:00 - 21:00"
+              />
+            </div>
+
+            <!-- Mapa -->
+            <div class="col-12">
+              <label class="form-label fw-semibold">Enlace Google Maps (opcional)</label>
+              <input 
+                formControlName="mapa_url"
+                type="url" 
+                class="form-control rounded-3 shadow-sm"
+                placeholder="https://maps.app.goo.gl/..."
+                [class.is-invalid]="form.get('mapa_url')?.invalid && (form.get('mapa_url')?.touched || formSubmitted)"
+              />
+              <div class="invalid-feedback">
+                {{ getErrorMessage('mapa_url') }}
+              </div>
+            </div>
+
+            <!-- Estado (solo admin) -->
+            <div class="col-12 mt-4" *ngIf="esAdmin">
+              <label class="form-label fw-semibold">Estado de la tienda</label>
+              <div class="btn-group w-100 rounded-3 overflow-hidden shadow-sm" role="group">
+                <input type="radio" class="btn-check" formControlName="activo" [value]="true" id="activoSi">
+                <label class="btn btn-outline-success py-3 fw-semibold" for="activoSi">Activa</label>
+                <input type="radio" class="btn-check" formControlName="activo" [value]="false" id="activoNo">
+                <label class="btn btn-outline-danger py-3 fw-semibold" for="activoNo">Inactiva</label>
+              </div>
             </div>
           </div>
 
-          <div class="col-md-6">
-            <label class="form-label fw-semibold required">Moneda principal</label>
-            <select formControlName="moneda" class="form-select">
-              <option value="SOLES">Soles (S/)</option>
-              <option value="DOLARES">Dólares ($)</option>
-            </select>
+          <!-- Mensajes -->
+          <div *ngIf="form.invalid && formSubmitted" class="alert alert-warning mt-5 rounded-3 shadow-sm">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Hay campos con errores. Revisa los marcados en rojo.
           </div>
 
-          <!-- Plan (Admin) -->
-          <div class="col-12" *ngIf="esAdmin">
-            <label class="form-label fw-semibold required">
-              <i class="bi bi-credit-card-2-back me-1 text-primary"></i>
-              Plan de suscripción
-            </label>
-            <select 
-              formControlName="planId" 
-              class="form-select"
-              [class.is-invalid]="form.get('planId')?.invalid && form.get('planId')?.touched"
+          <div *ngIf="serverError" class="alert alert-danger mt-5 rounded-3 shadow-sm d-flex align-items-center">
+            <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+            <div>{{ serverError }}</div>
+          </div>
+
+          <!-- Botones finales -->
+          <div class="d-flex gap-3 justify-content-end mt-5 pt-4 border-top">
+            <button 
+              type="button" 
+              class="btn btn-outline-light px-5 py-3 rounded-pill fw-semibold"
+              (click)="onCancel()"
+              [disabled]="loading"
             >
-              <option [ngValue]="null" disabled>
-                {{ planesLoading ? 'Cargando planes...' : 'Selecciona un plan' }}
-              </option>
-              <option *ngFor="let plan of planes" [ngValue]="plan.id">
-                {{ plan.descripcion }}
-              </option>
-            </select>
-            <div class="invalid-feedback">
-              {{ getErrorMessage('planId') }}
-            </div>
+              Cancelar
+            </button>
+            
+            <!-- Debug temporal - quítalo después -->
+            <button type="button" class="btn btn-danger btn-sm" (click)="debugForm()">
+              Ver qué falla
+            </button>
+
+            <button 
+              type="submit" 
+              class="btn btn-white px-5 py-3 rounded-pill shadow-lg fw-bold"
+              [disabled]="loading || fileError"
+              [class.opacity-75]="form.invalid && !loading"
+            >
+              <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+              {{ isEditMode ? 'Guardar Cambios' : 'Crear Tienda' }}
+            </button>
           </div>
-
-          <!-- Plan info (no Admin) -->
-          <div class="col-12" *ngIf="!esAdmin && isEditMode">
-            <div class="alert alert-info small mb-0">
-              <strong>Plan actual:</strong> {{ tienda?.planNombre || 'Sin plan asignado' }}
-            </div>
-          </div>
-
-          <!-- Descripción -->
-          <div class="col-12">
-            <label class="form-label">Descripción</label>
-            <textarea 
-              formControlName="descripcion"
-              class="form-control" 
-              rows="3"
-              placeholder="Describe tu tienda, especialidad, valores..."
-            ></textarea>
-          </div>
-
-          <!-- Dirección y Horarios -->
-          <div class="col-md-6">
-            <label class="form-label">Dirección física</label>
-            <input 
-              formControlName="direccion"
-              type="text" 
-              class="form-control"
-              placeholder="Av. Principal 123, Distrito, Ciudad"
-            />
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label">Horarios de atención</label>
-            <input 
-              formControlName="horarios"
-              type="text" 
-              class="form-control"
-              placeholder="Lun - Sáb 9:00 - 21:00 | Dom 10:00 - 16:00"
-            />
-          </div>
-
-          <!-- Mapa -->
-          <div class="col-12">
-            <label class="form-label">Enlace Google Maps (opcional)</label>
-            <input 
-              formControlName="mapa_url"
-              type="url" 
-              class="form-control"
-              placeholder="https://goo.gl/maps/..."
-              [class.is-invalid]="form.get('mapa_url')?.touched && form.get('mapa_url')?.invalid"
-            />
-            <div class="invalid-feedback">
-              {{ getErrorMessage('mapa_url') }}
-            </div>
-          </div>
-
-          <!-- Estado (solo admin) -->
-          <div class="col-12" *ngIf="esAdmin">
-            <label class="form-label fw-semibold">Estado de la tienda</label>
-            <div class="btn-group w-100" role="group">
-              <input type="radio" class="btn-check" formControlName="activo" [value]="true" id="activoSi">
-              <label class="btn btn-outline-success" for="activoSi">Activa</label>
-
-              <input type="radio" class="btn-check" formControlName="activo" [value]="false" id="activoNo">
-              <label class="btn btn-outline-danger" for="activoNo">Inactiva</label>
-            </div>
-          </div>
-        </div>
-
-        <!-- Error global -->
-        <div class="alert alert-danger mt-4 d-flex align-items-center" role="alert" *ngIf="serverError">
-          <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
-          <div>{{ serverError }}</div>
-        </div>
-
-        <!-- Botones de acción -->
-        <div class="d-flex gap-3 justify-content-end mt-5 pt-4 border-top">
-          <button 
-            type="button" 
-            class="btn btn-outline-secondary px-5 py-2" 
-            (click)="onCancel()"
-            [disabled]="loading"
-          >
-            Cancelar
-          </button>
-          
-          <button 
-            type="submit" 
-            class="btn btn-primary px-5 py-2"
-            [disabled]="loading || form.invalid || !!fileError"
-          >
-            <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
-            {{ isEditMode ? 'Guardar Cambios' : 'Crear Tienda' }}
-          </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   </div>
 </div>

@@ -1,4 +1,3 @@
-// src/app/pages/admin/stores/form-stores/form-stores.component.ts
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
@@ -13,7 +12,7 @@ import { GlobalImageFallbackDirective } from '../../../../directives/global-imag
 @Component({
   selector: 'app-form-stores',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule,GlobalImageFallbackDirective],
+  imports: [CommonModule, ReactiveFormsModule, GlobalImageFallbackDirective],
   templateUrl: './form-stores.component.html',
   styleUrl: './form-stores.component.css'
 })
@@ -28,6 +27,7 @@ export class FormStoresComponent implements OnInit, OnChanges {
   selectedFile: File | null = null;
   serverError: string | null = null;
   fileError: string | null = null;
+  formSubmitted = false;
 
   usuarios: DropTownStandar[] = [];
   usuariosLoading = false;
@@ -35,40 +35,42 @@ export class FormStoresComponent implements OnInit, OnChanges {
   planesLoading = false;
 
   esAdmin = false;
-
-  // Control para mostrar/ocultar contraseña de app
-  showAppPassword = false;
+  showAppPassword = false; // Por defecto oculto
 
   form = new FormGroup({
-    nombre: new FormControl<string>('', [Validators.required, Validators.minLength(3)]),
-    slug: new FormControl<string>('', [
-      Validators.required,
-      Validators.pattern(/^[a-z0-9-]+$/),
-      Validators.maxLength(50)
-    ]),
-    whatsapp: new FormControl<string>('+51', [
-      Validators.pattern(/^(\+51\s?)?[0-9]{9,15}$/)
-    ]),
-    moneda: new FormControl<'SOLES' | 'DOLARES'>('SOLES', [Validators.required]),
-    descripcion: new FormControl<string>(''),
-    direccion: new FormControl<string>(''),
-    horarios: new FormControl<string>('Lun - Sáb 9:00 - 21:00'),
-    mapa_url: new FormControl<string>('', [Validators.pattern(/^https?:\/\/.+/)]),
-    
-    // Nuevos campos
-    emailRemitente: new FormControl<string>('', [
-      Validators.email,
-      Validators.maxLength(150)
-    ]),
-    emailAppPassword: new FormControl<string>('', [
-      Validators.minLength(16),
-      Validators.maxLength(16),
-      Validators.pattern(/^[A-Za-z0-9]+$/)
-    ]),
-
+    nombre: new FormControl<string>('', {
+      validators: [Validators.required, Validators.minLength(3), Validators.maxLength(100)],
+      nonNullable: true
+    }),
+    slug: new FormControl<string>('', {
+      validators: [
+        Validators.required,
+        Validators.pattern(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+        Validators.minLength(3),
+        Validators.maxLength(60)
+      ],
+      nonNullable: true
+    }),
+    whatsapp: new FormControl<string>('+51', {
+      validators: [Validators.pattern(/^\+?[0-9\s-]{9,18}$/)]
+    }),
+    moneda: new FormControl<'SOLES' | 'DOLARES'>('SOLES', {
+      validators: [Validators.required],
+      nonNullable: true
+    }),
+    descripcion: new FormControl<string | null>(null),
+    direccion: new FormControl<string | null>(null),
+    horarios: new FormControl<string | null>(null),
+    mapa_url: new FormControl<string | null>(null, {
+      validators: [Validators.pattern(/^https?:\/\/[^\s/$.?#].[^\s]*$/i)]
+    }),
+    emailRemitente: new FormControl<string | null>(null, {
+      validators: [Validators.email, Validators.maxLength(150)]
+    }),
+    emailAppPassword: new FormControl<string | null>(null),
     userId: new FormControl<number | null>(null),
     planId: new FormControl<number | null>(null),
-    activo: new FormControl<boolean>(true)
+    activo: new FormControl<boolean>(true, { nonNullable: true })
   });
 
   constructor(
@@ -80,58 +82,60 @@ export class FormStoresComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.esAdmin = this.auth.isAdmin();
-    this.configurarValidadores();
-
-    this.form.get('slug')?.enable();
+    this.configurarValidadoresDinamicos();
 
     if (this.esAdmin) {
       this.cargarUsuarios();
       this.cargarPlanes();
     }
+
+    this.form.get('nombre')?.valueChanges.subscribe(nombre => {
+      if (!this.isEditMode && nombre?.trim()) {
+        const slug = this.tiendaService.generarSlug(nombre);
+        this.form.get('slug')?.setValue(slug, { emitEvent: false });
+      }
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['tienda']?.currentValue !== changes['tienda']?.previousValue) {
-      if (this.tienda) {
-        this.isEditMode = true;
-        this.serverError = null;
-        this.logoPreview = this.tienda.logo_img_url || null;
-        this.selectedFile = null;
+    if (changes['tienda'] && changes['tienda'].currentValue !== changes['tienda'].previousValue) {
+      this.isEditMode = !!this.tienda;
 
+      if (this.tienda) {
+        // En modo edición → MOSTRAMOS SIEMPRE los valores reales (incluyendo sensibles)
+        this.logoPreview = this.tienda.logo_img_url || null;
         this.form.patchValue({
           nombre: this.tienda.nombre,
           slug: this.tienda.slug,
           whatsapp: this.tienda.whatsapp || '+51',
           moneda: this.tienda.moneda as 'SOLES' | 'DOLARES',
-          descripcion: this.tienda.descripcion || '',
-          direccion: this.tienda.direccion || '',
-          horarios: this.tienda.horarios || 'Lun - Sáb 9:00 - 21:00',
-          mapa_url: this.tienda.mapa_url || '',
-          emailRemitente: this.tienda.emailRemitente || '',
-          // ¡CAMBIO! Ahora SÍ mostramos la contraseña actual (como pediste)
-          emailAppPassword: this.tienda.emailAppPassword || '',
+          descripcion: this.tienda.descripcion,
+          direccion: this.tienda.direccion,
+          horarios: this.tienda.horarios,
+          mapa_url: this.tienda.mapa_url,
+          emailRemitente: this.tienda.emailRemitente || null,    // ← Mostramos el correo real
+          emailAppPassword: this.tienda.emailAppPassword || null, // ← Mostramos la contraseña real (peligroso pero como pediste)
           userId: this.tienda.userId,
-          activo: this.tienda.activo
+          planId: this.tienda.planId,
+          activo: this.tienda.activo ?? true
         });
 
         this.form.get('slug')?.disable({ emitEvent: false });
-        this.seleccionarPlanActual();
       } else {
-        this.isEditMode = false;
+        // Creación → valores vacíos
         this.logoPreview = null;
         this.selectedFile = null;
-
         this.form.reset({
           nombre: '',
           slug: '',
           whatsapp: '+51',
           moneda: 'SOLES',
-          descripcion: '',
-          direccion: '',
-          horarios: 'Lun - Sáb 9:00 - 21:00',
-          mapa_url: '',
-          emailRemitente: '',
-          emailAppPassword: '',
+          descripcion: null,
+          direccion: null,
+          horarios: null,
+          mapa_url: null,
+          emailRemitente: null,
+          emailAppPassword: null,
           userId: null,
           planId: null,
           activo: true
@@ -139,29 +143,55 @@ export class FormStoresComponent implements OnInit, OnChanges {
 
         this.form.get('slug')?.enable({ emitEvent: false });
       }
+
+      this.serverError = null;
+      this.fileError = null;
+      this.formSubmitted = false;
     }
   }
-  private configurarValidadores() {
-    const userIdControl = this.form.get('userId');
-    const planIdControl = this.form.get('planId');
+
+  private configurarValidadoresDinamicos(): void {
+    const userId = this.form.get('userId');
+    const planId = this.form.get('planId');
 
     if (this.esAdmin) {
-      userIdControl?.setValidators([Validators.required, Validators.min(1)]);
-      planIdControl?.setValidators([Validators.required, Validators.min(1)]);
+      userId?.setValidators([Validators.required, Validators.min(1)]);
+      planId?.setValidators([Validators.required, Validators.min(1)]);
     } else {
-      userIdControl?.clearValidators();
-      planIdControl?.clearValidators();
+      userId?.clearValidators();
+      planId?.clearValidators();
     }
 
-    userIdControl?.updateValueAndValidity();
-    planIdControl?.updateValueAndValidity();
+    userId?.updateValueAndValidity();
+    planId?.updateValueAndValidity();
   }
 
-  private cargarUsuarios() {
+  private async cargarPlanes(): Promise<void> {
+    this.planesLoading = true;
+    try {
+      const data = await lastValueFrom(this.dropTownService.getPlanes());
+      this.planes = data || [];
+
+      if (!this.isEditMode && this.planes.length > 0) {
+        this.form.get('planId')?.setValue(this.planes[0].id, { emitEvent: true });
+      }
+
+      if (this.isEditMode && this.tienda?.planId) {
+        const plan = this.planes.find(p => p.id === this.tienda?.planId);
+        if (plan) this.form.get('planId')?.setValue(plan.id);
+      }
+    } catch (e) {
+      this.sweet.error('Error', 'No se pudieron cargar los planes');
+    } finally {
+      this.planesLoading = false;
+    }
+  }
+
+  private cargarUsuarios(): void {
     this.usuariosLoading = true;
     this.dropTownService.getUsuarios().subscribe({
       next: (data) => {
-        this.usuarios = data;
+        this.usuarios = data || [];
         this.usuariosLoading = false;
       },
       error: () => {
@@ -171,82 +201,33 @@ export class FormStoresComponent implements OnInit, OnChanges {
     });
   }
 
-  private cargarPlanes() {
-    this.planesLoading = true;
-    this.dropTownService.getPlanes().subscribe({
-      next: (data) => {
-        this.planes = data;
-        this.planesLoading = false;
-
-        if (!this.isEditMode && this.planes.length > 0) {
-          this.form.get('planId')?.setValue(this.planes[0].id);
-        }
-
-        if (this.isEditMode) {
-          this.seleccionarPlanActual();
-        }
-      },
-      error: () => {
-        this.sweet.error('Error', 'No se pudieron cargar los planes');
-        this.planesLoading = false;
-      }
-    });
-  }
-
-  private seleccionarPlanActual(): void {
-    if (!this.tienda || this.planes.length === 0) return;
-
-    const planSlug = this.tienda.planSlug?.toLowerCase();
-    const planNombre = this.tienda.planNombre?.toLowerCase();
-
-    const planEncontrado = this.planes.find(p => {
-      const descLower = p.descripcion.toLowerCase();
-      return (planSlug && descLower.includes(planSlug)) ||
-             (planNombre && descLower.includes(planNombre));
-    });
-
-    if (planEncontrado) {
-      this.form.get('planId')?.setValue(planEncontrado.id);
-    }
-  }
-
-  onNombreChange(): void {
-    if (!this.isEditMode) {
-      const nombre = this.form.get('nombre')?.value || '';
-      if (nombre.length >= 3) {
-        const slug = this.tiendaService.generarSlug(nombre);
-        this.form.get('slug')?.setValue(slug, { emitEvent: false });
-      }
-    }
-  }
-
   onFileSelected(event: Event): void {
     this.fileError = null;
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
+
     if (!file) return;
 
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!validTypes.includes(file.type)) {
-      this.fileError = 'Solo se permiten JPG, PNG, GIF o WEBP';
-      this.sweet.warning('Formato inválido', this.fileError);
+      this.fileError = 'Solo se permiten JPG, PNG o WEBP';
       return;
     }
+
     if (file.size > 5 * 1024 * 1024) {
       this.fileError = 'La imagen no debe superar los 5MB';
-      this.sweet.warning('Imagen demasiado grande', this.fileError);
       return;
     }
 
     this.selectedFile = file;
     const reader = new FileReader();
-    reader.onload = () => this.logoPreview = reader.result as string;
+    reader.onload = () => (this.logoPreview = reader.result as string);
     reader.readAsDataURL(file);
   }
 
   removeLogo(): void {
     this.selectedFile = null;
-    this.logoPreview = this.isEditMode ? this.tienda?.logo_img_url || null : null;
+    this.logoPreview = this.isEditMode ? this.tienda?.logo_img_url ?? null : null;
     const input = document.getElementById('logoInput') as HTMLInputElement;
     if (input) input.value = '';
     this.fileError = null;
@@ -256,43 +237,53 @@ export class FormStoresComponent implements OnInit, OnChanges {
     this.showAppPassword = !this.showAppPassword;
   }
 
-  getErrorMessage(controlName: string): string {
+  getErrorMessage(controlName: keyof typeof this.form.controls): string {
     const control = this.form.get(controlName);
-    if (!control || !control.touched || !control.errors) return '';
+    if (!control?.errors) return '';
 
     if (control.errors['required']) return 'Campo obligatorio';
-    if (control.errors['minlength']) return 'Mínimo 3 caracteres';
-    if (control.errors['maxlength']) return 'Máximo 50 caracteres';
-    if (control.errors['email']) return 'Correo electrónico inválido';
-    if (control.errors['pattern']) {
-      if (controlName === 'emailAppPassword') {
-        return 'Debe tener exactamente 16 caracteres alfanuméricos';
-      }
-      if (controlName === 'slug') return 'Solo minúsculas, números y guiones';
-      if (controlName === 'whatsapp') return 'Formato inválido (+51 seguido de 9 dígitos)';
-      if (controlName === 'mapa_url') return 'Debe ser una URL válida';
+    if (control.errors['minlength'])
+      return `Mínimo ${control.errors['minlength'].requiredLength} caracteres`;
+    if (control.errors['maxlength'])
+      return `Máximo ${control.errors['maxlength'].requiredLength} caracteres`;
+    if (control.errors['email']) return 'Formato de email inválido';
+    if (control.errors['pattern'] || control.errors['minlength'] || control.errors['maxlength']) {
+      if (controlName === 'emailAppPassword') return 'Debe tener exactamente 16 caracteres alfanuméricos';
+      if (controlName === 'slug') return 'Solo minúsculas, números y guiones (sin guion al inicio/final)';
+      if (controlName === 'whatsapp') return 'Formato inválido (ej: +51987654321)';
+      if (controlName === 'mapa_url') return 'Debe ser una URL válida (http/https)';
     }
+
     return 'Valor inválido';
   }
 
   async onSubmit(): Promise<void> {
+    this.formSubmitted = true;
+    this.form.markAllAsTouched();
+
+    const appPass = this.form.value.emailAppPassword?.trim();
+    if (appPass) {
+      if (appPass.length !== 16 || !/^[A-Za-z0-9]{16}$/.test(appPass)) {
+        this.form.get('emailAppPassword')?.setErrors({ invalidAppPass: true });
+        return;
+      }
+    }
+
     if (this.form.invalid || this.fileError) {
-      this.form.markAllAsTouched();
-      this.sweet.warning('Formulario incompleto', 'Revisa los campos marcados');
+      this.sweet.warning('Formulario incompleto', 'Revisa los campos marcados en rojo');
       return;
     }
 
-    // Advertencia especial si se está intentando cambiar la contraseña de app
-    if (this.form.value.emailAppPassword && this.form.value.emailAppPassword.trim().length > 0) {
-      const result = await this.sweet.confirmAction({
-        title: '¿Estás seguro?',
-        text: 'Estás modificando la contraseña de aplicación de Gmail.\nEsta acción es sensible y afectará el envío de correos.',
-        confirmButtonText: 'Sí, cambiar contraseña',
+    if (appPass) {
+      const confirmed = await this.sweet.confirmAction({
+        title: '¡Acción crítica!',
+        text: 'Estás modificando la contraseña de aplicación Gmail.\nEsto afectará el envío de correos.',
+        confirmButtonText: 'Sí, cambiar',
         icon: 'warning'
       });
 
-      if (!result.isConfirmed) {
-        this.form.get('emailAppPassword')?.setValue('');
+      if (!confirmed.isConfirmed) {
+        this.form.get('emailAppPassword')?.setValue(null);
         return;
       }
     }
@@ -300,14 +291,8 @@ export class FormStoresComponent implements OnInit, OnChanges {
     this.loading = true;
     this.serverError = null;
 
-    const loadingSwal = this.sweet.loading(
-      this.isEditMode ? 'Actualizando tienda...' : 'Creando tienda...'
-    );
-
     try {
-      let resultado: TiendaResponse;
-
-      const commonData = {
+      const common = {
         nombre: this.form.value.nombre!.trim(),
         slug: this.isEditMode ? this.tienda!.slug : this.form.value.slug!.trim(),
         whatsapp: this.form.value.whatsapp?.trim() || undefined,
@@ -317,72 +302,73 @@ export class FormStoresComponent implements OnInit, OnChanges {
         horarios: this.form.value.horarios?.trim() || undefined,
         mapa_url: this.form.value.mapa_url?.trim() || undefined,
         emailRemitente: this.form.value.emailRemitente?.trim() || undefined,
-        emailAppPassword: this.form.value.emailAppPassword?.trim() || undefined
+        emailAppPassword: appPass || undefined
       };
 
-      if (this.isEditMode && this.tienda?.id) {
-        const updateRequest: TiendaUpdateRequest = {
-          ...commonData,
-          planId: this.esAdmin ? this.form.value.planId ?? undefined : undefined,
-          activo: this.esAdmin ? this.form.value.activo ?? undefined : undefined
-        };
+      let response: TiendaResponse;
 
-        resultado = await lastValueFrom(
-          this.tiendaService.actualizarTienda(this.tienda.id, updateRequest, this.selectedFile || undefined)
+      if (this.isEditMode && this.tienda?.id) {
+        const request: TiendaUpdateRequest = {
+          ...common,
+          planId: this.form.value.planId ?? undefined,
+          activo: this.form.value.activo
+        };
+        response = await lastValueFrom(
+          this.tiendaService.actualizarTienda(this.tienda.id, request, this.selectedFile ?? undefined)
         );
       } else {
-        const createRequest: TiendaCreateRequest = {
-          ...commonData,
-          userId: this.esAdmin ? this.form.value.userId ?? undefined : undefined,
-          planId: this.esAdmin ? this.form.value.planId ?? undefined : undefined,
-          activo: this.esAdmin ? this.form.value.activo ?? true : undefined
+        const request: TiendaCreateRequest = {
+          ...common,
+          userId: this.form.value.userId ?? undefined,
+          planId: this.form.value.planId ?? undefined,
+          activo: true
         };
-
-        resultado = await lastValueFrom(
-          this.tiendaService.crearTienda(createRequest, this.selectedFile || undefined)
+        response = await lastValueFrom(
+          this.tiendaService.crearTienda(request, this.selectedFile ?? undefined)
         );
       }
 
       this.sweet.success(
-        this.isEditMode ? '¡Tienda actualizada!' : '¡Tienda creada!',
-        'Los cambios han sido guardados correctamente'
+        this.isEditMode ? 'Tienda actualizada' : 'Tienda creada exitosamente!',
+        'Operación completada'
       );
 
-      // Limpiamos el campo sensible después de guardar
-      this.form.get('emailAppPassword')?.setValue('');
-
-      this.success.emit(resultado);
-    } catch (err: any) {
-      console.error('Error al guardar tienda:', err);
-
-      let mensaje = 'No se pudo guardar la tienda';
-      if (err.message?.toLowerCase().includes('slug')) {
-        mensaje = 'El slug ya está en uso por otra tienda';
+      // Solo limpiamos la contraseña después de guardar exitosamente
+      this.form.get('emailAppPassword')?.setValue(null);
+      this.success.emit(response);
+    } catch (error: any) {
+      console.error('Error guardando tienda:', error);
+      let msg = 'No se pudo guardar la tienda';
+      if (error?.error?.message?.includes('slug')) {
+        msg = 'El slug ya está en uso';
         this.form.get('slug')?.setErrors({ duplicate: true });
-      } else if (err.message?.includes('16 caracteres')) {
-        mensaje = 'La contraseña de aplicación debe tener exactamente 16 caracteres';
       }
-
-      this.sweet.error('Error al guardar', mensaje);
-      this.serverError = mensaje;
+      this.serverError = msg;
+      this.sweet.error('Error', msg);
     } finally {
       this.loading = false;
-      this.sweet.close(); // Cierra el loading
     }
-  }
-get emailAppPasswordControl() {
-  return this.form.get('emailAppPassword')!; // Esto elimina la advertencia de TS
-}
-  get planActualTexto(): string {
-    if (!this.esAdmin) {
-      return this.isEditMode 
-        ? `Plan actual: ${this.tienda?.planNombre || 'Desconocido'}`
-        : 'Se asignará el plan básico al crear la tienda';
-    }
-    return '';
   }
 
   onCancel(): void {
+    this.formSubmitted = false;
     this.cancel.emit();
+  }
+
+  debugForm(): void {
+    console.clear();
+    console.group('🔍 DEBUG FORMULARIO');
+    console.log('Inválido?', this.form.invalid);
+    console.log('Submitted?', this.formSubmitted);
+    console.log('Valores:', this.form.value);
+    
+    console.log('\nErrores:');
+    Object.keys(this.form.controls).forEach(key => {
+      const c = this.form.get(key);
+      if (c?.invalid) {
+        console.warn(`→ ${key}:`, c.errors);
+      }
+    });
+    console.groupEnd();
   }
 }

@@ -27,6 +27,8 @@ export interface TiendaResponse extends TiendaBase {
   // Datos del plan y suscripción actual
   planNombre?: string;
   planSlug?: string;
+  // Información del plan actual
+  planId: number;
   estadoSuscripcion?: string;  // ej: 'active', 'trialing', 'canceled', 'past_due'
   trialEndsAt?: string | null; // ISO date string o null
   fechaFin?: string | null;
