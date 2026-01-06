@@ -2,30 +2,27 @@
 FROM node:18 AS build
 WORKDIR /app
 
-# Copiar solo los archivos necesarios para instalar dependencias
+# Copiar solo los archivos necesarios
 COPY package*.json ./
 
-# Instalar dependencias forzando resolución de peer deps
+# Instalar dependencias (ignora conflictos)
 RUN npm install --legacy-peer-deps
 
 # Copiar todo el proyecto
 COPY . .
 
-# Build en modo producción
-RUN npm run build --configuration production
+# Build en modo default
+RUN npm run build
 
 # ================= RUN IN NGINX =================
 FROM nginx:alpine
 WORKDIR /usr/share/nginx/html
 
-# Limpiar contenido default de NGINX
+# Limpiar contenido default
 RUN rm -rf ./*
 
-# Copiar los archivos de build desde la etapa anterior
+# Copiar build
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Exponer puerto 80 para Railway
 EXPOSE 80
-
-# Comando por defecto para NGINX
 CMD ["nginx", "-g", "daemon off;"]
