@@ -1,6 +1,6 @@
 // src/environments/environment.ts
 export const environment = {
-  production: false,
-  apiUrl: 'http://localhost:8080'  // ← Tu backend Spring Boot
+  production: true,
+  apiUrl: 'https://zooming-quietude-production.up.railway.app'  // ← Tu backend Spring Boot
 };
 
