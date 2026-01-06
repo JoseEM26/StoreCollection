@@ -7,15 +7,22 @@ import { Categoria } from '../model';
 import { environment } from '../../../environment';
 
 @Injectable({ providedIn: 'root' })
-export class CategoriaPublicService {private apiUrl = `${environment.apiUrl}/api/public/tiendas`;
+export class CategoriaPublicService {
+  private apiUrl = `${environment.apiUrl}/api/public/tiendas`;
+
   constructor(private http: HttpClient, private tiendaService: TiendaService) {}
 
   getAll(): Observable<Categoria[]> {
-    return this.http.get<Categoria[]>(`${this.tiendaService.getBaseUrl()}/categorias`);
+    const base = this.tiendaService.getBaseUrl();
+    if (!base) {
+      return of([]);
+    }
+    // Usamos URL absoluta: backend + /categorias
+    return this.http.get<Categoria[]>(`${environment.apiUrl}${base}/categorias`);
   }
+
   isCategoriaActiva(tiendaSlug: string, categoriaSlug: string): Observable<boolean> {
-    // Como no tienes endpoint individual por slug de categoría,
-    // usamos el listado y buscamos si aparece
+    // Este método ya usaba apiUrl correctamente (absoluta), lo dejamos igual
     return this.http.get<any[]>(`${this.apiUrl}/${tiendaSlug}/categorias`).pipe(
       map(categorias => {
         return categorias.some(cat => 
