@@ -1,73 +1,61 @@
 <div class="container-fluid py-4 bg-light min-vh-100">
-  <div class="row">
-    <div class="col-12">
+  <div class="row justify-content-center">
+    <div class="col-12 col-xxl-11">
       <!-- Header -->
-      <div
-        class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3"
-      >
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
         <div>
           <h1 class="h3 fw-bold text-dark mb-1">
-            <i class="bi bi-box-seam me-2"></i>
+            <i class="bi bi-box-seam me-2 text-primary"></i>
             Gestión de Productos
           </h1>
-          <p class="text-muted mb-0">
-            {{
-              auth.isAdmin()
-                ? "Todos los productos del sistema"
-                : "Productos de tu tienda"
-            }}
-            <span class="ms-2">
-              ({{ pageData()?.totalElements || 0 }} producto{{
-                (pageData()?.totalElements || 0) !== 1 ? "s" : ""
-              }})
+          <p class="text-muted mb-0 fs-6">
+            {{ auth.isAdmin() ? 'Todos los productos del sistema' : 'Productos de tu tienda' }}
+            <span class="badge bg-primary ms-2 px-3 py-2">
+              {{ pageData()?.totalElements || 0 }}
             </span>
           </p>
         </div>
 
-        <button
-          *ngIf="auth.isOwner()"
-          class="btn btn-primary btn-lg shadow-sm px-4"
-          (click)="openCreateModal()"
-        >
+        <button *ngIf="auth.isOwner()" class="btn btn-primary btn-lg rounded-pill px-5 shadow"
+                (click)="openCreateModal()">
           <i class="bi bi-plus-lg me-2"></i>
           Nuevo Producto
         </button>
       </div>
 
       <!-- Filtros -->
-      <div class="card border-0 shadow-sm mb-4">
+      <div class="card border-0 shadow-sm mb-4 rounded-4 overflow-hidden">
         <div class="card-body py-3">
           <div class="row g-3 align-items-center">
-            <div class="col-12 col-md-8 col-lg-6">
-              <div class="position-relative">
-                <i
-                  class="bi bi-search position-absolute top-50 start-3 translate-middle-y text-muted z-3"
-                ></i>
-                <input
-                  type="text"
-                  class="form-control form-control-lg ps-5 rounded-3"
-                  placeholder="Buscar por nombre o slug..."
-                  [ngModel]="searchTerm()"
-                  (ngModelChange)="searchTerm.set($event); onSearch()"
-                />
+            <div class="col-12 col-md-7 col-lg-6">
+              <div class="input-group input-group-lg">
+                <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-4">
+                  <i class="bi bi-search text-muted"></i>
+                </span>
+                <input type="text" class="form-control border-start-0 rounded-end-pill"
+                       placeholder="Buscar por nombre, slug o SKU..."
+                       [value]="searchTerm()"
+                       (input)="searchTerm.set($any($event.target).value); onSearch()" />
               </div>
             </div>
-            <div class="col-12 col-md-4 col-lg-3">
-              <button
-                class="btn btn-outline-secondary w-100 rounded-3"
-                (click)="setSort('nombre')"
-              >
-                <i class="bi bi-arrow-down-up me-2"></i>
-                Ordenar por nombre
-                <i
-                  class="bi bi-arrow-up-short ms-1"
-                  *ngIf="sort().includes('nombre') && sort().endsWith('asc')"
-                ></i>
-                <i
-                  class="bi bi-arrow-down-short ms-1"
-                  *ngIf="sort().includes('nombre') && sort().endsWith('desc')"
-                ></i>
-              </button>
+
+            <div class="col-12 col-md-5 col-lg-4 col-xl-3">
+              <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary flex-fill rounded-pill"
+                        (click)="setSort('nombre')">
+                  <i class="bi bi-arrow-down-up me-2"></i>
+                  Nombre
+                  <i class="bi ms-1"
+                     [ngClass]="sort().includes('nombre') ? 
+                                (sort().endsWith('asc') ? 'bi-arrow-up-short' : 'bi-arrow-down-short') : ''"></i>
+                </button>
+
+                <button class="btn btn-outline-secondary rounded-pill px-3" 
+                        (click)="setSort('stockTotal')">
+                  <i class="bi bi-box-seam me-2"></i>
+                  Stock
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -75,367 +63,241 @@
 
       <!-- Loading -->
       <div *ngIf="loading()" class="text-center py-5 my-5">
-        <div
-          class="spinner-border text-primary"
-          role="status"
-          style="width: 4rem; height: 4rem"
-        >
+        <div class="spinner-border text-primary" style="width: 4.5rem; height: 4.5rem;" role="status">
           <span class="visually-hidden">Cargando...</span>
         </div>
-        <p class="mt-4 fs-5 text-muted">Cargando productos...</p>
+        <h5 class="mt-4 text-primary fw-semibold">Cargando productos...</h5>
+        <p class="text-muted">Por favor espera un momento</p>
       </div>
 
       <!-- Tabla de productos -->
-      <div
-        *ngIf="!loading() && productos().length > 0"
-        class="card border-0 shadow"
-      >
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="bg-light border-bottom">
-                <tr>
-                  <th class="ps-4 py-3">Producto</th>
-                  <th class="py-3">Precio</th>
-                  <th class="py-3">Stock</th>
-                  <th class="py-3">Variantes</th>
-                  <th class="py-3">Categoría</th>
-                  <th class="py-3" *ngIf="auth.isAdmin()">Tienda</th>
-                  <th class="py-3">Estado</th>
-                  <th class="text-end pe-4 py-3">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  *ngFor="let p of productos(); trackBy: trackByProductoId"
-                  class="border-bottom"
-                >
-                  <td class="ps-4 py-3">
-                    <div class="d-flex align-items-center gap-3">
-                      <div class="flex-shrink-0">
-                        <img
-                          [src]="
-                            p.imagenPrincipal ||
-                            'https://via.placeholder.com/80?text=Sin+imagen'
-                          "
-                          [alt]="p.nombre"
-                          class="rounded-3 shadow-sm object-fit-cover"
-                          style="width: 80px; height: 80px"
-                          (error)="handleImageError($event)"
-                        />
-                      </div>
-                      <div class="min-w-0">
-                        <div
-                          class="fw-semibold text-dark text-truncate"
-                          style="max-width: 300px"
-                        >
-                          {{ p.nombre }}
+      <ng-container *ngIf="!loading()">
+        <!-- Estado vacío -->
+        <div *ngIf="productos().length === 0" class="text-center py-5 my-5">
+          <i class="bi bi-inbox-fill display-1 text-muted opacity-50 mb-4"></i>
+          <h4 class="fw-semibold text-dark mb-3">
+            {{ searchTerm() ? 'No se encontraron resultados' : 'Aún no tienes productos' }}
+          </h4>
+          <p class="lead text-muted mb-4">
+            {{ searchTerm() ? 'Intenta con otros términos de búsqueda' : 'Comienza creando tu primer producto' }}
+          </p>
+          <button *ngIf="auth.isOwner()" class="btn btn-primary btn-lg rounded-pill px-5"
+                  (click)="openCreateModal()">
+            <i class="bi bi-plus-lg me-2"></i>
+            Crear primer producto
+          </button>
+        </div>
+
+        <!-- Tabla con productos -->
+        <div *ngIf="productos().length > 0" class="card border-0 shadow rounded-4 overflow-hidden">
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light border-bottom">
+                  <tr>
+                    <th class="ps-4 py-3">Producto</th>
+                    <th class="py-3">Precio</th>
+                    <th class="py-3">Stock</th>
+                    <th class="py-3">Variantes</th>
+                    <th class="py-3">Categoría</th>
+                    <th class="py-3" *ngIf="auth.isAdmin()">Tienda</th>
+                    <th class="py-3">Estado</th>
+                    <th class="text-end pe-4 py-3">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let p of productos(); trackBy: trackByProductoId" class="border-bottom">
+                    <td class="ps-4 py-3">
+                      <div class="d-flex align-items-center gap-3">
+                        <div class="flex-shrink-0 position-relative">
+                          <img [src]="p.imagenPrincipal || '/assets/images/default-product.png'"
+                               [alt]="p.nombre || 'Producto'"
+                               class="rounded-3 shadow-sm object-fit-cover"
+                               width="80" height="80"
+                               loading="lazy"
+                               (error)="handleImageError($event)" />
                         </div>
-                        <small
-                          class="text-muted d-block text-truncate"
-                          style="max-width: 300px"
-                        >
-                          {{ p.slug }}
-                        </small>
+                        <div class="min-vw-0">
+                          <div class="fw-semibold text-dark text-truncate" style="max-width: 320px;">
+                            {{ p.nombre }}
+                          </div>
+                          <small class="text-muted d-block text-truncate" style="max-width: 320px;">
+                            {{ p.slug }}
+                          </small>
+                        </div>
                       </div>
-                    </div>
-                  </td>
+                    </td>
 
-                  <td class="py-3 fw-semibold">
-                    {{ formatPrecio(p.precioMinimo, p.precioMaximo) }}
-                  </td>
+                    <td class="py-3 fw-semibold text-nowrap">
+                      {{ formatPrecio(p.precioMinimo, p.precioMaximo) }}
+                    </td>
 
-                  <td class="py-3">
-                    <span
-                      class="badge rounded-pill px-3 py-2 fw-semibold"
-                      [ngClass]="getStockBadgeClass(p.stockTotal)"
-                    >
-                      {{ getStockText(p.stockTotal) }}
-                    </span>
-                  </td>
+                    <td class="py-3">
+                      <span class="badge rounded-pill px-3 py-2 fw-semibold"
+                            [ngClass]="getStockBadgeClass(p.stockTotal)">
+                        {{ getStockText(p.stockTotal) }}
+                      </span>
+                    </td>
 
-                  <td class="py-3">
-                    <span class="badge bg-info-subtle text-info px-3 py-2">
-                      <i class="bi bi-grid-3x3-gap me-1"></i>
-                      {{ p.cantidadVariantes }} variante{{
-                        p.cantidadVariantes !== 1 ? "s" : ""
-                      }}
-                    </span>
-                  </td>
+                    <td class="py-3">
+                      <span class="badge bg-info-subtle text-info px-3 py-2">
+                        <i class="bi bi-grid-3x3-gap me-1"></i>
+                        {{ p.cantidadVariantes }} variante{{ p.cantidadVariantes !== 1 ? 's' : '' }}
+                      </span>
+                    </td>
 
-                  <td class="py-3">
-                    <span
-                      class="badge bg-primary-subtle text-primary px-3 py-2"
-                    >
-                      {{ p.categoriaNombre || "Sin categoría" }}
-                    </span>
-                  </td>
+                    <td class="py-3">
+                      <span class="badge bg-primary-subtle text-primary px-3 py-2">
+                        {{ p.categoriaNombre || 'Sin categoría' }}
+                      </span>
+                    </td>
 
-                  <td class="py-3" *ngIf="auth.isAdmin()">
-                    <div>
-                      <div class="fw-medium">{{ p.tiendaNombre }}</div>
-                      <small class="text-muted">ID: #{{ p.tiendaId }}</small>
-                    </div>
-                  </td>
+                    <td class="py-3" *ngIf="auth.isAdmin()">
+                      <div>
+                        <div class="fw-medium">{{ p.tiendaNombre }}</div>
+                        <small class="text-muted">ID: #{{ p.tiendaId }}</small>
+                      </div>
+                    </td>
 
-                  <td class="py-3">
-                    <span
-                      class="badge rounded-pill px-3 py-2 fw-semibold"
-                      [ngClass]="p.activo ? 'bg-success' : 'bg-danger'"
-                    >
-                      <i
-                        class="bi me-1"
-                        [ngClass]="
-                          p.activo ? 'bi-check-circle-fill' : 'bi-x-circle-fill'
-                        "
-                      ></i>
-                      {{ p.activo ? "Activo" : "Inactivo" }}
-                    </span>
-                  </td>
+                    <td class="py-3">
+                      <span class="badge rounded-pill px-3 py-2 fw-semibold"
+                            [ngClass]="p.activo ? 'bg-success' : 'bg-danger'">
+                        <i class="bi me-1" [ngClass]="p.activo ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"></i>
+                        {{ p.activo ? 'Activo' : 'Inactivo' }}
+                      </span>
+                    </td>
 
-                  <td class="text-end pe-4 py-3">
-                    <div class="btn-group" role="group">
-                      <!-- Ver detalle -->
-                      <button
-                        class="btn btn-info btn-sm"
-                        title="Ver detalle completo"
-                        (click)="openDetailModal(p.id)"
-                      >
-                        <i class="bi bi-eye"></i>
-                      </button>
-
-                      <!-- Editar -->
-                      <button
-                        class="btn btn-outline-primary btn-sm"
-                        title="Editar producto"
-                        (click)="openEditModal(p.id)"
-                      >
-                        <i class="bi bi-pencil"></i>
-                      </button>
-
-                      <!-- Toggle activo/inactivo -->
-                      <button
-                        class="btn btn-sm ms-1"
-                        [ngClass]="{
-                          'btn-success': p.activo && loadingToggleId() !== p.id,
-                          'btn-danger': !p.activo && loadingToggleId() !== p.id,
-                          'btn-secondary': loadingToggleId() === p.id
-                        }"
-                        (click)="toggleActivo(p)"
-                        [disabled]="loadingToggleId() === p.id"
-                        [title]="p.activo ? 'Desactivar' : 'Activar'"
-                      >
-                        <span
-                          *ngIf="loadingToggleId() === p.id"
-                          class="spinner-border spinner-border-sm me-1"
-                        ></span>
-                        <i
-                          class="bi"
-                          [ngClass]="{
-                            'bi-check-circle-fill':
-                              p.activo && loadingToggleId() !== p.id,
-                            'bi-x-circle-fill':
-                              !p.activo && loadingToggleId() !== p.id,
-                            'bi-hourglass-split': loadingToggleId() === p.id
-                          }"
-                        ></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                    <td class="text-end pe-4 py-3">
+                      <div class="btn-group btn-group-sm" role="group">
+                        <button class="btn btn-outline-info" title="Ver detalle"
+                                (click)="openDetailModal(p.id)">
+                          <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-outline-primary" title="Editar"
+                                (click)="openEditModal(p.id)">
+                          <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn" [ngClass]="{
+                                'btn-success': p.activo && loadingToggleId() !== p.id,
+                                'btn-danger': !p.activo && loadingToggleId() !== p.id,
+                                'btn-secondary disabled': loadingToggleId() === p.id
+                              }"
+                               (click)="toggleActivo(p)"
+                               [disabled]="loadingToggleId() === p.id"
+                               title="{{ p.activo ? 'Desactivar' : 'Activar' }}">
+                          <span *ngIf="loadingToggleId() === p.id" class="spinner-border spinner-border-sm me-1"></span>
+                          <i class="bi" [ngClass]="{
+                              'bi-check-circle-fill': p.activo && loadingToggleId() !== p.id,
+                              'bi-x-circle-fill': !p.activo && loadingToggleId() !== p.id,
+                              'bi-hourglass-split': loadingToggleId() === p.id
+                            }"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Empty State -->
-      <div
-        *ngIf="!loading() && productos().length === 0"
-        class="text-center py-5 my-5"
-      >
-        <i class="bi bi-inbox display-1 text-muted opacity-50 mb-4"></i>
-        <h4 class="fw-semibold text-muted mb-3">
-          {{
-            searchTerm()
-              ? "No se encontraron resultados"
-              : "Aún no tienes productos"
-          }}
-        </h4>
-        <p class="text-muted mb-4" *ngIf="searchTerm(); else noProducts">
-          No hay productos que coincidan con "<strong>{{ searchTerm() }}</strong
-          >"
-        </p>
-        <ng-template #noProducts>
-          <p class="text-muted mb-4">Comienza creando tu primer producto</p>
-        </ng-template>
-        <button
-          class="btn btn-primary btn-lg px-5"
-          (click)="openCreateModal()"
-          *ngIf="auth.isOwner()"
-        >
-          <i class="bi bi-plus-lg me-2"></i>
-          Crear primer producto
-        </button>
-      </div>
-
-      <!-- Paginación -->
-      <nav
-        *ngIf="pageData() && pageData()!.totalPages > 1"
-        class="mt-5 d-flex justify-content-center"
-      >
-        <ul class="pagination pagination-lg">
-          <li class="page-item" [class.disabled]="currentPage() === 0">
-            <button
-              class="page-link"
-              (click)="goToPage(currentPage() - 1)"
-              [disabled]="currentPage() === 0"
-            >
-              <i class="bi bi-chevron-left"></i>
-            </button>
-          </li>
-          <li
-            class="page-item"
-            *ngFor="let num of getPageNumbers()"
-            [class.active]="num === currentPage()"
-            [class.disabled]="num === -1"
-          >
-            <button
-              class="page-link"
-              (click)="num >= 0 && goToPage(num)"
-              [disabled]="num === -1"
-            >
-              {{ num === -1 ? "..." : num + 1 }}
-            </button>
-          </li>
-          <li
-            class="page-item"
-            [class.disabled]="currentPage() === pageData()!.totalPages - 1"
-          >
-            <button
-              class="page-link"
-              (click)="goToPage(currentPage() + 1)"
-              [disabled]="currentPage() === pageData()!.totalPages - 1"
-            >
-              <i class="bi bi-chevron-right"></i>
-            </button>
-          </li>
-        </ul>
-      </nav>
+        <!-- Paginación -->
+        <nav *ngIf="pageData() && pageData()!.totalPages > 1" class="mt-5 d-flex justify-content-center">
+          <ul class="pagination pagination-lg">
+            <li class="page-item" [class.disabled]="currentPage() === 0">
+              <button class="page-link rounded-start" (click)="goToPage(currentPage() - 1)">
+                <i class="bi bi-chevron-left"></i>
+              </button>
+            </li>
+            <li class="page-item" *ngFor="let num of getPageNumbers()" 
+                [class.active]="num === currentPage()"
+                [class.disabled]="num === -1">
+              <button class="page-link" (click)="num >= 0 && goToPage(num)">
+                {{ num === -1 ? '...' : num + 1 }}
+              </button>
+            </li>
+            <li class="page-item" [class.disabled]="currentPage() === pageData()!.totalPages - 1">
+              <button class="page-link rounded-end" (click)="goToPage(currentPage() + 1)">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </ng-container>
     </div>
   </div>
 </div>
 
-<!-- Modal de Edición/Creación (usando componente hijo) -->
-<div
-  class="modal fade"
-  tabindex="-1"
-  [ngClass]="{ 'show d-block': showModal(), 'd-none': !showModal() }"
-  [style.display]="showModal() ? 'block' : 'none'"
->
-  <div
-    class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered"
-  >
-    <div class="modal-content shadow-lg border-0">
+<!-- Modal Edición/Creación -->
+<div class="modal fade" tabindex="-1" [class.show]="showModal()" [style.display]="showModal() ? 'block' : 'none'">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow-lg rounded-4">
       <div class="modal-body p-0">
-        <app-product-form
+        <app-product-form 
           [isEdit]="isEditMode()"
           [producto]="selectedProducto()"
           (saved)="onProductSaved()"
-          (closed)="closeModal()"
-        >
+          (closed)="closeModal()">
         </app-product-form>
       </div>
     </div>
   </div>
 </div>
-<div
-  class="modal-backdrop fade"
-  [ngClass]="{ show: showModal() }"
-  *ngIf="showModal()"
-></div>
+<div class="modal-backdrop fade show" *ngIf="showModal()"></div>
 
-<!-- Modal de Detalle (solo lectura) -->
-<div
-  class="modal fade"
-  tabindex="-1"
-  [ngClass]="{
-    'show d-block': showDetailModal(),
-    'd-none': !showDetailModal()
-  }"
-  [style.display]="showDetailModal() ? 'block' : 'none'"
->
-  <div
-    class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"
-  >
-    <div class="modal-content shadow-lg">
-      <div class="modal-header border-0 bg-light">
+<!-- Modal Detalle -->
+<div class="modal fade" tabindex="-1" [class.show]="showDetailModal()" [style.display]="showDetailModal() ? 'block' : 'none'">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header bg-light border-0">
         <h5 class="modal-title fw-bold">
           <i class="bi bi-eye me-2 text-info"></i>
           Detalle del Producto
         </h5>
-        <button
-          type="button"
-          class="btn-close"
-          (click)="closeDetailModal()"
-          aria-label="Cerrar"
-        ></button>
+        <button type="button" class="btn-close" (click)="closeDetailModal()" aria-label="Cerrar"></button>
       </div>
 
       <div class="modal-body" *ngIf="loadingDetail(); else detalleContent">
         <div class="text-center py-5">
           <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Cargando detalle...</span>
+            <span class="visually-hidden">Cargando...</span>
           </div>
           <p class="mt-3 text-muted">Cargando información completa...</p>
         </div>
       </div>
 
       <ng-template #detalleContent>
-        <div
-          class="modal-body pt-2"
-          *ngIf="selectedProductoDetail() as producto"
-        >
+        <div class="modal-body" *ngIf="selectedProductoDetail() as producto">
           <div class="row g-4">
-            <!-- Imagen principal -->
-            <div class="col-md-5 text-center">
-              <img
-                #detailImg
-                [src]="producto.variantes?.[0]?.imagenUrl || 'https://via.placeholder.com/400?text=Sin+imagen'"
-                class="img-fluid rounded-3 shadow-sm"
-                style="max-height: 350px; object-fit: contain"
-                alt="Imagen del producto"
-                (error)="
-                  detailImg.src =
-                    'https://via.placeholder.com/400?text=Sin+imagen'
-                "
-              />
+            <!-- Imagen + info básica -->
+            <div class="col-md-5">
+              <img [src]="producto.variantes?.[0]?.imagenUrl || '/assets/images/default-product.png'"
+                   class="img-fluid rounded-4 shadow" 
+                   style="max-height: 380px; object-fit: contain; width: 100%;"
+                   alt="{{producto.nombre}}"
+                   (error)="handleImageError($event)" />
             </div>
 
-            <!-- Información -->
+            <!-- Detalles -->
             <div class="col-md-7">
-              <h4 class="fw-bold text-dark mb-3">{{ producto.nombre }}</h4>
+              <h4 class="fw-bold mb-3">{{ producto.nombre }}</h4>
+              
               <div class="mb-3">
-                <strong>Slug:</strong>
-                <code class="bg-light px-2 py-1 rounded">{{
-                  producto.slug
-                }}</code>
+                <strong>Slug:</strong> 
+                <code class="bg-light px-2 py-1 rounded ms-2">{{ producto.slug }}</code>
               </div>
+
               <div class="mb-3">
                 <strong>Categoría:</strong>
-                <span
-                  class="badge bg-primary-subtle text-primary px-3 py-2 ms-2"
-                >
-                  {{ producto.categoriaNombre }}
+                <span class="badge bg-primary-subtle text-primary ms-2 px-3 py-2">
+                  {{ producto.categoriaNombre || 'Sin categoría' }}
                 </span>
               </div>
+
               <div class="mb-4">
                 <strong>Estado:</strong>
-                <span
-                  class="badge px-3 py-2 ms-2"
-                  [ngClass]="producto.activo ? 'bg-success' : 'bg-secondary'"
-                >
-                  {{ producto.activo ? "Activo" : "Inactivo" }}
+                <span class="badge ms-2 px-3 py-2" [ngClass]="producto.activo ? 'bg-success' : 'bg-secondary'">
+                  {{ producto.activo ? 'Activo' : 'Inactivo' }}
                 </span>
               </div>
 
@@ -443,9 +305,9 @@
                 Variantes ({{ producto.variantes?.length || 0 }})
               </h5>
 
-              <div class="table-responsive">
-                <table class="table table-sm table-hover align-middle">
-                  <thead class="table-light">
+              <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                <table class="table table-sm table-hover">
+                  <thead class="table-light sticky-top">
                     <tr>
                       <th>SKU</th>
                       <th>Precio</th>
@@ -455,57 +317,32 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr *ngFor="let v of producto.variantes">
+                    <tr *ngFor="let v of producto.variantes || []">
+                      <td><code>{{ v.sku }}</code></td>
+                      <td><strong>S/ {{ v.precio | number:'1.2-2' }}</strong></td>
                       <td>
-                        <code>{{ v.sku }}</code>
-                      </td>
-                      <td>
-                        <strong>S/ {{ v.precio | number : "1.2-2" }}</strong>
-                      </td>
-                      <td>
-                        <span
-                          class="badge px-3"
-                          [ngClass]="
-                            v.stock === 0
-                              ? 'bg-danger'
-                              : v.stock <= 10
-                              ? 'bg-warning text-dark'
-                              : 'bg-success'
-                          "
-                        >
+                        <span class="badge px-3" [ngClass]="v.stock === 0 ? 'bg-danger' : v.stock <= 10 ? 'bg-warning text-dark' : 'bg-success'">
                           {{ v.stock }}
                         </span>
                       </td>
                       <td>
-                        <small
-                          class="text-muted"
-                          *ngIf="v.atributos.length > 0"
-                        >
+                        <small *ngIf="v.atributos.length; else sinAtributos">
                           <span *ngFor="let a of v.atributos; let last = last">
-                            {{ a.atributoNombre }}:
-                            <strong>{{ a.valor }}</strong
-                            >{{ last ? "" : "; " }}
+                            {{ a.atributoNombre }}: <strong>{{ a.valor }}</strong>{{ last ? '' : ', ' }}
                           </span>
                         </small>
-                        <em class="text-muted" *ngIf="!v.atributos.length"
-                          >Sin atributos</em
-                        >
+                        <ng-template #sinAtributos>
+                          <em class="text-muted">—</em>
+                        </ng-template>
                       </td>
                       <td>
-                        <span
-                          class="badge"
-                          [ngClass]="v.activo ? 'bg-success' : 'bg-secondary'"
-                        >
-                          {{ v.activo ? "Activa" : "Inactiva" }}
+                        <span class="badge" [ngClass]="v.activo ? 'bg-success' : 'bg-secondary'">
+                          {{ v.activo ? 'Activa' : 'Inactiva' }}
                         </span>
                       </td>
                     </tr>
-                    <tr
-                      *ngIf="
-                        !producto.variantes || producto.variantes.length === 0
-                      "
-                    >
-                      <td colspan="5" class="text-center text-muted py-3">
+                    <tr *ngIf="!producto.variantes?.length">
+                      <td colspan="5" class="text-center text-muted py-4">
                         Este producto no tiene variantes configuradas
                       </td>
                     </tr>
@@ -517,22 +354,13 @@
         </div>
       </ng-template>
 
-      <div class="modal-footer border-0">
-        <button
-          type="button"
-          class="btn btn-secondary px-4"
-          (click)="closeDetailModal()"
-        >
+      <div class="modal-footer border-0 bg-light">
+        <button type="button" class="btn btn-outline-secondary px-5 rounded-pill" 
+                (click)="closeDetailModal()">
           Cerrar
         </button>
       </div>
     </div>
   </div>
 </div>
-
-<!-- Backdrop del modal de detalle -->
-<div
-  class="modal-backdrop fade"
-  [ngClass]="{ show: showDetailModal() }"
-  *ngIf="showDetailModal()"
-></div>
+<div class="modal-backdrop fade show" *ngIf="showDetailModal()"></div>

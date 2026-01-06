@@ -23,7 +23,7 @@ public class  TiendaResponse {
     private String planSlug;
     private String estadoSuscripcion;  // trial, active, canceled, etc.
     private String trialEndsAt;
-    private String fechaFin;
+    private String fechaVencimiento;
     private Integer maxProductos;
     private Integer maxVariantes;
     private String emailRemitente;

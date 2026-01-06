@@ -15,6 +15,7 @@ interface TiendaBase {
   activo?: boolean;
   userId?: number;
   userEmail?: string;
+fechaVencimiento?: string | null;  
 }
 
 // Para respuestas del admin/owner (más datos sensibles y de suscripción)

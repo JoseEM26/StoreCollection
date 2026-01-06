@@ -101,6 +101,12 @@ export class TiendaAdminService {
       .pipe(catchError(this.handleError));
   }
 
+renovarTienda(tiendaId: number): Observable<TiendaResponse> {
+  const url = `${this.BASE_URL}/${tiendaId}/renovar`;
+  return this.http.post<TiendaResponse>(url, {})
+    .pipe(catchError(this.handleError));
+}
+
   // === GENERAR SLUG AUTOMÁTICO (helper en frontend) ===
   generarSlug(nombre: string): string {
     return nombre

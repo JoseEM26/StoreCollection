@@ -87,6 +87,9 @@ public class Tienda {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "fecha_vencimiento")
+    private LocalDateTime fechaVencimiento;
+
     // ==================== MÉTODOS DE CONVENIENCIA ====================
 
     /**

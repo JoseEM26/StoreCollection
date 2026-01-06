@@ -1,17 +1,25 @@
 package com.proyecto.StoreCollection.controller;
 import com.proyecto.StoreCollection.dto.request.TiendaRequest;
 import com.proyecto.StoreCollection.dto.response.*;
+import com.proyecto.StoreCollection.entity.Plan;
+import com.proyecto.StoreCollection.entity.Tienda;
+import com.proyecto.StoreCollection.repository.TiendaRepository;
 import com.proyecto.StoreCollection.service.TiendaService;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,6 +29,7 @@ import java.util.stream.Collectors;
 public class TiendaController {
 
     private final TiendaService service;
+    private final TiendaRepository tiendaRepository;
 
     @GetMapping("/api/public/tiendas")
     public ResponseEntity<Page<TiendaResponse>> listarTodasTiendas(
@@ -169,20 +178,27 @@ public class TiendaController {
         TiendaResponse response = service.toggleActivo(id);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/api/owner/tiendas/{tiendaId}/renovar")
+    public ResponseEntity<TiendaResponse> renovarTienda(@PathVariable Integer tiendaId) {
+        TiendaResponse response = service.renovarTienda(tiendaId);
+        return ResponseEntity.ok(response);
+    }
     // ==================== OPERACIONES CRUD ====================
     // ==================== OPERACIONES CRUD ====================
     // ==================== OPERACIONES CRUD ====================
 
     // PRIVADO - Mis tiendas
-    @GetMapping("/api/owner/tiendas")
-    public ResponseEntity<List<TiendaResponse>> misTiendas() {
-        return ResponseEntity.ok(service.getMisTiendas());
-    }
+    //@GetMapping("/api/owner/tiendas")
+    //public ResponseEntity<List<TiendaResponse>> misTiendas() {
+      //  return ResponseEntity.ok(service.getMisTiendas());
+    //}
 
-    @GetMapping("/api/owner/tiendas/mi-tienda")
-    public ResponseEntity<TiendaResponse> miTienda() {
-        return ResponseEntity.ok(service.getMiTienda());
-    }
+    //@GetMapping("/api/owner/tiendas/mi-tienda")
+    //public ResponseEntity<TiendaResponse> miTienda() {
+      //  return ResponseEntity.ok(service.getMiTienda());
+    //}
+
 
 
 

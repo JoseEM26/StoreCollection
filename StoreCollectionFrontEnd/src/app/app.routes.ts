@@ -29,6 +29,8 @@ import { resourceActiveGuard } from '../auth/resource-active.guard'; // ← IMPO
 import { CarritoComponent } from './componente/carrito/carrito.component';
 import { BoletaComponent } from './pages/administrativo/boleta/boleta.component';
 import { tiendaAccessGuard } from '../auth/tienda-access.guard';
+import { planActiveGuard } from '../auth/plan-active.guard';
+import { adminOnlyGuard } from '../auth/admin-only.guard';
 
 export const routes: Routes = [
 
@@ -43,20 +45,33 @@ export const routes: Routes = [
     title: 'Suscripción Expirada'
   },
 
-  // 2. PANEL ADMIN (protegido por authGuard)
-  {
+{
     path: 'admin',
     component: AdminLayoutComponent,
-    canActivate: [authGuard],
+    canActivate: [authGuard], // autenticación general
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: DashboardComponent, title: 'Dashboard' },
-      { path: 'stores', component: StoresComponent, title: 'Tiendas' },
-      { path: 'categories', component: CategoriesComponent, title: 'Categorías' },
-      { path: 'products', component: ProductsComponent, title: 'Productos' },
-      { path: 'planes', component: PlanesComponent, title: 'Planes' },
-      { path: 'usuarios', component: UsuariosComponent, title: 'Usuarios' },
-      { path: 'boletas', component: BoletaComponent, title: 'Boletas' },
+
+      // Rutas EXCLUSIVAS para ADMIN
+      {
+        path: 'usuarios',
+        component: UsuariosComponent,
+        canActivate: [planActiveGuard, adminOnlyGuard], // ← Añadimos el nuevo guard
+        title: 'Usuarios'
+      },
+      {
+        path: 'planes',
+        component: PlanesComponent,
+        canActivate: [planActiveGuard, adminOnlyGuard], // ← Aquí también
+        title: 'Planes'
+      },
+
+      // Rutas permitidas para OWNER y ADMIN (solo planActiveGuard)
+      { path: 'stores', component: StoresComponent, canActivate: [planActiveGuard], title: 'Tiendas' },
+      { path: 'categories', component: CategoriesComponent, canActivate: [planActiveGuard], title: 'Categorías' },
+      { path: 'products', component: ProductsComponent, canActivate: [planActiveGuard], title: 'Productos' },
+      { path: 'boletas', component: BoletaComponent, canActivate: [planActiveGuard], title: 'Boletas' },
     ]
   },
 

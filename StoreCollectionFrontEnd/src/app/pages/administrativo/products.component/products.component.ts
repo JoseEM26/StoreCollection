@@ -1,9 +1,8 @@
 // src/app/pages/administrativo/products/products.component.ts
-
 import { Component, OnInit, signal, effect, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ProductoAdminListItem, ProductoAdminListPage, ProductoPage, ProductoResponse } from '../../../model/admin/producto-admin.model';
+import { ProductoAdminListItem, ProductoAdminListPage, ProductoResponse } from '../../../model/admin/producto-admin.model';
 import { ProductoAdminService } from '../../../service/service-admin/producto-admin.service';
 import { AuthService } from '../../../../auth/auth.service';
 import { ProductFormComponent } from './product-form/product-form.component';
@@ -17,32 +16,38 @@ import Swal from 'sweetalert2';
   styleUrl: './products.component.css'
 })
 export class ProductsComponent implements OnInit {
-pageData = signal<ProductoAdminListPage | null>(null);
-  productos = signal<ProductoAdminListItem[]>([]);  // ← Tipo correcto ahora
+  // Signals principales
+  pageData = signal<ProductoAdminListPage | null>(null);
+  productos = signal<ProductoAdminListItem[]>([]);
   loading = signal(true);
-  // Modal
+
+  // Modales
   showModal = signal(false);
   isEditMode = signal(false);
   selectedProducto = signal<ProductoResponse | undefined>(undefined);
   loadingEdicion = signal(false);
-// === AÑADE ESTOS NUEVOS SIGNALS cerca de los otros modales ===
-showDetailModal = signal(false);              // Nuevo: controla el modal de detalle
-selectedProductoDetail = signal<ProductoResponse | undefined>(undefined); // Producto en modo detalle
-loadingDetail = signal(false);                 // Loading mientras carga el detalle
-  // Loading para toggle (evita clicks múltiples)
+
+  showDetailModal = signal(false);
+  selectedProductoDetail = signal<ProductoResponse | undefined>(undefined);
+  loadingDetail = signal(false);
+
+  // Loading para toggle (evita múltiples clics)
   loadingToggleId = signal<number | null>(null);
 
   // Filtros y paginación
   currentPage = signal(0);
   pageSize = 20;
-  sort = signal('nombre,asc');
+  sort = signal<string>('nombre,asc');
   searchTerm = signal<string>('');
+
+  // Flag para evitar bucle infinito en imágenes fallidas
+  private failedImages = new Set<string>(); // Usamos src como key para evitar repeticiones
 
   constructor(
     private productoService: ProductoAdminService,
     public auth: AuthService
   ) {
-    // Recarga cuando cambian filtros o página
+    // Efecto reactivo para recarga automática
     effect(() => {
       this.loadProductos();
     });
@@ -52,39 +57,9 @@ loadingDetail = signal(false);                 // Loading mientras carga el deta
     this.loadProductos();
   }
 
-  getVarianteText(producto: ProductoResponse): string {
-    if (!producto.variantes || producto.variantes.length === 0) {
-      return 'Sin variantes';
-    }
-    return producto.variantes.length === 1 ? '1 variante' : `${producto.variantes.length} variantes`;
-  }
-openDetailModal(id: number): void {
-  this.loadingDetail.set(true);
-  this.showDetailModal.set(true);
-
-  this.productoService.obtenerParaEdicion(id).subscribe({
-    next: (productoCompleto) => {
-      this.selectedProductoDetail.set(productoCompleto);
-      this.loadingDetail.set(false);
-    },
-    error: (err) => {
-      this.loadingDetail.set(false);
-      this.showDetailModal.set(false);
-      this.mostrarError(err, 'No se pudo cargar el detalle del producto');
-    }
-  });
-}
-handleImageError(event: Event): void {
-  if (event.target instanceof HTMLImageElement) {
-    event.target.src = 'https://via.placeholder.com/80?text=Sin+imagen';
-  }
-}
-// === MÉTODO PARA CERRAR EL MODAL DE DETALLE ===
-closeDetailModal(): void {
-  this.showDetailModal.set(false);
-  this.loadingDetail.set(false);
-  this.selectedProductoDetail.set(undefined);
-}
+  // ===============================================
+  // Carga de productos
+  // ===============================================
   loadProductos(): void {
     this.loading.set(true);
 
@@ -106,6 +81,74 @@ closeDetailModal(): void {
     });
   }
 
+  // ===============================================
+  // Manejo de errores de imagen (SOLUCIÓN AL BUCLE INFINITO)
+  // ===============================================
+  handleImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    const currentSrc = img.src;
+
+    // Evitar bucle infinito: si ya es la imagen por defecto, no hacer nada
+    if (this.failedImages.has(currentSrc)) {
+      return;
+    }
+
+    this.failedImages.add(currentSrc);
+
+    // Usa una imagen local (recomendado) o base64 ligero
+    img.src = 'https://res.cloudinary.com/dqznlmig0/image/upload/v1767658215/imagen_2026-01-05_191004692_bepdxz.png'; // ← Crea esta imagen en assets (80x80 px)
+
+    // Alternativa base64 muy ligera (gris con texto) - sin llamadas externas
+    // img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0iI2ZmZmZmZiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlN2ViIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjOTk5Ij5TaW4gaW1hZ2VuPC90ZXh0Pjwvc3ZnPg==';
+
+    img.alt = 'Sin imagen disponible';
+  }
+
+  // ===============================================
+  // Utilidades visuales
+  // ===============================================
+  getVarianteText(producto: ProductoResponse): string {
+    if (!producto.variantes || producto.variantes.length === 0) return 'Sin variantes';
+    return producto.variantes.length === 1 ? '1 variante' : `${producto.variantes.length} variantes`;
+  }
+
+  formatPrecio(min: number, max: number): string {
+    const fmt = (n: number) => n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return min === max ? `S/ ${fmt(min)}` : `S/ ${fmt(min)} - S/ ${fmt(max)}`;
+  }
+
+  getStockBadgeClass(stock: number): string {
+    if (stock === 0) return 'bg-danger text-white';
+    if (stock <= 10) return 'bg-warning text-dark';
+    return 'bg-success text-white';
+  }
+
+  getStockText(stock: number): string {
+    if (stock === 0) return 'Sin stock';
+    if (stock <= 10) return `${stock} en stock`;
+    return `${stock} disponibles`;
+  }
+
+  // ===============================================
+  // Acciones principales
+  // ===============================================
+  openDetailModal(id: number): void {
+    this.loadingDetail.set(true);
+    this.showDetailModal.set(true);
+
+    this.productoService.obtenerParaEdicion(id).subscribe({
+      next: (producto) => {
+        this.selectedProductoDetail.set(producto);
+        this.loadingDetail.set(false);
+      },
+      error: (err) => {
+        this.loadingDetail.set(false);
+        this.showDetailModal.set(false);
+        this.mostrarError(err, 'No se pudo cargar el detalle del producto');
+      }
+    });
+  }
+
   openCreateModal(): void {
     this.isEditMode.set(false);
     this.selectedProducto.set(undefined);
@@ -118,8 +161,8 @@ closeDetailModal(): void {
     this.showModal.set(true);
 
     this.productoService.obtenerParaEdicion(id).subscribe({
-      next: (productoCompleto) => {
-        this.selectedProducto.set(productoCompleto);
+      next: (producto) => {
+        this.selectedProducto.set(producto);
         this.loadingEdicion.set(false);
       },
       error: (err) => {
@@ -130,9 +173,55 @@ closeDetailModal(): void {
     });
   }
 
+  toggleActivo(producto: ProductoAdminListItem): void {
+    if (this.loadingToggleId() === producto.id) return; // Evita doble clic
+
+    const nuevoEstado = !producto.activo;
+    this.loadingToggleId.set(producto.id);
+
+    // Optimistic update
+    this.productos.update(list =>
+      list.map(p => p.id === producto.id ? { ...p, activo: nuevoEstado } : p)
+    );
+
+    this.productoService.toggleActivo(producto.id).subscribe({
+      next: (updated) => {
+        this.productos.update(list =>
+          list.map(p => p.id === updated.id ? { ...p, ...updated } : p)
+        );
+        this.loadingToggleId.set(null);
+
+        Swal.fire({
+          icon: 'success',
+          title: nuevoEstado ? 'Activado' : 'Desactivado',
+          text: `El producto "${updated.nombre}" ahora está ${nuevoEstado ? 'activo' : 'inactivo'}.`,
+          timer: 1500,
+          showConfirmButton: false
+        });
+      },
+      error: (err) => {
+        // Rollback optimistic update
+        this.productos.update(list =>
+          list.map(p => p.id === producto.id ? { ...p, activo: !nuevoEstado } : p)
+        );
+        this.loadingToggleId.set(null);
+        this.mostrarError(err, 'Error al cambiar estado');
+      }
+    });
+  }
+
+  // ===============================================
+  // Modal handlers
+  // ===============================================
   closeModal(): void {
     this.showModal.set(false);
     this.loadingEdicion.set(false);
+  }
+
+  closeDetailModal(): void {
+    this.showDetailModal.set(false);
+    this.loadingDetail.set(false);
+    this.selectedProductoDetail.set(undefined);
   }
 
   onProductSaved(): void {
@@ -144,74 +233,17 @@ closeDetailModal(): void {
       showConfirmButton: false
     });
     this.closeModal();
-    this.currentPage.set(0); // Volver a página 1 tras crear/editar
+    this.currentPage.set(0);
     this.loadProductos();
   }
-formatPrecio(min: number, max: number): string {
-    const fmt = (n: number) => n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    if (min === max) {
-      return `S/ ${fmt(min)}`;
-    }
-    return `S/ ${fmt(min)} - S/ ${fmt(max)}`;
+
+  // ===============================================
+  // Utilidades generales
+  // ===============================================
+  trackByProductoId(index: number, producto: ProductoAdminListItem): number {
+    return producto.id;
   }
 
-  // Badge de stock
-  getStockBadgeClass(stock: number): string {
-    if (stock === 0) return 'bg-danger text-white';
-    if (stock <= 10) return 'bg-warning text-dark';
-    return 'bg-success text-white';
-  }
-
-  getStockText(stock: number): string {
-    if (stock === 0) return 'Sin stock';
-    if (stock <= 10) return `${stock} en stock`;
-    return `${stock} disponibles`;
-  }
-toggleActivo(producto: ProductoAdminListItem): void {
-  const nuevoEstado = !producto.activo;
-
-  this.loadingToggleId.set(producto.id);
-
-  // Optimistic update
-  this.productos.update(list =>
-    list.map(p => p.id === producto.id ? { ...p, activo: nuevoEstado } : p)
-  );
-
-  this.productoService.toggleActivo(producto.id).subscribe({
-    next: (updatedResponse: ProductoResponse) => {
-      // Buscamos el producto actual en la lista para conservar las propiedades extras
-      this.productos.update(list =>
-        list.map(p =>
-          p.id === updatedResponse.id
-            ? { ...p, ...updatedResponse }  // merge: mantiene las props extras y actualiza las del response
-            : p
-        )
-      );
-
-      this.loadingToggleId.set(null);
-
-      Swal.fire({
-        icon: 'success',
-        title: nuevoEstado ? 'Activado' : 'Desactivado',
-        text: `El producto "${updatedResponse.nombre}" ahora está ${nuevoEstado ? 'activo' : 'inactivo'}.`,
-        timer: 1500,
-        showConfirmButton: false
-      });
-    },
-    error: (err) => {
-      this.productos.update(list =>
-        list.map(p => p.id === producto.id ? { ...p, activo: !nuevoEstado } : p)
-      );
-      this.loadingToggleId.set(null);
-      this.mostrarError(err, 'Error al cambiar el estado del producto');
-    }
-  });
-}
-  // ======================== UTILIDADES ========================
-
- trackByProductoId(index: number, producto: ProductoAdminListItem): unknown {
-  return producto.id;
-}
   onSearch(): void {
     this.currentPage.set(0);
   }
@@ -236,22 +268,20 @@ toggleActivo(producto: ProductoAdminListItem): void {
     const delta = 2;
     const left = Math.max(0, current - delta);
     const right = Math.min(total - 1, current + delta);
-    const range = [];
+    const range: number[] = [];
 
-    if (left > 0) range.push(0); // Siempre mostrar primera página
-    if (left > 1) range.push(-1); // ... para indicar salto
+    if (left > 0) range.push(0);
+    if (left > 1) range.push(-1); // ...
 
     for (let i = left; i <= right; i++) {
       range.push(i);
     }
 
-    if (right < total - 2) range.push(-1); // ...
-    if (right < total - 1) range.push(total - 1); // Última página
+    if (right < total - 2) range.push(-1);
+    if (right < total - 1) range.push(total - 1);
 
     return range;
   }
-
-  // ======================== MANEJO DE ERRORES CON SWEETALERT2 ========================
 
   private mostrarError(err: any, tituloDefault: string = 'Error') {
     const mensaje = err.error?.message || err.message || 'Error desconocido';
@@ -267,9 +297,8 @@ toggleActivo(producto: ProductoAdminListItem): void {
   }
 
   @HostListener('document:keydown.escape')
-  onEscape() {
-    if (this.showModal()) {
-      this.closeModal();
-    }
+  onEscape(): void {
+    if (this.showModal()) this.closeModal();
+    if (this.showDetailModal()) this.closeDetailModal();
   }
 }

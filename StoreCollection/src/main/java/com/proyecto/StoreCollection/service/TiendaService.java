@@ -27,4 +27,5 @@ public interface TiendaService {
     void deleteById(Integer id);
     Page<TiendaResponse> findByUserEmail(String email, Pageable pageable);
     TiendaResponse toggleActivo(Integer id);
+    TiendaResponse renovarTienda(Integer tiendaId);
 }

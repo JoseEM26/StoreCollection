@@ -2,8 +2,8 @@
   <!-- Header -->
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4">
     <div>
-      <h1 class="display-5 fw-bold mb-1" style="background: linear-gradient(90deg, #6366f1, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-        <i class="bi bi-shop-window me-3"></i>
+      <h1 class="display-5 fw-bold mb-1">
+        <i class="bi bi-shop-window me-3 text-primary"></i>
         Gestión de Tiendas
       </h1>
       <p class="text-muted fs-5 mb-0">
@@ -14,14 +14,14 @@
       </p>
     </div>
 
-    <button class="btn btn-primary btn-lg rounded-pill px-5 shadow-lg" (click)="openCreateModal()">
+    <button class="btn btn-primary btn-lg rounded-pill px-5 shadow" (click)="openCreateModal()">
       <i class="bi bi-plus-circle-fill me-2 fs-4"></i>
       Nueva Tienda
     </button>
   </div>
 
-  <!-- Búsqueda y filtros -->
-  <div class="row mb-5 g-3">
+  <!-- Búsqueda -->
+  <div class="row mb-5">
     <div class="col-lg-6 col-xl-5">
       <div class="input-group input-group-lg">
         <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-4">
@@ -29,7 +29,7 @@
         </span>
         <input
           type="text"
-          class="form-control border-start-0 rounded-end-pill pe-4"
+          class="form-control rounded-end-pill pe-4 border-start-0"
           placeholder="Buscar por nombre, slug o dueño..."
           [value]="searchInput()"
           (input)="searchInput.set($any($event.target).value)"
@@ -43,8 +43,8 @@
     <div class="spinner-border text-primary" style="width: 5rem; height: 5rem;" role="status">
       <span class="visually-hidden">Cargando...</span>
     </div>
-    <h4 class="mt-4 text-primary fw-bold">Cargando tus tiendas...</h4>
-    <p class="text-muted">Un momento por favor</p>
+    <h4 class="mt-4 text-primary fw-bold">Cargando tiendas...</h4>
+    <p class="text-muted">Por favor espera un momento</p>
   </div>
 
   <!-- Contenido principal -->
@@ -53,12 +53,14 @@
     <div *ngIf="tiendas().length === 0" class="text-center py-5 my-5">
       <i class="bi bi-shop-window display-1 text-muted opacity-50 mb-4"></i>
       <h3 class="fw-bold text-dark mb-3">No hay tiendas aún</h3>
+
       <p class="lead text-muted mb-4" *ngIf="searchTerm().length > 0">
         No encontramos resultados para "<strong>{{ searchTerm() }}</strong>"
       </p>
       <p class="lead text-muted mb-4" *ngIf="searchTerm().length === 0">
         Crea tu primera tienda para empezar a vender
       </p>
+
       <button class="btn btn-primary btn-lg rounded-pill px-5" (click)="openCreateModal()">
         <i class="bi bi-plus-circle me-2"></i> Crear mi primera tienda
       </button>
@@ -67,14 +69,11 @@
     <!-- Grid de tiendas -->
     <div *ngIf="tiendas().length > 0" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
       <div class="col" *ngFor="let tienda of tiendas()">
-        <div class="card h-100 border-0 shadow-lg rounded-4 overflow-hidden position-relative store-card-hover">
-          <!-- Glow effect -->
-          <div class="card-glow"></div>
-
-          <div class="card-body d-flex flex-column p-4 position-relative" style="z-index: 2;">
+        <div class="card h-100 border-0 shadow rounded-4 overflow-hidden hover-lift">
+          <div class="card-body d-flex flex-column p-4">
             <div class="d-flex justify-content-between align-items-start mb-4">
               <div class="d-flex align-items-center gap-3">
-                <div class="avatar-circle bg-gradient-primary text-white d-flex align-items-center justify-content-center fw-bold fs-3">
+                <div class="avatar-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold fs-4">
                   {{ tienda.nombre.charAt(0).toUpperCase() }}
                 </div>
                 <div>
@@ -90,15 +89,15 @@
             </div>
 
             <!-- Plan -->
-            <div class="mt-2 mb-4">
+            <div class="mb-4">
               <span class="badge rounded-pill px-4 py-2 fs-6 fw-bold text-white"
                     [ngClass]="getPlanBadgeClass(tienda)">
                 {{ tienda.planNombre || 'Sin plan' }}
-                <small *ngIf="tienda.estadoSuscripcion === 'trial'" class="ms-2">(Trial)</small>
+                <small *ngIf="tienda.estadoSuscripcion === 'trial'" class="ms-2">(Prueba)</small>
               </span>
             </div>
 
-            <!-- Meta info -->
+            <!-- Info básica -->
             <div class="text-muted small mb-4">
               <div class="d-flex align-items-center mb-2">
                 <i class="bi bi-whatsapp me-2 text-success"></i>
@@ -108,23 +107,18 @@
                 <i class="bi bi-currency-exchange me-2 text-primary"></i>
                 {{ tienda.moneda }}
               </div>
-              <!-- Fecha (si tienes createdAt en el modelo) -->
-              <!-- <div class="d-flex align-items-center">
-                <i class="bi bi-calendar-event me-2"></i>
-                Creada: {{ formatDate(tienda.createdAt) }}
-              </div> -->
             </div>
 
             <!-- Límites -->
-            <div class="mt-auto pt-3 border-top">
+            <div class="mt-auto pt-4 border-top">
               <div class="row text-center small fw-semibold">
                 <div class="col">
-                  <span class="text-primary fs-4">{{ tienda.maxProductos ?? 0 }}</span><br>
-                  Productos
+                  <div class="fs-4 text-primary fw-bold">{{ tienda.maxProductos ?? 0 }}</div>
+                  <div>Productos</div>
                 </div>
                 <div class="col">
-                  <span class="text-primary fs-4">{{ tienda.maxVariantes ?? 0 }}</span><br>
-                  Variantes
+                  <div class="fs-4 text-primary fw-bold">{{ tienda.maxVariantes ?? 0 }}</div>
+                  <div>Variantes</div>
                 </div>
               </div>
             </div>
@@ -132,7 +126,7 @@
 
           <!-- Acciones -->
           <div class="card-footer bg-transparent border-0 px-4 pb-4 pt-0">
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 flex-wrap">
               <button class="btn btn-outline-primary flex-fill rounded-pill py-2" (click)="openEditModal(tienda)">
                 <i class="bi bi-pencil-square me-2"></i> Editar
               </button>
@@ -140,7 +134,12 @@
                 <i class="bi bi-eye me-2"></i> Detalles
               </button>
               <button *ngIf="auth.isAdmin()"
-                      class="btn rounded-circle p-3 shadow-sm"
+                      class="btn btn-success flex-fill rounded-pill py-2"
+                      (click)="renovarTienda(tienda)">
+                <i class="bi bi-arrow-repeat me-2"></i> Renovar
+              </button>
+              <button *ngIf="auth.isAdmin()"
+                      class="btn rounded-circle shadow-sm p-3"
                       [ngClass]="tienda.activo ? 'btn-success' : 'btn-danger'"
                       (click)="toggleActive(tienda)">
                 <i class="bi fs-4" [ngClass]="tienda.activo ? 'bi-toggle-on' : 'bi-toggle-off'"></i>
@@ -155,7 +154,7 @@
     <nav *ngIf="tiendasPage() && tiendasPage()!.totalPages > 1" class="d-flex justify-content-center mt-5">
       <ul class="pagination pagination-lg">
         <li class="page-item" [class.disabled]="currentPage() === 0">
-          <button class="page-link rounded-circle me-2" (click)="goToPage(currentPage() - 1)">
+          <button class="page-link rounded-circle" (click)="goToPage(currentPage() - 1)">
             <i class="bi bi-chevron-left"></i>
           </button>
         </li>
@@ -167,7 +166,7 @@
         </li>
 
         <li class="page-item" [class.disabled]="currentPage() === (tiendasPage()!.totalPages - 1)">
-          <button class="page-link rounded-circle ms-2" (click)="goToPage(currentPage() + 1)">
+          <button class="page-link rounded-circle" (click)="goToPage(currentPage() + 1)">
             <i class="bi bi-chevron-right"></i>
           </button>
         </li>
@@ -176,10 +175,11 @@
   </ng-container>
 
   <!-- Modal Crear/Editar -->
-  <div class="modal fade" id="storeModal" tabindex="-1" [class.show]="showCreateModal || showEditModal" [class.d-block]="showCreateModal || showEditModal">
+  <div class="modal fade" id="storeModal" tabindex="-1"
+       [ngClass]="{'show d-block': showCreateModal || showEditModal}">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content border-0 shadow-5 rounded-4 overflow-hidden">
-        <div class="modal-header bg-gradient-primary text-white border-0">
+      <div class="modal-content border-0 shadow rounded-4">
+        <div class="modal-header bg-primary text-white border-0">
           <h5 class="modal-title fw-bold fs-4">
             <i class="bi bi-shop me-2"></i>
             {{ showEditModal ? 'Editar Tienda' : 'Crear Nueva Tienda' }}
@@ -197,14 +197,12 @@
     </div>
   </div>
 
-  <!-- Backdrop para modal -->
-  <div class="modal-backdrop fade show" *ngIf="showCreateModal || showEditModal"></div>
-
   <!-- Modal Detalles -->
-  <div class="modal fade" id="detailsModal" tabindex="-1" [class.show]="showDetailsModal" [class.d-block]="showDetailsModal">
+  <div class="modal fade" id="detailsModal" tabindex="-1"
+       [ngClass]="{'show d-block': showDetailsModal}">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-      <div class="modal-content border-0 shadow-5 rounded-4">
-        <div class="modal-header bg-gradient-info text-white border-0">
+      <div class="modal-content border-0 shadow rounded-4">
+        <div class="modal-header bg-info text-white border-0">
           <h5 class="modal-title fw-bold fs-4">
             <i class="bi bi-info-circle-fill me-2"></i>
             Detalles de {{ selectedTienda?.nombre }}
@@ -212,8 +210,26 @@
           <button type="button" class="btn-close btn-close-white" (click)="closeDetailsModal()"></button>
         </div>
         <div class="modal-body" *ngIf="selectedTienda">
-          <!-- Aquí pones los detalles como en tu versión anterior -->
-          <!-- ... (copia tu contenido de detalles) ... -->
+          <!-- Aquí colocas los detalles específicos -->
+          <dl class="row">
+            <dt class="col-sm-4">Nombre</dt>
+            <dd class="col-sm-8">{{ selectedTienda.nombre }}</dd>
+
+            <dt class="col-sm-4">Slug</dt>
+            <dd class="col-sm-8">/{{ selectedTienda.slug }}</dd>
+
+            <dt class="col-sm-4">Plan</dt>
+            <dd class="col-sm-8">{{ selectedTienda.planNombre || 'Sin plan' }}</dd>
+
+            <dt class="col-sm-4">Estado</dt>
+            <dd class="col-sm-8">{{ getEstadoSuscripcion(selectedTienda) }}</dd>
+
+            <dt class="col-sm-4">Vencimiento</dt>
+            <dd class="col-sm-8">{{ formatDate(selectedTienda.fechaFin) }}</dd>
+
+            <dt class="col-sm-4">Productos máx.</dt>
+            <dd class="col-sm-8">{{ selectedTienda.maxProductos ?? '—' }}</dd>
+          </dl>
         </div>
         <div class="modal-footer border-0">
           <button type="button" class="btn btn-outline-secondary rounded-pill px-5" (click)="closeDetailsModal()">
@@ -224,6 +240,7 @@
     </div>
   </div>
 
-  <!-- Backdrop para modal detalles -->
+  <!-- Backdrops -->
+  <div class="modal-backdrop fade show" *ngIf="showCreateModal || showEditModal"></div>
   <div class="modal-backdrop fade show" *ngIf="showDetailsModal"></div>
 </div>

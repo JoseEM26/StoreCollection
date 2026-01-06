@@ -365,9 +365,9 @@ public class TiendaServiceImpl implements TiendaService {
         }
     }
 
-
     private TiendaResponse toResponse(Tienda t) {
         TiendaResponse dto = new TiendaResponse();
+
         dto.setId(t.getId());
         dto.setNombre(t.getNombre());
         dto.setSlug(t.getSlug());
@@ -381,9 +381,20 @@ public class TiendaServiceImpl implements TiendaService {
         dto.setActivo(t.getActivo());
         dto.setUserId(t.getUser().getId());
         dto.setUserEmail(t.getUser().getEmail());
-        dto.setEmailAppPassword(t.getEmailAppPassword());
         dto.setEmailRemitente(t.getEmailRemitente());
-        // PLAN ACTUAL (directo desde la relación)
+        dto.setEmailAppPassword(t.getEmailAppPassword());
+
+        if (t.getFechaVencimiento() != null) {
+            // Opción recomendada: solo fecha (más común para vencimientos)
+            dto.setFechaVencimiento(t.getFechaVencimiento()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+            // Alternativa con hora (si la necesitas):
+            // dto.setFechaVencimiento(t.getFechaVencimiento().toString().substring(0, 19)); // "yyyy-MM-ddTHH:mm:ss"
+        } else {
+            dto.setFechaVencimiento(null);
+        }
+
+        // PLAN ACTUAL
         if (t.getPlan() != null) {
             dto.setPlanId(t.getPlan().getId());
             dto.setPlanNombre(t.getPlan().getNombre());
@@ -393,8 +404,59 @@ public class TiendaServiceImpl implements TiendaService {
         } else {
             dto.setPlanNombre("Sin plan");
             dto.setPlanSlug("none");
+            dto.setMaxProductos(0);
+            dto.setMaxVariantes(0);
         }
 
+        dto.setEstadoSuscripcion(t.getActivo() ? "active" : "inactive");
+        dto.setTrialEndsAt(null); // ← si tienes trial, calcúlalo aquí
+
         return dto;
+    }
+
+    @Override
+    @Transactional
+    public TiendaResponse renovarTienda(Integer tiendaId) {
+        // 1. Obtener autenticación y validar que sea ADMIN
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!esAdmin) {
+            throw new AccessDeniedException("Solo los administradores pueden renovar planes de tiendas");
+        }
+
+        // 2. Obtener la tienda (el método ya valida existencia, pero no permisos de owner)
+        Tienda tienda = getEntityById(tiendaId); // Este método ya lanza excepción si no existe
+
+        // 3. Validar que tenga un plan asignado
+        Plan plan = tienda.getPlan();
+        if (plan == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La tienda no tiene un plan asignado");
+        }
+
+        // 4. Fecha base: preferimos extender desde la fecha de vencimiento anterior si existe
+        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime baseVencimiento = tienda.getFechaVencimiento() != null
+                ? tienda.getFechaVencimiento()
+                : ahora;
+
+        // 5. Calcular nueva fecha de vencimiento
+        LocalDateTime nuevaVencimiento;
+        String intervalo = plan.getIntervaloBilling();
+
+        if ("year".equalsIgnoreCase(intervalo)) {
+            nuevaVencimiento = baseVencimiento.plusYears(1);
+        } else {
+            // Por defecto mensual
+            nuevaVencimiento = baseVencimiento.plusMonths(1);
+        }
+
+        // 6. Actualizar fecha de vencimiento
+        tienda.setFechaVencimiento(nuevaVencimiento);
+
+        // 8. Guardar y retornar
+        Tienda saved = tiendaRepository.save(tienda);
+        return toResponse(saved);
     }
 }
