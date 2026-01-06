@@ -29,6 +29,6 @@ export class ProductoPublicService {
   }
   getBySlug(slug: string): Observable<ProductoPublic> {
     const base = this.tiendaService.getBaseUrl();
-    return this.http.get<ProductoPublic>(`${base}/productos/${slug}`);
+    return this.http.get<ProductoPublic>(`${environment.apiUrl}${base}/productos/${slug}`);
   }
 }

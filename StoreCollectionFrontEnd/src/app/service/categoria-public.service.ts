@@ -14,7 +14,7 @@ export class CategoriaPublicService {
   getAll(): Observable<Categoria[]> {
     const tiendaSlug = this.tiendaService.getBaseUrl(); // obtenemos slug
     if (!tiendaSlug) return of([]);
-    return this.http.get<Categoria[]>(`${environment.apiUrl}/api/public/tiendas/${tiendaSlug}/categorias`).pipe(
+    return this.http.get<Categoria[]>(`${environment.apiUrl}${tiendaSlug}/categorias`).pipe(
       catchError(() => of([]))
     );
   }
@@ -22,7 +22,7 @@ export class CategoriaPublicService {
  isCategoriaActiva(tiendaSlug: string, categoriaSlug: string): Observable<boolean> {
     // Como no tienes endpoint individual por slug de categoría,
     // usamos el listado y buscamos si aparece
-    return this.http.get<any[]>(`${environment.apiUrl}/api/public/tiendas/${tiendaSlug}/categorias`).pipe(
+    return this.http.get<any[]>(`${environment.apiUrl}${tiendaSlug}/categorias`).pipe(
       map(categorias => {
         return categorias.some(cat => 
           cat.slug === categoriaSlug && cat.activo === true
