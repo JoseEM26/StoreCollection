@@ -11,6 +11,7 @@ import { DropTownService, DropTownStandar } from '../../../../service/droptown.s
 import { ProductoAdminService } from '../../../../service/service-admin/producto-admin.service';
 import { AuthService } from '../../../../../auth/auth.service';
 import Swal from 'sweetalert2';
+import { GlobalImageFallbackDirective } from '../../../../directives/global-image-fallback.directive';
 
 interface AtributoTemp extends AtributoValorRequest {
   atributoNombreTemp?: string;
@@ -20,7 +21,7 @@ interface AtributoTemp extends AtributoValorRequest {
 @Component({
   selector: 'app-product-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule ,GlobalImageFallbackDirective],
   templateUrl: './product-form.component.html',
   styleUrl: './product-form.component.css'
 })

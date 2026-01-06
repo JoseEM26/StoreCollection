@@ -8,11 +8,12 @@ import { AuthService } from '../../../../../auth/auth.service';
 import { TiendaResponse } from '../../../../model/admin/tienda-admin.model';
 import { TiendaAdminService, TiendaCreateRequest, TiendaUpdateRequest } from '../../../../service/service-admin/tienda-admin.service';
 import { SwalService } from '../../../../service/SweetAlert/swal.service';
+import { GlobalImageFallbackDirective } from '../../../../directives/global-image-fallback.directive';
 
 @Component({
   selector: 'app-form-stores',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule,GlobalImageFallbackDirective],
   templateUrl: './form-stores.component.html',
   styleUrl: './form-stores.component.css'
 })
