@@ -11,7 +11,7 @@ import { TiendaPublic, TiendaPublicPage } from '../model/admin/tienda-admin.mode
   providedIn: 'root'
 })
 export class TiendaPublicService {
-  private readonly apiUrl = `https://zooming-quietude-production.up.railway.app/api/public/tiendas`;
+  private readonly apiUrl = `${environment.apiUrl}/api/public/tiendas`;
 
   constructor(
     private http: HttpClient,
@@ -74,27 +74,21 @@ getAllTiendas(
     );
   }
 
-  /**
-   * Carga la tienda actual usando la URL base guardada
-   * Actualiza el estado global a través de TiendaService
-   */
   cargarTiendaActual(): Observable<TiendaPublic | null> {
     const url = this.tiendaService.getBaseUrl();
     if (!url) {
       return of(null);
     }
 
-    return this.http.get<TiendaPublic>(url).pipe(
-      tap(tienda => {
-        if (tienda) {
-          this.tiendaService.setTienda(tienda);
-        }
-      }),
-      catchError((error) => {
-        console.error('Error al cargar tienda actual:', error);
-        this.tiendaService.setTienda(null);
-        return of(null);
-      })
-    );
+   return this.http.get<TiendaPublic>(`${environment.apiUrl}/api/public/tiendas/${url}`).pipe(
+    tap(tienda => {
+      if (tienda) this.tiendaService.setTienda(tienda);
+    }),
+    catchError(error => {
+      console.error('Error al cargar tienda actual:', error);
+      this.tiendaService.setTienda(null);
+      return of(null);
+    })
+  );
   }
 }
