@@ -77,7 +77,8 @@ public class SecurityConfig {
                 "http://localhost:4200",
                 "http://localhost:8080",
                 "https://storecollection.pe",
-                "https://www.storecollection.pe"
+                "https://www.storecollection.pe",
+                "https://frontendstorecollection-production.up.railway.app" 
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
