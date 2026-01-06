@@ -1,337 +1,238 @@
-<div class="product-form-container p-4">
-  <!-- Header del formulario -->
-  <div class="d-flex justify-content-between align-items-start mb-4 pb-3 border-bottom">
-    <div>
-      <h2 class="h4 fw-bold mb-1">
-        {{ isEdit ? 'Editar Producto' : 'Crear Nuevo Producto' }}
-      </h2>
-      <small class="text-muted" *ngIf="isEdit && producto?.id">
-        ID: #{{ producto?.id }} • {{ producto?.slug }}
-      </small>
-    </div>
-    <button 
-      type="button" 
-      class="btn-close" 
-      (click)="cancel()" 
-      [disabled]="loading()"
-      aria-label="Cerrar formulario">
+<div class="product-form-container">
+  <!-- Header -->
+  <div class="form-header">
+    <h2>
+      {{ isEdit ? 'Editar Producto' : 'Crear Nuevo Producto' }}
+      <small *ngIf="isEdit && producto?.id" class="text-muted ms-2">#{{ producto?.id }}</small>
+    </h2>
+    <button type="button" class="btn-close" (click)="cancel()" [disabled]="loading()" aria-label="Cerrar">
+      ×
     </button>
   </div>
 
   <div class="form-body">
+    <!-- Información General -->
+    <section class="section">
+      <h3 class="section-title">Información General</h3>
 
-    <!-- ==================== INFORMACIÓN GENERAL ==================== -->
-    <section class="mb-5">
-      <h3 class="h5 fw-bold mb-4 text-primary">
-        <i class="bi bi-info-circle me-2"></i>Información General
-      </h3>
-
-      <div class="row g-3">
-        <!-- Nombre -->
-        <div class="col-12 col-lg-6">
-          <label class="form-label fw-semibold required">Nombre del producto</label>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label required">Nombre del producto</label>
           <input
             type="text"
-            class="form-control form-control-lg"
             [ngModel]="nombre()"
             (ngModelChange)="nombre.set($event); generarSlugDesdeNombre()"
-            placeholder="Ej: Zapatillas Nike Air Max 90"
+            class="form-control"
+            placeholder="Ej: Zapatillas Nike Air Max"
             autocomplete="off"
-            required
           />
-          <small class="form-text text-muted">
-            Se mostrará en la tienda y generará el slug automáticamente
-          </small>
+          <small class="form-help">Se usará para mostrar en la tienda y generar el slug automáticamente.</small>
         </div>
 
-        <!-- Slug -->
-        <div class="col-12 col-lg-6">
-          <label class="form-label fw-semibold required">Slug (URL amigable)</label>
+        <div class="form-group">
+          <label class="form-label required">Slug (URL amigable)</label>
           <input
             type="text"
-            class="form-control form-control-lg"
             [ngModel]="slug()"
             (ngModelChange)="slug.set($event)"
-            placeholder="zapatillas-nike-air-max-90"
+            class="form-control"
+            placeholder="Ej: zapatillas-nike-air-max"
           />
-          <small class="form-text text-muted">
-            Solo minúsculas, números y guiones (-)
-          </small>
+          <small class="form-help">Solo letras minúsculas, números y guiones.</small>
         </div>
       </div>
 
-      <div class="row g-3 mt-3">
-        <!-- Categoría -->
-        <div class="col-12 col-md-6">
-          <label class="form-label fw-semibold required">Categoría</label>
-          <select 
-            class="form-select form-select-lg"
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label required">Categoría</label>
+          <select
+            class="form-control"
             [ngModel]="categoriaId()"
             (ngModelChange)="categoriaId.set($event)"
-            required>
+          >
             <option value="" disabled>Seleccionar categoría</option>
-            <option *ngFor="let c of categorias()" [value]="c.id">
-              {{ c.descripcion }}
-            </option>
+            <option *ngFor="let c of categorias()" [value]="c.id">{{ c.descripcion }}</option>
           </select>
         </div>
 
-        <!-- Tienda (solo admin en creación) -->
-        <div class="col-12 col-md-6" *ngIf="auth.isAdmin() && !isEdit">
-          <label class="form-label fw-semibold required">Asignar a tienda</label>
-          <select 
-            class="form-select form-select-lg"
+        <div class="form-group" *ngIf="auth.isAdmin() && !isEdit">
+          <label class="form-label required">Tienda</label>
+          <select
+            class="form-control"
             [ngModel]="tiendaId()"
             (ngModelChange)="tiendaId.set($event)"
-            required>
+          >
             <option value="" disabled>Seleccionar tienda</option>
-            <option *ngFor="let t of tiendas()" [value]="t.id">
-              {{ t.descripcion }}
-            </option>
+            <option *ngFor="let t of tiendas()" [value]="t.id">{{ t.descripcion }}</option>
           </select>
         </div>
 
-        <!-- Tienda actual (owner) -->
-        <div class="col-12 col-md-6" *ngIf="!auth.isAdmin() && tiendaActual()">
-          <label class="form-label fw-semibold">Tu tienda</label>
-          <input 
+        <div class="form-group" *ngIf="!auth.isAdmin() && tiendaActual()">
+          <label class="form-label">Tu tienda</label>
+          <input
             type="text"
             [value]="tiendaActual()?.descripcion || ''"
-            class="form-control form-control-lg bg-light"
             readonly
+            class="form-control readonly"
           />
         </div>
       </div>
 
-      <!-- Activo -->
-      <div class="mt-4">
-        <div class="form-check form-switch">
-          <input 
-            class="form-check-input" 
-            type="checkbox" 
-            id="activoSwitch"
+      <div class="form-group checkbox">
+        <label class="form-check-label">
+          <input
+            type="checkbox"
             [ngModel]="activo()"
             (ngModelChange)="activo.set($event)"
+            class="form-check-input"
           />
-          <label class="form-check-label fw-semibold" for="activoSwitch">
-            Producto activo (visible en la tienda pública)
-          </label>
-        </div>
+          <strong>Producto activo</strong> (visible en la tienda online)
+        </label>
       </div>
     </section>
 
-    <!-- ==================== VARIANTES ==================== -->
-    <section class="mt-5">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="h5 fw-bold text-primary mb-0">
-          <i class="bi bi-grid-3x3-gap me-2"></i>
-          Variantes del producto ({{ variantes().length }})
-        </h3>
-        <button 
-          type="button" 
-          class="btn btn-success btn-sm px-4"
-          (click)="agregarVariante()">
-          <i class="bi bi-plus-lg me-2"></i>
-          Agregar variante
+    <!-- Variantes -->
+    <section class="section mt-5">
+      <div class="d-flex justify-between align-center mb-4">
+        <h3 class="section-title mb-0">Variantes ({{ variantes().length }})</h3>
+        <button type="button" class="btn btn-success btn-sm" (click)="agregarVariante()">
+          <i class="icon-plus">+</i> Agregar variante
         </button>
       </div>
 
-      <!-- Sin variantes -->
-      <div *ngIf="variantes().length === 0" class="text-center py-5 bg-light rounded-3">
-        <i class="bi bi-box-seam display-6 text-muted mb-3"></i>
-        <p class="text-muted mb-4">Este producto aún no tiene variantes</p>
+      <div *ngIf="variantes().length === 0" class="empty-state">
+        <p class="text-muted">Aún no has agregado variantes.</p>
         <button class="btn btn-primary" (click)="agregarVariante()">
-          <i class="bi bi-plus-lg me-2"></i>
-          Crear primera variante
+          + Crear primera variante
         </button>
       </div>
 
-      <!-- Lista de variantes -->
-      <div *ngFor="let item of variantesOrdenadas(); let i = index" class="card mb-4 shadow-sm border-0">
-        <!-- Header de variante (colapsable) -->
-        <div 
-          class="card-header bg-white d-flex justify-content-between align-items-center cursor-pointer py-3"
-          (click)="toggleCollapse(i)">
-          <div class="d-flex align-items-center">
-            <i class="bi me-3 fs-5 text-muted" [class.bi-chevron-right]="collapsed()[i]" [class.bi-chevron-down]="!collapsed()[i]"></i>
-            <div>
-              <strong class="fs-6">Variante {{ i + 1 }}</strong>
-              <span class="badge ms-3" [class.bg-success-light]="item.variante.id" [class.bg-info-light]="!item.variante.id">
-                {{ item.variante.id ? 'Existente' : 'Nueva' }}
-              </span>
-              <span class="text-muted ms-3 small" *ngIf="item.variante.sku">
-                SKU: <code>{{ item.variante.sku }}</code>
-              </span>
-            </div>
+      <div *ngFor="let item of variantesOrdenadas(); let i = index" class="variante-card mb-4">
+        <div class="variante-header" (click)="toggleCollapse(i)">
+          <div class="d-flex align-center">
+            <span class="collapse-icon me-3">{{ collapsed()[i] ? '▶' : '▼' }}</span>
+            <strong>Variante {{ i + 1 }}</strong>
+            <span class="badge ms-3" [class.badge-new]="!item.variante.id"> {{ !item.variante.id ? 'Nueva' : 'Existente' }}</span>
+            <span class="text-muted ms-3" *ngIf="item.variante.sku">SKU: {{ item.variante.sku }}</span>
           </div>
-          <button 
-            type="button"
-            class="btn btn-danger btn-sm"
-            (click)="$event.stopPropagation(); eliminarVariante(i)"
-            title="Eliminar variante">
-            <i class="bi bi-trash"></i>
+          <button type="button" class="btn btn-danger btn-sm" (click)="$event.stopPropagation(); eliminarVariante(i)">
+            Eliminar
           </button>
         </div>
 
-        <!-- Body de variante -->
-        <div class="card-body" [hidden]="collapsed()[i]">
-          <div class="row g-3">
-            <!-- SKU, Precio, Stock -->
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold required">SKU</label>
-              <input 
-                [(ngModel)]="item.variante.sku"
-                [name]="'sku_' + i"
-                class="form-control"
-                placeholder="Ej: ZAP-NEG-42"
-                required
-              />
+        <div [hidden]="collapsed()[i]" class="variante-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label required">SKU</label>
+              <input [(ngModel)]="item.variante.sku" [name]="'sku_' + i" class="form-control" placeholder="Ej: ZAP-BL-42" />
             </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold required">Precio</label>
-              <input 
-                [(ngModel)]="item.variante.precio"
-                [name]="'precio_' + i"
-                type="number"
-                min="0.01"
-                step="0.01"
-                class="form-control"
-                required
-              />
+            <div class="form-group">
+              <label class="form-label required">Precio</label>
+              <input [(ngModel)]="item.variante.precio" [name]="'precio_' + i" type="number" min="0.01" step="0.01" class="form-control" />
             </div>
-            <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold required">Stock</label>
-              <input 
-                [(ngModel)]="item.variante.stock"
-                [name]="'stock_' + i"
-                type="number"
-                min="0"
-                class="form-control"
-                required
-              />
+            <div class="form-group">
+              <label class="form-label required">Stock</label>
+              <input [(ngModel)]="item.variante.stock" [name]="'stock_' + i" type="number" min="0" class="form-control" />
             </div>
           </div>
 
-          <!-- Imagen -->
-          <div class="mt-4">
-            <label class="form-label fw-semibold">Imagen de la variante</label>
-            <div class="image-upload-container p-3 border rounded bg-light">
-              <div class="d-flex justify-content-center mb-3">
-                <div class="position-relative">
-                  <img 
-                    *ngIf="imagenPreviews().get(i)"
-                    [src]="imagenPreviews().get(i)!"
-                    class="rounded shadow-sm"
-                    style="max-height: 200px; max-width: 100%; object-fit: contain;"
-                    alt="Preview variante">
-                  <div 
-                    *ngIf="!imagenPreviews().get(i)"
-                    class="bg-secondary-subtle rounded d-flex align-items-center justify-content-center"
-                    style="width: 200px; height: 200px;">
-                    <span class="text-muted fs-5">Sin imagen</span>
-                  </div>
-
-                  <!-- Botón eliminar imagen -->
-                  <button 
-                    *ngIf="imagenPreviews().get(i)"
-                    type="button"
-                    class="btn btn-danger btn-sm position-absolute top-0 end-0 rounded-circle"
-                    (click)="eliminarImagen(i)"
-                    title="Eliminar imagen">
-                    <i class="bi bi-x"></i>
-                  </button>
+          <div class="form-group">
+            <label class="form-label">Imagen de la variante</label>
+            <div class="image-upload-container">
+              <div class="image-preview-wrapper">
+                <div *ngIf="imagenPreviews().get(i)" class="preview-container">
+                  <img [src]="imagenPreviews().get(i)!" alt="Preview" class="preview-img">
+                  <button type="button" class="btn-delete-img" (click)="eliminarImagen(i)" title="Eliminar imagen">×</button>
+                </div>
+                <div *ngIf="!imagenPreviews().get(i)" class="placeholder-img">
+                  <span>Sin imagen</span>
                 </div>
               </div>
-
-              <input 
-                type="file"
-                accept="image/*"
-                (change)="onImagenChange($event, i)"
-                class="form-control"
-              />
-              <small class="form-text text-muted mt-2">
-                Máximo 5 MB • JPG, PNG, WebP
-              </small>
+              <input type="file" accept="image/*" (change)="onImagenChange($event, i)" class="file-input mt-3" />
+              <small class="form-help d-block mt-2">Máximo 5 MB. Formatos: JPG, PNG, WebP.</small>
             </div>
           </div>
 
           <!-- Atributos -->
           <div class="mt-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h6 class="fw-bold mb-0">
-                Atributos ({{ item.variante.atributos.length }})
-              </h6>
-              <button 
-                type="button"
-                class="btn btn-outline-primary btn-sm"
-                (click)="agregarAtributo(i)">
+            <div class="d-flex justify-between align-center mb-3">
+              <h5 class="mb-0 fw-bold">Atributos ({{ item.variante.atributos.length }})</h5>
+              <button type="button" class="btn btn-outline-primary btn-sm" (click)="agregarAtributo(i)">
                 + Agregar atributo
               </button>
             </div>
 
-            <div *ngIf="item.variante.atributos.length === 0" class="text-muted small py-3 text-center bg-light rounded">
-              No hay atributos definidos para esta variante
+            <div *ngIf="item.variante.atributos.length === 0" class="empty-atributos">
+              No hay atributos definidos para esta variante.
             </div>
 
-            <div class="row g-3" *ngFor="let attr of item.variante.atributos; let j = index">
-              <!-- Atributo -->
-              <div class="col-12 col-md-5">
-                <select
-                  class="form-select"
-                  [(ngModel)]="attr.atributoNombre"
-                  (ngModelChange)="onAtributoChange(i, j, $event)"
-                  [name]="'attrNombre_' + i + '_' + j">
-                  <option value="" disabled>Seleccionar atributo</option>
-                  <option *ngFor="let a of atributosDisponibles()" [value]="a.descripcion">
-                    {{ a.descripcion }}
-                  </option>
-                  <option value="__new__" class="text-primary fw-bold">+ Crear nuevo atributo</option>
-                </select>
+            <div class="atributos-list">
+              <div class="atributo-row" *ngFor="let attr of item.variante.atributos; let j = index">
+                <div class="attr-col">
+                  <select
+                    class="form-select"
+                    [(ngModel)]="attr.atributoNombre"
+                    (ngModelChange)="onAtributoChange(i, j, $event)"
+                    [name]="'attrNom_' + i + '_' + j"
+                  >
+                    <option value="" disabled>Seleccionar atributo</option>
+                    <option *ngIf="isAtributoPersonalizado(attr)" [value]="attr.atributoNombre">
+                      {{ attr.atributoNombre }} (personalizado)
+                    </option>
+                    <option *ngFor="let a of atributosDisponibles()" [value]="a.descripcion">
+                      {{ a.descripcion }}
+                    </option>
+                    <option value="__new__" class="text-primary fw-bold">+ Crear nuevo atributo</option>
+                  </select>
 
-                <input 
-                  *ngIf="attr.atributoNombre === '__new__'"
-                  type="text"
-                  [(ngModel)]="attr.atributoNombreTemp!"
-                  (blur)="finalizarNuevoAtributo(i, j)"
-                  placeholder="Ej: Talla, Color, Material"
-                  class="form-control mt-2"
-                  autofocus
-                />
-              </div>
+                  <input
+                    *ngIf="attr.atributoNombre === '__new__'"
+                    type="text"
+                    [(ngModel)]="attr.atributoNombreTemp!"
+                    placeholder="Ej: Talla, Material"
+                    class="form-control mt-2 nuevo-input"
+                    (blur)="finalizarNuevoAtributo(i, j)"
+                    autofocus
+                  />
+                </div>
 
-              <!-- Valor -->
-              <div class="col-12 col-md-5" *ngIf="attr.atributoNombre && attr.atributoNombre !== '__new__'">
-                <select
-                  class="form-select"
-                  [(ngModel)]="attr.valor"
-                  (ngModelChange)="onValorChange(i, j, $event)"
-                  [name]="'attrValor_' + i + '_' + j">
-                  <option value="" disabled>Seleccionar valor</option>
-                  <option *ngFor="let v of getValoresForAtributo(attr.atributoNombre)" [value]="v.descripcion">
-                    {{ v.descripcion }}
-                  </option>
-                  <option value="__new__" class="text-primary fw-bold">+ Crear nuevo valor</option>
-                </select>
+                <div class="attr-col" *ngIf="attr.atributoNombre && attr.atributoNombre !== '__new__'">
+                  <select
+                    class="form-select"
+                    [(ngModel)]="attr.valor"
+                    (ngModelChange)="onValorChange(i, j, $event)"
+                    [name]="'attrVal_' + i + '_' + j"
+                  >
+                    <option value="" disabled>Seleccionar valor</option>
+                    <option *ngIf="isValorPersonalizado(attr)" [value]="attr.valor">
+                      {{ attr.valor }} (personalizado)
+                    </option>
+                    <option *ngFor="let v of getValoresForAtributo(attr.atributoNombre)" [value]="v.descripcion">
+                      {{ v.descripcion }}
+                    </option>
+                    <option value="__new__" class="text-primary fw-bold">+ Crear nuevo valor</option>
+                  </select>
 
-                <input 
-                  *ngIf="attr.valor === '__new__'"
-                  type="text"
-                  [(ngModel)]="attr.valorTemp!"
-                  (blur)="finalizarNuevoValor(i, j)"
-                  placeholder="Ej: 42, Rojo, Algodón"
-                  class="form-control mt-2"
-                  autofocus
-                />
-              </div>
+                  <input
+                    *ngIf="attr.valor === '__new__'"
+                    type="text"
+                    [(ngModel)]="attr.valorTemp!"
+                    placeholder="Ej: 42, Rojo, Algodón"
+                    class="form-control mt-2 nuevo-input"
+                    (blur)="finalizarNuevoValor(i, j)"
+                    autofocus
+                  />
+                </div>
 
-              <!-- Eliminar atributo -->
-              <div class="col-12 col-md-2 d-flex align-items-end">
-                <button 
-                  type="button"
-                  class="btn btn-danger w-100"
-                  (click)="eliminarAtributo(i, j)">
-                  Eliminar
-                </button>
+                <div class="attr-col action-col">
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-sm w-100"
+                    (click)="eliminarAtributo(i, j)"
+                  >
+                    Eliminar
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -339,22 +240,19 @@
       </div>
     </section>
 
-    <!-- ==================== ACCIONES ==================== -->
-    <div class="d-flex justify-content-end gap-3 mt-5 pt-4 border-top">
-      <button 
-        type="button"
-        class="btn btn-secondary px-5"
-        (click)="cancel()"
-        [disabled]="loading()">
+    <!-- Acciones finales -->
+    <div class="form-actions mt-5">
+      <button type="button" class="btn btn-secondary me-3" (click)="cancel()" [disabled]="loading()">
         Cancelar
       </button>
-      <button 
+      <button
         type="button"
-        class="btn btn-primary px-5 position-relative"
+        class="btn btn-primary"
         (click)="save()"
-        [disabled]="loading() || variantes().length === 0">
-        <span *ngIf="loading()" class="spinner-border spinner-border-sm me-2" role="status"></span>
-        {{ loading() ? 'Guardando...' : (isEdit ? 'Guardar cambios' : 'Crear producto') }}
+        [disabled]="loading() || variantes().length === 0"
+      >
+        <span *ngIf="loading()" class="spinner">Guardando...</span>
+        <span *ngIf="!loading()">{{ isEdit ? 'Guardar cambios' : 'Crear producto' }}</span>
       </button>
     </div>
   </div>

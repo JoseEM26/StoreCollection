@@ -185,12 +185,6 @@
 <div class="modal fade" tabindex="-1" [class.show]="showCheckoutModal" [style.display]="showCheckoutModal ? 'block' : 'none'" (click)="cerrarFormularioCheckout()">
   <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content border-0 shadow-5 rounded-4 overflow-hidden" (click)="$event.stopPropagation()">
-      <div class="modal-header bg-gradient-success text-white border-0">
-        <h5 class="modal-title fw-bold fs-4">
-          <i class="bi bi-truck me-2"></i> Finalizar tu pedido
-        </h5>
-        <button type="button" class="btn-close btn-close-white" (click)="cerrarFormularioCheckout()"></button>
-      </div>
       <div class="modal-body p-0">
         <app-checkout-form 
           [tiendaId]="tiendaId"
