@@ -17,7 +17,7 @@ export class ProductoPublicService {
   const tiendaSlug = this.tiendaService.getBaseUrl(); // solo slug, ej: activewear-fit
   if (!tiendaSlug) return of([]);
   return this.http.get<ProductoPublic[]>(
-    `${environment.apiUrl}/api/public/tiendas/${tiendaSlug}/productos`
+    `${environment.apiUrl}${tiendaSlug}/productos`
   ).pipe(catchError(() => of([])));
 }
 
