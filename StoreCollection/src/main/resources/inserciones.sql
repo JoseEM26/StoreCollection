@@ -146,7 +146,7 @@ INSERT INTO atributo_valor (atributo_id, valor, tienda_id) VALUES
 (3, '65W', 2),
 (3, '100W', 2);
 
-INSERT INTO Producto_Variante (producto_id, tienda_id, sku, precio, stock, imagen_url, activo) VALUES
+INSERT INTO producto_variante (producto_id, tienda_id, sku, precio, stock, imagen_url, activo) VALUES
 (1, 1, 'NAM90-38-NEGRO', 549.90, 12, 'https://res.cloudinary.com/dqznlmig0/image/upload/v1766708632/tiendas/zapatik/productos/d2nbioqlakdkh6zor1uz.png', TRUE),
 (1, 1, 'NAM90-38-BLANCO', 549.90, 8, 'https://res.cloudinary.com/dqznlmig0/image/upload/v1766708628/tiendas/zapatik/productos/gbnzhdyt3zn708uvxgym.png', TRUE),
 (1, 1, 'NAM90-39-NEGRO', 549.90, 15, 'https://res.cloudinary.com/dqznlmig0/image/upload/v1766708689/tiendas/zapatik/productos/p98bhi2npuy4z5jjk1sz.png', TRUE),
@@ -163,7 +163,7 @@ INSERT INTO Producto_Variante (producto_id, tienda_id, sku, precio, stock, image
 (5, 3, 'VEST-FLORAL-M', 139.90, 15, 'https://moda.pe/vestido-m.jpg', TRUE),
 (6, 3, 'POLO-BASICO-M-BLACK', 79.90, 25, 'https://moda.pe/polo-black-m.jpg', TRUE);
 
-INSERT INTO Variante_Atributo (variante_id, atributo_valor_id) VALUES
+INSERT INTO variante_atributo (variante_id, atributo_valor_id) VALUES
 -- Nike Air Max 90 (variantes 1 a 5) → Talla + Color
 (1, 1), (1, 6),   -- 38 + Negro
 (2, 1), (2, 7),   -- 38 + Blanco

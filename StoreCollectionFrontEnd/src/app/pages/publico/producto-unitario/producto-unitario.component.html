@@ -65,14 +65,16 @@
         <div class="atributo-grupo mb-4" *ngFor="let grupo of atributosAgrupados">
           <label class="form-label fw-bold">{{ grupo.nombre }}</label>
           <div class="opciones-atributo">
-            <button type="button"
-                    class="opcion-btn"
-                    [class.selected]="seleccionAtributos[grupo.nombre] === valor"
-                    [class.disabled]="!esValorDisponible(grupo.nombre, valor)"
-                    (click)="seleccionarValorAtributo(grupo.nombre, valor)"
-                    *ngFor="let valor of grupo.valores">
-              {{ valor }}
-            </button>
+           <button type="button"
+        class="opcion-btn"
+        [class.selected]="seleccionAtributos[grupo.nombre] === valor"
+        [class.disabled]="!esValorDisponible(grupo.nombre, valor)"
+        (click)="seleccionarValorAtributo(grupo.nombre, valor)"
+        *ngFor="let valor of grupo.valores">
+  {{ valor }}
+  <!-- Icono opcional de check cuando está seleccionado -->
+  <i class="bi bi-check-lg ms-2" *ngIf="seleccionAtributos[grupo.nombre] === valor"></i>
+</button>
           </div>
         </div>
 
@@ -105,15 +107,17 @@
         </div>
 
         <div class="carrito-controls mb-4" *ngIf="varianteSeleccionada">
-          <div class="cantidad-selector mb-3">
-            <button class="btn-cantidad" (click)="disminuirCantidad()" [disabled]="cantidad <= 1">
-              <i class="bi bi-dash-lg"></i>
-            </button>
-            <span class="cantidad-numero">{{ cantidad }}</span>
-            <button class="btn-cantidad" (click)="aumentarCantidad()" [disabled]="cantidad >= stockActual || !hayStock">
-              <i class="bi bi-plus-lg"></i>
-            </button>
-          </div>
+        <div class="cantidad-wrapper">
+    <div class="cantidad-selector">
+      <button class="btn-cantidad" (click)="disminuirCantidad()" [disabled]="cantidad <= 1">
+        <i class="bi bi-dash-lg"></i>
+      </button>
+      <span class="cantidad-numero">{{ cantidad }}</span>
+      <button class="btn-cantidad" (click)="aumentarCantidad()" [disabled]="cantidad >= stockActual || !hayStock">
+        <i class="bi bi-plus-lg"></i>
+      </button>
+    </div>
+  </div>
 
           <button class="btn-agregar-carrito w-100"
                   (click)="agregarAlCarrito()"

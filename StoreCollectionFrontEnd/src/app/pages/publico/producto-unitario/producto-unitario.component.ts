@@ -129,10 +129,17 @@ mensajeExito: string | null = null;  // null = oculto, string = se muestra
   }
 
   seleccionarValorAtributo(atributoNombre: string, valor: string) {
+  // Si el valor ya está seleccionado, lo deseleccionamos (lo ponemos en '')
+  if (this.seleccionAtributos[atributoNombre] === valor) {
+    this.seleccionAtributos[atributoNombre] = '';
+  } else {
+    // Si no, lo seleccionamos normalmente
     this.seleccionAtributos[atributoNombre] = valor;
-    this.actualizarVarianteSegunSeleccion();
   }
 
+  // Actualizamos la variante según la nueva selección
+  this.actualizarVarianteSegunSeleccion();
+}
   private actualizarVarianteSegunSeleccion() {
     if (!this.producto.variantes.length) {
       this.varianteSeleccionada = null;
