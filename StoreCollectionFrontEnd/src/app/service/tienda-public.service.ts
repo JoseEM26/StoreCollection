@@ -11,7 +11,7 @@ import { TiendaPublic, TiendaPublicPage } from '../model/admin/tienda-admin.mode
   providedIn: 'root'
 })
 export class TiendaPublicService {
-  private readonly apiUrl = `${environment.apiUrl}api/public/tiendas`;
+  private readonly apiUrl = `${environment.apiUrl}/api/public/tiendas`;
 
   constructor(
     private http: HttpClient,
@@ -80,7 +80,7 @@ getAllTiendas(
       return of(null);
     }
 
-   return this.http.get<TiendaPublic>(`${environment.apiUrl}/${url}`).pipe(
+   return this.http.get<TiendaPublic>(`https://zooming-quietude-production.up.railway.app/api/public/tiendas/${url}`).pipe(
     tap(tienda => {
       if (tienda) this.tiendaService.setTienda(tienda);
     }),
