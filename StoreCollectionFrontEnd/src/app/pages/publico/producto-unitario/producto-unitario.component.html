@@ -1,176 +1,169 @@
 <!-- src/app/componente/producto-unitario/producto-unitario.component.html -->
 
-<div class="container py-4 py-md-5" *ngIf="!loading && producto; else cargando">
+<div class="container py-5" *ngIf="!loading && producto; else cargando">
   <button class="btn-volver" routerLink="/catalogo">
     <i class="bi bi-arrow-left me-2"></i> Regresar al catálogo
   </button>
 
-  <div class="row producto-grid g-4 g-lg-5 mt-3 mt-md-5">
+  <div class="producto-grid">
 
-    <!-- ==================== SECCIÓN DE IMÁGENES ==================== -->
-    <div class="col-12 col-lg-6">
-      <div class="imagen-seccion">
-        <div class="imagen-container">
-          <img [src]="imagenActual"
-               [alt]="producto.nombre"
-               class="imagen-principal"
-               loading="lazy"
-               (error)="imagenActual = fallbackImage">
+    <!-- ==================== IMAGEN PRINCIPAL ==================== -->
+    <div class="imagen-seccion">
+      <div class="imagen-container">
+        <img [src]="imagenActual"
+             [alt]="producto.nombre"
+             class="imagen-principal"
+             loading="lazy"
+             (error)="imagenActual = fallbackImage">
 
-          <!-- Badges de stock -->
-          <div class="badge-stock" *ngIf="varianteSeleccionada">
-            <span class="agotado" *ngIf="stockActual === 0">AGOTADO</span>
-            <span class="ultimas" *ngIf="stockActual > 0 && stockActual <= 5">
-              ¡Últimas {{ stockActual }} unidades!
-            </span>
-          </div>
+        <!-- Badges de stock -->
+        <div class="badge-stock" *ngIf="varianteSeleccionada">
+          <span class="agotado" *ngIf="stockActual === 0">AGOTADO</span>
+          <span class="ultimas" *ngIf="stockActual > 0 && stockActual <= 5">
+            ¡Últimas {{ stockActual }} unidades!
+          </span>
         </div>
+      </div>
 
-        <!-- Miniaturas -->
-        <div class="miniaturas" *ngIf="tieneVariantesConImagen">
-          <button *ngFor="let v of producto.variantes"
-                  class="mini-btn"
-                  [class.active]="v.imagenUrl === imagenActual"
-                  (click)="cambiarImagen(v.imagenUrl)"
-                  [disabled]="!v.imagenUrl">
-            <img [src]="v.imagenUrl || fallbackImage"
-                 [alt]="'Variante ' + producto.nombre"
-                 loading="lazy">
-          </button>
-        </div>
+      <!-- Miniaturas -->
+      <div class="miniaturas" *ngIf="tieneVariantesConImagen">
+        <button *ngFor="let v of producto.variantes"
+                class="mini-btn"
+                [class.active]="v.imagenUrl === imagenActual"
+                (click)="cambiarImagen(v.imagenUrl)"
+                [disabled]="!v.imagenUrl">
+          <img [src]="v.imagenUrl || fallbackImage"
+               [alt]="'Variante ' + producto.nombre"
+               loading="lazy">
+        </button>
       </div>
     </div>
 
     <!-- ==================== INFORMACIÓN DEL PRODUCTO ==================== -->
-    <div class="col-12 col-lg-6">
-      <div class="info-seccion">
-        <span class="categoria">{{ producto.nombreCategoria }}</span>
-        <h1 class="titulo">{{ producto.nombre }}</h1>
+    <div class="info-seccion">
+      <span class="categoria">{{ producto.nombreCategoria }}</span>
+      <h1 class="titulo">{{ producto.nombre }}</h1>
 
-        <div class="precio">
-          S/ <span>{{ precioActual | number:'1.2-2' }}</span>
+      <div class="precio">
+        S/ <span>{{ precioActual | number:'1.2-2' }}</span>
+      </div>
+
+      <!-- Variante seleccionada (chips) -->
+      <div class="atributos-seleccionados mb-4" *ngIf="atributosTexto">
+        <strong>Variante seleccionada:</strong>
+        <div class="atributos-lista mt-2">
+          <span class="atributo-chip" *ngFor="let attr of varianteSeleccionada?.atributos">
+            {{ attr.atributoNombre }}: <strong>{{ attr.valor }}</strong>
+          </span>
+        </div>
+      </div>
+
+      <!-- ==================== SELECCIÓN DE ATRIBUTOS ==================== -->
+      <div class="atributos-selector mb-5" *ngIf="atributosAgrupados.length > 0">
+        <h3 class="mb-4">Elige tus opciones</h3>
+
+        <div class="atributo-grupo mb-4" *ngFor="let grupo of atributosAgrupados">
+          <label class="form-label fw-bold">{{ grupo.nombre }}</label>
+          <div class="opciones-atributo">
+           <button type="button"
+        class="opcion-btn"
+        [class.selected]="seleccionAtributos[grupo.nombre] === valor"
+        [class.disabled]="!esValorDisponible(grupo.nombre, valor)"
+        (click)="seleccionarValorAtributo(grupo.nombre, valor)"
+        *ngFor="let valor of grupo.valores">
+  {{ valor }}
+  <!-- Icono opcional de check cuando está seleccionado -->
+  <i class="bi bi-check-lg ms-2" *ngIf="seleccionAtributos[grupo.nombre] === valor"></i>
+</button>
+          </div>
         </div>
 
-        <!-- Variante seleccionada (chips) -->
-        <div class="atributos-seleccionados mb-4" *ngIf="atributosTexto">
-          <strong>Variante seleccionada:</strong>
-          <div class="atributos-lista mt-2">
-            <span class="atributo-chip" *ngFor="let attr of varianteSeleccionada?.atributos">
-              {{ attr.atributoNombre }}: <strong>{{ attr.valor }}</strong>
+        <!-- Mensaje si falta seleccionar algo -->
+        <div class="alert alert-light border mt-4" *ngIf="!varianteSeleccionada && tieneAlgunaSeleccion()">
+          <i class="bi bi-info-circle me-2"></i>
+          Por favor, selecciona: 
+          <strong>{{ atributosFaltantesTexto }}</strong>
+          para continuar.
+        </div>
+
+        <!-- Mensaje si la combinación no existe -->
+        <div class="alert alert-warning mt-3" *ngIf="varianteSeleccionada && stockActual === 0">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          Lo sentimos, esta combinación está agotada.
+        </div>
+
+        <!-- Stock disponible -->
+        <small class="text-muted d-block mt-3" *ngIf="varianteSeleccionada && stockActual > 0">
+          <i class="bi bi-box-seam me-1"></i>
+          {{ stockActual }} unidades disponibles
+        </small>
+      </div>
+
+      <!-- ==================== ACCIONES PRINCIPALES ==================== -->
+      <div class="acciones mt-5">
+        <div class="alert alert-success text-center mb-4 p-3" *ngIf="mensajeExito">
+          <i class="bi bi-check-circle-fill me-2"></i>
+          <strong>¡{{ cantidad }} producto(s) agregado(s) al carrito!</strong>
+        </div>
+
+        <div class="carrito-controls mb-4" *ngIf="varianteSeleccionada">
+        <div class="cantidad-wrapper">
+    <div class="cantidad-selector">
+      <button class="btn-cantidad" (click)="disminuirCantidad()" [disabled]="cantidad <= 1">
+        <i class="bi bi-dash-lg"></i>
+      </button>
+      <span class="cantidad-numero">{{ cantidad }}</span>
+      <button class="btn-cantidad" (click)="aumentarCantidad()" [disabled]="cantidad >= stockActual || !hayStock">
+        <i class="bi bi-plus-lg"></i>
+      </button>
+    </div>
+  </div>
+
+          <button class="btn-agregar-carrito w-100"
+                  (click)="agregarAlCarrito()"
+                  [disabled]="!varianteSeleccionada || !hayStock || agregandoAlCarrito">
+            <span *ngIf="!agregandoAlCarrito">
+              <i class="bi bi-cart-plus me-2"></i>
+              <ng-container *ngIf="varianteSeleccionada && hayStock">
+                Agregar al carrito
+              </ng-container>
+              <ng-container *ngIf="!varianteSeleccionada">
+                Selecciona las opciones
+              </ng-container>
+              <ng-container *ngIf="varianteSeleccionada && !hayStock">
+                Sin stock disponible
+              </ng-container>
             </span>
-          </div>
-        </div>
-
-        <!-- ==================== SELECCIÓN DE ATRIBUTOS ==================== -->
-        <div class="atributos-selector mb-4 mb-md-5" *ngIf="atributosAgrupados.length > 0">
-          <h3 class="mb-3 mb-md-4">Elige tus opciones</h3>
-
-          <div class="atributo-grupo mb-4" *ngFor="let grupo of atributosAgrupados">
-            <label class="form-label fw-bold">{{ grupo.nombre }}</label>
-            <div class="opciones-atributo d-flex flex-wrap gap-2 gap-md-3">
-              <button type="button"
-                      class="opcion-btn"
-                      [class.selected]="seleccionAtributos[grupo.nombre] === valor"
-                      [class.disabled]="!esValorDisponible(grupo.nombre, valor)"
-                      (click)="seleccionarValorAtributo(grupo.nombre, valor)"
-                      *ngFor="let valor of grupo.valores">
-                {{ valor }}
-                <i class="bi bi-check-lg ms-2" *ngIf="seleccionAtributos[grupo.nombre] === valor"></i>
-              </button>
-            </div>
-          </div>
-
-          <!-- Mensaje si falta seleccionar algo -->
-          <div class="alert alert-light border mt-3 mt-md-4" *ngIf="!varianteSeleccionada && tieneAlgunaSeleccion()">
-            <i class="bi bi-info-circle me-2"></i>
-            Por favor, selecciona: 
-            <strong>{{ atributosFaltantesTexto }}</strong>
-            para continuar.
-          </div>
-
-          <!-- Mensaje si la combinación no existe -->
-          <div class="alert alert-warning mt-3" *ngIf="varianteSeleccionada && stockActual === 0">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            Lo sentimos, esta combinación está agotada.
-          </div>
-
-          <!-- Stock disponible -->
-          <small class="text-muted d-block mt-2 mt-md-3" *ngIf="varianteSeleccionada && stockActual > 0">
-            <i class="bi bi-box-seam me-1"></i>
-            {{ stockActual }} unidades disponibles
-          </small>
-        </div>
-
-        <!-- ==================== ACCIONES PRINCIPALES ==================== -->
-        <div class="acciones mt-4 mt-md-5">
-          <div class="alert alert-success text-center mb-4 p-3" *ngIf="mensajeExito">
-            <i class="bi bi-check-circle-fill me-2"></i>
-            <strong>¡{{ cantidad }} producto(s) agregado(s) al carrito!</strong>
-          </div>
-
-          <div class="carrito-controls mb-4" *ngIf="varianteSeleccionada">
-            <div class="cantidad-wrapper">
-              <div class="cantidad-selector">
-                <button class="btn-cantidad" (click)="disminuirCantidad()" [disabled]="cantidad <= 1">
-                  <i class="bi bi-dash-lg"></i>
-                </button>
-                <span class="cantidad-numero">{{ cantidad }}</span>
-                <button class="btn-cantidad" (click)="aumentarCantidad()" [disabled]="cantidad >= stockActual || !hayStock">
-                  <i class="bi bi-plus-lg"></i>
-                </button>
-              </div>
-            </div>
-
-            <button class="btn-agregar-carrito w-100 mb-3"
-                    (click)="agregarAlCarrito()"
-                    [disabled]="!varianteSeleccionada || !hayStock || agregandoAlCarrito">
-              <span *ngIf="!agregandoAlCarrito">
-                <i class="bi bi-cart-plus me-2"></i>
-                <ng-container *ngIf="varianteSeleccionada && hayStock">
-                  Agregar al carrito
-                </ng-container>
-                <ng-container *ngIf="!varianteSeleccionada">
-                  Selecciona las opciones
-                </ng-container>
-                <ng-container *ngIf="varianteSeleccionada && !hayStock">
-                  Sin stock disponible
-                </ng-container>
-              </span>
-              <span *ngIf="agregandoAlCarrito">
-                <span class="spinner-border spinner-border-sm me-2"></span> Agregando...
-              </span>
-            </button>
-          </div>
-
-          <button class="btn-whatsapp w-100 mb-3 mb-md-4" (click)="consultarWhatsApp()">
-            <i class="bi bi-whatsapp me-2"></i> Consultar por WhatsApp
+            <span *ngIf="agregandoAlCarrito">
+              <span class="spinner-border spinner-border-sm me-2"></span> Agregando...
+            </span>
           </button>
-
-          <div class="secundarios row g-3">
-            <div class="col-6">
-              <button class="btn-sec w-100" (click)="llamarAhora()">
-                <i class="bi bi-telephone me-2"></i> Llamar ahora
-              </button>
-            </div>
-            <div class="col-6">
-              <button class="btn-sec w-100" (click)="abrirCotizacion()">
-                <i class="bi bi-chat-dots me-2"></i> Pedir cotización
-              </button>
-            </div>
-          </div>
         </div>
 
-        <!-- ==================== GARANTÍAS ==================== -->
-        <div class="garantias mt-5 mt-md-5">
-          <div class="garantia-item">
-            <i class="bi bi-truck"></i> <strong>Envíos a todo el Perú</strong>
-          </div>
-          <div class="garantia-item">
-            <i class="bi bi-shield-check"></i> <strong>Compra 100% segura</strong>
-          </div>
-          <div class="garantia-item">
-            <i class="bi bi-headset"></i> <strong>Atención personalizada 24/7</strong>
-          </div>
+        <button class="btn-whatsapp w-100 mb-3" (click)="consultarWhatsApp()">
+          <i class="bi bi-whatsapp me-2"></i> Consultar por WhatsApp
+        </button>
+
+        <div class="secundarios">
+          <button class="btn-sec" (click)="llamarAhora()">
+            <i class="bi bi-telephone me-2"></i> Llamar ahora
+          </button>
+          <button class="btn-sec" (click)="abrirCotizacion()">
+            <i class="bi bi-chat-dots me-2"></i> Pedir cotización
+          </button>
+        </div>
+      </div>
+
+      <!-- ==================== GARANTÍAS ==================== -->
+      <div class="garantias mt-5">
+        <div class="garantia-item">
+          <i class="bi bi-truck"></i> <strong>Envíos a todo el Perú</strong>
+        </div>
+        <div class="garantia-item">
+          <i class="bi bi-shield-check"></i> <strong>Compra 100% segura</strong>
+        </div>
+        <div class="garantia-item">
+          <i class="bi bi-headset"></i> <strong>Atención personalizada 24/7</strong>
         </div>
       </div>
     </div>
@@ -188,48 +181,43 @@
 </ng-template>
 
 <!-- MODAL COTIZACIÓN -->
-<div class="modal fade" *ngIf="showQuoteModal" (click)="cerrarModal()">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <button class="btn-close position-absolute top-0 end-0 mt-3 me-3" 
-              (click)="cerrarModal()" 
-              aria-label="Cerrar"></button>
-      
-      <div class="modal-body p-4 p-md-5">
-        <h3 class="mb-3">Pide tu cotización personalizada</h3>
-        <p class="text-muted mb-4">Te contactaremos por WhatsApp en minutos</p>
+<div class="modal" *ngIf="showQuoteModal" (click)="cerrarModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <button class="cerrar" (click)="cerrarModal()" aria-label="Cerrar">
+      <i class="bi bi-x-lg"></i>
+    </button>
+    <h3>Pide tu cotización personalizada</h3>
+    <p class="text-muted mb-4">Te contactaremos por WhatsApp en minutos</p>
 
-        <form>
-          <input type="text"
-                 [(ngModel)]="clienteNombre"
-                 placeholder="Tu nombre completo"
-                 class="form-control mb-3"
-                 required>
+    <form>
+      <input type="text"
+             [(ngModel)]="clienteNombre"
+             placeholder="Tu nombre completo"
+             class="form-control mb-3"
+             required>
 
-          <input type="tel"
-                 [(ngModel)]="clienteTelefono"
-                 placeholder="Tu número de WhatsApp"
-                 class="form-control mb-3"
-                 required>
+      <input type="tel"
+             [(ngModel)]="clienteTelefono"
+             placeholder="Tu número de WhatsApp"
+             class="form-control mb-3"
+             required>
 
-          <textarea [(ngModel)]="clienteMensaje"
-                    placeholder="Mensaje adicional (opcional)"
-                    rows="4"
-                    class="form-control mb-4"></textarea>
+      <textarea [(ngModel)]="clienteMensaje"
+                placeholder="Mensaje adicional (opcional)"
+                rows="4"
+                class="form-control mb-4"></textarea>
 
-          <button type="button"
-                  class="btn-whatsapp w-100 py-3"
-                  (click)="enviarCotizacion()"
-                  [disabled]="enviandoCotizacion || !clienteNombre || !clienteTelefono">
-            <span *ngIf="!enviandoCotizacion">
-              <i class="bi bi-send me-2"></i> Enviar por WhatsApp
-            </span>
-            <span *ngIf="enviandoCotizacion">
-              <span class="spinner-border spinner-border-sm me-2"></span> Enviando...
-            </span>
-          </button>
-        </form>
-      </div>
-    </div>
+      <button type="button"
+              class="btn-whatsapp w-100 py-3"
+              (click)="enviarCotizacion()"
+              [disabled]="enviandoCotizacion || !clienteNombre || !clienteTelefono">
+        <span *ngIf="!enviandoCotizacion">
+          <i class="bi bi-send me-2"></i> Enviar por WhatsApp
+        </span>
+        <span *ngIf="enviandoCotizacion">
+          <span class="spinner-border spinner-border-sm me-2"></span> Enviando...
+        </span>
+      </button>
+    </form>
   </div>
 </div>
