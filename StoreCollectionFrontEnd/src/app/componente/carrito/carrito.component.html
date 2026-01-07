@@ -32,7 +32,7 @@
       <p class="text-muted mb-4 lead">¡Explora nuestro catálogo y encuentra productos increíbles!</p>
       
       <!-- RUTA CORREGIDA -->
-      <a routerLink="/catalogo" class="btn btn-success btn-lg px-5 py-3 rounded-pill shadow">
+      <a [routerLink]="['/', tienda?.slug, 'catalogo']" class="btn btn-success btn-lg px-5 py-3 rounded-pill shadow">
         <i class="bi bi-shop me-2"></i> Ir al Catálogo
       </a>
     </div>
