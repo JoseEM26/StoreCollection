@@ -1,19 +1,19 @@
-<div class="text-center mb-5">
-  <h2 class="h3 fw-bold text-dark">
+<div class="text-center mb-4 mb-md-5">
+  <h2 class="h4 h3-md fw-bold text-dark">
     {{ isEdit() ? 'Editar Plan' : 'Crear Nuevo Plan' }}
   </h2>
-  <p class="text-muted">Completa los datos del plan de suscripción</p>
+  <p class="text-muted fs-6">Completa los datos del plan de suscripción</p>
 </div>
 
 <form (ngSubmit)="onSubmit()" class="needs-validation" novalidate #planForm="ngForm">
   <!-- Nombre y Slug -->
-  <div class="row g-4 mb-4">
-    <div class="col-md-6">
+  <div class="row g-3 g-md-4 mb-4">
+    <div class="col-12 col-md-6">
       <label for="nombre" class="form-label fw-semibold">Nombre del plan <span class="text-danger">*</span></label>
       <input
         type="text"
         id="nombre"
-        class="form-control form-control-lg"
+        class="form-control"
         [(ngModel)]="form().nombre"
         name="nombre"
         placeholder="Ej: Básico, Premium, Empresarial"
@@ -27,12 +27,12 @@
       </div>
     </div>
 
-    <div class="col-md-6">
+    <div class="col-12 col-md-6">
       <label for="slug" class="form-label fw-semibold">Slug (URL amigable) <span class="text-danger">*</span></label>
       <input
         type="text"
         id="slug"
-        class="form-control form-control-lg"
+        class="form-control"
         [(ngModel)]="form().slug"
         name="slug"
         placeholder="plan-basico"
@@ -43,15 +43,15 @@
       <div class="invalid-feedback">
         El slug es obligatorio
       </div>
-      <small class="text-muted">Se genera automáticamente al escribir el nombre</small>
+      <small class="text-muted d-block mt-1">Se genera automáticamente</small>
     </div>
   </div>
 
   <!-- Precios -->
-  <div class="row g-4 mb-4">
-    <div class="col-md-6">
+  <div class="row g-3 g-md-4 mb-4">
+    <div class="col-12 col-md-6">
       <label for="precioMensual" class="form-label fw-semibold">Precio mensual (S/) <span class="text-danger">*</span></label>
-      <div class="input-group input-group-lg">
+      <div class="input-group">
         <span class="input-group-text">S/</span>
         <input
           type="number"
@@ -67,13 +67,13 @@
         />
       </div>
       <div class="invalid-feedback">
-        Ingresa un precio válido (mayor o igual a 0)
+        Ingresa un precio válido
       </div>
     </div>
 
-    <div class="col-md-6">
+    <div class="col-12 col-md-6">
       <label for="precioAnual" class="form-label fw-semibold">Precio anual (S/) <small class="text-muted">(opcional)</small></label>
-      <div class="input-group input-group-lg">
+      <div class="input-group">
         <span class="input-group-text">S/</span>
         <input
           type="number"
@@ -83,62 +83,62 @@
           name="precioAnual"
           min="0"
           step="0.01"
-          placeholder="Dejar vacío si no hay plan anual"
+          placeholder="Dejar vacío si no hay"
         />
       </div>
-      <small class="text-muted">Si se llena, se mostrará opción de pago anual</small>
+      <small class="text-muted d-block mt-1">Opcional - pago anual</small>
     </div>
   </div>
 
   <!-- Intervalo de facturación -->
-  <div class="row g-4 mb-4">
-    <div class="col-md-6">
+  <div class="row g-3 g-md-4 mb-4">
+    <div class="col-12 col-md-6">
       <label for="intervaloBilling" class="form-label fw-semibold">Intervalo de facturación</label>
-      <select id="intervaloBilling" class="form-select form-select-lg" [(ngModel)]="form().intervaloBilling" name="intervaloBilling">
+      <select id="intervaloBilling" class="form-select" [(ngModel)]="form().intervaloBilling" name="intervaloBilling">
         <option *ngFor="let int of intervalos" [value]="int.value">{{ int.label }}</option>
       </select>
     </div>
 
-    <div class="col-md-6">
+    <div class="col-12 col-md-6">
       <label for="intervaloCantidad" class="form-label fw-semibold">Cantidad de intervalos</label>
       <input
         type="number"
         id="intervaloCantidad"
-        class="form-control form-control-lg"
+        class="form-control"
         [(ngModel)]="form().intervaloCantidad"
         name="intervaloCantidad"
         min="1"
         value="1"
       />
-      <small class="text-muted">Ej: 1 mes, 3 meses, 1 año</small>
+      <small class="text-muted d-block mt-1">Ej: 1 mes, 3 meses, 1 año</small>
     </div>
   </div>
 
   <!-- Límites -->
-  <div class="row g-4 mb-4">
-    <div class="col-md-6">
+  <div class="row g-3 g-md-4 mb-4">
+    <div class="col-12 col-md-6">
       <label for="maxProductos" class="form-label fw-semibold">Máximo de productos</label>
       <input
         type="number"
         id="maxProductos"
-        class="form-control form-control-lg"
+        class="form-control"
         [(ngModel)]="form().maxProductos"
         name="maxProductos"
         min="1"
-        placeholder="100"
+        placeholder="Ej: 100"
       />
     </div>
 
-    <div class="col-md-6">
+    <div class="col-12 col-md-6">
       <label for="maxVariantes" class="form-label fw-semibold">Máximo de variantes</label>
       <input
         type="number"
         id="maxVariantes"
-        class="form-control form-control-lg"
+        class="form-control"
         [(ngModel)]="form().maxVariantes"
         name="maxVariantes"
         min="1"
-        placeholder="500"
+        placeholder="Ej: 500"
       />
     </div>
   </div>
@@ -159,13 +159,13 @@
     </div>
   </div>
 
-  <div class="row g-4 mb-4" *ngIf="showTrialFields">
-    <div class="col-md-6">
+  <div class="row g-3 g-md-4 mb-4" *ngIf="showTrialFields">
+    <div class="col-12 col-md-6">
       <label for="diasTrial" class="form-label fw-semibold">Días de prueba <span class="text-danger">*</span></label>
       <input
         type="number"
         id="diasTrial"
-        class="form-control form-control-lg"
+        class="form-control"
         [(ngModel)]="form().diasTrial"
         name="diasTrial"
         min="1"
@@ -178,22 +178,22 @@
   </div>
 
   <!-- Opciones avanzadas -->
-  <div class="row g-4 mb-4">
-    <div class="col-md-6">
+  <div class="row g-3 g-md-4 mb-4">
+    <div class="col-12 col-md-6">
       <label for="orden" class="form-label fw-semibold">Orden de aparición</label>
       <input
         type="number"
         id="orden"
-        class="form-control form-control-lg"
+        class="form-control"
         [(ngModel)]="form().orden"
         name="orden"
         min="0"
-        placeholder="999"
+        placeholder="Ej: 999"
       />
-      <small class="text-muted">Menor número = aparece primero en la página de precios</small>
+      <small class="text-muted d-block mt-1">Menor número = aparece primero</small>
     </div>
 
-    <div class="col-md-6">
+    <div class="col-12 col-md-6">
       <div class="form-check form-switch mt-4">
         <input
           class="form-check-input"
@@ -215,7 +215,7 @@
     <textarea
       id="descripcion"
       class="form-control"
-      rows="4"
+      rows="3"
       [(ngModel)]="form().descripcion"
       name="descripcion"
       placeholder="Detalles del plan, beneficios, etc."
@@ -223,10 +223,10 @@
   </div>
 
   <!-- Botones -->
-  <div class="d-flex justify-content-end gap-3 mt-5 pt-4 border-top">
+  <div class="d-flex flex-column flex-md-row justify-content-end gap-3 mt-4 pt-4 border-top">
     <button
       type="button"
-      class="btn btn-outline-secondary btn-lg px-5"
+      class="btn btn-outline-secondary btn-md px-4 px-md-5 py-2"
       (click)="onCancel()"
       [disabled]="loading()"
     >
@@ -234,7 +234,7 @@
     </button>
     <button
       type="submit"
-      class="btn btn-primary btn-lg px-5 shadow-sm"
+      class="btn btn-primary btn-md px-4 px-md-5 py-2 shadow-sm"
       [disabled]="loading() || planForm.invalid"
     >
       <span *ngIf="loading()" class="spinner-border spinner-border-sm me-2" role="status"></span>

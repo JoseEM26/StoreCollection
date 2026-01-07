@@ -80,7 +80,16 @@ export class CategoriesComponent implements OnInit {
     this.selectedCategoria = categoria;
     this.showModal = true;
   }
+// Agrega estos getters al final de tu clase CategoriesComponent
 
+get startItem(): number {
+  return this.currentPage() * this.pageSize + 1;
+}
+
+get endItem(): number {
+  const end = (this.currentPage() + 1) * this.pageSize;
+  return Math.min(end, this.pageData()?.totalElements || 0);
+}
   closeModal(): void {
     this.showModal = false;
   }

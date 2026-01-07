@@ -1,7 +1,7 @@
-// src/app/pages/administrativo/usuarios/usuarios-form.component.ts
+// usuarios-form.component.ts
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { UsuarioRequest, UsuarioResponse } from '../../../../model/admin/usuario-admin.model';
 import { UsuarioAdminService } from '../../../../service/service-admin/usuario-admin.service';
 
@@ -13,11 +13,12 @@ import { UsuarioAdminService } from '../../../../service/service-admin/usuario-a
   styleUrl: './usuarios-form.component.css'
 })
 export class UsuariosFormComponent implements OnInit {
-  @Input() usuario: UsuarioResponse | null = null; // Recibe usuario para edición
-  @Output() success = new EventEmitter<UsuarioResponse>(); // Emite al guardar
-  @Output() cancel = new EventEmitter<void>(); // Emite al cancelar
+  @Input() usuario: UsuarioResponse | null = null;
+  @Output() success = new EventEmitter<UsuarioResponse>();
+  @Output() cancel = new EventEmitter<void>();
 
   esEdicion = false;
+  loading = false; // ← Variable booleana simple (recomendada)
 
   form: UsuarioRequest = {
     nombre: '',
@@ -31,13 +32,12 @@ export class UsuariosFormComponent implements OnInit {
   constructor(private usuarioService: UsuarioAdminService) {}
 
   ngOnInit(): void {
-    // Si recibe un usuario, es edición
     if (this.usuario) {
       this.esEdicion = true;
       this.form = {
         nombre: this.usuario.nombre,
         email: this.usuario.email,
-        password: '', // Nunca mostrar contraseña
+        password: '', // Nunca precargamos contraseña
         celular: this.usuario.celular || '',
         activo: this.usuario.activo,
         rol: this.usuario.rol
@@ -65,6 +65,8 @@ export class UsuariosFormComponent implements OnInit {
       return;
     }
 
+    this.loading = true; // ← Activamos loading
+
     const obs = this.esEdicion && this.usuario
       ? this.usuarioService.actualizar(this.usuario.id, this.form)
       : this.usuarioService.crear(this.form);
@@ -72,8 +74,13 @@ export class UsuariosFormComponent implements OnInit {
     obs.subscribe({
       next: (saved) => {
         this.success.emit(saved);
+        this.loading = false; // ← Desactivamos al terminar
       },
-      error: () => alert('Error al guardar el usuario')
+      error: (err) => {
+        console.error('Error al guardar usuario:', err);
+        alert('Error al guardar el usuario');
+        this.loading = false; // ← Importante: siempre desactivar
+      }
     });
   }
 

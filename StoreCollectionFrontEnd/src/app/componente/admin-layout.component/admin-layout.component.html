@@ -1,10 +1,10 @@
-<div class="admin-layout" [class.sidebar-collapsed]="isSidebarCollapsed">
+<div class="admin-layout" [class.sidebar-collapsed]="isSidebarCollapsed" [class.sidebar-open]="isMobile && !isSidebarCollapsed">
+  <!-- Overlay solo en móvil cuando sidebar está visible -->
   <div class="sidebar-overlay" *ngIf="isMobile && !isSidebarCollapsed" (click)="toggleSidebar()"></div>
 
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-inner">
-
       <!-- Logo -->
       <div class="sidebar-header">
         <div class="logo-wrapper">
@@ -18,7 +18,7 @@
         </div>
       </div>
 
-      <!-- Navegación dinámica -->
+      <!-- Navegación -->
       <nav class="sidebar-nav mt-4">
         <a
           *ngFor="let item of menuItems"
@@ -30,7 +30,6 @@
         >
           <i class="bi" [class]="item.icon"></i>
           <span>{{ item.label }}</span>
-          <!-- Badge opcional para rutas prohibidas -->
           <small *ngIf="!isMenuItemVisible(item)" class="ms-2 text-danger">
             <i class="bi bi-lock-fill"></i>
           </small>
@@ -46,7 +45,8 @@
       </div>
     </div>
 
-    <button class="btn-collapse" (click)="toggleSidebar()">
+    <!-- Botón colapsar (solo visible en desktop) -->
+    <button class="btn-collapse d-none d-lg-block" (click)="toggleSidebar()">
       <i class="bi" [class.bi-chevron-left]="!isSidebarCollapsed" [class.bi-chevron-right]="isSidebarCollapsed"></i>
     </button>
   </aside>
@@ -54,15 +54,16 @@
   <!-- Contenido principal -->
   <div class="main-content">
     <header class="topbar">
-      <div class="container-fluid d-flex align-items-center justify-content-between px-4 py-3">
-        <button class="btn-mobile-menu d-lg-none me-3" (click)="toggleSidebar()">
+      <div class="container-fluid d-flex align-items-center justify-content-between px-3 py-3">
+        <!-- Menú hamburguesa en móvil -->
+        <button class="btn-mobile-menu me-3" (click)="toggleSidebar()">
           <i class="bi bi-list fs-4"></i>
         </button>
 
-        <h5 class="mb-0 fw-semibold text-dark">{{ pageTitle }}</h5>
+        <h5 class="mb-0 fw-semibold text-dark flex-grow-1 text-center text-lg-start">{{ pageTitle }}</h5>
 
         <div class="d-flex align-items-center gap-3">
-          <div class="text-end">
+          <div class="text-end d-none d-md-block">
             <div class="fw-semibold text-dark">{{ auth.fullName() }}</div>
             <small class="text-muted">{{ auth.roleDisplay() }}</small>
           </div>

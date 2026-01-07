@@ -1,48 +1,126 @@
 <div class="form-container">
-  <h3 class="modal-title">
+  <h3 class="modal-title mb-4 mb-md-5">
     {{ esEdicion ? 'Editar Usuario' : 'Nuevo Usuario' }}
   </h3>
 
-  <form (ngSubmit)="guardar()">
+  <form (ngSubmit)="guardar()" class="needs-validation" novalidate #userForm="ngForm">
+    <!-- Nombre -->
     <div class="mb-3">
-      <label class="form-label">Nombre *</label>
-      <input type="text" class="form-control rounded-pill" [(ngModel)]="form.nombre" name="nombre" required>
+      <label class="form-label fw-semibold">Nombre completo <span class="text-danger">*</span></label>
+      <input
+        type="text"
+        class="form-control"
+        [(ngModel)]="form.nombre"
+        name="nombre"
+        placeholder="Ej: Juan Pérez"
+        required
+        #nombreCtrl="ngModel"
+        [class.is-invalid]="nombreCtrl.invalid && nombreCtrl.touched"
+      />
+      <div class="invalid-feedback">
+        El nombre es obligatorio
+      </div>
     </div>
 
+    <!-- Email -->
     <div class="mb-3">
-      <label class="form-label">Email *</label>
-      <input type="email" class="form-control rounded-pill" [(ngModel)]="form.email" name="email" required>
+      <label class="form-label fw-semibold">Correo electrónico <span class="text-danger">*</span></label>
+      <input
+        type="email"
+        class="form-control"
+        [(ngModel)]="form.email"
+        name="email"
+        placeholder="ejemplo@dominio.com"
+        required
+        #emailCtrl="ngModel"
+        [class.is-invalid]="emailCtrl.invalid && emailCtrl.touched"
+      />
+      <div class="invalid-feedback">
+        Ingresa un email válido
+      </div>
     </div>
 
+    <!-- Contraseña (solo creación) -->
     <div class="mb-3" *ngIf="!esEdicion">
-      <label class="form-label">Contraseña *</label>
-      <input type="password" class="form-control rounded-pill" [(ngModel)]="form.password" name="password" required>
+      <label class="form-label fw-semibold">Contraseña <span class="text-danger">*</span></label>
+      <input
+        type="password"
+        class="form-control"
+        [(ngModel)]="form.password"
+        name="password"
+        placeholder="Mínimo 8 caracteres"
+        required
+        minlength="8"
+        #passwordCtrl="ngModel"
+        [class.is-invalid]="passwordCtrl.invalid && passwordCtrl.touched"
+      />
+      <div class="invalid-feedback">
+        La contraseña debe tener al menos 8 caracteres
+      </div>
     </div>
 
+    <!-- Celular -->
     <div class="mb-3">
-      <label class="form-label">Celular</label>
-      <input type="tel" class="form-control rounded-pill" [(ngModel)]="form.celular" name="celular">
+      <label class="form-label fw-semibold">Celular (opcional)</label>
+      <input
+        type="tel"
+        class="form-control"
+        [(ngModel)]="form.celular"
+        name="celular"
+        placeholder="+51 999 999 999"
+      />
     </div>
 
+    <!-- Rol -->
     <div class="mb-3">
-      <label class="form-label">Rol *</label>
-      <select class="form-select rounded-pill" [(ngModel)]="form.rol" name="rol" required>
+      <label class="form-label fw-semibold">Rol <span class="text-danger">*</span></label>
+      <select
+        class="form-select"
+        [(ngModel)]="form.rol"
+        name="rol"
+        required
+        #rolCtrl="ngModel"
+        [class.is-invalid]="rolCtrl.invalid && rolCtrl.touched"
+      >
+        <option value="" disabled>Selecciona un rol</option>
         <option value="ADMIN">Administrador</option>
         <option value="OWNER">Propietario</option>
         <option value="CUSTOMER">Cliente</option>
       </select>
+      <div class="invalid-feedback">
+        Selecciona un rol
+      </div>
     </div>
 
-    <div class="form-check mb-4">
-      <input type="checkbox" class="form-check-input" id="activo" [(ngModel)]="form.activo" name="activo">
-      <label class="form-check-label" for="activo">Usuario activo</label>
+    <!-- Activo -->
+    <div class="mb-4 form-check form-switch">
+      <input
+        class="form-check-input"
+        type="checkbox"
+        id="activo"
+        [(ngModel)]="form.activo"
+        name="activo"
+      />
+      <label class="form-check-label fw-semibold" for="activo">
+        Usuario activo
+      </label>
     </div>
 
-    <div class="d-flex justify-content-end gap-3">
-      <button type="button" class="btn btn-outline-secondary rounded-pill px-4" (click)="cancelar()">
+    <!-- Botones -->
+    <div class="d-flex flex-column flex-md-row justify-content-end gap-3 mt-4 pt-3 border-top">
+      <button
+        type="button"
+        class="btn btn-outline-secondary btn-md px-4 px-md-5 py-2 w-100 w-md-auto"
+        (click)="cancelar()"
+      >
         Cancelar
       </button>
-      <button type="submit" class="btn btn-primary rounded-pill px-4">
+
+      <button
+        type="submit"
+        class="btn btn-primary btn-md px-4 px-md-5 py-2 shadow-sm w-100 w-md-auto"
+        [disabled]="userForm.invalid"
+      >
         {{ esEdicion ? 'Actualizar' : 'Crear' }}
       </button>
     </div>

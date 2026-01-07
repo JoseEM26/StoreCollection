@@ -1,44 +1,51 @@
-<!-- category-form.component.html -->
 <div class="modal-card shadow-lg rounded-4 overflow-hidden" (click)="$event.stopPropagation()" data-aos="zoom-in">
-  <div class="modal-header bg-primary text-white p-4">
-    <h2 class="h4 mb-0 fw-bold">
-      <i class="bi bi-tags-fill me-3"></i>
+  <!-- Header -->
+  <div class="modal-header bg-gradient-primary text-white p-4 p-md-5 border-0">
+    <h2 class="h4 h3-md mb-0 fw-bold d-flex align-items-center gap-3">
+      <i class="bi bi-tags-fill fs-3"></i>
       {{ isEdit ? 'Editar Categoría' : 'Crear Nueva Categoría' }}
     </h2>
     <button class="btn-close btn-close-white" (click)="cancel()" [disabled]="loading()"></button>
   </div>
 
-  <div class="modal-body p-4 p-lg-5">
+  <!-- Body -->
+  <div class="modal-body p-4 p-md-5 bg-white">
     <form>
       <!-- Nombre -->
       <div class="mb-4">
-        <label class="form-label fw-semibold text-dark">
-          <i class="bi bi-fonts me-2"></i>Nombre de la categoría
+        <label class="form-label fw-semibold text-dark d-flex align-items-center gap-2">
+          <i class="bi bi-fonts"></i>
+          Nombre de la categoría
+          <span class="text-danger ms-1">*</span>
         </label>
         <input
           [(ngModel)]="nombre"
           name="nombre"
           type="text"
-          class="form-control form-control-lg rounded-3 shadow-sm"
+          class="form-control"
           placeholder="Ej: Electrónica, Ropa, Hogar..."
+          required
           autofocus
           [disabled]="loading()"
         />
       </div>
 
-      <!-- Dropdown de Tiendas SOLO para ADMIN -->
-      <div class="mb-4" *ngIf="auth.isAdmin()">
-        <label class="form-label fw-semibold text-dark">
-          <i class="bi bi-shop me-2"></i>Tienda destino
+      <!-- Dropdown de Tiendas (solo ADMIN) -->
+      <div class="mb-5" *ngIf="auth.isAdmin()">
+        <label class="form-label fw-semibold text-dark d-flex align-items-center gap-2">
+          <i class="bi bi-shop"></i>
+          Tienda destino
+          <span class="text-danger ms-1">*</span>
         </label>
         <select
           [(ngModel)]="tiendaId"
           name="tiendaId"
-          class="form-select form-select-lg rounded-3 shadow-sm"
+          class="form-select"
           [disabled]="loading() || tiendas().length === 0"
+          required
         >
           <option [ngValue]="null" disabled>
-            {{ tiendas().length === 0 ? 'Cargando tiendas...' : 'Seleccionar tienda' }}
+            {{ tiendas().length === 0 ? 'Cargando tiendas...' : 'Selecciona una tienda' }}
           </option>
           <option *ngFor="let tienda of tiendas()" [ngValue]="tienda.id">
             {{ tienda.descripcion }}
@@ -46,29 +53,30 @@
         </select>
         <small class="text-muted d-block mt-2">
           <i class="bi bi-info-circle me-1"></i>
-          Como administrador, debes asignar la categoría a una tienda específica.
+          Obligatorio para administradores
         </small>
       </div>
 
       <!-- Mensaje de error -->
-      <div *ngIf="errorMessage()" class="alert alert-danger rounded-3 shadow-sm d-flex align-items-center">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+      <div *ngIf="errorMessage()" class="alert alert-danger rounded-3 shadow-sm d-flex align-items-center mb-4">
+        <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
         {{ errorMessage() }}
       </div>
 
       <!-- Botones -->
-      <div class="d-flex gap-3 mt-5">
+      <div class="d-flex flex-column flex-md-row gap-3 mt-5 pt-4 border-top">
         <button
           type="button"
-          class="btn btn-outline-secondary btn-lg flex-fill rounded-3"
+          class="btn btn-outline-secondary btn-md flex-fill rounded-pill py-2 py-md-3"
           (click)="cancel()"
           [disabled]="loading()"
         >
           Cancelar
         </button>
+
         <button
           type="button"
-          class="btn btn-primary btn-lg flex-fill rounded-3 shadow"
+          class="btn btn-primary btn-md flex-fill rounded-pill py-2 py-md-3 shadow"
           (click)="save()"
           [disabled]="loading()"
         >

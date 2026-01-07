@@ -212,4 +212,181 @@
 .nav-link.disabled i,
 .nav-link.disabled span {
   color: inherit !important;
+}.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  background: #f8fafc;
+  position: relative;
 }
+
+/* ── SIDEBAR ─────────────────────────────────────────────── */
+.sidebar {
+  width: 280px;
+  background: white;
+  border-right: 1px solid #e2e8f0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 1030;
+  transition: transform 0.35s ease, width 0.35s ease;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+}
+
+.sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1.5rem 0;
+}
+
+/* Modo colapsado (solo desktop) */
+.admin-layout.sidebar-collapsed .sidebar {
+  width: 78px;
+}
+
+.admin-layout.sidebar-collapsed .sidebar .logo-text,
+.admin-layout.sidebar-collapsed .sidebar .nav-link span,
+.admin-layout.sidebar-collapsed .sidebar .sidebar-footer span {
+  opacity: 0;
+  visibility: hidden;
+  width: 0;
+  overflow: hidden;
+}
+
+.admin-layout.sidebar-collapsed .sidebar .nav-link {
+  justify-content: center;
+  padding: 1rem;
+  margin: 0.35rem 0.8rem;
+}
+
+/* Móvil: sidebar oculto por defecto y desliza desde izquierda */
+@media (max-width: 991.98px) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: 280px; /* ancho completo en móvil */
+  }
+
+  .admin-layout.sidebar-open .sidebar {
+    transform: translateX(0);
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+  }
+
+  .btn-collapse {
+    display: none !important;
+  }
+}
+
+/* ── MAIN CONTENT ────────────────────────────────────────── */
+.main-content {
+  flex: 1;
+  margin-left: 280px;
+  transition: margin-left 0.35s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-layout.sidebar-collapsed .main-content {
+  margin-left: 78px;
+}
+
+/* ── TOPBAR ──────────────────────────────────────────────── */
+.topbar {
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+}
+
+/* Ajustes móviles en topbar */
+@media (max-width: 767.98px) {
+  .topbar .container-fluid {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  h5.mb-0 {
+    font-size: 1.1rem;
+  }
+
+  .avatar {
+    width: 38px;
+    height: 38px;
+    font-size: 0.8rem;
+  }
+}
+
+/* ── CONTENIDO ───────────────────────────────────────────── */
+.page-content {
+  padding: 1.5rem;
+  flex: 1;
+  background: #f8fafc;
+}
+
+@media (min-width: 992px) {
+  .page-content {
+    padding: 2rem 2.5rem;
+  }
+}
+
+/* ── BOTÓN COLAPSAR (solo desktop) ───────────────────────── */
+.btn-collapse {
+  position: absolute;
+  top: 100px;
+  right: -18px;
+  width: 36px;
+  height: 36px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.btn-collapse:hover {
+  background: #f8fafc;
+  transform: scale(1.1);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* Overlay móvil */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(6px);
+  z-index: 1020;
+}
+
+/* Otros estilos (nav-link, avatar, etc) permanecen similares... */
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0.85rem 1.5rem;
+  margin: 0.35rem 1rem;
+  border-radius: 12px;
+  color: #64748b;
+  font-weight: 500;
+  transition: all 0.25s ease;
+}
+
+.nav-link i {
+  font-size: 1.25rem;
+  width: 28px;
+  text-align: center;
+}
+
+/* ... resto de estilos de nav-link, active, logout, etc ... */

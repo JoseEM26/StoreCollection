@@ -1,14 +1,93 @@
 .form-container {
-  padding: 1.5rem;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 1rem 0.75rem;
 }
 
+@media (min-width: 576px) {
+  .form-container {
+    padding: 1.5rem 1rem;
+  }
+}
+
+/* Título */
 .modal-title {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 1.5rem;
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: #212529;
   text-align: center;
+  margin-bottom: 1.5rem;
 }
 
-.form-control, .form-select {
-  padding: 0.75rem 1.25rem;
+@media (min-width: 768px) {
+  .modal-title {
+    font-size: 1.65rem;
+  }
+}
+
+/* Inputs y select - tamaño medio */
+.form-control,
+.form-select {
+  padding: 0.65rem 1rem;
+  font-size: 0.98rem;
+  border-radius: 0.5rem;
+  border: 1px solid #ced4da;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.12);
+}
+
+/* Labels */
+.form-label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 0.4rem;
+}
+
+/* Invalid feedback */
+.invalid-feedback {
+  font-size: 0.82rem;
+}
+
+/* Switch */
+.form-switch .form-check-input {
+  width: 2.4em;
+  height: 1.25em;
+  margin-top: 0.25em;
+}
+
+/* Botones */
+.btn-md {
+  padding: 0.55rem 1.25rem;
+  font-size: 0.95rem;
+  border-radius: 0.5rem;
+}
+
+@media (min-width: 576px) {
+  .btn-md {
+    padding: 0.6rem 1.5rem;
+    font-size: 0.98rem;
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 480px) {
+  .form-control,
+  .form-select {
+    font-size: 0.94rem;
+    padding: 0.6rem 0.9rem;
+  }
+
+  .modal-title {
+    font-size: 1.35rem;
+  }
+
+  .btn {
+    width: 100%;
+  }
 }

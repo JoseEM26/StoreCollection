@@ -1,17 +1,134 @@
-/* category-form.component.css */
-.modal-card {
-  max-width: 500px;
-  margin: 0 auto;
-  background: white;
-  border: none;
+/* Fondo gradiente header */
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
 }
 
+/* Contenedor modal */
+.modal-card {
+  max-width: 90vw;
+  width: 100%;
+  margin: 0.5rem auto;
+  background: white;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  position: relative;
+}
+
+@media (min-width: 576px) {
+  .modal-card {
+    max-width: 520px;
+  }
+}
+
+@media (min-width: 992px) {
+  .modal-card {
+    max-width: 620px;
+  }
+}
+
+/* Header */
 .modal-header {
   border-bottom: none;
+  padding: 1.5rem 1.75rem;
+}
+
+@media (min-width: 576px) {
+  .modal-header {
+    padding: 2rem 2.5rem;
+  }
+}
+
+.modal-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+/* Body */
+.modal-body {
+  padding: 1.5rem 1.75rem;
+  background: white;
+}
+
+@media (min-width: 576px) {
+  .modal-body {
+    padding: 2rem 2.5rem;
+  }
+}
+
+/* Inputs y select - tamaño medio (perfecto para móvil y PC) */
+.form-control,
+.form-select {
+  padding: 0.65rem 1rem;
+  font-size: 0.98rem;
+  border-radius: 0.5rem;
+  border: 1px solid #d1d5db;
+  transition: all 0.2s ease;
 }
 
 .form-control:focus,
 .form-select:focus {
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.15);
+}
+
+/* Labels */
+.form-label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.4rem;
+}
+
+/* Alert error */
+.alert-danger {
+  font-size: 0.9rem;
+  padding: 0.75rem 1rem;
+}
+
+/* Botones */
+.btn-md {
+  padding: 0.55rem 1.25rem;
+  font-size: 0.95rem;
+  border-radius: 0.5rem;
+  transition: all 0.25s ease;
+}
+
+@media (min-width: 576px) {
+  .btn-md {
+    padding: 0.65rem 1.5rem;
+    font-size: 0.98rem;
+  }
+}
+
+.btn-primary.btn-md {
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
+  border: none;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+
+.btn-primary.btn-md:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35);
+}
+
+/* Responsive para móviles pequeños */
+@media (max-width: 480px) {
+  .modal-body {
+    padding: 1.25rem 1.25rem;
+  }
+
+  .form-control,
+  .form-select {
+    font-size: 0.94rem;
+    padding: 0.6rem 0.9rem;
+  }
+
+  .modal-title {
+    font-size: 1.3rem;
+  }
+
+  .btn {
+    width: 100%;
+  }
 }

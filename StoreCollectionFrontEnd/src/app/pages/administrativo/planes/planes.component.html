@@ -1,34 +1,36 @@
-<div class="container-fluid py-5">
+<div class="container-fluid py-4 py-md-5">
   <!-- Header -->
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-4">
-    <div>
-      <h1 class="display-6 fw-bold text-dark mb-2">
-        <i class="bi bi-credit-card-2-back-fill text-primary me-3"></i>
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 mb-md-5 gap-3 gap-md-4">
+    <div class="mb-3 mb-md-0">
+      <h1 class="display-6 display-md-5 fw-bold text-dark mb-1">
+        <i class="bi bi-credit-card-2-back-fill text-primary me-2 me-md-3"></i>
         Gestión de Planes
       </h1>
-      <p class="text-muted mb-0 fs-5">
-        Administra los planes de suscripción de tu tienda
-        <span class="badge bg-primary rounded-pill ms-2 px-3 py-2 fs-6">
-          {{ pageData()?.totalElements || 0 }} planes activos
+      <p class="text-muted mb-0 fs-5 d-flex align-items-center flex-wrap gap-2">
+        Administra los planes de suscripción
+        <span class="badge bg-primary rounded-pill px-3 py-1 fs-6">
+          {{ pageData()?.totalElements || 0 }} planes
         </span>
       </p>
     </div>
-    <button class="btn btn-primary btn-lg rounded-pill px-5 shadow-lg" (click)="abrirCrear()">
+
+    <button class="btn btn-primary rounded-pill px-4 px-md-5 py-2 py-md-3 shadow w-100 w-md-auto"
+            (click)="abrirCrear()">
       <i class="bi bi-plus-circle-fill me-2"></i>
       Nuevo Plan
     </button>
   </div>
 
-  <!-- Search Bar -->
-  <div class="row mb-5">
-    <div class="col-lg-6 col-xl-5">
-      <div class="input-group input-group-lg shadow rounded-4 overflow-hidden border border-light">
-        <span class="input-group-text bg-transparent border-0 text-muted">
-          <i class="bi bi-search fs-5"></i>
+  <!-- Búsqueda -->
+  <div class="row justify-content-center mb-4 mb-md-5">
+    <div class="col-12 col-lg-7 col-xl-6">
+      <div class="input-group input-group-lg shadow-sm">
+        <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-4">
+          <i class="bi bi-search text-primary"></i>
         </span>
         <input
           type="text"
-          class="form-control border-0 fs-5 py-3"
+          class="form-control rounded-end-pill pe-4 border-start-0"
           placeholder="Buscar por nombre, slug o descripción..."
           [(ngModel)]="searchTerm"
           (keyup)="onSearch()"
@@ -39,213 +41,196 @@
 
   <!-- Loading -->
   <div *ngIf="loading()" class="text-center py-5 my-5">
-    <div class="spinner-border text-primary" style="width: 5rem; height: 5rem;" role="status">
+    <div class="spinner-border text-primary" style="width: 4.5rem; height: 4.5rem;" role="status">
       <span class="visually-hidden">Cargando...</span>
     </div>
-    <p class="mt-4 text-muted fs-4">Cargando planes...</p>
+    <h4 class="mt-4 fw-bold text-primary">Cargando planes...</h4>
   </div>
 
-  <!-- Lista de Planes (estilo tarjetas en tabla) -->
-  <div *ngIf="!loading() && planes().length > 0" class="row g-4">
-    <div class="col-12">
-      <div class="table-responsive">
-        <table class="table table-borderless align-middle">
-          <tbody>
-            <tr *ngFor="let p of planes(); trackBy: trackById"
-                class="shadow-sm rounded-4 overflow-hidden mb-4"
-                [class.border-start-5]="true"
-                [class.border-primary]="p.nombre === 'Pro'"
-                [class.border-warning]="p.nombre === 'Premium'"
-                [class.border-dark]="p.nombre === 'Enterprise'"
-                [class.border-success]="p.nombre === 'Gratis'"
-                [class.border-info]="p.nombre === 'Básico'">
-              <td class="bg-white p-4">
-                <div class="row align-items-center">
-                  <!-- Icono + Info del Plan -->
-                  <div class="col-md-4 col-lg-3">
-                    <div class="d-flex align-items-center gap-4">
-                      <div class="flex-shrink-0">
-                        <div class="bg-gradient rounded-4 p-4 shadow-sm text-white"
-                             [class.bg-primary]="p.nombre === 'Pro' || p.nombre === 'Premium'"
-                             [class.bg-warning]="p.nombre === 'Enterprise'"
-                             [class.bg-success]="p.nombre === 'Gratis'"
-                             [class.bg-info]="p.nombre === 'Básico'">
-                          <i class="bi fs-1"
-                             [class.bi-gem]="p.nombre === 'Premium' || p.nombre === 'Enterprise'"
-                             [class.bi-star-fill]="p.nombre === 'Pro'"
-                             [class.bi-gift-fill]="p.nombre === 'Gratis'"
-                             [class.bi-box-seam-fill]="p.nombre === 'Básico'"></i>
-                        </div>
-                      </div>
-                      <div>
-                        <h3 class="fw-bold mb-1 fs-4">{{ p.nombre }}</h3>
-                        <p class="text-muted mb-1 small">{{ p.slug }}</p>
-                        <p class="text-muted small mb-0">{{ p.descripcion }}</p>
-                      </div>
+  <ng-container *ngIf="!loading()">
+    <!-- Estado vacío -->
+    <div *ngIf="planes().length === 0" class="text-center py-5 my-5">
+      <i class="bi bi-credit-card-2-back display-1 text-muted opacity-50 mb-4"></i>
+      <h3 class="fw-bold mb-3">No hay planes aún</h3>
+      <p class="lead text-muted mb-4" *ngIf="searchTerm">
+        No encontramos resultados para "<strong>{{ searchTerm }}</strong>"
+      </p>
+      <p class="lead text-muted mb-4" *ngIf="!searchTerm">
+        Crea tu primer plan de suscripción
+      </p>
+      <button class="btn btn-primary rounded-pill px-5 py-3 shadow w-100 w-md-auto" (click)="abrirCrear()">
+        <i class="bi bi-plus-circle me-2"></i> Crear primer plan
+      </button>
+    </div>
+
+    <!-- Lista de planes (tarjetas responsivas) -->
+    <div *ngIf="planes().length > 0" class="row row-cols-1 row-cols-md-2 row-cols-lg-1 g-3 g-md-4">
+      <div class="col" *ngFor="let p of planes(); trackBy: trackById">
+        <div class="card h-100 border-0 shadow-lg rounded-4 overflow-hidden plan-card"
+             [class.border-start]="true"
+             [ngClass]="{
+               'border-primary': p.nombre === 'Pro',
+               'border-warning': p.nombre === 'Premium',
+               'border-dark': p.nombre === 'Enterprise',
+               'border-success': p.nombre === 'Gratis',
+               'border-info': p.nombre === 'Básico'
+             }">
+          <div class="card-body p-3 p-md-4">
+            <div class="row align-items-center g-4">
+              <!-- Icono + Nombre -->
+              <div class="col-12 col-md-5 col-lg-4">
+                <div class="d-flex align-items-center gap-3 gap-md-4">
+                  <div class="flex-shrink-0">
+                    <div class="icon-circle text-white d-flex align-items-center justify-content-center fs-3 fs-md-2"
+                         [ngClass]="{
+                           'bg-primary': p.nombre === 'Pro' || p.nombre === 'Premium',
+                           'bg-warning': p.nombre === 'Enterprise',
+                           'bg-success': p.nombre === 'Gratis',
+                           'bg-info': p.nombre === 'Básico'
+                         }">
+                      <i class="bi"
+                         [ngClass]="{
+                           'bi-gem': p.nombre === 'Premium' || p.nombre === 'Enterprise',
+                           'bi-star-fill': p.nombre === 'Pro',
+                           'bi-gift-fill': p.nombre === 'Gratis',
+                           'bi-box-seam-fill': p.nombre === 'Básico'
+                         }"></i>
                     </div>
                   </div>
-
-                  <!-- Precio -->
-                  <div class="col-md-3 col-lg-2 text-center text-md-start">
-                    <div class="fw-bold fs-3 text-dark">
-                      {{ formatPrecio(p.precioMensual) }}
-                      <small class="text-muted fs-6">/mes</small>
-                    </div>
-                    <ng-container *ngIf="p.precioAnual != null">
-                      <div class="text-success small fw-semibold mt-2">
-                        <i class="bi bi-tag-fill me-1"></i>
-                        {{ formatPrecio(p.precioAnual) }}/año
-                        <span class="badge bg-success rounded-pill ms-2">
-                          Ahorra {{ calcularAhorro(p) }}%
-                        </span>
-                      </div>
-                    </ng-container>
-                  </div>
-
-                  <!-- Límites -->
-                  <div class="col-md-3 col-lg-2 text-center">
-                    <div class="d-flex flex-column gap-3">
-                      <div>
-                        <div class="fw-bold fs-4">{{ p.maxProductos | number }}</div>
-                        <small class="text-muted">productos</small>
-                      </div>
-                      <div>
-                        <div class="fw-bold fs-4">{{ p.maxVariantes | number }}</div>
-                        <small class="text-muted">variantes</small>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Trial + Público + Orden -->
-                  <div class="col-md-3 col-lg-3 text-center text-md-start">
-                    <div class="d-flex flex-column gap-3 align-items-center align-items-md-start">
-                      <!-- Trial -->
-                      <div>
-                        <ng-container *ngIf="p.esTrial; else noTrial">
-                          <span class="badge bg-success rounded-pill px-4 py-2 fs-6 shadow-sm">
-                            <i class="bi bi-clock-history me-2"></i>
-                            {{ p.diasTrial }} días gratis
-                          </span>
-                        </ng-container>
-                        <ng-template #noTrial>
-                          <span class="text-muted small">Sin trial</span>
-                        </ng-template>
-                      </div>
-
-                      <!-- Visible Público -->
-                      <div>
-                        <i class="bi fs-4"
-                           [class.bi-eye-fill]="p.esVisiblePublico"
-                           [class.bi-eye-slash]="!p.esVisiblePublico"
-                           [class.text-success]="p.esVisiblePublico"
-                           [class.text-danger]="!p.esVisiblePublico"></i>
-                        <small class="text-muted ms-2">
-                          {{ p.esVisiblePublico ? 'Visible al público' : 'Oculto' }}
-                        </small>
-                      </div>
-
-                      <!-- Orden -->
-                      <div>
-                        <span class="badge bg-secondary rounded-pill px-3 py-2">
-                          Orden #{{ p.orden }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Estado + Acciones -->
-                  <div class="col-md-3 col-lg-2 text-center text-md-end">
-                    <div class="d-flex flex-column gap-3 align-items-center align-items-md-end">
-                      <!-- Estado -->
-                      <span class="badge fs-6 px-4 py-3 rounded-pill shadow-sm"
-                            [class.bg-success]="p.activo"
-                            [class.bg-danger]="!p.activo">
-                        {{ p.activo ? 'Activo' : 'Inactivo' }}
-                      </span>
-
-                      <!-- Botones -->
-                      <div class="d-flex gap-2">
-                        <button
-                          class="btn rounded-circle shadow-sm btn-lg"
-                          [class.btn-success]="p.activo"
-                          [class.btn-outline-danger]="!p.activo"
-                          (click)="toggleActivo(p)"
-                          [title]="p.activo ? 'Desactivar plan' : 'Activar plan'">
-                          <i class="bi fs-4"
-                             [class.bi-toggle-on]="p.activo"
-                             [class.bi-toggle-off]="!p.activo"></i>
-                        </button>
-
-                        <button class="btn btn-outline-primary rounded-circle shadow-sm btn-lg"
-                                (click)="abrirEditar(p)"
-                                title="Editar plan">
-                          <i class="bi bi-pencil-fill fs-5"></i>
-                        </button>
-                      </div>
-                    </div>
+                  <div class="flex-grow-1 min-w-0">
+                    <h3 class="fw-bold fs-4 mb-1 text-truncate">{{ p.nombre }}</h3>
+                    <small class="text-muted d-block mb-1">{{ p.slug }}</small>
+                    <p class="text-muted small mb-0 text-truncate-2">{{ p.descripcion }}</p>
                   </div>
                 </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </div>
+
+              <!-- Precio -->
+              <div class="col-6 col-md-3 col-lg-2 text-center">
+                <div class="fw-bold fs-3 fs-md-4 text-dark">
+                  {{ formatPrecio(p.precioMensual) }}
+                  <small class="text-muted fs-6">/mes</small>
+                </div>
+                <ng-container *ngIf="p.precioAnual != null">
+                  <div class="text-success small fw-semibold mt-1">
+                    {{ formatPrecio(p.precioAnual) }}/año
+                    <span class="badge bg-success-subtle text-success ms-2">
+                      -{{ calcularAhorro(p) }}%
+                    </span>
+                  </div>
+                </ng-container>
+              </div>
+
+              <!-- Límites -->
+              <div class="col-6 col-md-2 col-lg-2 text-center">
+                <div class="d-flex flex-column gap-2">
+                  <div>
+                    <div class="fw-bold fs-4">{{ p.maxProductos | number }}</div>
+                    <small class="text-muted">prod.</small>
+                  </div>
+                  <div>
+                    <div class="fw-bold fs-4">{{ p.maxVariantes | number }}</div>
+                    <small class="text-muted">var.</small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Trial + Visibilidad + Orden -->
+              <div class="col-12 col-lg-2 text-center text-lg-start">
+                <div class="d-flex flex-column gap-2">
+                  <div>
+                    <ng-container *ngIf="p.esTrial; else noTrial">
+                      <span class="badge bg-success px-3 py-1 fs-6">
+                        {{ p.diasTrial }} días trial
+                      </span>
+                    </ng-container>
+                    <ng-template #noTrial>
+                      <small class="text-muted">Sin trial</small>
+                    </ng-template>
+                  </div>
+
+                  <div>
+                    <i class="bi fs-4 me-1"
+                       [ngClass]="p.esVisiblePublico ? 'bi-eye-fill text-success' : 'bi-eye-slash text-danger'"></i>
+                    <small class="text-muted">{{ p.esVisiblePublico ? 'Público' : 'Oculto' }}</small>
+                  </div>
+
+                  <div>
+                    <span class="badge bg-secondary px-3 py-1">
+                      Orden #{{ p.orden }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Estado + Acciones -->
+              <div class="col-12 col-lg-2 text-center text-lg-end mt-3 mt-lg-0">
+                <div class="d-flex flex-column gap-3 align-items-center align-items-lg-end">
+                  <span class="badge fs-6 px-4 py-2 rounded-pill shadow-sm"
+                        [ngClass]="p.activo ? 'bg-success' : 'bg-danger'">
+                    {{ p.activo ? 'Activo' : 'Inactivo' }}
+                  </span>
+
+                  <div class="d-flex gap-2">
+                    <button class="btn rounded-circle shadow p-3"
+                            [ngClass]="p.activo ? 'btn-success' : 'btn-outline-danger'"
+                            (click)="toggleActivo(p)"
+                            title="{{ p.activo ? 'Desactivar' : 'Activar' }}">
+                      <i class="bi fs-4"
+                         [ngClass]="p.activo ? 'bi-toggle-on' : 'bi-toggle-off'"></i>
+                    </button>
+
+                    <button class="btn btn-outline-primary rounded-circle shadow p-3"
+                            (click)="abrirEditar(p)"
+                            title="Editar">
+                      <i class="bi bi-pencil-fill fs-4"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Empty State -->
-  <div *ngIf="!loading() && planes().length === 0" class="text-center py-5 my-5">
-    <i class="bi bi-credit-card-2-back display-1 text-muted opacity-20 mb-4"></i>
-    <h3 class="fw-bold text-dark">No hay planes disponibles</h3>
-    <p class="lead text-muted mb-4" *ngIf="searchTerm">
-      No se encontraron resultados para "<strong>{{ searchTerm }}</strong>"
-    </p>
-    <p class="lead text-muted mb-4" *ngIf="!searchTerm">
-      Aún no has creado ningún plan de suscripción.
-    </p>
-    <button class="btn btn-primary btn-lg rounded-pill px-5 shadow" (click)="abrirCrear()">
-      <i class="bi bi-plus-circle me-2"></i>
-      Crear mi primer plan
-    </button>
-  </div>
-
-  <!-- Paginación -->
-  <div *ngIf="pageData() && pageData()!.totalPages > 1" class="d-flex justify-content-between align-items-center mt-5 flex-wrap gap-3">
-    <p class="text-muted mb-0">
-      Mostrando {{ startItem }} al {{ endItem }} de {{ pageData()?.totalElements }} planes
-    </p>
-    <nav>
-      <ul class="pagination pagination-lg">
+    <!-- Paginación -->
+    <nav *ngIf="pageData() && pageData()!.totalPages > 1" class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 mt-md-5 gap-3">
+      <p class="text-muted mb-0">
+        Mostrando {{ startItem }}–{{ endItem }} de {{ pageData()?.totalElements }}
+      </p>
+      <ul class="pagination pagination-md mb-0">
         <li class="page-item" [class.disabled]="currentPage() === 0">
-          <button class="page-link rounded-pill" (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 0">
+          <button class="page-link" (click)="goToPage(currentPage() - 1)">
             <i class="bi bi-chevron-left"></i>
           </button>
         </li>
         <li class="page-item" *ngFor="let page of getPageNumbers()" [class.active]="page === currentPage()">
-          <button class="page-link rounded-pill" (click)="goToPage(page)">{{ page + 1 }}</button>
+          <button class="page-link" (click)="goToPage(page)">{{ page + 1 }}</button>
         </li>
         <li class="page-item" [class.disabled]="currentPage() === (pageData()!.totalPages - 1)">
-          <button class="page-link rounded-pill" (click)="goToPage(currentPage() + 1)">
+          <button class="page-link" (click)="goToPage(currentPage() + 1)">
             <i class="bi bi-chevron-right"></i>
           </button>
         </li>
       </ul>
     </nav>
-  </div>
+  </ng-container>
 
   <!-- Modal -->
   <div class="modal fade" tabindex="-1" [ngClass]="{'show d-block': showModal(), 'd-none': !showModal()}">
-    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+    <div class="modal-dialog modal-dialog-centered modal-responsive modal-dialog-scrollable">
       <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-        <div class="modal-header border-0 pb-0">
+        <div class="modal-header bg-light border-0 px-4 px-md-5 py-3 py-md-4">
+          <h5 class="modal-title fw-bold">Nuevo / Editar Plan</h5>
           <button type="button" class="btn-close" (click)="closeModal()" aria-label="Cerrar"></button>
         </div>
-        <div class="modal-body pt-0">
+        <div class="modal-body px-4 px-md-5 pb-4 pb-md-5">
           <app-planes-form
             [plan]="editingPlan()"
             (success)="onFormSuccess()"
-            (cancel)="closeModal()"
-          ></app-planes-form>
+            (cancel)="closeModal()">
+          </app-planes-form>
         </div>
       </div>
     </div>
