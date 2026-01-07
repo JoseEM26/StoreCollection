@@ -1,11 +1,12 @@
-<!-- HERO con datos reales de la tienda -->
+<!-- HERO -->
 <section class="hero-minimal">
   <div class="container">
-    <div class="row align-items-center min-vh-100">
-      <div class="col-lg-6" data-aos="fade-right">
+    <div class="row align-items-center gx-5">
+      <!-- Texto (primero en móvil) -->
+      <div class="col-lg-6 order-2 order-lg-1" data-aos="fade-right">
         <h1 class="hero-title">
           {{ tienda?.nombre || 'Cargando tienda...' }}
-          <small class="d-block fs-5 text-success fw-normal" *ngIf="tienda?.planNombre">
+          <small class="d-block mt-2 fs-5 fw-normal text-success" *ngIf="tienda?.planNombre">
             Plan {{ tienda.planNombre }}
           </small>
         </h1>
@@ -14,8 +15,8 @@
           {{ tienda?.descripcion || 'Los mejores productos con envíos a todo el país.' }}
         </p>
 
-        <!-- Info rápida -->
-        <div class="d-flex flex-wrap gap-3 mt-4 mb-4">
+        <!-- Chips informativos -->
+        <div class="info-chips d-flex flex-wrap gap-3 mt-4 mb-5">
           <div class="info-chip" *ngIf="tienda?.direccion">
             <i class="bi bi-geo-alt-fill"></i> {{ tienda.direccion }}
           </div>
@@ -24,24 +25,31 @@
           </div>
         </div>
 
+        <!-- Botón -->
         <div class="hero-actions">
-          <a routerLink="catalogo" class="btn-explore me-3">Explorar Catálogo</a>
-        
+          <a routerLink="catalogo" class="btn-explore">
+            Explorar Catálogo
+          </a>
         </div>
       </div>
-      <div class="col-lg-6 text-center" data-aos="fade-left">
+
+      <!-- Imagen (después en móvil) -->
+      <div class="col-lg-6 text-center order-1 order-lg-2 mb-5 mb-lg-0" data-aos="fade-left">
         <div class="hero-image-wrapper">
-          <img src={{tienda.logo_img_url}}
-               alt="{{ tienda?.nombre }}" class="hero-image">
+          <img [src]="tienda?.logo_img_url || 'https://via.placeholder.com/600x600?text=Logo+Tienda'"
+               alt="{{ tienda?.nombre || 'Tienda' }}"
+               class="hero-image"
+               loading="lazy">
         </div>
       </div>
     </div>
   </div>
 </section>
+
 <!-- CATEGORÍAS POPULARES -->
-<section class="section-categories py-5 bg-light" *ngIf="categorias.length > 0 || !loading">
+<section class="section-categories py-5">
   <div class="container">
-    <h2 class="section-title text-center mb-2 fw-bold display-6">
+    <h2 class="section-title text-center mb-5 fw-bold">
       Categorías populares
     </h2>
 
@@ -50,70 +58,68 @@
         <a *ngFor="let cat of categorias; let i = index"
            [routerLink]="['catalogo', cat.slug]"
            class="category-card"
-           data-aos="zoom-in-up"
+           data-aos="fade-up"
            [attr.data-aos-delay]="i * 80">
 
-          <!-- Círculo con icono + inicial -->
-          <div class="category-icon-circle" [style.background-color]="getColorForCategory(i)">
-            <i class="bi {{ getIconForCategory(cat.nombre) }} icon-large"></i>
-            <!-- Fallback con inicial si no hay icono reconocido -->
-            <span class="fallback-initial" *ngIf="!hasKnownIcon(cat.nombre)">
+          <div class="category-icon-circle">
+            <!-- Icono o inicial -->
+            <i *ngIf="hasKnownIcon(cat.nombre)" 
+               class="bi {{ getIconForCategory(cat.nombre) }} icon-large"></i>
+            <span *ngIf="!hasKnownIcon(cat.nombre)" 
+                  class="fallback-initial">
               {{ cat.nombre.charAt(0).toUpperCase() }}
             </span>
           </div>
 
-          <!-- Nombre de la categoría -->
-          <h3 class="category-name mt-3 mb-0 fw-bold">{{ cat.nombre }}</h3>
+          <h3 class="category-name mt-3 mb-0">{{ cat.nombre }}</h3>
         </a>
       </div>
     </div>
 
     <ng-template #emptyCategories>
       <div class="empty-state text-center py-5">
-        <i class="bi bi-grid-3x3-gap display-4 text-muted mb-4 opacity-50"></i>
+        <i class="bi bi-grid-3x3-gap display-4 text-muted mb-4"></i>
         <h4 class="text-dark fw-semibold">Aún no hay categorías disponibles</h4>
-        <p class="text-muted">Pronto agregaremos nuevas categorías. ¡Vuelve pronto!</p>
+        <p class="text-muted">Pronto agregaremos nuevas categorías</p>
       </div>
     </ng-template>
   </div>
 </section>
 
-<!-- PRODUCTOS DESTACADOS (con estado vacío) -->
-<section class="section-featured py-5 bg-light" *ngIf="destacados.length > 0 || !loading">
+<!-- PRODUCTOS DESTACADOS -->
+<section class="section-featured py-5">
   <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
       <h2 class="section-title mb-0">Productos Destacados</h2>
-      <a routerLink="catalogo" class="text-decoration-none fw-semibold text-success">
-        Ver todo el catálogo →
+      <a routerLink="catalogo" class="ver-todo">
+        Ver todo →
       </a>
     </div>
 
     <div *ngIf="destacados.length > 0; else emptyProducts" class="row g-4">
-      <div class="col-6 col-md-4 col-lg-3"
+      <div class="col-6 col-md-4 col-lg-3" 
            *ngFor="let p of destacados; let i = index"
            data-aos="fade-up"
-           [attr.data-aos-delay]="i * 100">
+           [attr.data-aos-delay]="i * 80">
         <app-producto-card [producto]="p"></app-producto-card>
       </div>
     </div>
 
     <ng-template #emptyProducts>
-      <div class="empty-state">
-        <i class="bi bi-basket2"></i>
-        <h3>Pronto habrá productos destacados</h3>
-        <p>Estamos preparando lo mejor para ti. ¡Los productos llegarán muy pronto!</p>
-        <a routerLink="catalogo" class="btn-empty">
-          Explorar catálogo completo
+      <div class="empty-state text-center py-5">
+        <i class="bi bi-basket2 display-4 text-muted mb-4"></i>
+        <h4 class="text-dark fw-semibold">Pronto habrá productos destacados</h4>
+        <p class="text-muted">Estamos preparando lo mejor para ti</p>
+        <a routerLink="catalogo" class="btn-explore-small">
+          Explorar catálogo
         </a>
       </div>
     </ng-template>
   </div>
 </section>
 
-<!-- Loading -->
-<div class="container py-5 text-center" *ngIf="loading">
-  <div class="spinner-border text-success" style="width: 3rem; height: 3rem;" role="status">
-    <span class="visually-hidden">Cargando...</span>
-  </div>
-  <p class="mt-3 text-muted">Cargando tu tienda...</p>
+<!-- Loading global -->
+<div class="loading-full text-center py-5" *ngIf="loading">
+  <div class="spinner-border text-success" style="width: 3.5rem; height: 3.5rem;"></div>
+  <p class="mt-4 text-muted fs-5">Cargando tu tienda...</p>
 </div>
