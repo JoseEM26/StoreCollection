@@ -1,5 +1,6 @@
 package com.proyecto.StoreCollection.service;
 
+import com.proyecto.StoreCollection.dto.request.BoletaAdminRequest;
 import com.proyecto.StoreCollection.dto.response.BoletaResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,7 +22,7 @@ public interface BoletaService {
 
     // Obtención individual con verificación de permisos
     BoletaResponse findByIdConPermisos(Integer id);
-
+    BoletaResponse crearBoletaAdmin(BoletaAdminRequest request);
     // Cambio de estado con lógica de negocio (deducción de stock)
     BoletaResponse actualizarEstado(Integer id, String estado);
 }

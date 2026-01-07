@@ -5,7 +5,7 @@ import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environment';
-import { BoletaPageResponse, BoletaResponse } from '../model/boleta.model';
+import { BoletaPageResponse, BoletaResponse, VentaDirectaRequest } from '../model/boleta.model';
 
 @Injectable({
   providedIn: 'root'
@@ -40,7 +40,40 @@ export class BoletaService {
       })
     );
   }
+  // =============================================
+  // CREAR VENTA DIRECTA (en tienda física / mostrador)
+  // =============================================
+  crearVentaDirecta(request: VentaDirectaRequest): Observable<BoletaResponse> {
+    console.log('[BoletaService] Creando venta directa:', request);
 
+    const url = `${environment.apiUrl}/api/owner/boletas/crear-venta-directa`;
+
+    return this.http.post<BoletaResponse>(url, request).pipe(
+      map(response => {
+        console.log('[BoletaService] Venta directa creada exitosamente:', response);
+        return response;
+      }),
+      catchError(error => {
+        console.error('[BoletaService] Error al crear venta directa:', error);
+
+        let mensaje = 'No se pudo crear la venta directa. Inténtalo de nuevo.';
+
+        if (error.status === 400) {
+          // Errores de validación o stock insuficiente
+          const errorMsg = error.error?.message || error.error?.error;
+          mensaje = errorMsg || 'Datos inválidos o stock insuficiente en uno o más productos.';
+        } else if (error.status === 403) {
+          mensaje = 'No tienes permiso para crear ventas en esta tienda.';
+        } else if (error.status === 404) {
+          mensaje = 'Tienda o producto no encontrado.';
+        } else if (error.status >= 500) {
+          mensaje = 'Error en el servidor. Contacta al administrador.';
+        }
+
+        return throwError(() => new Error(mensaje));
+      })
+    );
+  }
   // =============================================
   // Detalle de boleta
   // =============================================

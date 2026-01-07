@@ -18,6 +18,7 @@ export interface ProductoAdminListItem {
   imagenPrincipal: string;
   tieneVariantes: boolean;
   cantidadVariantes: number;
+variantes?: VarianteResponse[] | null;  // ← ahora acepta null
 }
 
 // === Página para la lista administrativa ===

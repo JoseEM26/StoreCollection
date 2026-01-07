@@ -26,7 +26,25 @@ export interface BoletaRequest {
   // Opcional: método de pago (si lo implementas después)
   metodoPago?: string;
 }
+// =============================================
+// Request para crear venta directa (mostrador)
+// =============================================
+export interface VentaDirectaRequest {
+  tiendaId: number;
 
+  // Información del comprador (opcional en venta directa)
+  compradorNombre?: string;     // Si no se envía → backend usa "Cliente en tienda (venta directa)"
+  compradorEmail?: string | null;
+  compradorTelefono?: string | null;
+
+  // Lista de ítems (obligatorio)
+  items: VentaDirectaItemRequest[];
+}
+
+export interface VentaDirectaItemRequest {
+  varianteId: number;
+  cantidad: number;
+}
 export interface BoletaResponse {
   id: number;
   sessionId: string;
@@ -35,7 +53,6 @@ export interface BoletaResponse {
   total: number;
   fecha: string;
   estado: string;
-
   // Nuevos campos agregados
   compradorNombre: string;
   compradorEmail: string;

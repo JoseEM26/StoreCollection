@@ -1,27 +1,34 @@
 package com.proyecto.StoreCollection.controller;
 
+import com.proyecto.StoreCollection.dto.request.BoletaAdminRequest;
 import com.proyecto.StoreCollection.dto.response.BoletaResponse;
 import com.proyecto.StoreCollection.service.BoletaService;
 import com.proyecto.StoreCollection.service.PdfService;
 import com.proyecto.StoreCollection.tenant.TenantContext;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.*;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/owner/boletas")
 public class BoletaController {
-
     private final BoletaService service;
     private final PdfService pdfService;
-
     @GetMapping("/admin-list")
     public ResponseEntity<Page<BoletaResponse>> listarBoletas(
             @RequestParam(defaultValue = "0") int page,
@@ -64,7 +71,33 @@ public class BoletaController {
 
         return ResponseEntity.ok(resultado);
     }
+    @PostMapping("/crear-venta-directa")
+    public ResponseEntity<?> crearBoletaAdmin(@Valid @RequestBody BoletaAdminRequest request) {
+        try {
+            BoletaResponse response = service.crearBoletaAdmin(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
 
+        } catch (IllegalArgumentException e) {
+            log.warn("Datos inválidos al crear boleta: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Datos inválidos", "message", e.getMessage()));
+
+        } catch (IllegalStateException e) {
+            log.warn("Error de negocio: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Stock insuficiente", "message", e.getMessage()));
+
+        } catch (AccessDeniedException e) {
+            log.warn("Acceso denegado para tienda {}: {}", request.getTiendaId(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Acceso denegado"));
+
+        } catch (Exception e) {
+            log.error("Error inesperado al crear boleta directa", e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", "Error interno del servidor"));
+        }
+    }
     @GetMapping("/{id}/whatsapp-confirmacion")
     public ResponseEntity<String> generarWhatsappConfirmacionCliente(@PathVariable Integer id) {
         try {

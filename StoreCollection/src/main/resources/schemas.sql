@@ -158,19 +158,19 @@ CREATE TABLE boleta (
     estado ENUM('PENDIENTE', 'ATENDIDA', 'CANCELADA') NOT NULL DEFAULT 'PENDIENTE',
 
     -- Nuevos campos de comprador y envío
-    comprador_nombre    VARCHAR(100) NOT NULL,
-    comprador_email     VARCHAR(120) NOT NULL,
-    comprador_telefono  VARCHAR(20) DEFAULT NULL,
+    comprador_nombre    VARCHAR(100)  NULL,
+    comprador_email     VARCHAR(120)  NULL,
+    comprador_telefono  VARCHAR(20)  NULL,
 
-    direccion_envio     VARCHAR(150) NOT NULL,
+    direccion_envio     VARCHAR(150)  NULL,
     referencia_envio    VARCHAR(100) DEFAULT NULL,
-    distrito            VARCHAR(60) NOT NULL,
-    provincia           VARCHAR(60) NOT NULL,
-    departamento        VARCHAR(40) NOT NULL,
+    distrito            VARCHAR(60)  NULL,
+    provincia           VARCHAR(60)  NULL,
+    departamento        VARCHAR(40)  NULL,
     codigo_postal       VARCHAR(10) DEFAULT NULL,
 
     tipo_entrega ENUM('DOMICILIO', 'RECOGIDA_EN_TIENDA', 'AGENCIA')
-        NOT NULL DEFAULT 'DOMICILIO',
+         NULL DEFAULT 'DOMICILIO',
 
     -- Claves foráneas
     FOREIGN KEY (user_id)   REFERENCES usuario(id)   ON DELETE SET NULL,

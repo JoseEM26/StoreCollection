@@ -1,39 +1,4 @@
-.bg-gradient-primary {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-}
-
-.table-hover tbody tr:hover {
-  background-color: rgba(99, 102, 241, 0.05);
-}
-
-.badge.rounded-pill {
-  min-width: 100px;
-  text-align: center;
-}
-
-.list-group-item {
-  transition: all 0.2s ease;
-}
-
-.list-group-item:hover {
-  background-color: #f8f9fa;
-}.modal-backdrop.show {
-  opacity: 0.5;
-}
-
-.btn-group .btn {
-  border-radius: 0.375rem;
-}
-
-.btn-group .btn:first-child {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-.btn-group .btn:last-child {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}/* Paleta de colores elegante */
+/* Paleta de colores elegante */
 .text-indigo { color: #4f46e5; }
 .bg-indigo { background-color: #4f46e5; }
 .btn-indigo { 
@@ -81,16 +46,33 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-/* Backdrop suave */
-.modal-backdrop.show {
-  opacity: 0.6;
-}
-
-/* Sombras suaves en cards */
-.card {
+/* Cards y modales con sombra suave y hover */
+.elegant-card,
+.elegant-modal {
   box-shadow: 0 10px 30px rgba(0,0,0,0.08);
   transition: all 0.3s ease;
 }
-.card:hover {
+.elegant-card:hover {
   box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+  transform: translateY(-4px);
+}
+
+/* Backdrop más presente */
+.modal-backdrop.show {
+  opacity: 0.65;
+}
+
+/* Transiciones suaves en hover de tabla */
+.table-hover tbody tr:hover {
+  background-color: rgba(99, 102, 241, 0.05);
+}
+
+/* Ajustes menores */
+.badge.rounded-pill {
+  min-width: 100px;
+  text-align: center;
+}
+
+.btn-group .btn {
+  border-radius: 0.375rem;
 }

@@ -5,18 +5,19 @@ import { BoletaService } from '../../../service/boleta.service';
 import { BoletaPageResponse, BoletaResponse } from '../../../model/boleta.model';
 import Swal from 'sweetalert2';
 import { Observable } from 'rxjs';
+import { CrearVentaDirectaFormComponent } from "./crear-venta-directa-form/crear-venta-directa-form.component";
 
 @Component({
   selector: 'app-boleta',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CrearVentaDirectaFormComponent],
   templateUrl: './boleta.component.html',
   styleUrls: ['./boleta.component.css']
 })
 export class BoletaComponent implements OnInit {
   boletas: BoletaResponse[] = [];
   boletaSeleccionada: BoletaResponse | null = null;
-
+mostrarModalVentaDirecta = false;
   currentPage = 0;
   pageSize = 10;
   totalPages = 0;
@@ -35,6 +36,15 @@ export class BoletaComponent implements OnInit {
     this.cargarBoletas();
   }
 
+
+// Métodos para abrir/cerrar el modal
+abrirModalVentaDirecta(): void {
+  this.mostrarModalVentaDirecta = true;
+}
+
+cerrarModalVentaDirecta(): void {
+  this.mostrarModalVentaDirecta = false;
+}
   cargarBoletas(page: number = this.currentPage): void {
     this.isLoading = true;
     this.errorMessage = null;

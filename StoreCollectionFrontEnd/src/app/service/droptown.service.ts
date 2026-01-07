@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environment';
-import { AtributoConValores } from '../model/admin/producto-admin.model';
+import { AtributoConValores, ProductoAdminListPage, VarianteResponse } from '../model/admin/producto-admin.model';
 export interface DropTownStandar {
   id: number;
   descripcion: string;
@@ -12,7 +12,7 @@ export interface DropTownStandar {
 })
 export class DropTownService {
 
-  private readonly API_URL = `${environment.apiUrl}/api/owner`;  // ← Usamos environment
+  private readonly API_URL = `${environment.apiUrl}/api/owner`; 
 
   constructor(private http: HttpClient) { }
 
@@ -36,5 +36,35 @@ export class DropTownService {
   return this.http.get<AtributoConValores[]>(`${this.API_URL}/atributosDropTown`);
   }
 
+// === NUEVOS PARA VENTA DIRECTA ===
+
+  /**
+   * Obtiene productos con stock disponible para venta directa
+   * Filtrado por nombre y paginado
+   */
+getProductosConStock(
+  nombre?: string,
+  page: number = 0,
+  size: number = 20,
+  productoIdConVariantes?: number  // ← este es clave
+): Observable<ProductoAdminListPage> {
+  let params = new HttpParams()
+    .set('page', page.toString())
+    .set('size', size.toString());
+
+  if (nombre?.trim()) {
+    params = params.set('nombre', nombre.trim());
+  }
+
+  // ¡IMPORTANTÍSIMO! Solo agregar si viene definido
+  if (productoIdConVariantes !== undefined && productoIdConVariantes !== null) {
+    params = params.set('productoIdConVariantes', productoIdConVariantes.toString());
+  }
+
+  return this.http.get<ProductoAdminListPage>(
+    `${this.API_URL}/productos-con-stock`,
+    { params }
+  );
+}
 
 }

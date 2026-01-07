@@ -1,0 +1,119 @@
+.main-container {
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #f8fff9, #ffffff);
+}
+
+.global-loader {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* Tarjetas de producto */
+.producto-card {
+  background: white;
+  border: 2px solid #e9ecef;
+  cursor: pointer;
+  height: 100%;
+  transition: all 0.3s ease;
+}
+
+.producto-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  border-color: #198754;
+}
+
+.producto-card.selected {
+  border-color: #198754 !important;
+  box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.2);
+  transform: translateY(-4px);
+}
+
+.producto-card img {
+  height: 200px;
+  object-fit: cover;
+  width: 100%;
+}
+
+.overlay-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+}
+
+/* Scroll personalizado */
+.productos-grid {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.productos-grid::-webkit-scrollbar {
+  width: 8px;
+}
+.productos-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+.productos-grid::-webkit-scrollbar-thumb {
+  background: #ced4da;
+  border-radius: 4px;
+}
+
+/* Skeleton */
+.skeleton {
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-img {
+  height: 200px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+.skeleton-text {
+  height: 16px;
+  background: #e9ecef;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.skeleton-text.short { width: 70%; }
+.skeleton-text.wide { width: 40%; height: 24px; margin-top: 12px; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Líneas truncadas */
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Responsivo móvil */
+@media (max-width: 991px) {
+  .sticky-top {
+    position: static !important;
+  }
+  .order-1, .order-2 {
+    order: unset !important;
+  }
+}

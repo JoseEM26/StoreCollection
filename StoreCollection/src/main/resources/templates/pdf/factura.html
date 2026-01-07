@@ -3,141 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <title>Comprobante #[[${boleta.id}]]</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         @page {
             size: A4 portrait;
-            margin: 15mm 12mm;
+            margin: 15mm 12mm 18mm 12mm;
+        }
+        * {
+            box-sizing: border-box;
         }
         body {
-            font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            color: #1f2937;
-            font-size: 11pt;
-            line-height: 1.6;
-            background: #f9fafb;
+            color: #1e293b;
+            font-size: 10.5pt; /* Ligeramente reducido para mayor seguridad */
+            line-height: 1.5;
+            background: #f8fafc;
         }
         .container {
+            width: 100%;
             max-width: 210mm;
             margin: 0 auto;
             background: white;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-            border-radius: 16px;
-            overflow: hidden;
+            padding: 18px;
+            min-height: 297mm;
         }
 
-        /* Header moderno y sutil */
+        /* Header */
         .header {
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
             text-align: center;
-            padding: 32px 24px;
+            padding: 28px 20px;
+            margin: -18px -18px 28px -18px;
+            border-radius: 12px 12px 0 0;
         }
         .header h1 {
             margin: 0;
-            font-size: 2.4em;
-            font-weight: 700;
-            letter-spacing: -0.5px;
+            font-size: 2.2em;
+            font-weight: 800;
         }
         .header .subtitle {
-            margin: 12px 0 0;
-            font-size: 1.1em;
+            margin: 10px 0 0;
+            font-size: 1.15em;
             opacity: 0.95;
         }
 
         /* Info cards */
         .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            padding: 28px;
-            background: #f8fafc;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin-bottom: 28px;
         }
         .info-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            flex: 1;
+            min-width: 260px;
+            background: #f0fdfa;
+            padding: 18px;
+            border-radius: 10px;
+            border-left: 5px solid #34d399;
         }
         .info-card h3 {
-            margin: 0 0 14px;
-            color: #6366f1;
-            font-size: 1.1em;
-            font-weight: 600;
+            margin: 0 0 12px;
+            color: #059669;
+            font-size: 1.05em;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 2px solid #e0e7ff;
-            padding-bottom: 8px;
+            letter-spacing: 0.8px;
         }
 
-        /* Estado badge moderno */
+        /* Estado badge */
         .estado {
             display: inline-block;
-            padding: 8px 20px;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 1em;
-            margin-top: 8px;
+            padding: 7px 18px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 0.95em;
         }
+        .estado-atendida  { background: #d1fae5; color: #065f46; border: 2px solid #86efac; }
         .estado-pendiente { background: #fef3c7; color: #92400e; }
-        .estado-atendida  { background: #d1fae5; color: #065f46; }
         .estado-cancelada { background: #fee2e2; color: #991b1b; }
 
-        /* Secciones */
-        .section {
-            padding: 0 28px 28px;
-        }
+        /* Títulos de sección */
         .section-title {
-            color: #6366f1;
+            color: #059669;
             font-size: 1.4em;
-            font-weight: 600;
-            margin: 32px 0 18px;
-            padding-left: 4px;
+            font-weight: 700;
+            margin: 32px 0 16px;
+            padding-bottom: 7px;
+            border-bottom: 3px solid #34d399;
         }
 
-        /* Tabla limpia */
-        table {
+        /* Datos del comprador y entrega - Seguro y adaptable */
+        .datos-grid {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+            background: #f0fdfa;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 18px 0;
+            border: 1px solid #bbf7d0;
+        }
+        .datos-column {
+            display: table-cell;
+            width: 50%;
+            padding: 16px;
+            vertical-align: top;
+        }
+        .datos-column:first-child {
+            border-right: 1px dashed #bbf7d0;
+        }
+        .datos-column h4 {
+            margin: 0 0 14px;
+            color: #059669;
+            font-size: 1.05em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        .datos-row {
+            display: table;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .datos-row:last-child {
+            margin-bottom: 0;
+        }
+        .datos-label {
+            display: table-cell;
+            width: 110px;
+            font-weight: 600;
+            color: #065f46;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding-right: 12px;
+            vertical-align: top;
+        }
+        .datos-value {
+            display: table-cell;
+            font-weight: 600;
+            color: #111827;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        .dashed {
+            color: #9ca3af;
+            font-style: italic;
+            letter-spacing: 1.5px;
+        }
+
+        /* Tabla de productos - Optimizada para contenido largo */
+        .productos-table {
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
-            font-size: 1em;
+            font-size: 0.95em;
+            background: white;
+            border: 1px solid #bbf7d0;
+            table-layout: fixed;
         }
-        th {
-            background: #eef2ff;
-            color: #4f46e5;
+        .productos-table th {
+            background: #86efac;
+            color: #064e3b;
             padding: 14px 16px;
             text-align: left;
-            font-weight: 600;
-            border-bottom: 2px solid #6366f1;
+            font-weight: 700;
+            font-size: 0.95em;
         }
-        td {
-            padding: 16px;
-            border-bottom: 1px solid #e2e8f0;
+        .productos-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #e0e7ff;
+            vertical-align: top;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
-        tr:hover {
-            background-color: #f8fafc;
+        .productos-table tr:last-child td {
+            border-bottom: none;
         }
+        .productos-table th:nth-child(1), .productos-table td:nth-child(1) { width: 45%; }
+        .productos-table th:nth-child(2), .productos-table td:nth-child(2) { width: 15%; }
+        .productos-table th:nth-child(3), .productos-table td:nth-child(3) { width: 20%; }
+        .productos-table th:nth-child(4), .productos-table td:nth-child(4) { width: 20%; }
+
         .text-right { text-align: right; }
         .text-center { text-align: center; }
-        .strong { font-weight: 700; color: #1f2937; }
 
-        /* Total destacado */
+        /* Total */
         .total-box {
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
             text-align: right;
-            padding: 28px 32px;
-            margin: 32px 28px 0;
+            padding: 28px 36px;
+            margin: 36px 0 28px;
             border-radius: 12px;
+            border: 3px solid #34d399;
         }
         .total-box .label {
-            font-size: 1.3em;
+            font-size: 1.4em;
+            font-weight: 600;
             opacity: 0.95;
         }
         .total-box .amount {
-            font-size: 3em;
-            font-weight: 800;
+            font-size: 3.2em;
+            font-weight: 900;
             margin-top: 8px;
             letter-spacing: -1px;
         }
@@ -145,14 +217,19 @@
         /* Footer */
         .footer {
             text-align: center;
-            padding: 32px 28px;
-            color: #64748b;
-            font-size: 1em;
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
+            padding: 32px 20px;
+            color: #065f46;
+            font-size: 1.05em;
+            background: #f0fdfa;
+            border-top: 4px solid #86efac;
+            margin: 28px -18px -18px;
+            border-radius: 0 0 12px 12px;
         }
-        .footer .heart {
-            color: #ec4899;
+
+        /* Seguridad extra para textos largos */
+        .break-word {
+            word-break: break-word;
+            overflow-wrap: anywhere;
         }
     </style>
 </head>
@@ -164,8 +241,8 @@
     <div class="header">
         <h1>¡Gracias por tu compra!</h1>
         <div class="subtitle">
-            Comprobante N° <strong>[[${boleta.id}]]</strong> •
-            <span th:text="${#temporals.format(boleta.fecha, 'dd MMMM yyyy - HH:mm')}">29 diciembre 2025 - 14:30</span>
+            Comprobante N° <strong>[[${boleta.id}]]</strong><br>
+            <span th:text="${#temporals.format(boleta.fecha, 'dd MMMM yyyy - HH:mm')}"></span>
         </div>
     </div>
 
@@ -173,10 +250,10 @@
     <div class="info-grid">
         <div class="info-card">
             <h3>Tienda</h3>
-            <div class="fw-bold fs-4 text-indigo mt-2">
+            <div style="font-size: 1.5em; font-weight: 700; color: #059669;" class="break-word">
                 [[${boleta.tiendaNombre ?: 'Mi Tienda'}]]
             </div>
-            <small class="text-muted">Venta por redes sociales</small>
+            <div style="margin-top: 8px; color: #64748b;">Venta directa / mostrador</div>
         </div>
 
         <div class="info-card">
@@ -187,87 +264,116 @@
                   class="estado"
                   th:text="${boleta.estado == 'PENDIENTE' ? 'Pendiente' :
                             boleta.estado == 'ATENDIDA' ? 'Atendido' : 'Cancelado'}">
-                Atendido
             </span>
-            <div class="mt-3">
-                <small class="text-muted d-block">
-                    Fecha del pedido:<br>
-                    <strong th:text="${#temporals.format(boleta.fecha, 'dd MMMM yyyy')}">29 diciembre 2025</strong>
-                    <span th:text="${#temporals.format(boleta.fecha, 'HH:mm')}">14:30</span>
-                </small>
+            <div style="margin-top: 12px; color: #64748b;">
+                Fecha: <strong th:text="${#temporals.format(boleta.fecha, 'dd MMMM yyyy')}"></strong> a las
+                <strong th:text="${#temporals.format(boleta.fecha, 'HH:mm')}"></strong>
             </div>
         </div>
     </div>
 
-    <!-- Datos del comprador y envío -->
-    <div class="section">
-        <h2 class="section-title">Datos del Comprador y Envío</h2>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; font-size: 1.05em;">
-            <div>
-                <div class="mb-3"><strong>Nombre:</strong> [[${boleta.compradorNombre}]]</div>
-                <div class="mb-3"><strong>Email:</strong> [[${boleta.compradorEmail}]]</div>
-                <div th:if="${boleta.compradorTelefono}" class="mb-3">
-                    <strong>WhatsApp:</strong> [[${boleta.compradorTelefono}]]
+    <!-- Datos del comprador y entrega -->
+    <h2 class="section-title">Datos del Comprador y Entrega</h2>
+
+    <div class="datos-grid">
+        <!-- Comprador -->
+        <div class="datos-column">
+            <h4>Datos del Comprador</h4>
+            <div class="datos-row">
+                <div class="datos-label">Nombre</div>
+                <div class="datos-value break-word">[[${boleta.compradorNombre ?: '────────────────────────────'}]]</div>
+            </div>
+            <div class="datos-row">
+                <div class="datos-label">Correo</div>
+                <div class="datos-value break-word">[[${boleta.compradorEmail ?: '────────────────────────────'}]]</div>
+            </div>
+            <div class="datos-row">
+                <div class="datos-label">Teléfono</div>
+                <div class="datos-value break-word">[[${boleta.compradorTelefono ?: '────────────────────────────'}]]</div>
+            </div>
+        </div>
+
+        <!-- Entrega -->
+        <div class="datos-column">
+            <h4>Información de Entrega</h4>
+            <div class="datos-row">
+                <div class="datos-label">Tipo</div>
+                <div class="datos-value">
+                    <span th:if="${boleta.tipoEntrega == 'DOMICILIO'}">Envío a domicilio</span>
+                    <span th:if="${boleta.tipoEntrega == 'RECOGIDA_EN_TIENDA'}">Recojo en tienda</span>
+                    <span th:if="${boleta.tipoEntrega == 'AGENCIA'}">Envío por agencia</span>
+                    <span th:unless="${boleta.tipoEntrega}" class="dashed">────────────────────────────</span>
                 </div>
             </div>
-            <div>
-                <div class="mb-3"><strong>Dirección de envío:</strong></div>
-                <div>[[${boleta.direccionEnvio}]]</div>
-                <div th:if="${boleta.referenciaEnvio}" class="text-muted small">Ref: [[${boleta.referenciaEnvio}]]</div>
-                <div class="mt-2">
-                    [[${boleta.distrito}]], [[${boleta.provincia}]], [[${boleta.departamento}]]
-                </div>
-                <div th:if="${boleta.codigoPostal}" class="text-muted small">CP: [[${boleta.codigoPostal}]]</div>
-                <div class="mt-3">
-                    <strong>Tipo de entrega:</strong>
-                    <span class="badge bg-primary-subtle text-primary ms-2 px-3 py-2 rounded-pill">
-                        <span th:if="${boleta.tipoEntrega == 'DOMICILIO'}">Envío a domicilio</span>
-                        <span th:if="${boleta.tipoEntrega == 'RECOGIDA_EN_TIENDA'}">Recojo en tienda</span>
-                        <span th:if="${boleta.tipoEntrega == 'AGENCIA'}">Envío por agencia</span>
+            <div class="datos-row">
+                <div class="datos-label">Dirección</div>
+                <div class="datos-value break-word">[[${boleta.direccionEnvio ?: '────────────────────────────'}]]</div>
+            </div>
+            <div class="datos-row">
+                <div class="datos-label">Ubicación</div>
+                <div class="datos-value break-word">
+                    [[${boleta.distrito ?: '───'}]],
+                    [[${boleta.provincia ?: '───'}]],
+                    [[${boleta.departamento ?: '───'}]]
+                    <span th:if="${boleta.codigoPostal}" style="color:#64748b;">
+                        • CP: [[${boleta.codigoPostal}]]
                     </span>
+                </div>
+            </div>
+            <div class="datos-row" th:if="${boleta.referenciaEnvio}">
+                <div class="datos-label">Referencia</div>
+                <div class="datos-value break-word" style="font-style: italic; color: #64748b;">
+                    [[${boleta.referenciaEnvio}]]
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Productos -->
-    <div class="section">
-        <h2 class="section-title">Productos Incluidos</h2>
+    <h2 class="section-title">Detalle de Productos</h2>
 
-        <table>
-            <thead>
-            <tr>
-                <th>Producto</th>
-                <th class="text-center">Cantidad</th>
-                <th class="text-right">Precio Unitario</th>
-                <th class="text-right">Subtotal</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="item : ${boleta.detalles}">
-                <td>
-                    <div class="fw-semibold">[[${item.nombreProducto}]]</div>
-                    <small class="text-muted" th:if="${item.sku}">SKU: [[${item.sku}]]</small>
-                </td>
-                <td class="text-center fw-bold">×[[${item.cantidad}]]</td>
-                <td class="text-right">S/ [[${#numbers.formatDecimal(item.precioUnitario,1,2,'POINT')}]]</td>
-                <td class="text-right strong">S/ [[${#numbers.formatDecimal(item.subtotal,1,2,'POINT')}]]</td>
-            </tr>
-            </tbody>
-        </table>
+    <table class="productos-table">
+        <thead>
+        <tr>
+            <th>Producto</th>
+            <th class="text-center">Cant.</th>
+            <th class="text-right">Precio Unit.</th>
+            <th class="text-right">Subtotal</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${boleta.detalles}">
+            <td class="break-word">
+                <div style="font-weight: 700; color: #064e3b;">[[${item.nombreProducto}]]</div>
+                <small style="color: #64748b;" th:if="${item.sku}">SKU: [[${item.sku}]]</small>
+                <small style="color: #64748b; display: block;" th:if="${item.atributos != null and !item.atributos.isEmpty()}">
+                    <span th:each="attr, iter : ${item.atributos}"
+                          th:text="${attr.atributoNombre + ': ' + attr.valor}"
+                          th:unless="${iter.last}"> • </span>
+                </small>
+            </td>
+            <td class="text-center" style="font-weight: 700; color: #059669;">×[[${item.cantidad}]]</td>
+            <td class="text-right">S/ [[${#numbers.formatDecimal(item.precioUnitario,1,2,'POINT')}]]</td>
+            <td class="text-right" style="font-weight: 700;">S/ [[${#numbers.formatDecimal(item.subtotal,1,2,'POINT')}]]</td>
+        </tr>
+        </tbody>
+    </table>
 
-        <!-- Total -->
-        <div class="total-box">
-            <div class="label">TOTAL PAGADO</div>
-            <div class="amount">S/ [[${#numbers.formatDecimal(boleta.total, 1, 2, 'POINT')}]]</div>
-        </div>
+    <!-- Total -->
+    <div class="total-box">
+        <div class="label">TOTAL PAGADO</div>
+        <div class="amount">S/ [[${#numbers.formatDecimal(boleta.total, 1, 2, 'POINT')}]]</div>
     </div>
 
     <!-- Footer -->
     <div class="footer">
-        ¡Gracias por confiar en nosotros! Esperamos verte pronto de nuevo.<br>
-        <span class="heart">♥</span> Tu equipo de <strong>[[${boleta.tiendaNombre}]]</strong>
+        <strong>¡Gracias por tu preferencia!</strong><br>
+        Esperamos verte pronto nuevamente en nuestra tienda.<br><br>
+        Con cariño,<br>
+        <strong style="font-size: 1.35em; color: #059669;">[[${boleta.tiendaNombre}]]</strong>
     </div>
+
 </div>
+
 </body>
 </html>

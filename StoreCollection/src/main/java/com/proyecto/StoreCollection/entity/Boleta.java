@@ -43,7 +43,6 @@ public class Boleta {
     @Size(min = 3, max = 100)
     private String compradorNombre;
 
-    @NotBlank
     @Email
     @Size(max = 120)
     private String compradorEmail;
