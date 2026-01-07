@@ -205,4 +205,57 @@
 @keyframes pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.07); }
+}/* ============================================= */
+/*     IMÁGENES QUE OCUPAN TODO EL ESPACIO DISPONIBLE     */
+/* ============================================= */
+
+.producto-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.07);
+  transition: all 0.35s ease;
+  height: 100%;
+  border: 1px solid #f1f5f9;
+}
+
+.producto-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 45px rgba(0,0,0,0.13);
+}
+
+/* Contenedor de imagen - ocupa todo el ancho y se adapta */
+.imagen-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1.1;           /* proporción más natural para productos */
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+/* Versión móvil: misma proporción, pero sin límite de altura */
+@media (max-width: 576px) {
+  .imagen-container {
+    aspect-ratio: 1 / 1.05;        /* un poquito más cuadrado en móvil */
+  }
+}
+
+/* La imagen ocupa TODO el espacio del contenedor */
+.producto-imagen {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;               /* ← clave: llena todo el espacio */
+  object-position: center;
+  transition: transform 0.7s ease;
+}
+
+.producto-card:hover .producto-imagen {
+  transform: scale(1.08);
+}
+
+
+
+.info {
+  padding: 1.2rem 1.1rem;
+  text-align: center;
 }
