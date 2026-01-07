@@ -1,120 +1,151 @@
-<!-- Loader mientras carga la tienda (opcional pero recomendado) -->
-<div *ngIf="!tienda" class="text-center py-7">
-  <div class="spinner-border text-primary" role="status">
-    <span class="visually-hidden">Cargando información de la tienda...</span>
+<!-- Loader -->
+<div *ngIf="!tienda" class="text-center py-8">
+  <div class="spinner-grow text-primary" role="status" style="width: 4rem; height: 4rem;">
+    <span class="visually-hidden">Cargando...</span>
   </div>
-  <p class="mt-3 text-muted">Cargando detalles de la tienda...</p>
+  <p class="mt-4 fs-4 fw-medium text-muted">Preparando tu experiencia en nuestra tienda...</p>
 </div>
 
-<!-- Contenido principal - solo se muestra cuando hay tienda -->
-<section *ngIf="tienda" class="conocenos-section py-5 py-lg-7">
-  <div class="container">
-    <div class="row align-items-center g-5">
+<!-- Sección principal - Conócenos -->
+<section *ngIf="tienda" class="conocenos-section py-5 py-lg-8 position-relative overflow-hidden">
+  <!-- Fondo decorativo sutil -->
+  <div class="background-decor"></div>
 
-      <!-- Imagen / Logo -->
-      <div class="col-lg-5 order-lg-1 order-2 text-center">
-        <div class="logo-container shadow-lg rounded-4 overflow-hidden">
+  <div class="container position-relative z-2">
+    <div class="row align-items-center g-5 g-lg-6">
+
+      <!-- Imagen/Logo - lado izquierdo en desktop, arriba en mobile -->
+      <div class="col-lg-5 order-lg-1 order-2">
+        <div class="logo-card glass-effect rounded-4 overflow-hidden shadow-3d">
           <img
-            [src]="tienda.logo_img_url || 'https://via.placeholder.com/600x450/F8FAFC/6366F1?text=Logo+de+' + tienda.nombre"
+            [src]="tienda.logo_img_url || 'https://via.placeholder.com/600x480/1e1b4b/7c3aed?text=' + (tienda.nombre | slice:0:1)"
             [alt]="'Logo de ' + tienda.nombre"
-            class="logo-img w-100 h-100 object-fit-cover"
+            class="w-100 h-100 object-fit-cover transition-zoom"
             loading="lazy">
         </div>
       </div>
 
-      <!-- Información de la tienda -->
+      <!-- Contenido principal -->
       <div class="col-lg-7 order-lg-2 order-1">
-        <h1 class="display-4 fw-black mb-4">
-          Conoce a <span class="text-gradient">{{ tienda.nombre }}</span>
-        </h1>
+        <div class="content-wrapper">
+          <span class="badge-premium mb-3 d-inline-block">Bienvenidos</span>
+          
+          <h1 class="display-4 fw-extrabold mb-4">
+            Descubre <span class="text-gradient">{{ tienda.nombre }}</span>
+          </h1>
 
-        <p class="lead fs-3 text-muted mb-5 lh-lg">
-          {{ tienda.descripcion || 'Tu tienda favorita con productos exclusivos, tendencias virales y la mejor atención personalizada.' }}
-        </p>
+          <p class="lead fs-3 fw-medium text-muted mb-5 lh-lg">
+            {{ tienda.descripcion || 'Donde las tendencias llegan primero. Calidad excepcional, estilo único y la atención que mereces.' }}
+          </p>
 
-        <!-- Detalles en tarjetas -->
-        <div class="row g-4 mb-5">
-          <!-- Dirección -->
-          <div class="col-md-6" *ngIf="tienda.direccion">
-            <div class="info-card">
-              <i class="bi bi-geo-alt-fill icon"></i>
-              <div>
-                <h5 class="fw-bold mb-1">Dirección</h5>
-                <p class="text-muted mb-0">{{ tienda.direccion }}</p>
+          <!-- Tarjetas de información - diseño más moderno -->
+          <div class="row g-4 mb-5">
+            <div class="col-md-6" *ngIf="tienda.direccion">
+              <div class="info-card glass-effect">
+                <div class="icon-circle bg-primary-subtle">
+                  <i class="bi bi-geo-alt-fill"></i>
+                </div>
+                <div>
+                  <h5 class="fw-bold mb-1">Nuestra Casa</h5>
+                  <p class="text-muted mb-0">{{ tienda.direccion }}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6" *ngIf="tienda.horarios">
+              <div class="info-card glass-effect">
+                <div class="icon-circle bg-warning-subtle">
+                  <i class="bi bi-clock-fill"></i>
+                </div>
+                <div>
+                  <h5 class="fw-bold mb-1">Horario Premium</h5>
+                  <p class="text-muted mb-0">{{ tienda.horarios }}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="info-card glass-effect">
+                <div class="icon-circle bg-success-subtle">
+                  <i class="bi bi-currency-exchange"></i>
+                </div>
+                <div>
+                  <h5 class="fw-bold mb-1">Pagamos en</h5>
+                  <p class="text-muted mb-0">
+                    {{ tienda.moneda === 'SOLES' ? 'Soles Peruanos (S/)' : tienda.moneda || 'Soles (S/)' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6" *ngIf="tienda.whatsapp">
+              <div class="info-card glass-effect whatsapp-card">
+                <div class="icon-circle bg-success">
+                  <i class="bi bi-whatsapp text-white"></i>
+                </div>
+                <div>
+                  <h5 class="fw-bold mb-2 text-dark">Chatea con nosotros</h5>
+                  <button class="btn btn-success rounded-pill shadow-sm px-4 py-2" (click)="abrirWhatsApp()">
+                    <i class="bi bi-whatsapp me-2"></i> {{ tienda.whatsapp }}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Horarios -->
-          <div class="col-md-6" *ngIf="tienda.horarios">
-            <div class="info-card">
-              <i class="bi bi-clock-fill icon"></i>
-              <div>
-                <h5 class="fw-bold mb-1">Horarios</h5>
-                <p class="text-muted mb-0">{{ tienda.horarios }}</p>
-              </div>
-            </div>
+          <!-- Botones de acción -->
+          <div class="d-flex flex-wrap gap-3">
+            <a *ngIf="tienda.mapa_url"
+               [href]="tienda.mapa_url"
+               target="_blank"
+               class="btn btn-outline-primary btn-lg rounded-pill px-5 shadow-sm">
+              <i class="bi bi-geo-alt me-2"></i> Ubícanos
+            </a>
+
+            <button class="btn btn-gradient btn-lg rounded-pill px-5 shadow" (click)="abrirWhatsApp()">
+              <i class="bi bi-chat-heart me-2"></i> ¡Hablemos ahora!
+            </button>
           </div>
-
-          <!-- Moneda -->
-          <div class="col-md-6">
-            <div class="info-card">
-              <i class="bi bi-currency-exchange icon"></i>
-              <div>
-                <h5 class="fw-bold mb-1">Moneda</h5>
-                <p class="text-muted mb-0">
-                  {{ tienda.moneda === 'SOLES' ? 'Soles Peruanos (S/)' : tienda.moneda || 'Soles (S/)' }}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <!-- WhatsApp -->
-          <div class="col-md-6" *ngIf="tienda.whatsapp">
-            <div class="info-card">
-              <i class="bi bi-whatsapp icon text-success"></i>
-              <div>
-                <h5 class="fw-bold mb-2">Contáctanos por WhatsApp</h5>
-                <button class="btn btn-success btn-md rounded-pill shadow-sm px-4" (click)="abrirWhatsApp()">
-                  <i class="bi bi-whatsapp me-2"></i> {{ tienda.whatsapp }}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Botones de acción -->
-        <div class="d-flex flex-wrap gap-3">
-          <a *ngIf="tienda.mapa_url"
-             [href]="tienda.mapa_url"
-             target="_blank"
-             rel="noopener noreferrer"
-             class="btn btn-outline-primary btn-lg rounded-pill px-5 shadow-sm">
-            <i class="bi bi-map me-2"></i> Ver en Google Maps
-          </a>
-
-          <button class="btn btn-primary btn-lg rounded-pill px-5 shadow" (click)="abrirWhatsApp()">
-            <i class="bi bi-chat-dots me-2"></i> ¡Escríbenos ahora!
-          </button>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Sección decorativa inferior -->
-<section *ngIf="tienda" class="bg-gradient py-6 mt-5">
-  <div class="container text-center">
-    <h2 class="display-5 fw-black text-white mb-3">
-      ¡Te esperamos en {{ tienda.nombre }}!
+<!-- Banner final - Experiencia WOW / Luxury Arrival -->
+<section *ngIf="tienda" class="banner-final py-6 py-lg-8 text-center position-relative overflow-hidden">
+  <!-- Fondo dinámico con gradiente + partículas -->
+  <div class="background-particles"></div>
+  <div class="overlay-gradient"></div>
+  
+  <!-- Contenido principal con animación -->
+  <div class="container position-relative z-3 animate__animated animate__fadeInUp animate__delay-0.3s">
+    <h2 class="display-3 display-lg-2 fw-extrabold text-white mb-3 mb-lg-4 glow-text">
+      ¡Te esperamos en
+      <span class="highlight neon-glow">{{ tienda.nombre }}</span>!
     </h2>
-    <p class="lead text-white opacity-90 mb-4">
-      Productos exclusivos, tendencias virales y envíos rápidos a todo el Perú.
+    
+    <p class="lead fs-3 fs-lg-2 text-white opacity-95 mb-5 mb-lg-6 slogan-text">
+      Donde cada compra se convierte en una experiencia inolvidable ✨
     </p>
-    <div class="d-flex justify-content-center flex-wrap gap-3">
-      <span class="badge-extra bg-danger">🚚 Envíos a todo el Perú</span>
-      <span class="badge-extra bg-warning text-dark">✅ Garantía de originalidad</span>
-      <span class="badge-extra bg-success text-white">🔥 Tendencias virales</span>
+
+    <div class="badges-container d-flex justify-content-center flex-wrap gap-3 gap-lg-4">
+      <span class="badge-premium premium-badge bg-white/90 text-dark shadow-lg border border-white/40">
+        🚚 Envío Nacional Premium
+      </span>
+      <span class="badge-premium premium-badge bg-white/90 text-dark shadow-lg border border-white/40">
+        ✨ 100% Auténtico & Original
+      </span>
+      <span class="badge-premium premium-badge bg-white/90 text-dark shadow-lg border border-white/40">
+        🔥 Lo más exclusivo del momento
+      </span>
+    </div>
+
+    <!-- CTA opcional para más engagement -->
+    <div class="mt-5 mt-lg-6">
+      <button class="btn btn-gradient btn-lg rounded-pill px-5 py-3 shadow-glow" (click)="abrirWhatsApp()">
+        <i class="bi bi-chat-heart-fill me-2"></i> ¡Reserva tu experiencia ahora!
+      </button>
     </div>
   </div>
 </section>

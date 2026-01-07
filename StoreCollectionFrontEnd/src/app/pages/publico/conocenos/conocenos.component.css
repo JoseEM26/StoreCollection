@@ -1,172 +1,204 @@
-/* ====================== GENERAL ====================== */
+/* ====================== BASE & RESET ====================== */
 .conocenos-section {
-  background: #ffffff;
-}
-
-.fw-black {
-  font-weight: 900 !important;
-}
-
-.text-gradient {
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* ====================== LOGO RECTANGULAR FIJO ====================== */
-.logo-container {
-  width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
-  aspect-ratio: 4 / 3; /* Proporción rectangular fija (ajusta si quieres 16:9 → 16/9) */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.4s ease;
-}
-
-.logo-container:hover {
-  transform: translateY(-8px);
-}
-
-.logo-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain; /* Mantiene proporción y no deforma */
-  object-position: center;
-}
-
-/* ====================== TARJETAS DE INFO ====================== */
-.info-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 1.2rem;
-  background: #f8fafc;
-  border-radius: 16px;
-  transition: all 0.3s ease;
-  border: 1px solid #e2e8f0;
-}
-
-.info-card:hover {
-  background: #ffffff;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-  transform: translateY(-4px);
-}
-
-.icon {
-  font-size: 1.8rem;
-  min-width: 40px;
-  margin-top: 4px;
-}
-
-/* ====================== BOTONES ====================== */
-.btn-primary {
-  background: linear-gradient(45deg, #667eea, #764ba2);
-  border: none;
-  font-weight: 600;
-}
-
-.btn-primary:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 15px 30px rgba(102, 126, 234, 0.3);
-}
-
-.btn-outline-primary {
-  font-weight: 600;
-  border-width: 2px;
-}
-
-.btn-outline-primary:hover {
-  transform: translateY(-4px);
-}
-
-/* ====================== SECCIÓN INFERIOR ====================== */
-.bg-gradient {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.badge-extra {
-  font-size: 1.1rem;
-  padding: 0.8rem 1.8rem;
-  border-radius: 50px;
-  font-weight: 700;
-}
-
-/* ====================== RESPONSIVE ====================== */
-@media (max-width: 992px) {
-  .order-1 { order: 1; }
-  .order-2 { order: 2; }
-
-  .display-4 {
-    font-size: 2.8rem;
-  }
-
-  .logo-container {
-    max-width: 400px;
-    aspect-ratio: 16 / 9; /* En móvil puede ser más ancho */
-  }
-}
-
-@media (max-width: 576px) {
-  .display-4 {
-    font-size: 2.4rem;
-  }
-
-  .info-card {
-    padding: 1rem;
-  }
-
-  .badge-extra {
-    font-size: 1rem;
-    padding: 0.7rem 1.4rem;
-    margin-bottom: 0.5rem;
-  }
-}/* ====================== LOGO RECTANGULAR - SIEMPRE OCUPADO ====================== */
-.logo-container {
-  width: 100%;
-  max-width: 520px;
-  margin: 0 auto;
-  aspect-ratio: 4 / 3; /* Rectángulo clásico. Cambia a 16/9 si prefieres más ancho */
-  border-radius: 24px;
-  overflow: hidden;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); /* Fondo de reserva elegante */
-  transition: all 0.4s ease;
+  background: #f8fff9;          /* Fondo muy claro con toque verde */
   position: relative;
 }
 
-.logo-container:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.18);
+.background-decor {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 40%);
+  pointer-events: none;
 }
 
-.logo-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;    /* ¡CLAVE! Cubre todo el contenedor sin dejar espacios */
-  object-position: center; /* Centra la parte más importante de la imagen */
-  display: block;
-  transition: transform 0.6s ease;
+/* Glassmorphism premium - adaptado a verde */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(16, 185, 129, 0.18);
+  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.10);
 }
 
-.logo-container:hover .logo-img {
-  transform: scale(1.08); /* Zoom sutil al hover */
+/* Gradientes modernos - ahora en tonos verde esmeralda */
+.text-gradient {
+  background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-/* ====================== RESPONSIVE ====================== */
+.btn-gradient {
+  background: linear-gradient(45deg, #10b981, #059669, #34d399);
+  border: none;
+  color: white;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-gradient:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 20px 40px rgba(16, 185, 129, 0.35);
+}
+
+/* Logo card con efecto 3D sutil */
+.logo-card {
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.logo-card:hover {
+  transform: translateY(-12px) rotate(1deg);
+}
+
+.transition-zoom img {
+  transition: transform 0.8s ease;
+}
+
+.logo-card:hover img {
+  transform: scale(1.08);
+}
+
+/* Iconos circulares - ahora con tonos verde */
+.icon-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 1.8rem;
+  flex-shrink: 0;
+  transition: all 0.4s ease;
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.info-card {
+  display: flex;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  border-radius: 20px;
+  transition: all 0.4s ease;
+  border: 1px solid rgba(16, 185, 129, 0.15);
+}
+
+.info-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 40px rgba(16, 185, 129, 0.15);
+}
+
+/* ====================== BANNER FINAL - MODO ESPECTACULAR VERDE ====================== */
+.banner-final {
+  background: linear-gradient(135deg, #064e3b 0%, #047857 50%, #10b981 100%);
+  color: white;
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+}
+
+.background-particles {
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(16, 185, 129, 0.25) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(52, 211, 153, 0.20) 0%, transparent 50%);
+  pointer-events: none;
+  animation: subtlePulse 12s infinite alternate ease-in-out;
+}
+
+.overlay-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.08) 100%);
+  pointer-events: none;
+}
+
+/* Texto principal con glow verde esmeralda */
+.glow-text {
+  text-shadow: 
+    0 0 20px rgba(16, 185, 129, 0.7),
+    0 0 40px rgba(16, 185, 129, 0.45),
+    0 0 80px rgba(16, 185, 129, 0.25);
+  letter-spacing: -0.02em;
+}
+
+.neon-glow {
+  background: linear-gradient(90deg, #34d399, #10b981, #34d399);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% 100%;
+  animation: textShine 4s ease-in-out infinite;
+  padding: 0 0.3em;
+  border-radius: 12px;
+}
+
+/* Animación de brillo */
+@keyframes textShine {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+/* Slogan con efecto sutil */
+.slogan-text {
+  text-shadow: 0 2px 12px rgba(0,0,0,0.65);
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Badges ultra-premium - verde */
+.premium-badge {
+  padding: 0.9rem 1.8rem;
+  border-radius: 3rem;
+  font-weight: 700;
+  font-size: 1.15rem;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.92);
+  color: #064e3b;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.premium-badge:hover {
+  transform: translateY(-6px) scale(1.05);
+  box-shadow: 0 15px 40px rgba(16, 185, 129, 0.45);
+  background: rgba(255, 255, 255, 1);
+}
+
+/* Botón CTA con glow verde */
+.shadow-glow {
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.55);
+}
+
+.btn-gradient {
+  background: linear-gradient(45deg, #10b981, #059669, #34d399);
+  background-size: 200% 200%;
+  animation: gradientFlow 8s ease infinite;
+}
+
+@keyframes gradientFlow {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Animación de fondo sutil */
+@keyframes subtlePulse {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 0.85; }
+}
+
+/* Responsive */
+@media (min-width: 992px) {
+  .display-lg-2 { font-size: 5.5rem; line-height: 1.05; }
+  .fs-lg-2 { font-size: 2rem; }
+}
+
 @media (max-width: 992px) {
-  .logo-container {
-    max-width: 420px;
-    aspect-ratio: 16 / 9; /* En tablets/móviles puede ser más panorámico si quieres */
-  }
+  .display-4 { font-size: 3.2rem; }
+  .logo-card { max-width: 420px; margin: 0 auto; }
 }
 
 @media (max-width: 576px) {
-  .logo-container {
-    max-width: 100%;
-    aspect-ratio: 4 / 3; /* Vuelve a rectangular en móvil para mejor uso de pantalla */
-    border-radius: 20px;
-  }
+  .display-4 { font-size: 2.6rem; }
+  .lead { font-size: 1.25rem; }
+  .info-card { padding: 1.25rem; }
+  .icon-circle { width: 56px; height: 56px; font-size: 1.5rem; }
 }
