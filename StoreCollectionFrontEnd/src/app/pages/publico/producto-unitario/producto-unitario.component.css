@@ -50,17 +50,18 @@
   margin-top: 40px;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 992px) {
   .producto-grid {
     grid-template-columns: 1fr;
-    gap: 60px;
+    gap: 56px;
+    margin-top: 80px; /* espacio para botón volver fixed */
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 576px) {
   .producto-grid {
-    gap: 48px;
-    margin-top: 32px;
+    gap: 40px;
+    margin-top: 70px;
   }
 }
 
@@ -68,6 +69,14 @@
 .imagen-seccion {
   position: sticky;
   top: 100px;
+  align-self: start;
+}
+
+@media (max-width: 992px) {
+  .imagen-seccion {
+    position: static;           /* ← Soluciona el problema de que tape todo */
+    top: auto;
+  }
 }
 
 .imagen-container {
@@ -116,16 +125,29 @@
   50% { transform: scale(1.05); }
 }
 
+/* Miniaturas - scroll horizontal en móvil + mejor espaciado */
 .miniaturas {
   display: flex;
   gap: 16px;
   margin-top: 32px;
-  justify-content: center;
-  flex-wrap: wrap;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  justify-content: flex-start;
+}
+
+.miniaturas::-webkit-scrollbar {
+  height: 6px;
+}
+
+.miniaturas::-webkit-scrollbar-thumb {
+  background: rgba(16,185,129,0.4);
+  border-radius: 3px;
 }
 
 .mini-btn {
-  width: 90px;
+  flex: 0 0 90px;
   height: 90px;
   border: 3px solid transparent;
   border-radius: 20px;
@@ -164,9 +186,16 @@
   object-fit: cover;
 }
 
+@media (max-width: 576px) {
+  .mini-btn {
+    flex: 0 0 80px;
+    height: 80px;
+  }
+}
+
 /* ==================== INFORMACIÓN ==================== */
 .info-seccion {
-  padding: 32px 0;
+  padding: 32px 0 60px;
 }
 
 .categoria {
@@ -192,46 +221,24 @@
   .titulo { font-size: 2.8rem; }
 }
 
+@media (max-width: 576px) {
+  .titulo { font-size: 2.4rem; margin: 20px 0 28px; }
+}
+
 .precio {
   font-size: 4rem;
   font-weight: 900;
   background: linear-gradient(135deg, #10b981, #059669);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  background-clip: text;
   margin: 32px 0;
 }
 
-/* Variante seleccionada */
-.atributos-seleccionados {
-  background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
-  border: 2px solid #86efac;
-  border-radius: 24px;
-  padding: 20px;
-  text-align: center;
-  margin: 32px 0;
+@media (max-width: 576px) {
+  .precio { font-size: 3.2rem; margin: 24px 0; }
 }
 
-.atributo-chip {
-  display: inline-block;
-  background: #10b981;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 9999px;
-  font-weight: 600;
-  margin: 6px;
-  font-size: 1rem;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-}
-
-/* Selector de atributos */
-.atributos-selector h3 {
-  font-size: 1.85rem;
-  font-weight: 800;
-  margin: 48px 0 32px;
-  color: #111827;
-}
-
+/* ==================== SELECTOR DE ATRIBUTOS ==================== */
 .opcion-btn {
   padding: 16px 28px;
   border: 2px solid #e2e8f0;
@@ -242,6 +249,14 @@
   color: #374151;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  white-space: nowrap;
+}
+
+@media (max-width: 576px) {
+  .opcion-btn {
+    padding: 12px 20px;
+    font-size: 0.95rem;
+  }
 }
 
 .opcion-btn:hover:not(.disabled) {
@@ -267,12 +282,21 @@
   color: #9ca3af;
 }
 
-/* ==================== SELECTOR DE CANTIDAD - CENTRADO Y PREMIUM ==================== */
+/* ==================== SELECTOR DE CANTIDAD ==================== */
 .cantidad-wrapper {
   display: flex;
   justify-content: center;
   margin-bottom: 32px;
 }
+
+@media (max-width: 576px) {
+  .cantidad-wrapper {
+    margin-bottom: 24px;
+  }
+}
+
+/* El resto de estilos (cantidad, botones principales, secundarios, garantías y modal) 
+   se mantienen exactamente iguales a tu versión original */
 
 .cantidad-selector {
   display: flex;
@@ -372,7 +396,7 @@
   font-size: 1.8rem;
 }
 
-/* ==================== BOTONES SECUNDARIOS (LLAMAR Y COTIZAR) ==================== */
+/* ==================== BOTONES SECUNDARIOS ==================== */
 .secundarios {
   display: flex;
   gap: 20px;
