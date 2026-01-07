@@ -1,141 +1,208 @@
-/* ==================== PRODUCT CARD INTEGRADO ==================== */
-.producto-card-link {
-  text-decoration: none;
-  color: inherit;
-  display: block;
+/* ============================================= */
+/*           CATÁLOGO - DISEÑO MODERNO Y ELEGANTE      */
+/* ============================================= */
+
+.catalogo-page {
+  background: #f9fafb;
+  min-height: 100vh;
 }
+
+.catalogo-header {
+  background: white;
+  padding: 1.4rem 0;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.titulo {
+  font-size: 2.3rem;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: -0.5px;
+}
+
+.subtitulo {
+  font-size: 1.05rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.btn-volver-inicio {
+  background: #f1f5f9;
+  color: #1f2937;
+  padding: 0.65rem 1.4rem;
+  border-radius: 999px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-volver-inicio:hover {
+  background: #e2e8f0;
+  transform: translateY(-2px);
+}
+
+/* Filtros */
+.filtros-sidebar {
+  background: white;
+  border-radius: 16px;
+  padding: 1.6rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  border: 1px solid #e5e7eb;
+}
+
+.filtro-busqueda {
+  border-radius: 999px;
+  padding: 0.8rem 1.3rem;
+  border: 1px solid #d1d5db;
+  font-size: 1rem;
+}
+
+.filtro-busqueda:focus {
+  border-color: #059669;
+  box-shadow: 0 0 0 4px rgba(5,150,105,0.12);
+}
+
+/* ============================================= */
+/*                 PRODUCT CARD                   */
+/* ============================================= */
 
 .producto-card {
   background: white;
-  border-radius: 24px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-  transition: all 0.4s ease;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.07);
+  transition: all 0.35s ease;
   height: 100%;
-  border: 1px solid #f0f0f0;
+  border: 1px solid #f1f5f9;
 }
 
 .producto-card:hover {
-  transform: translateY(-12px);
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+  transform: translateY(-10px);
+  box-shadow: 0 20px 45px rgba(0,0,0,0.13);
 }
 
-.producto-card-link.agotado .producto-card {
-  opacity: 0.65;
+.producto-card.agotado {
+  opacity: 0.72;
   pointer-events: none;
+  filter: grayscale(0.4);
 }
 
+/* IMÁGENES PERFECTAMENTE CONTENIDAS */
 .imagen-container {
   position: relative;
-  height: 280px;
+  aspect-ratio: 1 / 1.05;
   overflow: hidden;
-  background: #f8f9fa;
+  background: #f8fafc;
+}
+
+@media (max-width: 576px) {
+  .imagen-container {
+    aspect-ratio: 1 / 1.1;
+    max-height: 170px;           /* ← tamaño muy cómodo en móvil */
+  }
+}
+
+@media (max-width: 400px) {
+  .imagen-container {
+    max-height: 150px;
+  }
 }
 
 .producto-imagen {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  transition: transform 0.8s ease;
+  object-fit: contain;           /* ← clave: no se sale del cuadro */
+  object-position: center;
+  background: #f9fafb;
+  transition: transform 0.7s ease;
 }
 
 .producto-card:hover .producto-imagen {
-  transform: scale(1.12);
+  transform: scale(1.08);
 }
 
-.badge {
-  position: absolute;
-  top: 16px;
-  padding: 0.5rem 1rem;
-  border-radius: 50px;
-  font-size: 0.8rem;
-  font-weight: 800;
-  z-index: 2;
-}
-
-.badge-agotado {
-  background: #dc2626;
-  color: white;
-  right: 16px;
-}
-
-.badge-ultimas {
-  background: #f59e0b;
-  color: white;
-  left: 16px;
-  animation: pulse 2s infinite;
-}
-
+/* Info */
 .info {
-  padding: 1.6rem 1.4rem;
+  padding: 1.2rem 1.1rem;
   text-align: center;
 }
 
 .categoria {
   display: inline-block;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #6d28d9, #7c3aed);
   color: white;
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  padding: 0.4rem 1rem;
-  border-radius: 50px;
-  margin-bottom: 0.8rem;
+  letter-spacing: 0.6px;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  margin-bottom: 0.6rem;
 }
 
 .nombre {
-  font-size: 1.25rem;
+  font-size: 1.12rem;
   font-weight: 800;
-  color: #111;
-  margin: 0.8rem 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  color: #111827;
+  margin: 0.5rem 0 0.7rem;
   line-height: 1.3;
+  min-height: 2.8em;
 }
 
 .precio {
-  margin: 1rem 0;
+  margin: 0.7rem 0;
 }
 
 .simbolo {
-  font-size: 1.2rem;
-  color: #6b7280;
+  font-size: 1.05rem;
+  color: #64748b;
 }
 
 .valor {
-  font-size: 2.2rem;
+  font-size: 1.9rem;
   font-weight: 900;
-  background: linear-gradient(90deg, #111, #333);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-left: 6px;
+  color: #111827;
 }
 
 .stock-status {
-  font-size: 0.9rem;
-  font-weight: 700;
-  padding: 0.5rem 1rem;
-  border-radius: 50px;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
 }
 
 .stock-status.disponible {
   background: #ecfdf5;
-  color: #059669;
+  color: #065f46;
 }
 
 .stock-status.no-disponible {
   background: #fee2e2;
-  color: #dc2626;
+  color: #991b1b;
 }
+
+/* Badges */
+.badge {
+  position: absolute;
+  top: 10px;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+}
+
+.badge-agotado { background: #dc2626; color: white; right: 10px; }
+.badge-ultimas  { background: #f59e0b; color: white; left: 10px; animation: pulse 2.3s infinite; }
 
 @keyframes pulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
+  50% { transform: scale(1.07); }
 }
