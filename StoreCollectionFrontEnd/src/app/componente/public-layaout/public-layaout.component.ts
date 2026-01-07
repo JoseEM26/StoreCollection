@@ -34,7 +34,6 @@ export class PublicLayaoutComponent implements OnInit, OnDestroy {
 
 // En ngOnInit() del PublicLayoutComponent
 ngOnInit(): void {
-  // 1. Valor inmediato desde el service (gracias al resolver que ya lo cargó)
   this.tienda = this.tiendaService.currentTiendaValue;
 
   if (this.tienda?.nombre) {

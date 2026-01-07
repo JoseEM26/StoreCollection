@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import { CarritoService } from '../../service/carrito.service';
 import { CarritoItemResponse } from '../../model/carrito.model';
 import { CheckoutFormComponent } from "./checkout-form/checkout-form.component";
+import { TiendaService } from '../../service/tienda.service';
 
 @Component({
   selector: 'app-carrito',
@@ -18,11 +19,13 @@ import { CheckoutFormComponent } from "./checkout-form/checkout-form.component";
 export class CarritoComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private carritoService = inject(CarritoService);
+  private tiendaService = inject(TiendaService);
 
   items: CarritoItemResponse[] = [];
   totalItems = 0;
   totalPrecio = 0;
   loading = true;
+  tienda: any = null;
 
   isProcessingOnline = false;
   isProcessingWhatsapp = false;
@@ -33,6 +36,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
   showCheckoutModal = false;
 
   ngOnInit(): void {
+  this.tienda = this.tiendaService.currentTiendaValue;
     this.carritoService.carritoItems$
       .pipe(takeUntil(this.destroy$))
       .subscribe(items => {

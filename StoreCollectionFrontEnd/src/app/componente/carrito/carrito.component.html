@@ -14,54 +14,37 @@
             <span class="total-precio">S/ {{ totalPrecio | number:'1.2-2' }}</span>
           </p>
         </div>
-
-        <div class="header-actions">
-          <button class="btn-pagar-online" 
-                  (click)="abrirFormularioCheckout()"
-                  [disabled]="loading || items.length === 0 || isProcessingOnline">
-            <i class="bi bi-credit-card-2-front-fill me-2"></i>
-            Pagar Online
-          </button>
-
-          <button class="btn-whatsapp-header" 
-                  (click)="checkoutWhatsapp()"
-                  [disabled]="loading || items.length === 0 || isProcessingWhatsapp">
-            <i class="bi bi-whatsapp me-2"></i>
-            WhatsApp
-          </button>
-        </div>
       </div>
     </div>
   </div>
 
-  <div class="container py-5">
-    <!-- ==================== ESTADOS ==================== -->
+  <div class="container py-4 py-lg-5">
     <!-- Loading -->
-    <div *ngIf="loading" class="loading-container">
-      <div class="spinner"></div>
-      <h3>Cargando tu carrito...</h3>
+    <div *ngIf="loading" class="loading-container text-center py-5">
+      <div class="spinner-border text-success" style="width: 5rem; height: 5rem;"></div>
+      <h4 class="mt-4 text-dark">Cargando tu carrito...</h4>
     </div>
 
     <!-- Carrito vacío -->
-    <div *ngIf="!loading && items.length === 0" class="empty-cart">
-      <div class="empty-icon">
-        <i class="bi bi-cart-x"></i>
-      </div>
-      <h2>Tu carrito está vacío</h2>
-      <p>¡Explora nuestro catálogo y encuentra productos increíbles!</p>
-      <a routerLink="/catalogo" class="btn-catalogo">
-        <i class="bi bi-shop me-2"></i> Ir al catálogo
+    <div *ngIf="!loading && items.length === 0" class="empty-cart text-center py-5">
+      <i class="bi bi-cart-x display-1 text-success opacity-50 mb-4"></i>
+      <h2 class="mb-3">Tu carrito está vacío</h2>
+      <p class="text-muted mb-4 lead">¡Explora nuestro catálogo y encuentra productos increíbles!</p>
+      
+      <!-- RUTA CORREGIDA -->
+      <a routerLink="/catalogo" class="btn btn-success btn-lg px-5 py-3 rounded-pill shadow">
+        <i class="bi bi-shop me-2"></i> Ir al Catálogo
       </a>
     </div>
 
     <!-- Carrito con productos -->
     <div *ngIf="!loading && items.length > 0" class="carrito-main">
-      <div class="row g-5">
-        <!-- ==================== LISTA DE PRODUCTOS ==================== -->
-        <div class="col-lg-8">
+      <div class="row g-4 g-xl-5">
+        <!-- Lista de productos -->
+        <div class="col-xl-8">
           <div class="productos-card">
             <div class="productos-header">
-              <h4>
+              <h4 class="mb-0">
                 <i class="bi bi-basket2-fill me-2"></i>
                 Productos seleccionados ({{ totalItems }})
               </h4>
@@ -72,19 +55,19 @@
                 <div class="producto-card">
                   <div class="producto-imagen">
                     <img 
-                      [src]="item.imagenUrl || 'https://via.placeholder.com/400x400?text=Producto'"
+                      [src]="item.imagenUrl || 'https://via.placeholder.com/300?text=Producto'"
                       [alt]="item.nombreProducto"
-                      class="img-fluid">
+                      class="img-fluid rounded-3 shadow-sm">
                   </div>
 
                   <div class="producto-info">
                     <div class="info-top">
                       <div class="info-left">
                         <h5 class="producto-nombre">{{ item.nombreProducto }}</h5>
-                        <small class="sku">SKU: {{ item.sku || '—' }}</small>
+                        <small class="text-muted sku">SKU: {{ item.sku || '—' }}</small>
 
                         @if (item.atributos?.length) {
-                          <div class="atributos">
+                          <div class="atributos mt-2">
                             @for (attr of item.atributos; track attr.id) {
                               <span class="atributo-tag">
                                 {{ attr.nombre }}: {{ attr.valor }}
@@ -94,8 +77,8 @@
                         }
                       </div>
 
-                      <div class="info-right">
-                        <div class="precio-unitario">
+                      <div class="info-right text-end">
+                        <div class="precio-unitario text-muted">
                           S/ {{ item.precio | number:'1.2-2' }} c/u
                         </div>
                         <div class="precio-total">
@@ -117,15 +100,14 @@
                       </div>
 
                       <button class="btn-eliminar" (click)="eliminarItem(item.id)">
-                        <i class="bi bi-trash"></i>
-                        <span>Eliminar</span>
+                        <i class="bi bi-trash me-1"></i>
+                        Eliminar
                       </button>
                     </div>
                   </div>
                 </div>
               }
 
-              <!-- Vaciar carrito -->
               <div class="productos-footer">
                 <button class="btn-vaciar-carrito" (click)="vaciarCarrito()">
                   <i class="bi bi-trash me-2"></i>
@@ -136,11 +118,11 @@
           </div>
         </div>
 
-        <!-- ==================== RESUMEN ==================== -->
-        <div class="col-lg-4">
-          <div class="resumen-card sticky-top" style="top: 100px;">
+        <!-- Resumen (sticky) -->
+        <div class="col-xl-4">
+          <div class="resumen-card sticky-top" style="top: 90px;">
             <div class="resumen-header">
-              <h4>
+              <h4 class="mb-0">
                 <i class="bi bi-receipt me-2"></i> Resumen del pedido
               </h4>
             </div>
@@ -157,7 +139,7 @@
               </div>
 
               <div class="resumen-acciones">
-                <button class="btn-pagar-resumen" 
+                <button class="btn-pagar-online-resumen" 
                         (click)="abrirFormularioCheckout()"
                         [disabled]="isProcessingOnline">
                   <i class="bi bi-credit-card-2-front-fill me-2"></i>
@@ -168,11 +150,12 @@
                         (click)="checkoutWhatsapp()"
                         [disabled]="isProcessingWhatsapp">
                   <i class="bi bi-whatsapp me-2"></i>
-                  WhatsApp
+                  Enviar por WhatsApp
                 </button>
               </div>
 
-              <a routerLink="/catalogo" class="btn-continuar-comprando">
+              <!-- RUTA CORREGIDA -->
+              <a [routerLink]="['/', tienda?.slug, 'catalogo']"class="btn-continuar-comprando d-block text-center mt-4">
                 <i class="bi bi-arrow-left-circle me-2"></i>
                 Seguir comprando
               </a>
@@ -183,22 +166,27 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL CHECKOUT PREMIUM ==================== -->
+  <!-- ==================== MODAL CHECKOUT ==================== -->
   <div class="checkout-backdrop" 
-       [class.show]="showCheckoutModal" 
+       [class.active]="showCheckoutModal"
        (click)="cerrarFormularioCheckout()">
     
     <div class="checkout-modal" 
-         [class.show]="showCheckoutModal"
+         [class.active]="showCheckoutModal"
          (click)="$event.stopPropagation()">
       
-      <button class="checkout-close" 
-              (click)="cerrarFormularioCheckout()" 
+      <button class="modal-close-btn" 
+              (click)="cerrarFormularioCheckout()"
               aria-label="Cerrar">
         <i class="bi bi-x-lg"></i>
       </button>
 
-      <div class="checkout-content">
+      <div class="modal-header-premium">
+        <h3>Finalizar tu compra</h3>
+        <p>Completa los datos para procesar tu pedido</p>
+      </div>
+
+      <div class="modal-body-content">
         <app-checkout-form 
           [tiendaId]="tiendaId"
           (onSubmit)="procesarCheckout($event)"
