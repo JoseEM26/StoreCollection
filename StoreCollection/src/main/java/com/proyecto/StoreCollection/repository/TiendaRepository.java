@@ -27,7 +27,16 @@ public interface TiendaRepository extends JpaRepository<Tienda, Integer> {
     Page<Tienda> findByUserEmail(String email, Pageable pageable);
 
     Optional<Tienda> findFirstByUserEmail(String email);
+    // Con fetch del plan
+    @Query("SELECT t FROM Tienda t LEFT JOIN FETCH t.plan WHERE t.user.email = :email")
+    List<Tienda> findByUserEmailWithPlan(@Param("email") String email);
 
+    @Query("SELECT t FROM Tienda t LEFT JOIN FETCH t.plan WHERE t.user.email = :email ORDER BY t.id ASC")
+    Optional<Tienda> findFirstByUserEmailWithPlan(@Param("email") String email);
+
+    // Con fetch del plan y activas
+    @Query("SELECT t FROM Tienda t LEFT JOIN FETCH t.plan WHERE t.activo = true")
+    Page<Tienda> findByActivoTrueWithPlan(Pageable pageable);
     // ==================== TIENDAS PÚBLICAS ACTIVAS ====================
 
     @Query("SELECT t FROM Tienda t WHERE t.activo = true AND t.plan.slug IN ('basico', 'pro')")

@@ -64,7 +64,7 @@ public class DashboardController {
             stats.put("totalBoletas", totalBoletas);
             stats.put("revenueTotal", revenueTotal);
         } else {
-            List<Tienda> misTiendas = tiendaRepository.findByUserEmail(userEmail);
+            List<Tienda> misTiendas = tiendaRepository.findByUserEmailWithPlan(userEmail);
             if (misTiendas.isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("error", "No tienes tiendas asociadas"));
             }
@@ -113,26 +113,27 @@ public class DashboardController {
             ));
         }
 
-        // OWNER: Solo ve sus tiendas
-        List<Tienda> misTiendas = tiendaRepository.findByUserEmail(userEmail);
+        // === CAMBIO CLAVE: Usa el método con FETCH ===
+        List<Tienda> misTiendas = tiendaRepository.findByUserEmailWithPlan(userEmail);
+
         if (misTiendas.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "No tienes tiendas asociadas"));
         }
 
-        // Tomamos la primera tienda (puedes mejorar esta lógica si el owner tiene varias)
+        // Ahora el plan está cargado y seguro de usar fuera de la transacción
         Tienda tienda = misTiendas.get(0);
-        Plan plan = tienda.getPlan();
+        Plan plan = tienda.getPlan(); // Ya está inicializado gracias al FETCH
 
         // Conteo actual
         int productosActuales = productoRepository.countByTiendaId(tienda.getId());
         int variantesActuales = productoVarianteRepository.countByTiendaId(tienda.getId());
 
         // Porcentajes de uso
-        double porcentajeProductos = plan.getMaxProductos() > 0
+        double porcentajeProductos = plan.getMaxProductos() != null && plan.getMaxProductos() > 0
                 ? (double) productosActuales / plan.getMaxProductos() * 100
                 : 0;
 
-        double porcentajeVariantes = plan.getMaxVariantes() > 0
+        double porcentajeVariantes = plan.getMaxVariantes() != null && plan.getMaxVariantes() > 0
                 ? (double) variantesActuales / plan.getMaxVariantes() * 100
                 : 0;
 
@@ -141,41 +142,43 @@ public class DashboardController {
         LocalDateTime fechaInicioTrial = null;
         LocalDateTime fechaFinTrial = null;
 
-        if (plan.getEsTrial() && plan.getDiasTrial() > 0) {
+        Boolean esTrial = plan.getEsTrial();
+        Short diasTrial = plan.getDiasTrial();
+
+        if (esTrial != null && esTrial && diasTrial != null && diasTrial > 0) {
             fechaInicioTrial = tienda.getCreatedAt();
-            fechaFinTrial = fechaInicioTrial.plusDays(plan.getDiasTrial());
+            fechaFinTrial = fechaInicioTrial.plusDays(diasTrial);
 
             long diasTranscurridos = java.time.Duration
                     .between(fechaInicioTrial, LocalDateTime.now())
                     .toDays();
 
-            long diasTotal = plan.getDiasTrial();
+            long diasTotal = diasTrial;
 
             porcentajeTiempoTrial = diasTotal > 0
                     ? Math.min(100.0, (double) diasTranscurridos / diasTotal * 100)
                     : 0.0;
         }
 
-        // === Nueva lógica: Próxima renovación ===
-        String intervaloBilling = plan.getIntervaloBilling(); // "month" o "year"
+        // === Lógica de próxima renovación (mejorada) ===
+        String intervaloBilling = plan.getIntervaloBilling();
         LocalDateTime fechaProximaRenovacion = null;
-        long diasRestantesRenovacion = -1L; // -1 = no aplica
+        long diasRestantesRenovacion = -1L;
         boolean proximoVencimientoCerca = false;
 
-        if (intervaloBilling != null) {
+        if (intervaloBilling != null && tienda.getCreatedAt() != null) {
             if ("month".equalsIgnoreCase(intervaloBilling)) {
                 fechaProximaRenovacion = tienda.getCreatedAt().plusMonths(1);
             } else if ("year".equalsIgnoreCase(intervaloBilling)) {
                 fechaProximaRenovacion = tienda.getCreatedAt().plusYears(1);
             }
+
+            if (fechaProximaRenovacion != null) {
+                diasRestantesRenovacion = ChronoUnit.DAYS.between(LocalDateTime.now(), fechaProximaRenovacion);
+                proximoVencimientoCerca = diasRestantesRenovacion > 0 && diasRestantesRenovacion <= 7;
+            }
         }
 
-        if (fechaProximaRenovacion != null) {
-            diasRestantesRenovacion = ChronoUnit.DAYS.between(LocalDateTime.now(), fechaProximaRenovacion);
-            proximoVencimientoCerca = diasRestantesRenovacion > 0 && diasRestantesRenovacion <= 7;
-        }
-
-        // Crear el DTO con TODOS los campos (orden exacto del record)
         PlanUsageDto usage = new PlanUsageDto(
                 plan.getNombre(),
                 plan.getPrecioMensual(),
@@ -185,8 +188,8 @@ public class DashboardController {
                 proximoVencimientoCerca,
                 plan.getMaxProductos(),
                 plan.getMaxVariantes(),
-                plan.getEsTrial(),
-                plan.getDiasTrial(),
+                esTrial != null ? esTrial : false,
+                diasTrial,
                 fechaInicioTrial,
                 fechaFinTrial,
                 productosActuales,
@@ -211,7 +214,7 @@ public class DashboardController {
 
         if (esAdmin) {
             Pageable pageable = PageRequest.of(page, size, Sort.by("nombre").ascending());
-            Page<Tienda> tiendasPage = tiendaRepository.findByActivoTrue(pageable);
+            Page<Tienda> tiendasPage = tiendaRepository.findByActivoTrueWithPlan(pageable);
 
             List<TiendaDashboardDto> dtos = tiendasPage.stream()
                     .map(t -> new TiendaDashboardDto(
@@ -227,7 +230,7 @@ public class DashboardController {
 
             return ResponseEntity.ok(new PageImpl<>(dtos, pageable, tiendasPage.getTotalElements()));
         } else {
-            List<Tienda> misTiendas = tiendaRepository.findByUserEmail(userEmail);
+            List<Tienda> misTiendas = tiendaRepository.findByUserEmailWithPlan(userEmail);
 
             List<TiendaDashboardDto> dtos = misTiendas.stream()
                     .map(t -> new TiendaDashboardDto(
