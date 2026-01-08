@@ -206,7 +206,8 @@ public class TiendaServiceImpl implements TiendaService {
             Plan planDefault = planRepository.findById(1) // Cambia el 2 por el ID real de tu plan "Básico"
                     .orElseThrow(() -> new RuntimeException("Plan por defecto no encontrado. Contacta al administrador."));
             t.setPlan(planDefault);
-
+            LocalDateTime ahora = LocalDateTime.now();
+            t.setFechaVencimiento(ahora.plusMonths(1));
         } else {
             // ======================== EDICIÓN ========================
             t = tiendaRepository.findById(id)
