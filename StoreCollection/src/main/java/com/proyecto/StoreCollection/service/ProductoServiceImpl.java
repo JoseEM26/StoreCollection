@@ -41,14 +41,7 @@
     
         // ======================== VALIDACIONES CON MENSAJES CLAROS ========================
     
-        private void validarPlanPermitidoParaAccion(Tienda tienda) {
-            if (!tienda.tienePlanPermitido()) {
-                String nombrePlan = tienda.getPlan() != null ? tienda.getPlan().getNombre() : "ninguno";
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                        "¡Acción no permitida! Tu plan actual es '" + nombrePlan +
-                                "'. Necesitas un plan Básico o Pro para crear o editar productos. Actualiza tu plan para continuar.");
-            }
-        }
+
     
         private void validarLimiteProductos(Tienda tienda) {
             long conteoActual = productoRepository.countByTiendaId(tienda.getId());
@@ -148,7 +141,6 @@
                     tiendaAsignada = tiendaService.getTiendaDelUsuarioActual();
                 }
     
-                validarPlanPermitidoParaAccion(tiendaAsignada);
                 validarLimiteProductos(tiendaAsignada);
     
                 if (productoRepository.findBySlugAndTiendaId(request.getSlug(), tiendaAsignada.getId()).isPresent()) {
@@ -163,8 +155,7 @@
                                 "Producto no encontrado. Es posible que haya sido eliminado."));
     
                 tiendaAsignada = producto.getTienda();
-                validarPlanPermitidoParaAccion(tiendaAsignada);
-    
+
                 Optional<Producto> otro = productoRepository.findBySlugAndTiendaId(request.getSlug(), tiendaAsignada.getId());
                 if (otro.isPresent() && !otro.get().getId().equals(id)) {
                     throw new ResponseStatusException(HttpStatus.CONFLICT,

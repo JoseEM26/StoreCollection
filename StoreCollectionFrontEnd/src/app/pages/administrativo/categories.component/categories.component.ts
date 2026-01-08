@@ -101,10 +101,6 @@ get endItem(): number {
 
   // === Toggle Activo (solo ADMIN) ===
   toggleActivo(categoria: CategoriaResponse): void {
-    if (!this.auth.isAdmin()) {
-      alert('Solo los administradores pueden cambiar el estado');
-      return;
-    }
 
     this.categoriaService.toggleActivo(categoria.id).subscribe({
       next: (updated) => {

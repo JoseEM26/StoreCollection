@@ -207,10 +207,6 @@ public class CategoriaServiceImpl implements CategoriaService {
         boolean esAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-        if (!esAdmin) {
-            throw new AccessDeniedException("Solo los administradores pueden activar o desactivar categorías");
-        }
-
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + id));
 

@@ -90,28 +90,5 @@ public class Tienda {
     @Column(name = "fecha_vencimiento")
     private LocalDateTime fechaVencimiento;
 
-    // ==================== MÉTODOS DE CONVENIENCIA ====================
 
-    /**
-     * Verifica si la tienda tiene un plan Básico o Pro
-     */
-    public boolean tienePlanPermitido() {
-        return plan != null &&
-                ("basico".equalsIgnoreCase(plan.getSlug()) ||
-                        "pro".equalsIgnoreCase(plan.getSlug()));
-    }
-
-    /**
-     * Devuelve el nombre del plan actual
-     */
-    public String getNombrePlan() {
-        return plan != null ? plan.getNombre() : "Sin plan";
-    }
-
-    /**
-     * Devuelve el slug del plan actual
-     */
-    public String getSlugPlan() {
-        return plan != null ? plan.getSlug() : "none";
-    }
 }
