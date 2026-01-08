@@ -9,6 +9,7 @@ import { Categoria } from '../../../model';
 import { ProductoPublic } from '../../../model/index.dto';
 import { ProductoPublicService } from '../../../service/producto-public.service';
 import { CategoriaPublicService } from '../../../service/categoria-public.service';
+import { TiendaService } from '../../../service/tienda.service';
 
 @Component({
   selector: 'app-catalogo',
@@ -23,7 +24,6 @@ import { CategoriaPublicService } from '../../../service/categoria-public.servic
 
 export class CatalogoComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-
   productos: ProductoPublic[] = [];
   todosLosProductos: ProductoPublic[] = [];
   categorias: Categoria[] = [];
@@ -33,7 +33,7 @@ export class CatalogoComponent implements OnInit, OnDestroy {
   busqueda = '';
   precioMax = 5000; // Valor inicial temporal, se actualizará
   soloEnStock = false;
-
+  tienda: any = null;
   loading = true;
 
   // Nuevo: máximo real calculado
@@ -42,10 +42,12 @@ export class CatalogoComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private productoService: ProductoPublicService,
-    private categoriaService: CategoriaPublicService
+    private categoriaService: CategoriaPublicService,
+    private tiendaService: TiendaService
   ) {}
 
   ngOnInit(): void {
+      this.tienda = this.tiendaService.currentTiendaValue;
     combineLatest([
       this.route.paramMap,
       this.categoriaService.getAll(),

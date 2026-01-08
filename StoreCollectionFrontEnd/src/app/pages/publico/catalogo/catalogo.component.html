@@ -8,7 +8,7 @@
           <h1 class="titulo mb-1">{{ tituloPagina }}</h1>
           <p class="subtitulo mb-0">{{ totalResultados }} productos disponibles</p>
         </div>
-        <a routerLink="/" class="btn-volver-inicio">
+        <a [routerLink]="['/', tienda?.slug]"  class="btn-volver-inicio">
           <i class="bi bi-house-door-fill me-2"></i> Inicio
         </a>
       </div>
