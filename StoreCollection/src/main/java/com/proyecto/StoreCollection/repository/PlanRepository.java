@@ -18,7 +18,7 @@ public interface PlanRepository extends JpaRepository<Plan, Integer> {
 
     // Planes activos y ordenados
     List<Plan> findByActivoTrueOrderByOrdenAsc();
-
+    Integer countByActivoTrue();
     // Planes públicos visibles (página de precios)
     List<Plan> findByActivoTrueAndEsVisiblePublicoTrueOrderByOrdenAsc();
     List<Plan> findByActivoTrue();  // ← AÑADE ESTO

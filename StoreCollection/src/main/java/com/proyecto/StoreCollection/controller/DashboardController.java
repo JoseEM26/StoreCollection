@@ -51,11 +51,13 @@ public class DashboardController {
 
         if (esAdmin) {
             long totalTiendas = tiendaRepository.count();
-            long totalPlanesActivos = planRepository.findByActivoTrue().size();
+            long totalPlanesActivos = planRepository.countByActivoTrue();
             long totalBoletas = boletaRepository.count();
-            BigDecimal revenueTotal = boletaRepository.findAll().stream()
-                    .map(Boleta::getTotal)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            // Solo boletas ATENDIDAS - USAR EL ENUM
+            BigDecimal revenueTotal = boletaRepository.sumTotalByEstado(
+                    Boleta.EstadoBoleta.ATENDIDA
+            );
 
             stats.put("totalTiendas", totalTiendas);
             stats.put("totalPlanesActivos", totalPlanesActivos);
@@ -69,21 +71,23 @@ public class DashboardController {
 
             long totalTiendas = misTiendas.size();
 
-            Set<Plan> misPlanes = misTiendas.stream()
+            long totalPlanesActivos = misTiendas.stream()
                     .map(Tienda::getPlan)
                     .filter(Plan::getActivo)
-                    .collect(Collectors.toSet());
-            long totalPlanesActivos = misPlanes.size();
+                    .distinct()
+                    .count();
 
-            List<Integer> misTiendaIds = misTiendas.stream().map(Tienda::getId).collect(Collectors.toList());
-            List<Boleta> misBoletas = boletaRepository.findAll().stream()
-                    .filter(b -> misTiendaIds.contains(b.getTienda().getId()))
-                    .toList();
+            List<Integer> misTiendaIds = misTiendas.stream()
+                    .map(Tienda::getId)
+                    .collect(Collectors.toList());
 
-            long totalBoletas = misBoletas.size();
-            BigDecimal revenueTotal = misBoletas.stream()
-                    .map(Boleta::getTotal)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            long totalBoletas = boletaRepository.countByTiendaIdIn(misTiendaIds);
+
+            // Solo boletas ATENDIDAS de MIS tiendas - USAR EL ENUM
+            BigDecimal revenueTotal = boletaRepository.sumTotalByEstadoAndTiendaIdIn(
+                    Boleta.EstadoBoleta.ATENDIDA,
+                    misTiendaIds
+            );
 
             stats.put("totalTiendas", totalTiendas);
             stats.put("totalPlanesActivos", totalPlanesActivos);

@@ -75,4 +75,58 @@
 
 .btn-group .btn {
   border-radius: 0.375rem;
+}/* Paleta y estilos existentes se mantienen */
+
+/* Mejoras responsivas para tarjetas en móvil */
+@media (max-width: 991.98px) {
+  .card.elegant-card {
+    transition: all 0.3s ease;
+  }
+  .card.elegant-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.12) !important;
+  }
+}
+
+/* Botones grandes en móvil */
+@media (max-width: 767.98px) {
+  .d-grid.gap-2 .btn {
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* Ajustes generales */
+.elegant-table tbody tr.transition-row {
+  transition: all 0.3s ease;
+}
+.elegant-table tbody tr:hover {
+  background-color: rgba(79, 70, 229, 0.05) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+}
+
+.elegant-badge {
+  min-width: 120px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.elegant-btn-group .btn {
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.8rem;
+  transition: all 0.2s ease;
+}
+.elegant-btn-group .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.elegant-card,
+.elegant-modal {
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+}
+.elegant-card:hover {
+  box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+  transform: translateY(-4px);
 }
