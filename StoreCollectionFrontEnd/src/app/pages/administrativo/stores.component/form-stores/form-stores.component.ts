@@ -354,5 +354,20 @@ export class FormStoresComponent implements OnInit, OnChanges {
     this.formSubmitted = false;
     this.cancel.emit();
   }
-
+ debugForm(): void {
+    console.clear();
+    console.group('🔍 DEBUG FORMULARIO');
+    console.log('Inválido?', this.form.invalid);
+    console.log('Submitted?', this.formSubmitted);
+    console.log('Valores:', this.form.value);
+    
+    console.log('\nErrores:');
+    Object.keys(this.form.controls).forEach(key => {
+      const c = this.form.get(key);
+      if (c?.invalid) {
+        console.warn(`→ ${key}:`, c.errors);
+      }
+    });
+    console.groupEnd();
+  }
 }
