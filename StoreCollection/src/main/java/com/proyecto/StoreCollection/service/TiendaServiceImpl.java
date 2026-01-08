@@ -246,11 +246,16 @@ public class TiendaServiceImpl implements TiendaService {
             }
         }
 
-        // ======================== CAMBIO DE PLAN (solo admin) ========================
+        // ======================== CAMBIO DE PLAN (solo admin puede cambiarlo) ========================
         if (request.getPlanId() != null) {
-            if (!esAdmin) {
-                throw new AccessDeniedException("Solo los administradores pueden cambiar el plan de una tienda");
+            // Si es owner y el plan que envía es diferente al actual → denegado
+            if (!esAdmin && !request.getPlanId().equals(t.getPlan().getId())) {
+                throw new AccessDeniedException("No tienes permiso para cambiar el plan de la tienda");
             }
+
+            // Si llega aquí:
+            // - O es admin (puede cambiar a cualquier plan)
+            // - O es owner y está enviando el mismo plan que ya tiene (caso normal al editar)
 
             Plan nuevoPlan = planRepository.findById(request.getPlanId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,

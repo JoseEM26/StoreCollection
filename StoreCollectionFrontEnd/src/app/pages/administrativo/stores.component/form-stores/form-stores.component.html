@@ -329,7 +329,7 @@
               Cancelar
             </button>
   <!-- Debug temporal - quítalo después -->
-            <button type="button" class="btn btn-danger btn-sm" (click)="debugForm()">
+            <button *ngIf="esAdmin" type="button" class="btn btn-danger btn-sm" (click)="debugForm()">
               Ver qué falla
             </button>
             <button 
