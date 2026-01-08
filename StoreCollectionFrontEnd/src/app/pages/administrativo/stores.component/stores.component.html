@@ -14,7 +14,7 @@
       </p>
     </div>
 
-    <button class="btn btn-primary rounded-pill px-4 px-md-5 py-2 py-md-3 shadow-lg btn-create w-100 w-sm-auto" (click)="openCreateModal()">
+    <button *ngIf="auth.isOwner() || auth.isCustomer()" class="btn btn-primary rounded-pill px-4 px-md-5 py-2 py-md-3 shadow-lg btn-create w-100 w-sm-auto" (click)="openCreateModal()">
       <i class="bi bi-plus-circle-fill me-2"></i> Nueva Tienda
     </button>
   </div>
