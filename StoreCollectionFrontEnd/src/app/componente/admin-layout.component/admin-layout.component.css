@@ -1,218 +1,7 @@
+/* src/app/componente/admin-layout.component/admin-layout.component.css */
+
+/* ── ROOT ─────────────────────────────────────────────── */
 .admin-layout {
-  display: flex;
-  min-height: 100vh;
-  font-family: 'Inter', sans-serif;
-  background: #f8fafc;
-}
-
-.sidebar {
-  width: 280px;
-  background: white;
-  border-right: 1px solid #e2e8f0;
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  z-index: 1030;
-  transition: width 0.35s ease;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-
-  .sidebar-inner {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    padding: 1.5rem 0;
-  }
-
-  .sidebar-header {
-    padding: 0 1.5rem 1.5rem;
-    border-bottom: 1px solid #f1f5f9;
-
-    .logo-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .logo-icon {
-      width: 48px;
-      height: 48px;
-      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-      color: white;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-    }
-
-    .logo-text span {
-      font-size: 1.35rem;
-      font-weight: 700;
-      color: #1e293b;
-    }
-  }
-
-  .sidebar-nav {
-    flex: 1;
-    padding: 1rem 0;
-  }
-
-  .nav-link {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 0.85rem 1.5rem;
-    margin: 0.35rem 1rem;
-    border-radius: 12px;
-    color: #64748b;
-    font-weight: 500;
-    transition: all 0.25s ease;
-
-    i { font-size: 1.25rem; width: 28px; text-align: center; }
-
-    &:hover {
-      background: #f1f5f9;
-      color: #1e293b;
-      transform: translateX(4px);
-    }
-
-    &.active {
-      background: #3b82f6;
-      color: white;
-      font-weight: 600;
-      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
-
-      &:hover {
-        background: #2563eb;
-        transform: translateX(0);
-      }
-    }
-  }
-
-  .logout-btn {
-    color: #ef4444;
-    &:hover { background: #fef2f2; color: #dc2626; }
-  }
-
-  .sidebar-footer {
-    padding: 0 1rem 1rem;
-  }
-}
-
-.admin-layout.sidebar-collapsed {
-  .sidebar {
-    width: 78px;
-
-    .logo-text,
-    .nav-link span,
-    .sidebar-footer span {
-      opacity: 0;
-      visibility: hidden;
-      width: 0;
-      overflow: hidden;
-      transition: all 0.25s ease;
-    }
-
-    .nav-link {
-      justify-content: center;
-      padding: 1rem;
-      margin: 0.35rem 0.8rem;
-    }
-  }
-}
-
-.btn-collapse {
-  position: absolute;
-  top: 100px;
-  right: -18px;
-  width: 36px;
-  height: 36px;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #64748b;
-  font-size: 1.1rem;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  z-index: 10;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background: #f8fafc;
-    transform: scale(1.1);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-  }
-
-  .rotate-180 {
-    transform: rotate(180deg);
-  }
-}
-
-.main-content {
-  flex: 1;
-  margin-left: 280px;
-  transition: margin-left 0.35s ease;
-}
-
-.admin-layout.sidebar-collapsed .main-content {
-  margin-left: 78px;
-}
-
-.topbar {
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
-  position: sticky;
-  top: 0;
-  z-index: 900;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.04);
-}
-
-.page-content {
-  padding: 2rem;
-  min-height: calc(100vh - 73px);
-  background: #f8fafc;
-}
-
-.avatar {
-  width: 44px;
-  height: 44px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-}
-
-@media (max-width: 991.98px) {
-  .sidebar { left: -280px; }
-  .admin-layout.sidebar-open .sidebar { left: 0; }
-  .main-content { margin-left: 0 !important; }
-
-  .sidebar-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    backdrop-filter: blur(8px);
-    z-index: 1020;
-  }
-}.nav-link.disabled {
-  opacity: 0.5;
-  pointer-events: none;
-  cursor: not-allowed;
-  color: #94a3b8 !important;
-}
-
-.nav-link.disabled i,
-.nav-link.disabled span {
-  color: inherit !important;
-}.admin-layout {
   display: flex;
   min-height: 100vh;
   font-family: 'Inter', sans-serif;
@@ -229,9 +18,9 @@
   top: 0;
   left: 0;
   bottom: 0;
-  z-index: 1030;
-  transition: transform 0.35s ease, width 0.35s ease;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+  z-index: 2030;
+  transition: all 0.35s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
 }
 
 .sidebar-inner {
@@ -241,136 +30,42 @@
   padding: 1.5rem 0;
 }
 
-/* Modo colapsado (solo desktop) */
-.admin-layout.sidebar-collapsed .sidebar {
-  width: 78px;
+/* Logo */
+.sidebar-header {
+  padding: 0 1.5rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
 }
 
-.admin-layout.sidebar-collapsed .sidebar .logo-text,
-.admin-layout.sidebar-collapsed .sidebar .nav-link span,
-.admin-layout.sidebar-collapsed .sidebar .sidebar-footer span {
-  opacity: 0;
-  visibility: hidden;
-  width: 0;
-  overflow: hidden;
-}
-
-.admin-layout.sidebar-collapsed .sidebar .nav-link {
-  justify-content: center;
-  padding: 1rem;
-  margin: 0.35rem 0.8rem;
-}
-
-/* Móvil: sidebar oculto por defecto y desliza desde izquierda */
-@media (max-width: 991.98px) {
-  .sidebar {
-    transform: translateX(-100%);
-    width: 280px; /* ancho completo en móvil */
-  }
-
-  .admin-layout.sidebar-open .sidebar {
-    transform: translateX(0);
-  }
-
-  .main-content {
-    margin-left: 0 !important;
-  }
-
-  .btn-collapse {
-    display: none !important;
-  }
-}
-
-/* ── MAIN CONTENT ────────────────────────────────────────── */
-.main-content {
-  flex: 1;
-  margin-left: 280px;
-  transition: margin-left 0.35s ease;
+.logo-wrapper {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 }
 
-.admin-layout.sidebar-collapsed .main-content {
-  margin-left: 78px;
-}
-
-/* ── TOPBAR ──────────────────────────────────────────────── */
-.topbar {
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
-  position: sticky;
-  top: 0;
-  z-index: 900;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.04);
-}
-
-/* Ajustes móviles en topbar */
-@media (max-width: 767.98px) {
-  .topbar .container-fluid {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-
-  h5.mb-0 {
-    font-size: 1.1rem;
-  }
-
-  .avatar {
-    width: 38px;
-    height: 38px;
-    font-size: 0.8rem;
-  }
-}
-
-/* ── CONTENIDO ───────────────────────────────────────────── */
-.page-content {
-  padding: 1.5rem;
-  flex: 1;
-  background: #f8fafc;
-}
-
-@media (min-width: 992px) {
-  .page-content {
-    padding: 2rem 2.5rem;
-  }
-}
-
-/* ── BOTÓN COLAPSAR (solo desktop) ───────────────────────── */
-.btn-collapse {
-  position: absolute;
-  top: 100px;
-  right: -18px;
-  width: 36px;
-  height: 36px;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 50%;
+.logo-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #64748b;
-  font-size: 1.1rem;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  z-index: 10;
-  transition: all 0.3s ease;
+  font-size: 1.5rem;
 }
 
-.btn-collapse:hover {
-  background: #f8fafc;
-  transform: scale(1.1);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+.logo-text span {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1e293b;
 }
 
-/* Overlay móvil */
-.sidebar-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  backdrop-filter: blur(6px);
-  z-index: 1020;
+/* Navegación */
+.sidebar-nav {
+  flex: 1;
+  padding: 1rem 0;
 }
 
-/* Otros estilos (nav-link, avatar, etc) permanecen similares... */
 .nav-link {
   display: flex;
   align-items: center;
@@ -389,4 +84,228 @@
   text-align: center;
 }
 
-/* ... resto de estilos de nav-link, active, logout, etc ... */
+.nav-link:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+  transform: translateX(4px);
+}
+
+.nav-link.active {
+  background: #3b82f6;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+}
+
+.nav-link.active:hover {
+  background: #2563eb;
+  transform: translateX(0);
+}
+
+/* Logout */
+.logout-btn {
+  color: #ef4444;
+}
+
+.logout-btn:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.sidebar-footer {
+  padding: 0 1rem 1rem;
+}
+
+/* ── SIDEBAR COLAPSADO (solo desktop) ─────────────────── */
+.admin-layout.sidebar-collapsed .sidebar {
+  width: 78px;
+}
+
+.admin-layout.sidebar-collapsed .logo-text,
+.admin-layout.sidebar-collapsed .nav-link span,
+.admin-layout.sidebar-collapsed .sidebar-footer span {
+  opacity: 0;
+  visibility: hidden;
+  width: 0;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.admin-layout.sidebar-collapsed .nav-link {
+  justify-content: center;
+  padding: 1rem;
+  margin: 0.35rem 0.8rem;
+}
+
+/* ── BOTÓN COLAPSAR (solo desktop) ─────────────────────── */
+.btn-collapse {
+  position: absolute;
+  top: 100px;
+  right: -18px;
+  width: 36px;
+  height: 36px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  z-index: 110;
+  transition: all 0.3s ease;
+}
+
+.btn-collapse:hover {
+  background: #f8fafc;
+  transform: scale(1.1);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+/* ── MAIN CONTENT ──────────────────────────────────────── */
+.main-content {
+  flex: 1;
+  margin-left: 280px;
+  transition: margin-left 0.35s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-layout.sidebar-collapsed .main-content {
+  margin-left: 78px;
+}
+
+/* ── TOPBAR ─────────────────────────────────────────────── */
+.topbar {
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 1900;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+}
+
+/* ── CONTENIDO ─────────────────────────────────────────── */
+.page-content {
+  padding: 1.5rem;
+  flex: 1;
+  background: #f8fafc;
+}
+
+@media (min-width: 992px) {
+  .page-content {
+    padding: 2rem 2.5rem;
+  }
+}
+
+/* ── AVATAR ────────────────────────────────────────────── */
+.avatar {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+/* ── RESPONSIVE MÓVIL (drawer lateral) ─────────────────── */
+@media (max-width: 991.98px) {
+  /* Sidebar oculto por defecto */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    height: 100vh;
+    width: 280px;
+    transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 2040;
+    box-shadow: 8px 0 30px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Sidebar abierto */
+  .admin-layout.sidebar-open .sidebar {
+    left: 0;
+  }
+
+  /* Contenido ocupa toda la pantalla */
+  .main-content {
+    margin-left: 0 !important;
+    width: 100%;
+  }
+
+  /* Overlay con blur */
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    z-index: 2030;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Ocultar botón colapsar en móvil */
+  .btn-collapse {
+    display: none !important;
+  }
+
+  /* Ajustes topbar */
+  .topbar .container-fluid {
+    padding: 0 1rem;
+  }
+
+  h5.mb-0 {
+    font-size: 1.1rem;
+  }
+
+  .avatar {
+    width: 38px;
+    height: 38px;
+    font-size: 0.8rem;
+  }
+
+  .page-content {
+    padding: 1rem;
+  }
+}@media (max-width: 991.98px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    height: 100vh;
+    width: 280px;
+    transition: left 0.35s ease;
+    z-index: 2040;
+  }
+
+  /* Esta es la clase que hace que aparezca */
+  .admin-layout.sidebar-open .sidebar {
+    left: 0;
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+  }
+
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    z-index: 2030;
+  }
+}

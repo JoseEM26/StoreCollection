@@ -56,7 +56,7 @@
               <th class="ps-4">#</th>
               <th>Nombre</th>
               <th>Tienda</th>
-              <th class="text-center pe-4">Acciones</th>
+              <th class="text-center pe-4" *ngIf="auth.isOwner() ">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -65,7 +65,7 @@
               <td class="ps-4">{{ (pageInfo.page * pageInfo.size) + i + 1 }}</td>
               <td><strong>{{ attr.nombre }}</strong></td>
               <td>{{ attr.tiendaNombre || '—' }}</td>
-              <td class="text-center pe-4">
+              <td class="text-center pe-4" *ngIf="auth.isOwner() ">
                 <button 
                   class="btn btn-warning btn-sm me-2 shadow-sm" 
                   (click)="abrirModalEditar(attr)" 
@@ -172,25 +172,63 @@
         </button>
       </div>
 
-      <div class="modal-body py-4">
-        <div class="mb-4">
-          <label for="nombreAtributo" class="form-label fw-bold text-dark">
-            Nombre del atributo <span class="text-danger">*</span>
-          </label>
-          <input
-            id="nombreAtributo"
-            type="text"
-            class="form-control form-control-lg"
-            [(ngModel)]="nombreAtributo"
-            placeholder="Ej: Color, Talla, Material, Sabor"
-            autofocus
-            autocomplete="off"
-          />
-          <div class="form-text text-muted mt-2">
-            Este nombre se mostrará en los filtros y variantes de los productos.
-          </div>
-        </div>
+  <div class="modal-body py-4">
+  <!-- Nombre del atributo (siempre visible) -->
+  <div class="mb-4">
+    <label for="nombreAtributo" class="form-label fw-bold text-dark">
+      Nombre del atributo <span class="text-danger">*</span>
+    </label>
+    <input
+      id="nombreAtributo"
+      type="text"
+      class="form-control form-control-lg"
+      [(ngModel)]="nombreAtributo"
+      placeholder="Ej: Color, Talla, Material, Sabor"
+      autofocus
+      autocomplete="off"
+      [disabled]="saving"
+    />
+    <div class="form-text text-muted mt-2">
+      Este nombre se mostrará en los filtros y variantes de los productos.
+    </div>
+  </div>
+
+  <!-- Dropdown de tienda: SOLO visible para ADMIN y SOLO al CREAR (no al editar) -->
+  <div class="mb-4" *ngIf="auth.isAdmin() && !isEditMode">
+    <label for="tiendaSelect" class="form-label fw-bold text-dark">
+      Tienda <span class="text-danger">*</span>
+    </label>
+    <select
+      id="tiendaSelect"
+      class="form-select form-select-lg"
+      [(ngModel)]="selectedTiendaId"
+      [disabled]="loadingTiendas || saving"
+      required
+    >
+      <option [ngValue]="null" disabled>Selecciona una tienda</option>
+      <option *ngFor="let tienda of tiendas" [ngValue]="tienda.id">
+        {{ tienda.descripcion }}
+      </option>
+    </select>
+    <div class="form-text text-muted mt-2">
+      El atributo se creará para la tienda seleccionada.
+    </div>
+
+    <!-- Loading de tiendas -->
+    <div class="text-center mt-3" *ngIf="loadingTiendas">
+      <div class="spinner-border spinner-border-sm text-primary" role="status">
+        <span class="visually-hidden">Cargando tiendas...</span>
       </div>
+      <small class="text-muted ms-2">Cargando tiendas...</small>
+    </div>
+  </div>
+
+  <!-- Info para owner al crear -->
+  <div class="alert alert-info" *ngIf="!auth.isAdmin() && !isEditMode">
+    <i class="bi bi-info-circle me-2"></i>
+    El atributo se creará automáticamente en <strong>tu tienda</strong>.
+  </div>
+</div>
 
       <div class="modal-footer bg-light py-3">
         <button 

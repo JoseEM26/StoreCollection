@@ -1,6 +1,14 @@
-<div class="admin-layout" [class.sidebar-collapsed]="isSidebarCollapsed" [class.sidebar-open]="isMobile && !isSidebarCollapsed">
-  <!-- Overlay solo en móvil cuando sidebar está visible -->
-  <div class="sidebar-overlay" *ngIf="isMobile && !isSidebarCollapsed" (click)="toggleSidebar()"></div>
+<!-- src/app/componente/admin-layout.component/admin-layout.component.html -->
+
+<div class="admin-layout" 
+     [class.sidebar-collapsed]="isSidebarCollapsed && !isMobile"
+     [class.sidebar-open]="isMobile && !isSidebarCollapsed">
+
+  <!-- Overlay solo en móvil -->
+  <div class="sidebar-overlay" 
+       *ngIf="isMobile && !isSidebarCollapsed" 
+       (click)="closeMobileSidebar()">
+  </div>
 
   <!-- Sidebar -->
   <aside class="sidebar">
@@ -9,71 +17,72 @@
       <div class="sidebar-header">
         <div class="logo-wrapper">
           <div class="logo-icon">
-            <i class="bi bi-buildings"></i>
+            <i class="bi bi-basket2-fill"></i>
           </div>
           <div class="logo-text">
-            <span class="fw-bold">Store Collection</span>
-            <small class="text-muted d-block">Panel Admin</small>
+            <span>StoreCollection</span>
           </div>
         </div>
       </div>
 
-      <!-- Navegación -->
-      <nav class="sidebar-nav mt-4">
-        <a
-          *ngFor="let item of menuItems"
-          [routerLink]="isMenuItemVisible(item) ? item.route : null"
-          routerLinkActive="active"
-          class="nav-link"
-          [class.disabled]="!isMenuItemVisible(item)"
-          [attr.title]="!isMenuItemVisible(item) ? 'No tienes permiso' : ''"
-        >
-          <i class="bi" [class]="item.icon"></i>
-          <span>{{ item.label }}</span>
-          <small *ngIf="!isMenuItemVisible(item)" class="ms-2 text-danger">
-            <i class="bi bi-lock-fill"></i>
-          </small>
-        </a>
+      <!-- Menú -->
+      <nav class="sidebar-nav">
+        <ul class="nav flex-column">
+          <li class="nav-item" *ngFor="let item of menuItems">
+            <a class="nav-link"
+               routerLink="{{ item.route }}"
+               routerLinkActive="active"
+               *ngIf="isMenuItemVisible(item)"
+               (click)="closeMobileSidebar()">
+              <i class="{{ item.icon }}"></i>
+              <span>{{ item.label }}</span>
+            </a>
+          </li>
+        </ul>
       </nav>
 
       <!-- Logout -->
       <div class="sidebar-footer">
-        <button class="nav-link logout-btn" (click)="logout()">
+        <a class="nav-link logout-btn" 
+           (click)="logout(); closeMobileSidebar()" 
+           style="cursor: pointer;">
           <i class="bi bi-box-arrow-right"></i>
           <span>Cerrar sesión</span>
-        </button>
+        </a>
       </div>
     </div>
 
-    <!-- Botón colapsar (solo visible en desktop) -->
-    <button class="btn-collapse d-none d-lg-block" (click)="toggleSidebar()">
-      <i class="bi" [class.bi-chevron-left]="!isSidebarCollapsed" [class.bi-chevron-right]="isSidebarCollapsed"></i>
+    <!-- Botón colapsar solo desktop -->
+    <button class="btn-collapse" 
+            (click)="toggleSidebar()" 
+            *ngIf="!isMobile">
+      <i class="bi bi-chevron-left" [class.rotate-180]="isSidebarCollapsed"></i>
     </button>
   </aside>
 
   <!-- Contenido principal -->
-  <div class="main-content">
+  <main class="main-content">
     <header class="topbar">
-      <div class="container-fluid d-flex align-items-center justify-content-between px-3 py-3">
-        <!-- Menú hamburguesa en móvil -->
-        <button class="btn-mobile-menu me-3" (click)="toggleSidebar()">
-          <i class="bi bi-list fs-4"></i>
-        </button>
-
-        <h5 class="mb-0 fw-semibold text-dark flex-grow-1 text-center text-lg-start">{{ pageTitle }}</h5>
-
+      <div class="container-fluid d-flex align-items-center justify-content-between py-3">
+        <div class="d-flex align-items-center">
+          <button class="btn me-3 d-lg-none" (click)="toggleMobileSidebar()">
+            <i class="bi bi-list fs-3"></i>
+          </button>
+          <h5 class="mb-0 fw-bold text-dark">{{ pageTitle }}</h5>
+        </div>
         <div class="d-flex align-items-center gap-3">
-          <div class="text-end d-none d-md-block">
-            <div class="fw-semibold text-dark">{{ auth.fullName() }}</div>
-            <small class="text-muted">{{ auth.roleDisplay() }}</small>
+          <span class="text-muted small d-none d-md-block">
+            {{ auth.currentUser()?.nombre || 'Usuario' }}
+          </span>
+          <div class="avatar">
+            {{ (auth.currentUser()?.nombre || 'U').charAt(0).toUpperCase() }}
           </div>
-          <div class="avatar">{{ auth.initials() }}</div>
         </div>
       </div>
     </header>
 
-    <main class="page-content">
+    <div class="page-content">
       <router-outlet></router-outlet>
-    </main>
-  </div>
+    </div>
+  </main>
 </div>

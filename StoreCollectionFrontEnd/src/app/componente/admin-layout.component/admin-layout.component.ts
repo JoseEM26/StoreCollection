@@ -26,16 +26,17 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   pageTitle = 'Dashboard';
   private routerSub!: Subscription;
 
-  // Menú dinámico según rol
-  menuItems: MenuItem[] = [
-    { route: '/admin/dashboard',   icon: 'bi-speedometer2', label: 'Dashboard',   allowedRoles: ['ADMIN', 'OWNER'] },
-    { route: '/admin/stores',      icon: 'bi-shop',         label: 'Tiendas',     allowedRoles: ['ADMIN', 'OWNER'] },
-    { route: '/admin/categories',  icon: 'bi-grid-3x3-gap', label: 'Categorías',  allowedRoles: ['ADMIN', 'OWNER'] },
-    { route: '/admin/products',    icon: 'bi-box-seam',     label: 'Productos',   allowedRoles: ['ADMIN', 'OWNER'] },
-    { route: '/admin/usuarios',    icon: 'bi-people',       label: 'Usuarios',    allowedRoles: ['ADMIN'] }, // ← Solo ADMIN
-    { route: '/admin/planes',    icon: 'bi-people',       label: 'Planes',    allowedRoles: ['ADMIN'] }, // ← Solo ADMIN
-    { route: '/admin/boletas',    icon: 'bi-people',       label: 'Boletas',    allowedRoles: ['ADMIN', 'OWNER'] }, // ← Solo ADMIN
-    { route: '/admin/atributos',    icon: 'bi-people',       label: 'Atributos',    allowedRoles: ['ADMIN', 'OWNER'] } // ← Solo ADMIN
+   menuItems: MenuItem[] = [
+    { route: '/admin/dashboard',   icon: 'bi-speedometer2',      label: 'Dashboard',     allowedRoles: ['ADMIN', 'OWNER'] },
+    { route: '/admin/stores',      icon: 'bi-shop-window',       label: 'Tiendas',       allowedRoles: ['ADMIN', 'OWNER'] },
+    { route: '/admin/categories',  icon: 'bi-grid-3x3-gap-fill', label: 'Categorías',    allowedRoles: ['ADMIN', 'OWNER'] },
+    { route: '/admin/products',    icon: 'bi-box2',              label: 'Productos',     allowedRoles: ['ADMIN', 'OWNER'] },
+    { route: '/admin/atributos',   icon: 'bi-tags-fill',         label: 'Atributos',     allowedRoles: ['ADMIN', 'OWNER'] },
+    { route: '/admin/boletas',     icon: 'bi-receipt',           label: 'Boletas',       allowedRoles: ['ADMIN', 'OWNER'] },
+    
+    // === SOLO PARA ADMIN ===
+    { route: '/admin/usuarios',    icon: 'bi-person-gear',       label: 'Usuarios',      allowedRoles: ['ADMIN'] },
+    { route: '/admin/planes',      icon: 'bi-gem',               label: 'Planes',        allowedRoles: ['ADMIN'] },
   ];
 
   constructor(
@@ -74,15 +75,26 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
         }
       });
   }
+toggleMobileSidebar() {
+  this.isSidebarCollapsed = !this.isSidebarCollapsed;
+}
 
+closeMobileSidebar() {
+  this.isSidebarCollapsed = true;
+}
+
+checkIfMobile() {
+  this.isMobile = window.innerWidth < 992;
+  // En móvil, forzar colapsado por defecto
+  if (this.isMobile && !this.isSidebarCollapsed === false) {
+    this.isSidebarCollapsed = true;
+  }
+}
   ngOnDestroy() {
     this.routerSub?.unsubscribe();
   }
 
-  checkIfMobile() {
-    this.isMobile = window.innerWidth < 992;
-    if (this.isMobile) this.isSidebarCollapsed = true;
-  }
+
 
   toggleSidebar() {
     this.isSidebarCollapsed = !this.isSidebarCollapsed;

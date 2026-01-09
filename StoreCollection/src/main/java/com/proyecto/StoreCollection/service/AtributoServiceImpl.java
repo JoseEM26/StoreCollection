@@ -113,7 +113,7 @@ public class AtributoServiceImpl implements AtributoService {
     }
 
     @Override
-    @Transactional  // ¡Asegúrate de tener esta anotación!
+    @Transactional
     public AtributoResponse save(AtributoRequest request, Integer id) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean esAdmin = auth.getAuthorities().stream()
@@ -121,40 +121,54 @@ public class AtributoServiceImpl implements AtributoService {
 
         Atributo atributo;
         Tienda tienda;
-        String tiendaNombre;  // ← Guardamos el nombre aquí mientras la sesión está abierta
         Integer tiendaId;
+        String tiendaNombre;
 
         if (id == null) {
-            // === CREACIÓN ===
+            // ================== CREACIÓN ==================
             atributo = new Atributo();
+
             if (esAdmin && request.getTiendaId() != null) {
+                // Admin puede elegir cualquier tienda al crear
                 tienda = tiendaService.getEntityById(request.getTiendaId());
             } else {
+                // Owner siempre usa su tienda
+                // Admin sin tiendaId también usa la del usuario actual (o puedes forzar error si prefieres)
                 tienda = tiendaService.getTiendaDelUsuarioActual();
             }
-            tiendaId = tienda.getId();
-            tiendaNombre = tienda.getNombre();  // ← Aquí SÍ está cargada completamente
-        } else {
-            // === EDICIÓN ===
-            atributo = repository.getByIdAndTenant(id);  // Dentro de transacción → sesión abierta
 
-            // Forzamos la inicialización del proxy de tienda mientras la sesión está abierta
+        } else {
+            // ================== EDICIÓN ==================
+            // Cargamos el atributo existente (getByIdAndTenant valida que owner solo edite los suyos)
+            atributo = repository.getByIdAndTenant(id);
+
+            // Inicializamos para evitar LazyInitializationException
             Hibernate.initialize(atributo.getTienda());
 
+            // LA TIENDA NUNCA CAMBIA EN EDICIÓN → usamos siempre la original
             tienda = atributo.getTienda();
-            tiendaId = tienda.getId();
-            tiendaNombre = tienda.getNombre();  // ← Ahora seguro, porque ya inicializamos
+
+            // OPCIONAL: validación extra para admin que intente cambiarla
+            if (esAdmin && request.getTiendaId() != null
+                    && !request.getTiendaId().equals(tienda.getId())) {
+                throw new RuntimeException("No se permite cambiar la tienda de un atributo existente.");
+            }
         }
 
-        // Validación unicidad
+        // Capturamos datos para respuesta (mientras sesión abierta)
+        tiendaId = tienda.getId();
+        tiendaNombre = tienda.getNombre();
+
+        // Validación de unicidad dentro de la misma tienda
         if (repository.findByNombreAndTiendaId(request.getNombre().trim(), tienda.getId())
                 .filter(a -> !a.getId().equals(id))
                 .isPresent()) {
-            throw new RuntimeException("Ya existe un atributo con el nombre '" + request.getNombre() + "' en esta tienda.");
+            throw new RuntimeException("Ya existe un atributo con el nombre '" + request.getNombre().trim() + "' en esta tienda.");
         }
 
+        // Solo actualizamos el nombre (la tienda ya está asignada y no cambia)
         atributo.setNombre(request.getNombre().trim());
-        atributo.setTienda(tienda);
+        atributo.setTienda(tienda); // Inofensivo, pero claro
 
         Atributo saved = repository.save(atributo);
 
@@ -162,11 +176,11 @@ public class AtributoServiceImpl implements AtributoService {
                 saved.getId(),
                 saved.getNombre(),
                 tiendaId,
-                tiendaNombre,  // ← Usamos las variables capturadas ANTES del posible cierre de sesión
+                tiendaNombre,
                 null
         );
     }
-    // === ELIMINAR ===
+
     @Override
     public void deleteById(Integer id) {
         Atributo atributo = repository.getByIdAndTenant(id);

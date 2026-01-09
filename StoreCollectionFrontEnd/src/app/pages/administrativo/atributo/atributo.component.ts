@@ -13,6 +13,7 @@ import {
 } from '../../../service/service-admin/atributo-admin.service';
 import { AuthService } from '../../../../auth/auth.service';
 import { PageResponse } from '../../../service/service-admin/dashboard.service'; // Ajusta la ruta si es necesario
+import { DropTownService, DropTownStandar } from '../../../service/droptown.service';
 
 interface PageInfo {
   page: number;
@@ -42,18 +43,37 @@ saving = false;  // ← Agrega esta línea en la clase
   isEditMode = false;
   currentAtributoId: number | null = null;
   nombreAtributo = '';
-
+// Dentro de la clase AtributoComponent
+tiendas: DropTownStandar[] = [];
+selectedTiendaId: number | null = null;
+loadingTiendas = false;
   // Búsqueda
   searchTerm = '';
   loading = false;
 
   constructor(
     private atributoService: AtributoAdminService,
-    public auth: AuthService
+    public auth: AuthService,
+    private dropTownService: DropTownService
   ) {}
 
   ngOnInit(): void {
+    
     this.cargarAtributos();
+    // Solo cargar tiendas si es admin
+  if (this.auth.isAdmin()) {
+    this.loadingTiendas = true;
+    this.dropTownService.getTiendas().subscribe({
+      next: (tiendas) => {
+        this.tiendas = tiendas;
+        this.loadingTiendas = false;
+      },
+      error: () => {
+        this.loadingTiendas = false;
+        Swal.fire('Error', 'No se pudieron cargar las tiendas.', 'error');
+      }
+    });
+  }
   }
 
   cargarAtributos(page: number = 0): void {
@@ -135,6 +155,7 @@ saving = false;  // ← Agrega esta línea en la clase
     this.isEditMode = false;
     this.currentAtributoId = null;
     this.nombreAtributo = '';
+    this.selectedTiendaId = null;
     this.isModalOpen = true;
   }
 
@@ -142,6 +163,7 @@ saving = false;  // ← Agrega esta línea en la clase
     this.isEditMode = true;
     this.currentAtributoId = atributo.id;
     this.nombreAtributo = atributo.nombre;
+    this.selectedTiendaId = null;
     this.isModalOpen = true;
   }
 
@@ -151,7 +173,7 @@ saving = false;  // ← Agrega esta línea en la clase
     this.currentAtributoId = null;
   }
 
- guardarAtributo(): void {
+guardarAtributo(): void {
   if (!this.nombreAtributo.trim()) {
     Swal.fire({
       icon: 'warning',
@@ -162,10 +184,23 @@ saving = false;  // ← Agrega esta línea en la clase
     return;
   }
 
-  this.saving = true;  // ← Activa el estado de carga
+  // Validación adicional para admin al crear
+  if (this.auth.isAdmin() && !this.isEditMode && !this.selectedTiendaId) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Selecciona una tienda',
+      text: 'Como administrador, debes elegir la tienda para este atributo.',
+      confirmButtonText: 'Aceptar'
+    });
+    return;
+  }
+
+  this.saving = true;
 
   const request: AtributoCreateRequest | AtributoUpdateRequest = {
-    nombre: this.nombreAtributo.trim()
+    nombre: this.nombreAtributo.trim(),
+    // Solo enviar tiendaId si es admin y está creando
+    ...(this.auth.isAdmin() && !this.isEditMode && this.selectedTiendaId ? { tiendaId: this.selectedTiendaId } : {})
   };
 
   const observable = this.isEditMode && this.currentAtributoId
