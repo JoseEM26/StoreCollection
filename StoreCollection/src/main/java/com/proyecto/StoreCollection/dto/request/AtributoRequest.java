@@ -7,5 +7,5 @@ import lombok.Data;
 public class AtributoRequest {
     @NotBlank
     private String nombre;
-    private Long tiendaId;
+    private Integer tiendaId;
 }

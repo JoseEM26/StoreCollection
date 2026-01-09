@@ -31,6 +31,7 @@ import { BoletaComponent } from './pages/administrativo/boleta/boleta.component'
 import { tiendaAccessGuard } from '../auth/tienda-access.guard';
 import { planActiveGuard } from '../auth/plan-active.guard';
 import { adminOnlyGuard } from '../auth/admin-only.guard';
+import { AtributoComponent } from './pages/administrativo/atributo/atributo.component';
 
 export const routes: Routes = [
 
@@ -71,6 +72,7 @@ export const routes: Routes = [
       { path: 'stores', component: StoresComponent, canActivate: [planActiveGuard], title: 'Tiendas' },
       { path: 'categories', component: CategoriesComponent, canActivate: [planActiveGuard], title: 'Categorías' },
       { path: 'products', component: ProductsComponent, canActivate: [planActiveGuard], title: 'Productos' },
+      { path: 'atributos', component: AtributoComponent, canActivate: [planActiveGuard], title: 'Atributos' },
       { path: 'boletas', component: BoletaComponent, canActivate: [planActiveGuard], title: 'Boletas' },
     ]
   },

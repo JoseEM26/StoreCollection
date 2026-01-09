@@ -79,12 +79,23 @@ public class TiendaServiceImpl implements TiendaService {
         return tienda;
     }
 
+    // En TiendaServiceImpl.java
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Tienda> findEntityBySlug(String slug) {
+        return tiendaRepository.findBySlug(slug);
+    }
+
     @Override
     @Transactional(readOnly = true)
     public TiendaResponse findBySlug(String slug) {
-        return toResponse(tiendaRepository.findBySlug(slug)
-                .orElseThrow(() -> new RuntimeException("Tienda no encontrada: " + slug)));
+        Tienda tienda = tiendaRepository.findBySlug(slug)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Tienda no encontrada con slug: " + slug));
+
+        return toResponse(tienda);
     }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -98,12 +109,23 @@ public class TiendaServiceImpl implements TiendaService {
     @Transactional(readOnly = true)
     public Tienda getTiendaDelUsuarioActual() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
-            throw new RuntimeException("Usuario no autenticado");
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No autenticado");
         }
+
         String email = auth.getName();
-        return tiendaRepository.findFirstByUserEmail(email)
-                .orElseThrow(() -> new RuntimeException("No tienes una tienda asignada. Crea una primero."));
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado: " + email));
+
+        List<Tienda> tiendas = tiendaRepository.findByUserId(usuario.getId());
+        if (tiendas.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes ninguna tienda asociada");
+        }
+        if (tiendas.size() > 1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tienes múltiples tiendas. Usa el modo admin para gestionar.");
+        }
+
+        return tiendas.get(0);
     }
 
     @Override

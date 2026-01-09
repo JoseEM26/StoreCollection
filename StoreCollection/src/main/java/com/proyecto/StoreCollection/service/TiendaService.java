@@ -8,12 +8,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface TiendaService {
     Page<TiendaResponse> findAll(Pageable pageable);
     Page<TiendaResponse> findAllPublicasActivas(Pageable pageable);
     TiendaResponse findById(Integer id);
     Tienda getEntityById(Integer id);
+    //TiendaResponse findBySlug(String slug);
+    Optional<Tienda> findEntityBySlug(String slug);
     TiendaResponse findBySlug(String slug);
     List<TiendaResponse> findByUserId(Integer userId);
     List<DropTownStandar> getTiendasForDropdown();

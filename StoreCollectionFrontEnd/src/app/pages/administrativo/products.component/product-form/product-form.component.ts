@@ -208,18 +208,53 @@ eliminarImagen(index: number): void {
     return map;
   });
 }
-  agregarAtributo(varianteIndex: number): void {
-    this.variantes.update(v => {
-      const copy = [...v];
-      copy[varianteIndex].atributos.push({
-        atributoNombre: '',
-        valor: '',
-        atributoNombreTemp: '',
-        valorTemp: ''
-      });
-      return copy;
+agregarAtributo(varianteIndex: number): void {
+  const variante = this.variantes()[varianteIndex];
+  const nombresUsados = variante.atributos
+    .map(a => a.atributoNombre?.toLowerCase().trim())
+    .filter(nombre => nombre && nombre !== '__new__');
+
+  // Si ya usó todos los atributos disponibles, no permitir más
+  if (nombresUsados.length >= this.atributosDisponibles().length) {
+    Swal.fire({
+      icon: 'info',
+      title: 'Límite alcanzado',
+      text: 'Cada variante solo puede tener un valor por cada tipo de atributo (Color, Talla, Presentación, etc.).',
+      confirmButtonText: 'Entendido'
     });
+    return;
   }
+
+  // Permitir agregar solo si hay atributos disponibles sin usar
+  const hayDisponibles = this.atributosDisponibles().some(
+    attr => !nombresUsados.includes(attr.descripcion.toLowerCase())
+  );
+
+  if (!hayDisponibles) {
+    Swal.fire({
+      icon: 'info',
+      title: 'Sin atributos disponibles',
+      text: 'Ya has usado todos los atributos posibles en esta variante.',
+      confirmButtonText: 'OK'
+    });
+    return;
+  }
+
+  // Solo ahora agregamos uno nuevo
+  this.variantes.update(v => {
+    const copy = [...v];
+    copy[varianteIndex].atributos.push({
+      atributoNombre: '',
+      valor: '',
+      atributoNombreTemp: '',
+      valorTemp: ''
+    });
+    return copy;
+  });
+
+  // Opcional: expandir la variante para que vea el nuevo campo
+  this.collapsed.update(c => c.map((val, i) => i === varianteIndex ? false : val));
+}
 
   eliminarAtributo(varianteIndex: number, attrIndex: number): void {
     this.variantes.update(v => {

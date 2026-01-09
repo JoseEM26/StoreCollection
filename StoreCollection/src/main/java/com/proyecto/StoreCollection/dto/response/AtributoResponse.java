@@ -10,6 +10,7 @@ public class AtributoResponse {
     private Integer id;
     private String nombre;
     private Integer tiendaId;
+    private String tiendaNombre;
     private String valor;
 
 }

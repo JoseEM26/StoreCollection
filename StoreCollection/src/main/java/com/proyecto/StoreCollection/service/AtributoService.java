@@ -10,15 +10,11 @@ import java.util.List;
 
 public interface AtributoService {
 
-    List<AtributoResponse> findByTiendaSlug(String tiendaSlug);
     List<AtributoResponse> findAllByTenant();           // ← nuevo
-    Page<AtributoResponse> findAll(Pageable pageable);  // ← sigue igual (solo sus atributos)
+    Page<AtributoResponse> findAll(Pageable pageable, Integer tiendaId);  // ← sigue igual (solo sus atributos)
     AtributoResponse findById(Integer id);                 // ← solo si es suyo
-
-    AtributoResponse save(AtributoRequest request);
-    AtributoResponse save(AtributoRequest request, Integer id);
+    AtributoResponse save(AtributoRequest request,Integer id);
     void deleteById(Integer id);
-
     List<AtributoDropdownDTO> getAtributosConValores();
-
+    List<AtributoResponse> findByTiendaSlug(String tiendaSlug);
 }
