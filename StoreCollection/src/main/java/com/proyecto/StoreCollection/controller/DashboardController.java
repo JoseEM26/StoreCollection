@@ -16,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -102,9 +103,10 @@ public class DashboardController {
     @GetMapping("/usage")
     public ResponseEntity<?> getPlanUsage() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = auth.getName();
+
         boolean esAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-        String userEmail = auth.getName();
 
         if (esAdmin) {
             return ResponseEntity.ok(Map.of(
@@ -113,95 +115,93 @@ public class DashboardController {
             ));
         }
 
-        // === CAMBIO CLAVE: Usa el método con FETCH ===
+        // Obtenemos la tienda con su plan (JOIN FETCH para evitar LazyInitializationException)
         List<Tienda> misTiendas = tiendaRepository.findByUserEmailWithPlan(userEmail);
 
         if (misTiendas.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "No tienes tiendas asociadas"));
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "No tienes tiendas asociadas"
+            ));
         }
 
-        // Ahora el plan está cargado y seguro de usar fuera de la transacción
-        Tienda tienda = misTiendas.get(0);
-        Plan plan = tienda.getPlan(); // Ya está inicializado gracias al FETCH
+        Tienda tienda = misTiendas.get(0); // ← asumimos 1 tienda por usuario por ahora
+        Plan plan = tienda.getPlan();
 
-        // Conteo actual
+        // Conteos actuales
         int productosActuales = productoRepository.countByTiendaId(tienda.getId());
         int variantesActuales = productoVarianteRepository.countByTiendaId(tienda.getId());
 
         // Porcentajes de uso
-        double porcentajeProductos = plan.getMaxProductos() != null && plan.getMaxProductos() > 0
-                ? (double) productosActuales / plan.getMaxProductos() * 100
-                : 0;
+        double porcentajeProductos = (plan.getMaxProductos() != null && plan.getMaxProductos() > 0)
+                ? Math.min(100.0, (double) productosActuales / plan.getMaxProductos() * 100)
+                : 0.0;
 
-        double porcentajeVariantes = plan.getMaxVariantes() != null && plan.getMaxVariantes() > 0
-                ? (double) variantesActuales / plan.getMaxVariantes() * 100
-                : 0;
+        double porcentajeVariantes = (plan.getMaxVariantes() != null && plan.getMaxVariantes() > 0)
+                ? Math.min(100.0, (double) variantesActuales / plan.getMaxVariantes() * 100)
+                : 0.0;
 
-        // Trial
-        double porcentajeTiempoTrial = 0.0;
-        LocalDateTime fechaInicioTrial = null;
-        LocalDateTime fechaFinTrial = null;
-
+        // ── Trial ────────────────────────────────────────────────────────────────
         Boolean esTrial = plan.getEsTrial();
         Short diasTrial = plan.getDiasTrial();
+        LocalDateTime fechaInicioTrial = null;
+        LocalDateTime fechaFinTrial = null;
+        double porcentajeTiempoTrial = 0.0;
 
-        if (esTrial != null && esTrial && diasTrial != null && diasTrial > 0) {
+        if (Boolean.TRUE.equals(esTrial) && diasTrial != null && diasTrial > 0) {
             fechaInicioTrial = tienda.getCreatedAt();
             fechaFinTrial = fechaInicioTrial.plusDays(diasTrial);
 
-            long diasTranscurridos = java.time.Duration
-                    .between(fechaInicioTrial, LocalDateTime.now())
-                    .toDays();
-
-            long diasTotal = diasTrial;
-
-            porcentajeTiempoTrial = diasTotal > 0
-                    ? Math.min(100.0, (double) diasTranscurridos / diasTotal * 100)
+            long diasTranscurridos = Duration.between(fechaInicioTrial, LocalDateTime.now()).toDays();
+            porcentajeTiempoTrial = diasTrial > 0
+                    ? Math.min(100.0, (double) diasTranscurridos / diasTrial * 100)
                     : 0.0;
         }
 
-        // === Lógica de próxima renovación (mejorada) ===
-        String intervaloBilling = plan.getIntervaloBilling();
+        // ── Renovación / Vencimiento ─────────────────────────────────────────────
+        LocalDateTime fechaVencimientoActual = tienda.getFechaVencimiento();
         LocalDateTime fechaProximaRenovacion = null;
-        long diasRestantesRenovacion = -1L;
-        boolean proximoVencimientoCerca = false;
+        long diasRestantes = -1;
+        boolean vencimientoCerca = false;
 
-        if (intervaloBilling != null && tienda.getCreatedAt() != null) {
-            if ("month".equalsIgnoreCase(intervaloBilling)) {
-                fechaProximaRenovacion = tienda.getCreatedAt().plusMonths(1);
-            } else if ("year".equalsIgnoreCase(intervaloBilling)) {
-                fechaProximaRenovacion = tienda.getCreatedAt().plusYears(1);
-            }
+        if (fechaVencimientoActual != null) {
+            // Días restantes hasta el vencimiento ACTUAL (lo que más le importa al usuario)
+            diasRestantes = ChronoUnit.DAYS.between(LocalDateTime.now(), fechaVencimientoActual);
+            vencimientoCerca = diasRestantes >= 0 && diasRestantes <= 7;
 
-            if (fechaProximaRenovacion != null) {
-                diasRestantesRenovacion = ChronoUnit.DAYS.between(LocalDateTime.now(), fechaProximaRenovacion);
-                proximoVencimientoCerca = diasRestantesRenovacion > 0 && diasRestantesRenovacion <= 7;
+            // Calculamos la próxima renovación (solo informativo)
+            String intervalo = plan.getIntervaloBilling();
+            if (intervalo != null) {
+                if ("month".equalsIgnoreCase(intervalo) || "monthly".equalsIgnoreCase(intervalo)) {
+                    fechaProximaRenovacion = fechaVencimientoActual;
+                } else if ("year".equalsIgnoreCase(intervalo) || "annual".equalsIgnoreCase(intervalo)) {
+                    fechaProximaRenovacion = fechaVencimientoActual;
+                }
             }
         }
 
+        // ── Construcción del DTO ─────────────────────────────────────────────────
         PlanUsageDto usage = new PlanUsageDto(
                 plan.getNombre(),
                 plan.getPrecioMensual(),
-                intervaloBilling,
-                fechaProximaRenovacion,
-                diasRestantesRenovacion,
-                proximoVencimientoCerca,
+                plan.getIntervaloBilling(),
+                fechaProximaRenovacion,           // próxima renovación (informativo)
+                diasRestantes,                    // ← DÍAS HASTA VENCIMIENTO ACTUAL
+                vencimientoCerca,                 // alerta cuando ≤ 7 días
                 plan.getMaxProductos(),
                 plan.getMaxVariantes(),
-                esTrial != null ? esTrial : false,
+                Boolean.TRUE.equals(esTrial),
                 diasTrial,
                 fechaInicioTrial,
                 fechaFinTrial,
                 productosActuales,
                 variantesActuales,
-                Math.min(porcentajeProductos, 100),
-                Math.min(porcentajeVariantes, 100),
+                porcentajeProductos,
+                porcentajeVariantes,
                 porcentajeTiempoTrial
         );
 
         return ResponseEntity.ok(usage);
     }
-
     @GetMapping("/tiendas")
     public ResponseEntity<?> getTiendas(
             @RequestParam(defaultValue = "0") int page,

@@ -73,7 +73,21 @@ export class CrearVentaDirectaFormComponent implements OnInit, OnDestroy {
         this.resetBusqueda();
       });
   }
-
+validarCantidadEnTiempoReal(): void {
+  // Convertimos a número y limpiamos valores inválidos
+  let valor = Number(this.cantidad);
+  
+  if (isNaN(valor) || valor < 1) {
+    this.cantidad = 1;
+    return;
+  }
+  
+  if (valor > this.stockMaximo) {
+    this.cantidad = this.stockMaximo;
+    // Opcional: mostrar mensaje más amigable
+    // Swal.fire({ ... toast pequeño ... })
+  }
+}
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
@@ -194,41 +208,81 @@ seleccionarProducto(producto: ProductoAdminListItem): void {
       .join(' • ');
   }
 
-  agregarAlCarrito(): void {
-    if (!this.productoSeleccionado) return;
+agregarAlCarrito(): void {
+  if (!this.productoSeleccionado) return;
 
-    const precio = this.varianteSeleccionada?.precio || this.productoSeleccionado.precioMinimo;
-    const stockDisponible = this.stockMaximo;
+  const precio = this.varianteSeleccionada?.precio || this.productoSeleccionado.precioMinimo;
+  const stockDisponible = this.stockMaximo;
 
-    if (this.cantidad < 1 || this.cantidad > stockDisponible) {
-      alert(`Cantidad inválida. Stock disponible: ${stockDisponible}`);
-      return;
-    }
+  // Normalizamos y limpiamos cantidad
+  let cantidadFinal = Number(this.cantidad); // por si llega string raro
 
-    const item: ItemVenta = {
-      producto: this.productoSeleccionado,
-      variante: this.varianteSeleccionada,
-      cantidad: this.cantidad,
-      precioUnitario: precio,
-      subtotal: precio * this.cantidad
-    };
-
-    const existenteIndex = this.itemsVenta.findIndex(i =>
-      i.producto.id === item.producto.id &&
-      (i.variante?.id ?? null) === (item.variante?.id ?? null)
-    );
-
-    if (existenteIndex !== -1) {
-      this.itemsVenta[existenteIndex].cantidad += this.cantidad;
-      this.itemsVenta[existenteIndex].subtotal += item.subtotal;
-    } else {
-      this.itemsVenta.push(item);
-    }
-
-    this.actualizarTotal();
-    this.cantidad = 1; // Permite agregar más rápido del mismo
+  if (isNaN(cantidadFinal) || cantidadFinal < 1) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Cantidad inválida',
+      text: 'La cantidad debe ser al menos 1',
+      timer: 2200,
+      showConfirmButton: false
+    });
+    this.cantidad = 1;
+    return;
   }
 
+  if (cantidadFinal > stockDisponible) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Stock insuficiente',
+      html: `Solo hay <b>${stockDisponible}</b> unidad${stockDisponible === 1 ? '' : 'es'} disponible${stockDisponible === 1 ? '' : 's'}`,
+      timer: 2800,
+      showConfirmButton: false
+    });
+    this.cantidad = stockDisponible;
+    return;
+  }
+
+  // ------------------- Validación extra: stock restante en carrito -------------------
+  const yaEnCarrito = this.itemsVenta.find(i =>
+    i.producto.id === this.productoSeleccionado!.id &&
+    (i.variante?.id ?? null) === (this.varianteSeleccionada?.id ?? null)
+  );
+
+  const cantidadTotalSolicitada = (yaEnCarrito?.cantidad || 0) + cantidadFinal;
+
+  if (cantidadTotalSolicitada > stockDisponible) {
+    const faltante = stockDisponible - (yaEnCarrito?.cantidad || 0);
+    Swal.fire({
+      icon: 'warning',
+      title: 'Límite de stock alcanzado',
+      html: `Ya tienes <b>${yaEnCarrito?.cantidad || 0}</b> en el carrito.<br>
+             Puedes agregar máximo <b>${faltante}</b> unidad${faltante === 1 ? '' : 'es'} más.`,
+      timer: 3800,
+      showConfirmButton: false
+    });
+    this.cantidad = Math.max(0, faltante);
+    return;
+  }
+  // -------------------------------------------------------------------------
+
+  // Todo ok → procedemos
+  const item: ItemVenta = {
+    producto: this.productoSeleccionado,
+    variante: this.varianteSeleccionada,
+    cantidad: cantidadFinal,
+    precioUnitario: precio,
+    subtotal: precio * cantidadFinal
+  };
+
+  if (yaEnCarrito) {
+    yaEnCarrito.cantidad += cantidadFinal;
+    yaEnCarrito.subtotal += item.subtotal;
+  } else {
+    this.itemsVenta.push(item);
+  }
+
+  this.actualizarTotal();
+  this.cantidad = 1; // reset para agregar rápido el mismo producto
+}
   eliminarItem(index: number): void {
     this.itemsVenta.splice(index, 1);
     this.actualizarTotal();

@@ -147,15 +147,29 @@
                 </select>
               </div>
 
-              <div class="mb-4">
-                <label class="form-label fw-bold mb-2">Cantidad</label>
-                <input type="number"
-                       class="form-control form-control-lg text-center rounded-4 shadow-sm"
-                       [(ngModel)]="cantidad"
-                       min="1"
-                       [max]="stockMaximo"
-                       placeholder="1">
-              </div>
+             <div class="mb-4">
+  <label class="form-label fw-bold mb-2">Cantidad</label>
+  
+  <input type="number"
+         class="form-control form-control-lg text-center rounded-4 shadow-sm"
+         [(ngModel)]="cantidad"
+         min="1"
+         [max]="stockMaximo"
+         [class.is-invalid]="cantidad > stockMaximo || cantidad < 1"
+         (input)="validarCantidadEnTiempoReal()"
+         placeholder="1">
+  
+<div class="invalid-feedback" *ngIf="cantidad > stockMaximo">
+  Máximo disponible: {{stockMaximo}}
+</div>
+<div class="invalid-feedback" *ngIf="cantidad < 1">
+  La cantidad mínima es 1
+</div>
+
+  <small class="text-muted d-block mt-1">
+    Stock disponible: <strong>{{stockMaximo}}</strong>
+  </small>
+</div>
 
               <button class="btn btn-success btn-lg w-100 rounded-4 shadow mb-3 py-3"
                       (click)="agregarAlCarrito()">
