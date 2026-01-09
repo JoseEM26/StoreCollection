@@ -5,18 +5,19 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from '../../../auth/auth.service';
 import { PageResponse } from './dashboard.service';
+import { environment } from '../../../../environment';
 
 export interface AtributoListItem {
   id: number;
   nombre: string;
   tiendaId: number;
   tiendaNombre: string;
-  valor?: string | null; // Mantenido por compatibilidad con otros usos
+  valor?: string | null;
 }
 
 export interface AtributoCreateRequest {
   nombre: string;
-  tiendaId?: number; // Solo para admin
+  tiendaId?: number;
 }
 
 export interface AtributoUpdateRequest {
@@ -29,8 +30,9 @@ export interface AtributoUpdateRequest {
 })
 export class AtributoAdminService {
 
-  private ownerBaseUrl = '/api/owner/atributos';
-  private adminBaseUrl = '/api/admin/atributos';
+  // Usa la base URL del environment
+  private ownerBaseUrl = `${environment.apiUrl}/api/owner/atributos`;
+  private adminBaseUrl = `${environment.apiUrl}/api/admin/atributos`;
 
   constructor(
     private http: HttpClient,
@@ -41,7 +43,6 @@ export class AtributoAdminService {
     return this.auth.isAdmin() ? this.adminBaseUrl : this.ownerBaseUrl;
   }
 
-  // === LISTAR (Owner: solo suyos | Admin: todos con paginación y filtro opcional) ===
   listar(
     page: number = 0,
     size: number = 20,
@@ -65,36 +66,30 @@ export class AtributoAdminService {
     return this.http.get<PageResponse<AtributoListItem>>(url, { params });
   }
 
-  // === LISTAR SIMPLES (para owner, sin paginación - útil para dropdowns o listas rápidas) ===
   listarSimples(): Observable<AtributoListItem[]> {
     return this.http.get<AtributoListItem[]>(this.ownerBaseUrl);
   }
 
-  // === OBTENER UNO POR ID ===
   obtenerPorId(id: number): Observable<AtributoListItem> {
     const url = `${this.getBaseUrl()}/${id}`;
     return this.http.get<AtributoListItem>(url);
   }
 
-  // === CREAR ===
   crear(request: AtributoCreateRequest): Observable<AtributoListItem> {
     const url = this.getBaseUrl();
     return this.http.post<AtributoListItem>(url, request);
   }
 
-  // === ACTUALIZAR ===
   actualizar(id: number, request: AtributoUpdateRequest): Observable<AtributoListItem> {
     const url = `${this.getBaseUrl()}/${id}`;
     return this.http.put<AtributoListItem>(url, request);
   }
 
-  // === ELIMINAR ===
   eliminar(id: number): Observable<void> {
     const url = `${this.getBaseUrl()}/${id}`;
     return this.http.delete<void>(url);
   }
 
-  // === MÉTODO ESPECIAL PARA ADMIN: Crear con tienda específica ===
   crearComoAdmin(request: AtributoCreateRequest): Observable<AtributoListItem> {
     if (!this.auth.isAdmin()) {
       throw new Error('Solo administradores pueden usar este método');
