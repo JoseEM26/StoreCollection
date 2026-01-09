@@ -1,122 +1,161 @@
-/* src/app/pages/public-dashboard/public-dashboard.component.css */
+/* dashboard-public.component.css */
 
-/* Hero mejorado con animación sutil */
 .hero-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   position: relative;
 }
 
 .hero-section::before {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.15" d="M0,160L48,176C96,192,192,224,288,224C384,224,480,192,576,170.7C672,149,768,139,864,154.7C960,170,1056,213,1152,213.3C1248,213,1344,170,1392,149.3L1440,128L1440,320L0,320Z"></path></svg>') bottom no-repeat;
+  inset: 0;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.12" d="M0,96L48,112C96,128,192,160,288,176C384,192,480,192,576,181.3C672,171,768,149,864,154.7C960,160,1056,192,1152,197.3C1248,203,1344,181,1392,170.7L1440,160L1440,320L0,320Z"></path></svg>') bottom no-repeat;
   background-size: cover;
-  animation: wave 20s linear infinite;
+  opacity: 0.7;
 }
 
-@keyframes wave {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-1440px); }
+.benefit-card {
+  transition: all 0.35s ease;
+  border: 1px solid rgba(0,0,0,0.05);
 }
 
-/* Cards hover mejorados */
+.benefit-card:hover {
+  transform: translateY(-12px);
+  box-shadow: 0 20px 40px rgba(99,102,241,0.15) !important;
+}
+
 .card-hover {
   transition: all 0.3s ease;
-  cursor: pointer;
 }
 
 .card-hover:hover {
   transform: translateY(-10px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.15) !important;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.12) !important;
 }
 
-/* Beneficios hover */
-.benefit-card {
-  transition: transform 0.3s ease;
-  padding: 2rem;
-  border-radius: 1rem;
+.shop-icon {
+  width: 90px;
+  height: 90px;
+  background: rgba(99,102,241,0.1);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
 }
 
-.benefit-card:hover {
-  transform: scale(1.05);
+/* Timeline - Cómo empezar */
+.timeline-container {
+  position: relative;
+  padding: 2rem 0;
 }
 
-.icon-hover {
-  transition: transform 0.3s ease;
+.timeline-step {
+  position: relative;
+  padding-left: 5rem;
+  margin-bottom: 3.5rem;
 }
 
-.icon-hover:hover {
-  transform: rotate(10deg) scale(1.1);
-}
+.timeline-step:last-child { margin-bottom: 0; }
 
-/* Planes hover nuevo */
-.plan-card-hover {
-  transition: all 0.3s ease;
-}
-
-.plan-card-hover:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 15px 30px rgba(0,0,0,0.2) !important;
-}
-
-/* Responsividad extra */
-@media (max-width: 768px) {
-  .hero-section h1 {
-    font-size: 3rem;
-  }
-  
-  .input-group button {
-    width: 100%;
-    margin-top: 1rem;
-  }
-}
-/* ========================
-   PAGINACIÓN BONITA Y VISIBLE
-   ======================== */
-
-.pagination .page-link {
-  background-color: white;
-  border: 1px solid #dee2e6;
-  color: #667eea;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  min-width: 50px;
-}
-
-.pagination .page-link:hover:not(.disabled) {
-  background-color: #667eea;
+.step-number {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 70px;
+  height: 70px;
+  background: #6366f1;
   color: white;
-  border-color: #667eea;
-  transform: translateY(-3px);
-  box-shadow: 0 8px 15px rgba(102, 126, 234, 0.3);
-}
-
-.pagination .page-item.active .page-link {
-  background-color: #667eea !important;
-  border-color: #667eea !important;
-  color: white !important;
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-}
-
-.pagination .page-item.disabled .page-link {
-  color: #adb5bd;
-  background-color: #f8f9fa;
-  cursor: not-allowed;
-}
-
-/* Flechas más grandes */
-.pagination .page-link i {
-  font-size: 1.3rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 1.6rem;
   font-weight: bold;
+  box-shadow: 0 8px 20px rgba(99,102,241,0.3);
 }
 
-/* Responsivo para móviles */
-@media (max-width: 576px) {
-  .pagination.pagination-lg .page-link {
-    padding: 0.6rem 1rem;
-    font-size: 0.95rem;
-    min-width: 44px;
-  }
+.timeline-step::before {
+  content: '';
+  position: absolute;
+  left: 35px;
+  top: 70px;
+  bottom: -3.5rem;
+  width: 2px;
+  background: linear-gradient(to bottom, #6366f1, transparent);
 }
-.z-3 { position: relative; z-index: 3; }
+
+.timeline-step:last-child::before { display: none; }
+
+.contact-buttons .btn {
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+}
+
+/* Footer */
+footer {
+  background: #0f172a;
+}
+
+.social-icons a:hover { color: #6366f1 !important; transform: translateY(-3px); }/* Planes */
+.plan-card {
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  transition: all 0.35s ease;
+}
+
+.plan-card:hover {
+  transform: translateY(-12px);
+  box-shadow: 0 25px 60px rgba(99, 102, 241, 0.18) !important;
+}
+
+.plan-featured {
+  border: 2px solid #6366f1;
+  background: linear-gradient(to bottom, rgba(99,102,241,0.05), transparent);
+}
+
+.price-display {
+  line-height: 1;
+}
+
+.feature-list li {
+  font-size: 1.05rem;
+}
+
+/* Tiendas con logo */
+.tienda-card {
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+.tienda-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 45px rgba(0,0,0,0.12) !important;
+}
+
+.tienda-logo-container {
+  height: 160px;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.tienda-logo {
+  max-width: 100%;
+  max-height: 120px;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+.logo-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(99,102,241,0.08);
+}
+
+/* Util para truncar texto en 2 líneas */
+.text-truncate-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

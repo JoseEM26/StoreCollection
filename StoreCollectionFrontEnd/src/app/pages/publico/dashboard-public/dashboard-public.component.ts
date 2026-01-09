@@ -23,7 +23,7 @@ export class DashboardPublicComponent implements OnInit {
   loading = true;
   loadingPlanes = true;
   planes: PlanResponse[] = [];
-
+currentYear = new Date().getFullYear();
   constructor(
     private tiendaService: TiendaPublicService,
     private planService: PlanPublicService
@@ -70,7 +70,23 @@ export class DashboardPublicComponent implements OnInit {
     const fin = meses[mesFin - 1] || 'Dic';
     return `${inicio} - ${fin}`;
   }
+// En DashboardPublicComponent
 
+// Pipe o método auxiliar para ordenar planes
+get planesOrdenados() {
+  return [...this.planes].sort((a, b) => (a.orden || 0) - (b.orden || 0));
+}
+
+// Método para calcular % de ahorro anual
+calcularAhorroAnual(mensual: number, anual: number): number {
+  if (!anual || mensual === 0) return 0;
+  return Math.round(((mensual * 12 - anual) / (mensual * 12)) * 100);
+}
+
+// Para el error de imagen en tiendas
+onImageError(event: Event) {
+  (event.target as HTMLImageElement).src = '/assets/images/default-shop-logo.png';
+}
   // ========================================
   // CARGA DE TIENDAS PÚBLICAS
   // ========================================
