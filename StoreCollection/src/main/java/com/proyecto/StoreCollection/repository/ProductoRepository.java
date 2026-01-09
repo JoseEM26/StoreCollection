@@ -128,7 +128,15 @@ public interface ProductoRepository extends TenantBaseRepository<Producto, Integ
              @Param("productoSlug") String productoSlug);
 
      // ==================== OPERACIONES MASIVAS ====================
-
+     @Query("""
+    SELECT p FROM Producto p
+    LEFT JOIN FETCH p.variantes v
+    WHERE p.id = :id
+      AND p.tienda.id = :tiendaId
+""")
+     Optional<Producto> findByIdAndTiendaIdWithVariantes(
+             @Param("id") Integer id,
+             @Param("tiendaId") Integer tiendaId);
      @Modifying
      @Query("UPDATE Producto p SET p.activo = false WHERE p.categoria.id = :categoriaId")
      void desactivarTodosPorCategoriaId(@Param("categoriaId") Integer categoriaId);

@@ -95,19 +95,21 @@ public class DropTownController {
                 .filter(p -> p.isActivo() && p.getStockTotal() > 0)
                 .toList();
 
-        // === AQUÍ VIENE LA MAGIA: Cargar variantes solo si se solicita un producto específico ===
         if (productoIdConVariantes != null) {
             contenido = contenido.stream().map(dto -> {
                 if (dto.getId().equals(productoIdConVariantes) && dto.isTieneVariantes()) {
-                    // Cargar variantes completas solo para este producto
-                    Producto producto = productoRepository.getByIdAndTenant(productoIdConVariantes);
+
+                    // ← Cambio importante aquí
+                    Producto producto = productoRepository
+                            .findByIdAndTiendaIdWithVariantes(productoIdConVariantes, tenantId)
+                            .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+
                     List<VarianteResponse> variantes = producto.getVariantes().stream()
                             .filter(ProductoVariante::isActivo)
-                            .filter(v -> v.getStock() > 0) // opcional: solo con stock
+                            .filter(v -> v.getStock() > 0)
                             .map(this::toVarianteResponseSimple)
                             .toList();
 
-                    // Agregar al DTO (necesitarás un nuevo campo)
                     dto.setVariantes(variantes);
                 }
                 return dto;

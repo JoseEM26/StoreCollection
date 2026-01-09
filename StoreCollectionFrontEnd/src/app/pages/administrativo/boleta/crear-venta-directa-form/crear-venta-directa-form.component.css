@@ -1,12 +1,13 @@
 .main-container {
   min-height: 100vh;
-  background: linear-gradient(to bottom, #f8fff9, #ffffff);
+  background: linear-gradient(180deg, #f8fff9 0%, #ffffff 100%);
 }
 
 .global-loader {
   position: fixed;
   inset: 0;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(4px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -14,106 +15,111 @@
   z-index: 9999;
 }
 
+.spinner-lg {
+  width: 4.5rem;
+  height: 4.5rem;
+}
+
 /* Tarjetas de producto */
 .producto-card {
   background: white;
-  border: 2px solid #e9ecef;
-  cursor: pointer;
-  height: 100%;
-  transition: all 0.3s ease;
+  border-radius: 1rem;
+  overflow: hidden;
+  transition: all 0.28s ease;
+  border: 1px solid #e9ecef;
 }
 
-.producto-card:hover {
+.producto-card:hover,
+.producto-card.selected {
   transform: translateY(-8px);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.12);
   border-color: #198754;
 }
 
-.producto-card.selected {
-  border-color: #198754 !important;
-  box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.2);
-  transform: translateY(-4px);
-}
-
 .producto-card img {
-  height: 200px;
+  height: 210px;
   object-fit: cover;
   width: 100%;
+  transition: transform 0.4s ease;
 }
 
-.overlay-badge {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 2;
+.producto-card:hover img {
+  transform: scale(1.04);
+}
+
+/* Efecto lift suave */
+.hover-lift:hover {
+  transform: translateY(-8px);
 }
 
 /* Scroll personalizado */
 .productos-grid {
-  max-height: 70vh;
+  max-height: 68vh;
   overflow-y: auto;
-  padding-right: 8px;
+  padding-right: 6px;
+  scrollbar-width: thin;
 }
 
 .productos-grid::-webkit-scrollbar {
-  width: 8px;
+  width: 7px;
 }
 .productos-grid::-webkit-scrollbar-track {
   background: transparent;
 }
 .productos-grid::-webkit-scrollbar-thumb {
-  background: #ced4da;
-  border-radius: 4px;
+  background: #adb5bd;
+  border-radius: 10px;
 }
 
 /* Skeleton */
 .skeleton {
   background: #f8f9fa;
-  border: 2px solid #e9ecef;
-  animation: pulse 1.5s ease-in-out infinite;
+  border-radius: 1rem;
 }
 
 .skeleton-img {
-  height: 200px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  height: 210px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
   background-size: 200% 100%;
-  animation: loading 1.5s infinite;
+  animation: loading 1.6s infinite;
 }
 
-.skeleton-text {
-  height: 16px;
-  background: #e9ecef;
-  border-radius: 4px;
-  margin-bottom: 8px;
+/* FAB móvil */
+.fab {
+  width: 68px;
+  height: 68px;
+  font-size: 1.6rem;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  box-shadow: 0 8px 25px rgba(25, 135, 84, 0.35) !important;
 }
 
-.skeleton-text.short { width: 70%; }
-.skeleton-text.wide { width: 40%; height: 24px; margin-top: 12px; }
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
-}
-
-@keyframes loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-/* Líneas truncadas */
+/* Utilidades varias */
 .line-clamp-2 {
-  overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-/* Responsivo móvil */
+.price {
+  font-size: 1.25rem;
+}
+
+/* Sticky en desktop */
+.sticky-lg-top {
+  position: sticky;
+  top: 1.5rem;
+}
+
+/* Responsive */
 @media (max-width: 991px) {
-  .sticky-top {
-    position: static !important;
+  .sticky-lg-top {
+    position: static;
   }
-  .order-1, .order-2 {
-    order: unset !important;
+  
+  .productos-grid {
+    max-height: 55vh;
   }
 }
