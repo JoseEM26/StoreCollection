@@ -43,7 +43,7 @@
         }
       </a>
 
-      <!-- Botón menú móvil (solo uno) -->
+      <!-- Botón menú móvil -->
       <button class="btn btn-outline-dark d-lg-none rounded-circle p-2" 
               (click)="toggleMenu()" 
               aria-label="Abrir menú">
@@ -76,17 +76,45 @@
   <router-outlet></router-outlet>
 </main>
 
-<!-- WhatsApp flotante -->
+<!-- Botones de redes sociales flotantes (abajo a la derecha) -->
+<div class="social-floating-container">
+ <!-- WhatsApp -->
 @if (tienda?.whatsapp && getWhatsAppLink()) {
   <a [href]="getWhatsAppLink()"
      (click)="abrirWhatsApp(); $event.preventDefault()"
-     class="btn-whatsapp-flotante shadow-lg rounded-circle d-flex align-items-center justify-content-center"
+     class="social-btn-float whatsapp"
      aria-label="Chatear por WhatsApp">
-    <i class="bi bi-whatsapp fs-3"></i>
-    <span class="pulse-ring"></span>
-    <span class="online-dot"></span>
+    <i class="bi bi-whatsapp fs-4"></i>
   </a>
 }
+
+<!-- Instagram -->
+@if (instagramUrl) {
+  <a [href]="instagramUrl"
+     target="_blank" rel="noopener noreferrer"
+     class="social-btn-float instagram">
+    <i class="bi bi-instagram fs-4"></i>
+  </a>
+}
+
+<!-- TikTok -->
+@if (tiktokUrl) {
+  <a [href]="tiktokUrl"
+     target="_blank" rel="noopener noreferrer"
+     class="social-btn-float tiktok">
+    <i class="bi bi-tiktok fs-4"></i>
+  </a>
+}
+
+<!-- Facebook -->
+@if (facebookUrl) {
+  <a [href]="facebookUrl"
+     target="_blank" rel="noopener noreferrer"
+     class="social-btn-float facebook">
+    <i class="bi bi-facebook fs-4"></i>
+  </a>
+}
+</div>
 
 <!-- FOOTER -->
 <footer class="public-footer text-light">
@@ -132,11 +160,23 @@
 
       <div class="col-lg-3">
         <h6 class="fw-bold mb-4">Síguenos</h6>
-        <div class="d-flex gap-3 mb-4">
-          <a href="#" class="social-btn"><i class="bi bi-tiktok fs-5"></i></a>
-          <a href="#" class="social-btn"><i class="bi bi-instagram fs-5"></i></a>
-          <a href="#" class="social-btn"><i class="bi bi-facebook fs-5"></i></a>
-        </div>
+        @if (socialLinks.length > 0) {
+          <div class="d-flex gap-3 mb-4 flex-wrap">
+            @for (social of socialLinks; track social.platform) {
+              <a [href]="social.url" 
+                 target="_blank" 
+                 rel="noopener noreferrer"
+                 class="social-btn"
+                 [attr.aria-label]="'Seguir en ' + social.platform">
+                <i [class]="social.icon + ' fs-5'"></i>
+              </a>
+            }
+          </div>
+        } @else {
+          <p class="text-light-emphasis small fst-italic">
+            Síguenos pronto en nuestras redes
+          </p>
+        }
       </div>
     </div>
 

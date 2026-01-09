@@ -68,6 +68,19 @@ export class FormStoresComponent implements OnInit, OnChanges {
       validators: [Validators.email, Validators.maxLength(150)]
     }),
     emailAppPassword: new FormControl<string | null>(null),
+    // → Nuevos campos sociales
+    tiktok: new FormControl<string | null>(null, {
+      validators: [Validators.pattern(/^https?:\/\/[^\s/$.?#].[^\s]*$/i)],
+      nonNullable: false
+    }),
+    instagram: new FormControl<string | null>(null, {
+      validators: [Validators.pattern(/^https?:\/\/[^\s/$.?#].[^\s]*$/i)],
+      nonNullable: false
+    }),
+    facebook: new FormControl<string | null>(null, {
+      validators: [Validators.pattern(/^https?:\/\/[^\s/$.?#].[^\s]*$/i)],
+      nonNullable: false
+    }),
     userId: new FormControl<number | null>(null),
     planId: new FormControl<number | null>(null),
     activo: new FormControl<boolean>(true, { nonNullable: true })
@@ -112,6 +125,9 @@ export class FormStoresComponent implements OnInit, OnChanges {
           descripcion: this.tienda.descripcion,
           direccion: this.tienda.direccion,
           horarios: this.tienda.horarios,
+          tiktok: this.tienda.tiktok || null,
+          instagram: this.tienda.instagram || null,
+          facebook: this.tienda.facebook || null,
           mapa_url: this.tienda.mapa_url,
           emailRemitente: this.tienda.emailRemitente || null,    // ← Mostramos el correo real
           emailAppPassword: this.tienda.emailAppPassword || null, // ← Mostramos la contraseña real (peligroso pero como pediste)
@@ -137,6 +153,9 @@ export class FormStoresComponent implements OnInit, OnChanges {
           emailRemitente: null,
           emailAppPassword: null,
           userId: null,
+          tiktok: null,
+          instagram: null,
+          facebook: null,
           planId: null,
           activo: true
         });
@@ -302,7 +321,11 @@ export class FormStoresComponent implements OnInit, OnChanges {
         horarios: this.form.value.horarios?.trim() || undefined,
         mapa_url: this.form.value.mapa_url?.trim() || undefined,
         emailRemitente: this.form.value.emailRemitente?.trim() || undefined,
-        emailAppPassword: appPass || undefined
+        emailAppPassword: appPass || undefined,
+        // ← Agrega esto:
+  tiktok: this.form.value.tiktok?.trim() || undefined,
+  instagram: this.form.value.instagram?.trim() || undefined,
+  facebook: this.form.value.facebook?.trim() || undefined,
       };
 
       let response: TiendaResponse;

@@ -64,8 +64,11 @@
         activo BOOLEAN DEFAULT TRUE NOT NULL,
         user_id INT NOT NULL,
         plan_id INT NOT NULL,
-        email_remitente      VARCHAR(150)          NULL,          -- ej: dueno@mitienda.com
-        email_app_password   VARCHAR(255)          NULL,          -- ¡Nunca en texto plano en producción!
+        email_remitente      VARCHAR(150)          NULL,
+        email_app_password   VARCHAR(255)          NULL,
+        tiktok varchar(255) null,
+        instagram  varchar(255) null,
+        facebook  varchar(255) null,
         FOREIGN KEY (user_id) REFERENCES usuario(id) ON DELETE CASCADE,
         FOREIGN KEY (plan_id) REFERENCES plan(id) ON DELETE CASCADE
     );

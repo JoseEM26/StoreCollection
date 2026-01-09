@@ -259,6 +259,9 @@ public class TiendaServiceImpl implements TiendaService {
         t.setMapaUrl(request.getMapa_url());
         t.setEmailAppPassword(request.getEmailAppPassword());
         t.setEmailRemitente(request.getEmailRemitente());
+        t.setTiktok(request.getTiktok());
+        t.setFacebook(request.getFacebook());
+        t.setInstagram(request.getInstagram());
 
         // Moneda
         if (request.getMoneda() != null && !request.getMoneda().isEmpty()) {
@@ -411,6 +414,9 @@ public class TiendaServiceImpl implements TiendaService {
         dto.setUserEmail(t.getUser().getEmail());
         dto.setEmailRemitente(t.getEmailRemitente());
         dto.setEmailAppPassword(t.getEmailAppPassword());
+        dto.setFacebook(t.getFacebook());
+        dto.setInstagram(t.getInstagram());
+        dto.setTiktok(t.getTiktok());
 
         if (t.getFechaVencimiento() != null) {
             // Opción recomendada: solo fecha (más común para vencimientos)

@@ -28,5 +28,9 @@ public class  TiendaResponse {
     private Integer maxVariantes;
     private String emailRemitente;
     private String emailAppPassword;
-// + getters y setters para todos
+
+    private String tiktok;
+    private String instagram;
+    private String facebook;
+
 }

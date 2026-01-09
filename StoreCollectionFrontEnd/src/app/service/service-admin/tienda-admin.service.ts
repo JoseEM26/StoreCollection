@@ -21,6 +21,9 @@ export interface TiendaCreateRequest {
   activo?: boolean;
   emailRemitente?: string;           // opcional
   emailAppPassword?: string;
+    tiktok?: string | null;
+  instagram?: string | null;
+  facebook?: string | null;
 }
 
 export interface TiendaUpdateRequest {
@@ -36,6 +39,9 @@ export interface TiendaUpdateRequest {
   activo?: boolean;
   emailRemitente?: string;           // opcional
   emailAppPassword?: string;
+    tiktok?: string | null;
+  instagram?: string | null;
+  facebook?: string | null;
 }
 
 @Injectable({

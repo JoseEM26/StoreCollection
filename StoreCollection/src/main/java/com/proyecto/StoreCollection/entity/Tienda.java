@@ -54,6 +54,15 @@ public class Tienda {
     @Column(name = "logo_img_url")
     private String logoImgUrl;
 
+    @Column(name = "tiktok")
+    private String tiktok;
+
+    @Column(name = "instagram")
+    private String instagram;
+
+    @Column(name = "facebook")
+    private String facebook;
+
     @Column(nullable = false)
     private Boolean activo = true;
 

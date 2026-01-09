@@ -23,4 +23,8 @@ public class TiendaRequest {
     private Integer  userId;
     private Integer  planId;
     private Boolean activo;
+
+    private String tiktok;
+    private String instagram;
+    private String facebook;
 }
