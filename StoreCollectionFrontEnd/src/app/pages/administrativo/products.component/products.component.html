@@ -232,7 +232,7 @@
 <div class="modal fade" tabindex="-1" [class.show]="showModal()" [style.display]="showModal() ? 'block' : 'none'">
   <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content border-0 shadow-lg rounded-4">
-      <div class="modal-body p-0">
+      <div class="modal-body p-0" *ngIf="showModal()">
         <app-product-form 
           [isEdit]="isEditMode()"
           [producto]="selectedProducto()"

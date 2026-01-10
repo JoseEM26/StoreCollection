@@ -65,11 +65,12 @@ export class ProductFormComponent implements OnChanges {
       this.atributosDisponibles.set(atributos);
     });
   }
-
 ngOnChanges(changes: SimpleChanges): void {
-  // Caso 1: Estamos editando un producto existente
+  // Siempre reseteamos primero (garantiza formulario limpio en modo creación)
+  this.resetForm();
+
+  // Solo si estamos realmente en modo edición y hay producto → cargamos datos
   if (this.isEdit && this.producto) {
-    // Cargamos los datos del producto
     this.nombre.set(this.producto.nombre || '');
     this.slug.set(this.producto.slug || '');
     this.categoriaId.set(this.producto.categoriaId ?? null);
@@ -100,17 +101,12 @@ ngOnChanges(changes: SimpleChanges): void {
     this.variantes.set(variantesMapeadas);
     this.collapsed.set(variantesMapeadas.map(() => true));
 
-    // Cargar nombre de la tienda si no es admin
     if (!this.auth.isAdmin() && this.producto.tiendaId) {
       this.dropTownService.getTiendas().subscribe(tiendas => {
         const miTienda = tiendas.find(t => t.id === this.producto!.tiendaId);
         this.tiendaActual.set(miTienda || null);
       });
     }
-  } 
-  // Caso 2: Nuevo producto (isEdit false o producto undefined)
-  else {
-    this.resetForm();
   }
 }
 
