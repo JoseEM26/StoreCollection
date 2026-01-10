@@ -66,48 +66,53 @@ export class ProductFormComponent implements OnChanges {
     });
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['producto'] || changes['isEdit']) {
-      if (this.producto && this.isEdit) {
-        this.nombre.set(this.producto.nombre);
-        this.slug.set(this.producto.slug);
-        this.categoriaId.set(this.producto.categoriaId);
-        this.tiendaId.set(this.producto.tiendaId);
-        this.activo.set(this.producto.activo);
+ngOnChanges(changes: SimpleChanges): void {
+  // Caso 1: Estamos editando un producto existente
+  if (this.isEdit && this.producto) {
+    // Cargamos los datos del producto
+    this.nombre.set(this.producto.nombre || '');
+    this.slug.set(this.producto.slug || '');
+    this.categoriaId.set(this.producto.categoriaId ?? null);
+    this.tiendaId.set(this.producto.tiendaId ?? null);
+    this.activo.set(this.producto.activo ?? true);
 
-        const vars = this.producto.variantes?.map((v, index) => {
-          const variante: VarianteRequest = {
-            id: v.id,
-            sku: v.sku,
-            precio: v.precio,
-            stock: v.stock,
-            imagenUrl: v.imagenUrl,
-            activo: v.activo,
-            atributos: v.atributos.map(a => ({
-              atributoNombre: a.atributoNombre || '',
-              valor: a.valor || ''
-            }))
-          };
-          if (v.imagenUrl) {
-            this.imagenPreviews.update(map => map.set(index, v.imagenUrl!));
-          }
-          return variante;
-        }) || [];
+    const variantesMapeadas = this.producto.variantes?.map((v, index) => {
+      const variante: VarianteRequest = {
+        id: v.id,
+        sku: v.sku || '',
+        precio: v.precio || 0,
+        stock: v.stock ?? 0,
+        imagenUrl: v.imagenUrl,
+        activo: v.activo ?? true,
+        atributos: v.atributos.map(a => ({
+          atributoNombre: a.atributoNombre || '',
+          valor: a.valor || ''
+        }))
+      };
 
-        this.variantes.set(vars);
-        this.collapsed.set(vars.map(() => true));
-
-        if (!this.auth.isAdmin() && this.producto.tiendaId) {
-          this.dropTownService.getTiendas().subscribe(tiendas => {
-            const miTienda = tiendas.find(t => t.id === this.producto!.tiendaId);
-            this.tiendaActual.set(miTienda || null);
-          });
-        }
-      } else {
-        this.resetForm();
+      if (v.imagenUrl) {
+        this.imagenPreviews.update(map => map.set(index, v.imagenUrl!));
       }
+
+      return variante;
+    }) || [];
+
+    this.variantes.set(variantesMapeadas);
+    this.collapsed.set(variantesMapeadas.map(() => true));
+
+    // Cargar nombre de la tienda si no es admin
+    if (!this.auth.isAdmin() && this.producto.tiendaId) {
+      this.dropTownService.getTiendas().subscribe(tiendas => {
+        const miTienda = tiendas.find(t => t.id === this.producto!.tiendaId);
+        this.tiendaActual.set(miTienda || null);
+      });
     }
+  } 
+  // Caso 2: Nuevo producto (isEdit false o producto undefined)
+  else {
+    this.resetForm();
   }
+}
 
   private resetForm() {
     this.nombre.set('');
