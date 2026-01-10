@@ -257,8 +257,6 @@ public class TiendaServiceImpl implements TiendaService {
         t.setDireccion(request.getDireccion());
         t.setHorarios(request.getHorarios());
         t.setMapaUrl(request.getMapa_url());
-        t.setEmailAppPassword(request.getEmailAppPassword());
-        t.setEmailRemitente(request.getEmailRemitente());
         t.setTiktok(request.getTiktok());
         t.setFacebook(request.getFacebook());
         t.setInstagram(request.getInstagram());
@@ -412,8 +410,6 @@ public class TiendaServiceImpl implements TiendaService {
         dto.setActivo(t.getActivo());
         dto.setUserId(t.getUser().getId());
         dto.setUserEmail(t.getUser().getEmail());
-        dto.setEmailRemitente(t.getEmailRemitente());
-        dto.setEmailAppPassword(t.getEmailAppPassword());
         dto.setFacebook(t.getFacebook());
         dto.setInstagram(t.getInstagram());
         dto.setTiktok(t.getTiktok());

@@ -34,9 +34,6 @@ export interface TiendaResponse extends TiendaBase {
   fechaFin?: string | null;
   maxProductos?: number;
   maxVariantes?: number;
-  emailRemitente ?:string;
-  emailAppPassword ?:string;
-// Nuevos campos sociales (todos opcionales)
   tiktok?: string | null;
   instagram?: string | null;
   facebook?: string | null;

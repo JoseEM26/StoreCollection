@@ -292,54 +292,95 @@ agregarAlCarrito(): void {
     this.totalVenta = this.itemsVenta.reduce((sum, item) => sum + item.subtotal, 0);
   }
 
- confirmarVenta(): void {
+confirmarVenta(): void {
   if (this.itemsVenta.length === 0) {
-    alert('El carrito está vacío');
+    Swal.fire('Carrito vacío', 'Agrega al menos un producto', 'warning');
     return;
   }
 
-  const request: VentaDirectaRequest = {
-    tiendaId: this.itemsVenta[0].producto.tiendaId,  // todos los productos son de la misma tienda
-    compradorNombre: prompt('Nombre del cliente (opcional)')?.trim() || undefined,
-    compradorEmail: null,
-    compradorTelefono: null,
-    items: this.itemsVenta.map(item => ({
-      varianteId: item.variante?.id || item.producto.id,  // si no tiene variante, usa el producto base (ajustar según tu backend)
-      cantidad: item.cantidad
-    }))
-  };
+  Swal.fire({
+    title: 'Confirmar venta directa',
+    html: `
+      <div class="text-start mb-4">
+        <label class="form-label fw-bold mb-2">Nombre del cliente *</label>
+        <input id="swal-input-nombre" class="swal2-input" 
+               placeholder="Cliente en tienda / Mostrador" 
+               value="">
+      </div>
+      
+      <div class="text-start">
+        <label class="form-label fw-bold mb-2">Número de teléfono / WhatsApp (opcional)</label>
+        <input id="swal-input-telefono" class="swal2-input" 
+               placeholder="Ej: 999 123 456" 
+               value="">
+      </div>
+    `,
+    focusConfirm: false,
+    showCancelButton: true,
+    confirmButtonText: 'Registrar venta',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#10b981',
+    cancelButtonColor: '#d33',
+    preConfirm: () => {
+      const nombre = (document.getElementById('swal-input-nombre') as HTMLInputElement).value.trim();
+      const telefono = (document.getElementById('swal-input-telefono') as HTMLInputElement).value.trim();
 
-  // Si tu backend requiere variante siempre, asegúrate de que los productos sin variantes también tengan una variante por defecto
-  // o ajusta el backend para aceptar productoId si no hay variante
+      // Opcional: validación básica de teléfono (puedes quitarla si no la necesitas)
+      if (telefono && !/^[0-9+\-\s]{8,15}$/.test(telefono)) {
+        Swal.showValidationMessage('El número de teléfono no parece válido');
+        return false;
+      }
 
-  this.boletaService.crearVentaDirecta(request).subscribe({
-    next: (boleta) => {
-      // Éxito
-      Swal.fire({
-        icon: 'success',
-        title: '¡Venta realizada!',
-        text: `Boleta #${boleta.id} creada por S/ ${boleta.total.toFixed(2)}`,
-        timer: 3000,
-        showConfirmButton: false
-      });
-
-      // Limpiar carrito
-      this.itemsVenta = [];
-      this.totalVenta = 0;
-      this.productoSeleccionado = undefined;
-      this.variantes = [];
-      this.cantidad = 1;
-
-      // Opcional: redirigir o imprimir
-      // this.router.navigate(['/admin/boletas', boleta.id]);
-    },
-    error: (err) => {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error al crear venta',
-        text: err.message || 'Ocurrió un error inesperado'
-      });
+      return {
+        compradorNombre: nombre || undefined,
+        compradorNumero: telefono || undefined
+      };
     }
+  }).then(result => {
+    if (!result.isConfirmed) return;
+
+    const data = result.value as { compradorNombre?: string; compradorNumero?: string };
+
+    const request: VentaDirectaRequest = {
+      tiendaId: this.itemsVenta[0].producto.tiendaId,
+      compradorNombre: data.compradorNombre,
+      compradorNumero: data.compradorNumero,   // ← ahora enviado si el usuario lo ingresa
+      compradorEmail: null,                    // puedes agregar input para email si lo deseas
+      items: this.itemsVenta.map(item => ({
+        varianteId: item.variante?.id || item.producto.id,
+        cantidad: item.cantidad
+      }))
+    };
+
+    this.boletaService.crearVentaDirecta(request).subscribe({
+      next: (boleta) => {
+        Swal.fire({
+          icon: 'success',
+          title: '¡Venta realizada!',
+          html: `Boleta <strong>#${boleta.id}</strong> creada por <strong>S/ ${boleta.total.toFixed(2)}</strong><br>
+                 ${boleta.compradorNombre ? `Cliente: ${boleta.compradorNombre}` : 'Venta anónima/mostrador'}`,
+          timer: 3500,
+          showConfirmButton: false
+        });
+
+        // Limpiar todo
+        this.itemsVenta = [];
+        this.totalVenta = 0;
+        this.productoSeleccionado = undefined;
+        this.variantes = [];
+        this.cantidad = 1;
+
+        // Opcional: emitir evento al padre para recargar lista de boletas
+        // this.ventaCreada.emit();
+      },
+      error: (err) => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al registrar venta',
+          text: err.message || 'Ocurrió un error inesperado. Intenta nuevamente.',
+        });
+      }
+    });
   });
 }
 }

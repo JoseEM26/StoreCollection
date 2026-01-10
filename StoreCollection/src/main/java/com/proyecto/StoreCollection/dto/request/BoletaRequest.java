@@ -9,47 +9,42 @@ import java.util.List;
 @Data
 public class BoletaRequest {
 
-    @NotBlank
+    @NotBlank(message = "Session ID es requerido")
     private String sessionId;
 
     private Integer userId;
 
-    @NotNull
+    @NotNull(message = "Tienda es requerida")
     private Integer tiendaId;
 
-    @NotBlank
-    @Size(min = 3, max = 100)
+    // Todos opcionales para checkout WhatsApp rápido
+    @Size(max = 100)
     private String compradorNombre;
 
-    @NotBlank
-    @Email
     @Size(max = 120)
+    @Email
     private String compradorEmail;
 
     @Size(max = 20)
-    private String compradorTelefono;
+    private String compradorNumero;
 
-    // Campos de dirección opcionales
-    @Size(max = 150)
+    // Dirección opcional
+    @Size(max = 255)
     private String direccionEnvio;
 
-    @Size(max = 100)
+    @Size(max = 255)
     private String referenciaEnvio;
 
-    @Size(max = 60)
+    @Size(max = 100)
     private String distrito;
 
-    @Size(max = 60)
+    @Size(max = 100)
     private String provincia;
 
-    @Size(max = 40)
+    @Size(max = 60)
     private String departamento;
 
-    @Size(max = 10)
     private String codigoPostal;
 
-    private Boleta.TipoEntrega tipoEntrega;
-
-    // Opcional
-    private String metodoPago;
+    private String tipoEntrega;  // "DOMICILIO", "RECOGIDA_EN_TIENDA", "AGENCIA"
 }

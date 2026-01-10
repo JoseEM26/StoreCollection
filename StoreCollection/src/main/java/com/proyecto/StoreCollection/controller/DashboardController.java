@@ -314,7 +314,7 @@ public class DashboardController {
                         .map(b -> new BoletaDashboardDto(
                                 b.getId(),
                                 b.getCompradorNombre(),
-                                b.getCompradorEmail(),
+
                                 b.getTotal(),
                                 b.getEstado(),
                                 b.getFecha(),
@@ -333,7 +333,6 @@ public class DashboardController {
                         .map(b -> new BoletaDashboardDto(
                                 b.getId(),
                                 b.getCompradorNombre(),
-                                b.getCompradorEmail(),
                                 b.getTotal(),
                                 b.getEstado(),
                                 b.getFecha(),

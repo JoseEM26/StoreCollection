@@ -1,5 +1,4 @@
 package com.proyecto.StoreCollection.dto.request;
-import com.proyecto.StoreCollection.entity.Boleta.TipoEntrega;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -19,10 +18,8 @@ public class BoletaAdminRequest {
 
     private BigDecimal total;
     private String compradorNombre;
-    private String compradorEmail;
-    private String compradorTelefono;
-    private TipoEntrega tipoEntrega = TipoEntrega.RECOGIDA_EN_TIENDA;
-    private String notasInternas;
+    private String compradorNumero;
+
 
     @Data
     public static class ItemRequest {

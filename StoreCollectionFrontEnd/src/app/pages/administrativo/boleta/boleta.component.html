@@ -85,8 +85,8 @@
                 <td class="py-4">
                   <div class="fw-semibold">{{ boleta.compradorNombre }}</div>
                   <small class="text-muted d-block">{{ boleta.compradorEmail }}</small>
-                  <small class="text-muted" *ngIf="boleta.compradorTelefono">
-                    <i class="bi bi-whatsapp me-1 text-success"></i> {{ boleta.compradorTelefono }}
+                  <small class="text-muted" *ngIf="boleta.compradorNumero">
+                    <i class="bi bi-whatsapp me-1 text-success"></i> {{ boleta.compradorNumero }}
                   </small>
                 </td>
                 <td class="py-4 text-muted">{{ formatDate(boleta.fecha) }}</td>
@@ -164,8 +164,8 @@
             <div class="mb-3">
               <div class="fw-semibold">{{ boleta.compradorNombre }}</div>
               <small class="text-muted d-block">{{ boleta.compradorEmail }}</small>
-              <small class="text-muted" *ngIf="boleta.compradorTelefono">
-                <i class="bi bi-whatsapp me-1 text-success"></i> {{ boleta.compradorTelefono }}
+              <small class="text-muted" *ngIf="boleta.compradorNumero">
+                <i class="bi bi-whatsapp me-1 text-success"></i> {{ boleta.compradorNumero }}
               </small>
             </div>
 
@@ -257,14 +257,9 @@
             <div class="col-md-6">
               <h6 class="text-primary fw-bold">Datos del Cliente</h6>
               <p><strong>Nombre:</strong> {{ boletaSeleccionada.compradorNombre }}</p>
-              <p><strong>Email:</strong> {{ boletaSeleccionada.compradorEmail }}</p>
-              <p><strong>Teléfono:</strong> {{ boletaSeleccionada.compradorTelefono || 'No proporcionado' }}</p>
+              <p><strong>Teléfono:</strong> {{ boletaSeleccionada.compradorNumero || 'No proporcionado' }}</p>
             </div>
-            <div class="col-md-6">
-              <h6 class="text-primary fw-bold">Información de Entrega</h6>
-              <p><strong>Tipo:</strong> {{ boletaSeleccionada.tipoEntrega || 'No especificado' }}</p>
-              <p><strong>Dirección:</strong> {{ boletaSeleccionada.direccionEnvio || 'N/A' }}</p>
-            </div>
+           
           </div>
           <hr>
           <h6 class="text-primary fw-bold">Productos</h6>

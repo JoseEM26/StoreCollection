@@ -10,18 +10,18 @@ public class BoletaResponse {
     private Integer id;
     private String sessionId;
     private Integer userId;
-    private String tiendaNombre;
     private Integer tiendaId;
+    private String tiendaNombre;
     private BigDecimal total;
-
-    private LocalDateTime fecha;  // ← Cambia de String a LocalDateTime
-
+    private LocalDateTime fecha;           // mejor como objeto, el frontend lo formatea
     private String estado;
-    private List<BoletaDetalleResponse> detalles;
 
+    // Datos comprador
     private String compradorNombre;
     private String compradorEmail;
-    private String compradorTelefono;
+    private String compradorNumero;        // consistente
+
+    // Dirección
     private String direccionEnvio;
     private String referenciaEnvio;
     private String distrito;
@@ -29,4 +29,6 @@ public class BoletaResponse {
     private String departamento;
     private String codigoPostal;
     private String tipoEntrega;
+
+    private List<BoletaDetalleResponse> detalles;
 }

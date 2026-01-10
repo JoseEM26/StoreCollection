@@ -129,8 +129,6 @@ export class FormStoresComponent implements OnInit, OnChanges {
           instagram: this.tienda.instagram || null,
           facebook: this.tienda.facebook || null,
           mapa_url: this.tienda.mapa_url,
-          emailRemitente: this.tienda.emailRemitente || null,    // ← Mostramos el correo real
-          emailAppPassword: this.tienda.emailAppPassword || null, // ← Mostramos la contraseña real (peligroso pero como pediste)
           userId: this.tienda.userId,
           planId: this.tienda.planId,
           activo: this.tienda.activo ?? true

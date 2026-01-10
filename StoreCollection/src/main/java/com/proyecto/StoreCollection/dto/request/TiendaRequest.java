@@ -16,8 +16,6 @@ public class TiendaRequest {
     private String descripcion;
     private String direccion;
     private String horarios;
-    private String emailRemitente;
-    private String emailAppPassword;
     private String mapa_url;
     private MultipartFile logoImg;
     private Integer  userId;

@@ -3,11 +3,12 @@ package com.proyecto.StoreCollection.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.springframework.util.StringUtils;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-// ... imports ...
 
 @Entity
 @Table(name = "boleta")
@@ -38,9 +39,8 @@ public class Boleta {
     @Enumerated(EnumType.STRING)
     private EstadoBoleta estado = EstadoBoleta.PENDIENTE;
 
-    // Datos del comprador
-    @NotBlank
-    @Size(min = 3, max = 100)
+    // Datos del comprador - todos opcionales
+    @Size(max = 100)
     private String compradorNombre;
 
     @Email
@@ -48,22 +48,22 @@ public class Boleta {
     private String compradorEmail;
 
     @Size(max = 20)
-    private String compradorTelefono;
+    private String compradorNumero;          // ← nombre consistente con BD
 
-    // Campos de dirección → opcionales ahora
-    @Size(max = 150)
+    // Dirección de envío - todos opcionales
+    @Size(max = 255)
     private String direccionEnvio;
 
-    @Size(max = 100)
+    @Size(max = 255)
     private String referenciaEnvio;
 
-    @Size(max = 60)
+    @Size(max = 100)
     private String distrito;
 
-    @Size(max = 60)
+    @Size(max = 100)
     private String provincia;
 
-    @Size(max = 40)
+    @Size(max = 60)
     private String departamento;
 
     @Size(max = 10)
@@ -83,12 +83,12 @@ public class Boleta {
         DOMICILIO, RECOGIDA_EN_TIENDA, AGENCIA
     }
 
-    // Puedes mantener este helper, pero ya no es crítico
+    // Helper útil para mostrar dirección
     public String getDireccionCompleta() {
         if (direccionEnvio == null) return "Por coordinar vía WhatsApp";
         StringBuilder sb = new StringBuilder(direccionEnvio);
-        if (referenciaEnvio != null && !referenciaEnvio.isBlank()) sb.append(" - ").append(referenciaEnvio);
-        if (distrito != null) sb.append(", ").append(distrito);
-        return sb.toString();
+        if (StringUtils.hasText(referenciaEnvio)) sb.append(" - ").append(referenciaEnvio);
+        if (StringUtils.hasText(distrito)) sb.append(", ").append(distrito);
+        return sb.toString().trim();
     }
 }

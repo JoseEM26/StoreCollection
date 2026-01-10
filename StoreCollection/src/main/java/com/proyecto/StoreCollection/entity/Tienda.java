@@ -45,12 +45,6 @@ public class Tienda {
     @Column(name = "mapa_url")
     private String mapaUrl;
 
-    @Column(name = "email_remitente")
-    private String emailRemitente;
-
-    @Column(name = "email_app_password")
-    private String emailAppPassword;
-
     @Column(name = "logo_img_url")
     private String logoImgUrl;
 

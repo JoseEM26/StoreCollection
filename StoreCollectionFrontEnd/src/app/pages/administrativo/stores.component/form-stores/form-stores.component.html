@@ -161,53 +161,8 @@
               </select>
             </div>
 
-            <!-- Correo Remitente -->
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Correo remitente</label>
-              <input 
-                formControlName="emailRemitente"
-                type="email" 
-                class="form-control form-control-lg rounded-3 shadow-sm"
-                placeholder="ventas@mitienda.com"
-                [class.is-invalid]="form.get('emailRemitente')?.invalid && (form.get('emailRemitente')?.touched || formSubmitted)"
-              />
-              <div class="invalid-feedback">
-                {{ getErrorMessage('emailRemitente') }}
-              </div>
-            </div>
+       
 
-           <!-- Contraseña App Gmail -->
-<div class="col-md-6">
-  <label class="form-label fw-semibold">Contraseña de aplicación Gmail</label>
-  <div class="input-group input-group-lg">
-    <input 
-      [type]="showAppPassword ? 'text' : 'password'"
-      formControlName="emailAppPassword"
-      class="form-control rounded-3 shadow-sm"
-      placeholder="Ej: xxxxxxxxxxxxxxxxx (opcional)"
-      [class.is-invalid]="form.get('emailAppPassword')?.invalid && (form.get('emailAppPassword')?.touched || formSubmitted)"
-    />
-    <button 
-      class="btn btn-outline-secondary rounded-end-3 shadow-sm" 
-      type="button" 
-      (click)="toggleAppPasswordVisibility()"
-      title="{{ showAppPassword ? 'Ocultar' : 'Mostrar' }}"
-    >
-      <i class="bi" [ngClass]="showAppPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
-    </button>
-  </div>
-  <!-- Muestra el mensaje sensible SIEMPRE que haya valor -->
-  <div class="form-text text-danger small mt-2" 
-       *ngIf="(form.get('emailAppPassword')?.value?.length ?? 0) > 0">
-    <i class="bi bi-shield-lock-fill me-1"></i>
-    Campo extremadamente sensible — solo se usa para enviar correos
-  </div>
-  <div class="form-text text-muted small mt-1">
-    <a href="https://support.google.com/accounts/answer/185833" target="_blank" class="text-decoration-underline">
-      ¿Cómo generar una contraseña de app?
-    </a>
-  </div>
-</div>
 <!-- NUEVOS CAMPOS SOCIALES -->
 <div class="col-md-6">
   <label class="form-label fw-semibold">TikTok</label>

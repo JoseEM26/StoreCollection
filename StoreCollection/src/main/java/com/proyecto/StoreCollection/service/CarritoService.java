@@ -15,6 +15,5 @@ public interface CarritoService {
     void limpiarCarrito(String sessionId, Integer tiendaId);
     CarritoResponse crear(CarritoRequest request);
     CarritoResponse actualizar(Integer carritoId, CarritoRequest request);
-    BoletaResponse checkoutOnline(BoletaRequest request);
     String checkoutWhatsapp(BoletaRequest request);
 }

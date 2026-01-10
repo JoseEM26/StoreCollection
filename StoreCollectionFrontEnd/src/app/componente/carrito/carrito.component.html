@@ -30,8 +30,6 @@
       <i class="bi bi-cart-x display-1 text-success opacity-50 mb-4"></i>
       <h2 class="mb-3">Tu carrito está vacío</h2>
       <p class="text-muted mb-4 lead">¡Explora nuestro catálogo y encuentra productos increíbles!</p>
-      
-      <!-- RUTA CORREGIDA -->
       <a [routerLink]="['/', tienda?.slug, 'catalogo']" class="btn btn-success btn-lg px-5 py-3 rounded-pill shadow">
         <i class="bi bi-shop me-2"></i> Ir al Catálogo
       </a>
@@ -139,59 +137,21 @@
               </div>
 
               <div class="resumen-acciones">
-                <button class="btn-pagar-online-resumen" 
-                        (click)="abrirFormularioCheckout()"
-                        [disabled]="isProcessingOnline">
-                  <i class="bi bi-credit-card-2-front-fill me-2"></i>
-                  Reservar Online
-                </button>
-
                 <button class="btn-whatsapp-resumen" 
-                        (click)="checkoutWhatsapp()"
+                        (click)="enviarPedidoWhatsapp()"
                         [disabled]="isProcessingWhatsapp">
                   <i class="bi bi-whatsapp me-2"></i>
-                  Enviar por WhatsApp
+                  {{ isProcessingWhatsapp ? 'Preparando...' : 'Enviar pedido por WhatsApp' }}
                 </button>
               </div>
 
-              <!-- RUTA CORREGIDA -->
-              <a [routerLink]="['/', tienda?.slug, 'catalogo']"class="btn-continuar-comprando d-block text-center mt-4">
+              <a [routerLink]="['/', tienda?.slug, 'catalogo']" class="btn-continuar-comprando d-block text-center mt-4">
                 <i class="bi bi-arrow-left-circle me-2"></i>
                 Seguir comprando
               </a>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL CHECKOUT ==================== -->
-  <div class="checkout-backdrop" 
-       [class.active]="showCheckoutModal"
-       (click)="cerrarFormularioCheckout()">
-    
-    <div class="checkout-modal" 
-         [class.active]="showCheckoutModal"
-         (click)="$event.stopPropagation()">
-      
-      <button class="modal-close-btn" 
-              (click)="cerrarFormularioCheckout()"
-              aria-label="Cerrar">
-        <i class="bi bi-x-lg"></i>
-      </button>
-
-      <div class="modal-header-premium">
-        <h3>Finalizar tu compra</h3>
-        <p>Completa los datos para procesar tu pedido</p>
-      </div>
-
-      <div class="modal-body-content">
-        <app-checkout-form 
-          [tiendaId]="tiendaId"
-          (onSubmit)="procesarCheckout($event)"
-          (onCancel)="cerrarFormularioCheckout()">
-        </app-checkout-form>
       </div>
     </div>
   </div>

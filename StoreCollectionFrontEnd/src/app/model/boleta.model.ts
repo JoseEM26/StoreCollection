@@ -9,35 +9,17 @@ export interface BoletaRequest {
 
   // Datos del comprador (obligatorios)
   compradorNombre: string;
-  compradorEmail: string;
-  compradorTelefono?: string;  // opcional
+    compradorNumero: string;
 
-  // Datos de envío (obligatorios excepto algunos)
-  direccionEnvio: string;
-  referenciaEnvio?: string;
-  distrito: string;
-  provincia: string;
-  departamento: string;
-  codigoPostal?: string;
-
-  // Tipo de entrega
-  tipoEntrega: 'DOMICILIO' | 'RECOGIDA_EN_TIENDA' | 'AGENCIA';
-
-  // Opcional: método de pago (si lo implementas después)
-  metodoPago?: string;
 }
 // =============================================
 // Request para crear venta directa (mostrador)
 // =============================================
 export interface VentaDirectaRequest {
   tiendaId: number;
-
-  // Información del comprador (opcional en venta directa)
-  compradorNombre?: string;     // Si no se envía → backend usa "Cliente en tienda (venta directa)"
+  compradorNombre?: string;
   compradorEmail?: string | null;
-  compradorTelefono?: string | null;
-
-  // Lista de ítems (obligatorio)
+  compradorNumero?: string | null;   // ← cambiar de compradorTelefono
   items: VentaDirectaItemRequest[];
 }
 
@@ -47,29 +29,28 @@ export interface VentaDirectaItemRequest {
 }
 export interface BoletaResponse {
   id: number;
-  sessionId: string;
+  sessionId: string | null;
   userId: number | null;
   tiendaId: number;
   total: number;
   fecha: string;
   estado: string;
-  // Nuevos campos agregados
-  compradorNombre: string;
-  compradorEmail: string;
-  compradorTelefono?: string;
 
-  direccionEnvio: string;
-  referenciaEnvio?: string;
-  distrito: string;
-  provincia: string;
-  departamento: string;
-  codigoPostal?: string;
+  compradorNombre: string | null;
+  compradorNumero: string | null;
+  compradorEmail?: string | null;     // si lo agregaste
 
-  tipoEntrega: string;  // 'DOMICILIO' | etc...
+  // Dirección y entrega (agregar estos)
+  direccionEnvio?: string | null;
+  referenciaEnvio?: string | null;
+  distrito?: string | null;
+  provincia?: string | null;
+  departamento?: string | null;
+  codigoPostal?: string | null;
+  tipoEntrega?: 'DOMICILIO' | 'RECOGIDA_EN_TIENDA' | 'AGENCIA' | null;
 
   detalles: BoletaDetalleResponse[];
 }
-// src/app/model/boleta-detalle.model.ts (agregado para completar BoletaResponse, basado en backend)
 
 export interface BoletaDetalleResponse {
   id: number;

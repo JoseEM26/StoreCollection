@@ -165,7 +165,7 @@
 
         -- Nuevos campos de comprador y envío
         comprador_nombre    VARCHAR(100)  NULL,
-        comprador_email     VARCHAR(120)  NULL,
+        comprador_numero     VARCHAR(120)  NULL,
         comprador_telefono  VARCHAR(20)  NULL,
 
         direccion_envio     VARCHAR(150)  NULL,

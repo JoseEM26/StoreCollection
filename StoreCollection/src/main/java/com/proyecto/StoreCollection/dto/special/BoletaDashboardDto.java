@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 public record BoletaDashboardDto(
         Integer id,
         String compradorNombre,
-        String compradorEmail,
         BigDecimal total,
         EstadoBoleta estado,
         LocalDateTime fecha,
