@@ -30,8 +30,9 @@ export class CarritoComponent implements OnInit, OnDestroy {
   isProcessingOnline = false;
   isProcessingWhatsapp = false;
 
-  tiendaId: number = 1; // TODO: obtener dinámicamente (desde servicio o store)
-
+get tiendaId(): number {
+  return this.tienda?.id ?? 1;
+}
   // Control del modal de checkout
   showCheckoutModal = false;
 
