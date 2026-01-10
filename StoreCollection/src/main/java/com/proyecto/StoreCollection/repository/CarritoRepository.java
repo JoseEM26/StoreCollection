@@ -20,4 +20,13 @@ public interface CarritoRepository extends JpaRepository<Carrito,Integer> {
              "JOIN FETCH v.tienda t " +
              "WHERE c.sessionId = :sessionId")
      List<Carrito> findBySessionIdWithDetails(@Param("sessionId") String sessionId);
+
+
+     // Opcional: contar items
+     long countBySessionIdAndTiendaId(String sessionId, Integer tiendaId);
+     List<Carrito> findBySessionIdAndTiendaId(String sessionId, Integer tiendaId);
+     void deleteBySessionIdAndTiendaId(String sessionId, Integer tiendaId);
+     // Y si usas findBySessionIdWithDetails, crea uno nuevo con tiendaId o úsalo con JOIN
+     @Query("SELECT c FROM Carrito c JOIN FETCH c.variante v JOIN FETCH v.producto WHERE c.sessionId = :sessionId AND c.tienda.id = :tiendaId")
+     List<Carrito> findBySessionIdAndTiendaIdWithDetails(@Param("sessionId") String sessionId, @Param("tiendaId") Integer tiendaId);
 }

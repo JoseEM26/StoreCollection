@@ -24,27 +24,22 @@ public class CarritoController {
     private final CarritoService service;
 
     @GetMapping("/session/{sessionId}")
-    public ResponseEntity<List<CarritoResponse>> getBySession(@PathVariable String sessionId) {
-        return ResponseEntity.ok(service.findBySessionId(sessionId));
+    public ResponseEntity<List<CarritoResponse>> getBySession(
+            @PathVariable String sessionId,
+            @RequestParam(required = true) Integer tiendaId) {
+        return ResponseEntity.ok(service.findBySessionId(sessionId, tiendaId));
     }
 
     @PostMapping
     public ResponseEntity<CarritoResponse> agregar(@RequestBody @Valid CarritoRequest request) {
-        return ResponseEntity.ok(service.save(request));
-    }
-    @PostMapping("/checkout/online")
-    public ResponseEntity<BoletaResponse> checkoutOnline(@RequestBody @Valid BoletaRequest request) {
-        return ResponseEntity.ok(service.checkoutOnline(request));
+        return ResponseEntity.ok(service.crear(request));  // ← ahora usa crear()
     }
 
-    @PostMapping("/checkout/whatsapp")
-    public ResponseEntity<String> checkoutWhatsapp(@RequestBody @Valid BoletaRequest request) {
-        return ResponseEntity.ok(service.checkoutWhatsapp(request));
-    }
     @PutMapping("/{id}")
-    public ResponseEntity<CarritoResponse> actualizar(@PathVariable Integer id,
-                                                      @RequestBody @Valid CarritoRequest request) {
-        return ResponseEntity.ok(service.save(request, id));
+    public ResponseEntity<CarritoResponse> actualizar(
+            @PathVariable Integer id,
+            @RequestBody @Valid CarritoRequest request) {
+        return ResponseEntity.ok(service.actualizar(id, request));  // ← ahora usa actualizar()
     }
 
     @DeleteMapping("/{id}")
@@ -54,14 +49,20 @@ public class CarritoController {
     }
 
     @DeleteMapping("/session/{sessionId}")
-    public ResponseEntity<Void> vaciar(@PathVariable String sessionId) {
-        service.limpiarCarrito(sessionId);
+    public ResponseEntity<Void> vaciar(
+            @PathVariable String sessionId,
+            @RequestParam(required = true) Integer tiendaId) {
+        service.limpiarCarrito(sessionId, tiendaId);
         return ResponseEntity.noContent().build();
     }
 
-    // NUEVO ENDPOINT: Checkout
-    @PostMapping("/checkout")
-    public ResponseEntity<BoletaResponse> checkout(@RequestBody @Valid BoletaRequest request) {
+    @PostMapping("/checkout/online")
+    public ResponseEntity<BoletaResponse> checkoutOnline(@RequestBody @Valid BoletaRequest request) {
         return ResponseEntity.ok(service.checkoutOnline(request));
+    }
+
+    @PostMapping("/checkout/whatsapp")
+    public ResponseEntity<String> checkoutWhatsapp(@RequestBody @Valid BoletaRequest request) {
+        return ResponseEntity.ok(service.checkoutWhatsapp(request));
     }
 }

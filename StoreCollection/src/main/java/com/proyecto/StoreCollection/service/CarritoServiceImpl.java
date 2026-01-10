@@ -41,8 +41,11 @@ public class CarritoServiceImpl implements CarritoService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CarritoResponse> findBySessionId(String sessionId) {
-        return repository.findBySessionId(sessionId)
+    public List<CarritoResponse> findBySessionId(String sessionId, Integer tiendaId) {
+        if (tiendaId == null) {
+            throw new IllegalArgumentException("tiendaId es requerido");
+        }
+        return repository.findBySessionIdAndTiendaId(sessionId, tiendaId)
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -57,37 +60,61 @@ public class CarritoServiceImpl implements CarritoService {
     }
 
     @Override
-    public CarritoResponse save(CarritoRequest request) {
-        return save(request, null);
+    @Transactional
+    public CarritoResponse crear(CarritoRequest request) {
+        ProductoVariante variante = varianteRepository.findById(request.getVarianteId())
+                .orElseThrow(() -> new RuntimeException("Variante no encontrada: " + request.getVarianteId()));
+
+        Tienda tienda = variante.getProducto().getTienda();
+
+        Carrito carrito = new Carrito();
+        carrito.setSessionId(request.getSessionId());
+        carrito.setTienda(tienda);
+        carrito.setVariante(variante);
+        carrito.setCantidad(request.getCantidad());
+
+        Carrito saved = repository.save(carrito);
+        return toResponse(saved);
     }
 
     @Override
-    public CarritoResponse save(CarritoRequest request, Integer id) {
-        Carrito carrito = (id == null)
-                ? new Carrito()
-                : repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Carrito no encontrado: " + id));
-
-        carrito.setSessionId(request.getSessionId());
-        carrito.setCantidad(request.getCantidad());
-
-        if (request.getVarianteId() != null) {
-            ProductoVariante variante = varianteRepository.findById(request.getVarianteId())
-                    .orElseThrow(() -> new RuntimeException("Variante no encontrada: " + request.getVarianteId()));
-            carrito.setVariante(variante);
+    @Transactional
+    public CarritoResponse actualizar(Integer carritoId, CarritoRequest request) {
+        // Validación estricta del ID
+        if (carritoId == null || carritoId <= 0) {
+            throw new IllegalArgumentException("El ID del carrito es requerido y debe ser un número positivo válido para actualizar cantidad");
         }
 
-        return toResponse(repository.save(carrito));
-    }
+        Carrito carrito = repository.findById(carritoId)
+                .orElseThrow(() -> new IllegalArgumentException("Carrito no encontrado con ID: " + carritoId));
 
+        ProductoVariante variante = varianteRepository.findById(request.getVarianteId())
+                .orElseThrow(() -> new RuntimeException("Variante no encontrada: " + request.getVarianteId()));
+
+        // Seguridad: no permitir cambiar variante o tienda
+        if (!carrito.getVariante().getId().equals(variante.getId())) {
+            throw new IllegalStateException("No se puede cambiar la variante de un item existente");
+        }
+        if (!carrito.getTienda().getId().equals(variante.getProducto().getTienda().getId())) {
+            throw new IllegalStateException("No se puede cambiar la tienda de un item existente");
+        }
+
+        carrito.setCantidad(request.getCantidad());
+
+        Carrito saved = repository.save(carrito);
+        return toResponse(saved);
+    }
     @Override
     public void deleteById(Integer id) {
         repository.deleteById(id);
     }
 
     @Override
-    public void limpiarCarrito(String sessionId) {
-        repository.deleteBySessionId(sessionId);
+    public void limpiarCarrito(String sessionId, Integer tiendaId) {
+        if (tiendaId == null) {
+            throw new IllegalArgumentException("tiendaId es requerido para limpiar carrito");
+        }
+        repository.deleteBySessionIdAndTiendaId(sessionId, tiendaId);
     }
 
     // ===================== CHECKOUT ONLINE =====================
@@ -95,9 +122,14 @@ public class CarritoServiceImpl implements CarritoService {
     @Override
     @Transactional
     public BoletaResponse checkoutOnline(BoletaRequest request) {
-        List<Carrito> items = repository.findBySessionIdWithDetails(request.getSessionId());
+        // Filtramos items SOLO de esta tienda y sesión
+        List<Carrito> items = repository.findBySessionIdAndTiendaIdWithDetails(
+                request.getSessionId(),
+                request.getTiendaId()
+        );
+
         if (items == null || items.isEmpty()) {
-            throw new IllegalStateException("El carrito está vacío");
+            throw new IllegalStateException("El carrito está vacío para esta tienda");
         }
 
         Tienda tienda = tiendaRepository.findById(request.getTiendaId())
@@ -108,15 +140,14 @@ public class CarritoServiceImpl implements CarritoService {
 
         for (Carrito item : items) {
             ProductoVariante variante = item.getVariante();
-            if (variante == null) {
-                throw new IllegalStateException("Variante no encontrada en carrito");
+            if (variante == null || !variante.getProducto().getTienda().getId().equals(tienda.getId())) {
+                throw new IllegalStateException("Inconsistencia: variante pertenece a otra tienda");
             }
 
             if (variante.getStock() < item.getCantidad()) {
                 throw new IllegalStateException(
                         "Stock insuficiente para " + variante.getProducto().getNombre() +
-                                " (SKU: " + variante.getSku() + "). Disponible: " + variante.getStock() +
-                                ", solicitado: " + item.getCantidad());
+                                " (SKU: " + variante.getSku() + ")");
             }
 
             BigDecimal subtotal = variante.getPrecio().multiply(BigDecimal.valueOf(item.getCantidad()));
@@ -157,20 +188,20 @@ public class CarritoServiceImpl implements CarritoService {
         detalles.forEach(d -> d.setBoleta(boleta));
 
         Boleta boletaGuardada = boletaRepository.save(boleta);
-        limpiarCarrito(request.getSessionId());
 
-        // Enviamos notificaciones por email
+        // Limpiamos SOLO los items de esta tienda
+        limpiarCarrito(request.getSessionId(), request.getTiendaId());
+
         sendEmailNotifications(boletaGuardada);
 
         return toBoletaResponse(boletaGuardada);
     }
 
-    // ===================== EMAILS =====================
+
+
 
     private void sendEmailNotifications(Boleta boleta) {
         Tienda tienda = boleta.getTienda();
-
-        // Creamos el sender DINÁMICO usando las credenciales de ESTA TIENDA
         JavaMailSender sender = createMailSenderForTienda(tienda);
 
         String ownerEmail = tienda.getUser().getEmail();
@@ -509,28 +540,30 @@ public class CarritoServiceImpl implements CarritoService {
     @Override
     @Transactional(readOnly = true)
     public String checkoutWhatsapp(BoletaRequest request) {
-        List<Carrito> items = repository.findBySessionIdWithDetails(request.getSessionId());
+        // Filtramos items SOLO de esta tienda
+        List<Carrito> items = repository.findBySessionIdAndTiendaIdWithDetails(
+                request.getSessionId(),
+                request.getTiendaId()
+        );
 
         if (items == null || items.isEmpty()) {
-            throw new IllegalStateException("El carrito está vacío");
+            throw new IllegalStateException("El carrito está vacío para esta tienda");
         }
 
         Tienda tienda = tiendaRepository.findById(request.getTiendaId())
-                .orElseThrow(() -> new IllegalArgumentException("Tienda no encontrada: " + request.getTiendaId()));
+                .orElseThrow(() -> new IllegalArgumentException("Tienda no encontrada"));
 
         String numeroWhats = normalizeWhatsappNumber(tienda.getWhatsapp());
         if (numeroWhats == null || numeroWhats.length() < 9) {
-            throw new IllegalStateException("Número de WhatsApp inválido: " + tienda.getWhatsapp());
+            throw new IllegalStateException("Número de WhatsApp inválido");
         }
 
         StringBuilder msg = new StringBuilder();
 
-        // Encabezado
         msg.append("🛒 *¡NUEVO PEDIDO RECIBIDO!*\n");
         msg.append("*").append(escapeMarkdown(tienda.getNombre().toUpperCase())).append("*\n");
         msg.append("📅 ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))).append("\n\n");
 
-        // Detalle de productos
         msg.append("📦 *PRODUCTOS SOLICITADOS*\n\n");
 
         BigDecimal total = BigDecimal.ZERO;
@@ -548,7 +581,6 @@ public class CarritoServiceImpl implements CarritoService {
             msg.append(itemNumber++).append(". *").append(escapeMarkdown(producto.getNombre())).append("*\n");
             msg.append("   Cantidad: ").append(item.getCantidad()).append(" und.\n");
 
-            // Variantes
             if (variante.getAtributos() != null && !variante.getAtributos().isEmpty()) {
                 msg.append("   🎨 Opciones seleccionadas:\n");
                 for (AtributoValor av : variante.getAtributos()) {
@@ -557,7 +589,6 @@ public class CarritoServiceImpl implements CarritoService {
                 }
             }
 
-            // SKU si existe
             if (variante.getSku() != null && !variante.getSku().trim().isEmpty()) {
                 msg.append("   🏷️ SKU: ").append(variante.getSku().trim()).append("\n");
             }
@@ -566,12 +597,10 @@ public class CarritoServiceImpl implements CarritoService {
                     .append(" → Subtotal: S/ ").append(formatPrice(subtotal)).append("\n\n");
         }
 
-        // Resumen
         msg.append("━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
         msg.append("📊 *RESUMEN DEL PEDIDO*\n");
         msg.append("💰 *TOTAL: S/ ").append(formatPrice(total)).append("*\n\n");
 
-        // Datos para coordinar (espacios en blanco)
         msg.append("👤 *POR FAVOR, COORDINA CON EL CLIENTE:*\n\n");
         msg.append("• Nombre completo: ______________________________\n");
         msg.append("• Teléfono / WhatsApp: __________________________\n");
@@ -581,17 +610,18 @@ public class CarritoServiceImpl implements CarritoService {
         msg.append("• Método de entrega: ☐ Domicilio   ☐ Recojo en tienda   ☐ Agencia\n");
         msg.append("• Forma de pago: ☐ Transferencia   ☐ Yape/Plin   ☐ Contra entrega   ☐ Tarjeta\n\n");
 
-        // Cierre
         msg.append("✅ *Responde este mensaje para confirmar disponibilidad, total final y coordinar la entrega.*\n\n");
         msg.append("¡Gracias por atender rápido! 🙌");
 
         String encodedMessage = URLEncoder.encode(msg.toString(), StandardCharsets.UTF_8);
 
-        // Limpiar carrito
-        limpiarCarrito(request.getSessionId());
+        // Limpiamos solo esta tienda
+        limpiarCarrito(request.getSessionId(), request.getTiendaId());
 
         return "https://wa.me/" + numeroWhats + "?text=" + encodedMessage;
     }
+
+
     // Pequeño helper para evitar problemas con _ * en nombres de productos o atributos
     private String escapeMarkdown(String text) {
         if (text == null) return "";

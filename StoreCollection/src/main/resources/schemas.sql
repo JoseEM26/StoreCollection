@@ -144,7 +144,10 @@
         session_id VARCHAR(100) NOT NULL,
         variante_id INT NOT NULL,
         cantidad INT DEFAULT 1,
-        FOREIGN KEY (variante_id) REFERENCES producto_variante(id) ON DELETE CASCADE
+        tienda_id INT NOT NULL AFTER session_id,
+        FOREIGN KEY (variante_id) REFERENCES producto_variante(id) ON DELETE CASCADE,
+         FOREIGN KEY (tienda_id) REFERENCES tienda(id) ON DELETE CASCADE,
+         INDEX idx_session_tienda (session_id, tienda_id);
     );
 
     -- NUEVAS TABLAS PARA BOLETAS (COMPRAS)

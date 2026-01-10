@@ -9,14 +9,12 @@ import com.proyecto.StoreCollection.dto.response.CarritoResponse;
 import java.util.List;
 
 public interface CarritoService {
-    List<CarritoResponse> findBySessionId(String sessionId);
+    List<CarritoResponse> findBySessionId(String sessionId, Integer tiendaId);
     CarritoResponse findById(Integer id);
-    CarritoResponse save(CarritoRequest request);
-    CarritoResponse save(CarritoRequest request, Integer id);
     void deleteById(Integer id);
-    void limpiarCarrito(String sessionId);
-
-    // Nuevos
+    void limpiarCarrito(String sessionId, Integer tiendaId);
+    CarritoResponse crear(CarritoRequest request);
+    CarritoResponse actualizar(Integer carritoId, CarritoRequest request);
     BoletaResponse checkoutOnline(BoletaRequest request);
     String checkoutWhatsapp(BoletaRequest request);
 }

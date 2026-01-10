@@ -15,6 +15,10 @@ public class Carrito {
     @Column(name = "session_id")
     private String sessionId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tienda_id", nullable = false)
+    private Tienda tienda;
+
     @ManyToOne
     @JoinColumn(name = "variante_id", nullable = false)
     private ProductoVariante variante;

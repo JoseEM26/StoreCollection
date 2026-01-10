@@ -1,13 +1,14 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Subject, takeUntil, firstValueFrom } from 'rxjs';
-import Swal from 'sweetalert2';
+import { Subject, takeUntil } from 'rxjs';
 
 import { CarritoService } from '../../service/carrito.service';
 import { CarritoItemResponse } from '../../model/carrito.model';
 import { CheckoutFormComponent } from "./checkout-form/checkout-form.component";
 import { TiendaService } from '../../service/tienda.service';
+import { SwalService } from '../../service/SweetAlert/swal.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-carrito',
@@ -20,95 +21,79 @@ export class CarritoComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private carritoService = inject(CarritoService);
   private tiendaService = inject(TiendaService);
+  private swal = inject(SwalService);
 
   items: CarritoItemResponse[] = [];
-  totalItems = 0;
-  totalPrecio = 0;
   loading = true;
   tienda: any = null;
 
   isProcessingOnline = false;
   isProcessingWhatsapp = false;
 
-get tiendaId(): number {
-  return this.tienda?.id ?? 1;
-}
-  // Control del modal de checkout
+  // Getter que obtiene el ID real de la tienda actual
+  get tiendaId(): number {
+    return this.tienda?.id ?? 1; // fallback desarrollo
+  }
+
+  // Control del modal
   showCheckoutModal = false;
 
+  // Getters para el template (siempre frescos desde el servicio)
+  get totalItems(): number {
+    return this.carritoService.getTotalItemsSync();
+  }
+
+  get totalPrecio(): number {
+    return this.carritoService.getTotalPrecioSync();
+  }
+
   ngOnInit(): void {
-  this.tienda = this.tiendaService.currentTiendaValue;
+    this.tienda = this.tiendaService.currentTiendaValue;
+
+    // Cambio de tienda → recargar carrito
+    this.tiendaService.currentTienda$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(tienda => {
+        if (tienda?.id) {
+          this.tienda = tienda;
+          this.carritoService.cargarCarritoDesdeBackend();
+        }
+      });
+
+    // Suscripción principal al carrito
     this.carritoService.carritoItems$
       .pipe(takeUntil(this.destroy$))
       .subscribe(items => {
         this.items = items || [];
-        this.totalItems = this.carritoService.getTotalItemsSync();
-        this.totalPrecio = this.carritoService.getTotalPrecioSync();
         this.loading = false;
       });
 
-    this.carritoService.cargarCarritoDesdeBackend();
+    // Carga inicial
+    if (this.tienda?.id) {
+      this.carritoService.cargarCarritoDesdeBackend();
+    }
   }
 
-  // ── Métodos auxiliares con SweetAlert bonito ────────────────────────
-  private showSuccess(title: string, text: string): void {
-    Swal.fire({
-      icon: 'success',
-      title,
-      text,
-      timer: 3000,
-      timerProgressBar: true,
-      showConfirmButton: false,
-      toast: true,
-      position: 'top-end'
-    });
-  }
+  // ── Acciones del carrito ────────────────────────────────────────────────
 
-  private showError(title: string, text: string): void {
-    Swal.fire({
-      icon: 'error',
-      title,
-      text,
-      confirmButtonColor: '#d33'
-    });
-  }
-
-  private showWarning(title: string, text: string): void {
-    Swal.fire({
-      icon: 'warning',
-      title,
-      text,
-      confirmButtonColor: '#fd7e14'
-    });
-  }
-
-  private async showConfirm(title: string, text: string, confirmText: string = 'Sí'): Promise<boolean> {
-    const result = await Swal.fire({
-      title,
-      text,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: confirmText,
-      cancelButtonText: 'Cancelar'
-    });
-    return result.isConfirmed;
-  }
-
-  // ── Acciones del carrito ────────────────────────────────────────────
   async eliminarItem(itemId: number): Promise<void> {
-    const confirmed = await this.showConfirm(
-      '¿Eliminar producto?',
-      'No podrás revertir esta acción',
-      'Sí, eliminar'
+    const item = this.items.find(i => i.id === itemId);
+    if (!item) return;
+
+    const result = await this.swal.confirmDelete(
+      item.nombreProducto,
+      'El producto se quitará del carrito.'
     );
 
-    if (!confirmed) return;
+    if (!result.isConfirmed) return;
 
     this.carritoService.eliminarItem(itemId).subscribe({
-      next: () => this.showSuccess('Eliminado', 'El producto fue removido del carrito'),
-      error: () => this.showError('Error', 'No pudimos eliminar el producto')
+      next: () => {
+        this.swal.toast('Producto eliminado correctamente', 'success');
+      },
+      error: () => {
+        this.swal.error('No se pudo eliminar', 'Intenta nuevamente');
+      }
     });
   }
 
@@ -123,31 +108,42 @@ get tiendaId(): number {
       return;
     }
 
-    this.carritoService.actualizarCantidad(itemId, nuevaCantidad).subscribe({
-      next: () => this.showSuccess('Actualizado', 'Cantidad modificada correctamente'),
-      error: () => this.showError('Error', 'No pudimos actualizar la cantidad')
-    });
+    this.carritoService.actualizarCantidad(item.id, nuevaCantidad, item.varianteId ?? 0)
+      .subscribe({
+        next: () => {
+          this.swal.toast('Cantidad actualizada', 'success', 2000);
+        },
+        error: () => {
+          this.swal.error('Error al actualizar cantidad');
+        }
+      });
   }
 
   async vaciarCarrito(): Promise<void> {
-    const confirmed = await this.showConfirm(
-      '¿Vaciar carrito completo?',
-      'Se eliminarán todos los productos',
-      'Sí, vaciar todo'
-    );
+    const result = await this.swal.confirmAction({
+      title: '¿Vaciar carrito completo?',
+      text: 'Se eliminarán todos los productos seleccionados',
+      confirmButtonText: 'Sí, vaciar todo',
+      icon: 'warning'
+    });
 
-    if (!confirmed) return;
+    if (!result.isConfirmed) return;
 
     this.carritoService.vaciarCarrito().subscribe({
-      next: () => this.showSuccess('¡Carrito vacío!', 'Todos los productos han sido eliminados'),
-      error: () => this.showError('Error', 'No pudimos vaciar el carrito')
+      next: () => {
+        this.swal.success('¡Carrito vacío!', 'Todos los productos han sido eliminados');
+      },
+      error: () => {
+        this.swal.error('No pudimos vaciar el carrito', 'Intenta de nuevo');
+      }
     });
   }
 
-  // ── Checkout Online con formulario modal ────────────────────────────
+  // ── Checkout Online ─────────────────────────────────────────────────────
+
   abrirFormularioCheckout(): void {
-    if (this.items.length === 0) {
-      this.showWarning('Carrito vacío', 'Agrega productos antes de continuar');
+    if (this.totalItems === 0) {
+      this.swal.warning('Carrito vacío', 'Agrega productos antes de continuar');
       return;
     }
 
@@ -159,77 +155,62 @@ get tiendaId(): number {
   cerrarFormularioCheckout(): void {
     this.showCheckoutModal = false;
   }
-
 procesarCheckout(datosComprador: any): void {
   this.showCheckoutModal = false;
   this.isProcessingOnline = true;
 
-  Swal.fire({
-    title: 'Procesando tu pedido...',
-    allowOutsideClick: false,
-    didOpen: () => Swal.showLoading()
-  });
+  this.swal.loading('Procesando tu pedido...');
 
-  this.carritoService.checkoutOnline(this.tiendaId, datosComprador).subscribe({
+  this.carritoService.checkoutOnline(datosComprador).subscribe({
     next: (boleta) => {
-      Swal.close();
-      Swal.fire({
-        icon: 'success',
-        title: '¡Pedido confirmado!',
-        html: `Tu boleta <strong>#${boleta.id}</strong> fue creada exitosamente.<br><br>Te contactaremos pronto por WhatsApp y email.`,
-        confirmButtonColor: '#198754',
-        timer: 5000,
-        timerProgressBar: true
-      });
+      this.swal.close();
+      this.swal.success(
+        '¡Pedido confirmado!',
+        `Tu boleta <strong>#${boleta.id}</strong> fue creada exitosamente.<br><br>Te contactaremos pronto por WhatsApp y email.`
+      );
     },
-    error: (err) => {
-      Swal.close();
+    error: (err: any) => {
+      this.swal.close();
 
       if (err.type === 'missing_email_config') {
         Swal.fire({
           icon: 'warning',
           title: '¡Configura tu correo primero!',
           html: `
-            <p>${err.message}</p>
-            <p class="mt-3 fw-bold text-danger">Sin esta configuración, no podemos enviar confirmaciones automáticas.</p>
-            <p class="mt-3">¿Quieres configurarlo ahora?</p>
+            ${err.message || 'Es necesario configurar el correo para enviar confirmaciones automáticas.'}
+            <br><br>
+            Sin esta configuración no podemos enviar confirmaciones automáticas.<br>
+            ¿Quieres configurarlo ahora?
           `,
           showCancelButton: true,
-          confirmButtonColor: '#6366f1',
+          confirmButtonColor: '#fd7e14',
           cancelButtonColor: '#6c757d',
           confirmButtonText: 'Sí, configurar ahora',
-          cancelButtonText: 'Más tarde',
-          allowOutsideClick: false
+          cancelButtonText: 'Más tarde'
         }).then(result => {
           if (result.isConfirmed) {
-            // Redirige a edición de tienda (ajusta la ruta)
             window.location.href = `/admin/tiendas/editar/${this.tiendaId}`;
-            // Mejor: usa Router si lo tienes injectado
-            // this.router.navigate(['/admin/tiendas/editar', this.tiendaId]);
           }
         });
       } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error al procesar',
-          text: err.message || 'Intenta de nuevo o contacta soporte',
-          confirmButtonColor: '#d33'
-        });
+        this.swal.error('Error al procesar', err.message || 'Intenta de nuevo');
       }
     },
     complete: () => this.isProcessingOnline = false
   });
 }
 
-  // ── Checkout WhatsApp ───────────────────────────────────────────────
+  // ── Checkout WhatsApp ──────────────────────────────────────────────────
+
   async checkoutWhatsapp(): Promise<void> {
-    if (this.items.length === 0) {
-      this.showWarning('Carrito vacío', 'Agrega productos antes de continuar');
+    if (this.totalItems === 0) {
+      this.swal.warning('Carrito vacío', 'Agrega productos antes de continuar');
       return;
     }
 
     if (this.isProcessingOnline || this.isProcessingWhatsapp) return;
 
+    // ← Aquí deberías tener los datos reales del usuario
     const datosComprador = {
       compradorNombre: 'Cliente de Prueba',
       compradorEmail: 'prueba@ejemplo.com',
@@ -245,58 +226,43 @@ procesarCheckout(datosComprador: any): void {
 
     this.isProcessingWhatsapp = true;
 
-    Swal.fire({
-      title: 'Generando enlace de WhatsApp...',
-      allowOutsideClick: false,
-      didOpen: () => Swal.showLoading()
-    });
+    const loadingRef = this.swal.loading('Generando enlace de WhatsApp...');
 
-    let whatsappUrl: string;
     try {
-      whatsappUrl = await firstValueFrom(
-        this.carritoService.checkoutWhatsapp(this.tiendaId, datosComprador)
-      );
-    } catch (err: any) {
-      Swal.close();
-      this.showError('Error generando enlace', 'No pudimos preparar el mensaje para WhatsApp');
-      this.isProcessingWhatsapp = false;
-      return;
-    }
+      const whatsappUrl = await this.carritoService.checkoutWhatsapp(datosComprador).toPromise();
 
-    Swal.close();
+      this.swal.close();
 
-    const confirmed = await this.showConfirm(
-      '¿Enviar por WhatsApp?',
-      'Se abrirá el chat directo con la tienda para coordinar el pedido',
-      'Sí, abrir WhatsApp'
-    );
-
-    if (!confirmed) {
-      this.isProcessingWhatsapp = false;
-      return;
-    }
-
-    const newWindow = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-
-    if (newWindow) {
-      newWindow.focus();
-      this.showSuccess('¡Redirigiendo!', 'Abriendo chat de WhatsApp...');
-    } else {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Ventana bloqueada',
-        html: `
-          Tu navegador bloqueó la ventana emergente.<br><br>
-          <strong>Haz clic aquí para abrir el chat:</strong><br>
-          <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-success mt-3">
-            Abrir WhatsApp ahora
-          </a>
-        `,
-        showConfirmButton: false
+      const confirmed = await this.swal.confirmAction({
+        title: '¿Enviar por WhatsApp?',
+        text: 'Se abrirá el chat directo con la tienda',
+        confirmButtonText: 'Sí, abrir WhatsApp',
+        icon: 'info'
       });
-    }
 
-    this.isProcessingWhatsapp = false;
+      if (!confirmed.isConfirmed) {
+        this.isProcessingWhatsapp = false;
+        return;
+      }
+
+      const newWindow = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+
+      if (newWindow) {
+        newWindow.focus();
+        this.swal.toast('Abriendo chat de WhatsApp...', 'success', 2500);
+      } else {
+        await this.swal.warning(
+          'Ventana bloqueada',
+          `Tu navegador bloqueó la ventana emergente.<br><br>
+           <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer">Haz clic aquí para abrir WhatsApp</a>`
+        );
+      }
+    } catch (err) {
+      this.swal.close();
+      this.swal.error('Error generando enlace', 'No pudimos preparar el mensaje');
+    } finally {
+      this.isProcessingWhatsapp = false;
+    }
   }
 
   ngOnDestroy(): void {
