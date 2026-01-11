@@ -2,15 +2,38 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <title>Store Collection – Panel Administrativo</title>
+  <title>Store Collection – Tiendas Online</title>
   <base href="/">
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#667eea"> <!-- Mejora PWA y navegador móvil -->
-  <meta name="color-scheme" content="light dark"> <!-- Soporte dark mode futuro -->
+  <meta name="theme-color" content="#667eea">
+  <meta name="color-scheme" content="light dark">
 
-<link rel="icon" type="image/x-icon" href="https://res.cloudinary.com/dqznlmig0/image/upload/v1767996009/PineTools.com_imagen_2026-01-09_165850754-removebg-preview_a0dxex.png">
-  <!-- Google Fonts: solo las variantes que realmente usas (optimización) -->
+  <!-- Favicon por defecto (se mantiene como fallback) -->
+  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dqznlmig0/image/upload/v1767996009/PineTools.com_imagen_2026-01-09_165850754-removebg-preview_a0dxex.png">
+
+  <!-- Open Graph / Facebook / WhatsApp / LinkedIn -->
+  <meta property="og:title" content="Store Collection – Tiendas Online">
+  <meta property="og:description" content="Descubre y explora tiendas independientes con productos únicos: ropa, tecnología, artesanías, accesorios y mucho más">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://storecollection.up.railway.app">
+  <meta property="og:site_name" content="Store Collection">
+
+  <!-- Imagen optimizada para redes sociales (1200×630 es el tamaño más recomendado) -->
+  <meta property="og:image" content="https://res.cloudinary.com/dqznlmig0/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/v1767996009/PineTools.com_imagen_2026-01-09_165850754-removebg-preview_a0dxex.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:alt" content="Store Collection - Tiendas Online">
+
+  <!-- Twitter Cards (muy importante para que salga grande en Twitter/X) -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Store Collection – Tiendas Online">
+  <meta name="twitter:description" content="Explora tiendas independientes con productos únicos y especiales">
+  <meta name="twitter:image" content="https://res.cloudinary.com/dqznlmig0/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/v1767996009/PineTools.com_imagen_2026-01-09_165850754-removebg-preview_a0dxex.png">
+  <meta name="twitter:image:alt" content="Store Collection - Tiendas Online">
+
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -18,7 +41,7 @@
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-  <!-- Solo si realmente usas AOS en la mayoría de páginas (sino quítalo) -->
+  <!-- AOS (si lo sigues usando) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css">
 
   <style>
@@ -45,7 +68,6 @@
       background: var(--bg);
       color: var(--text);
       -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
       line-height: 1.6;
       min-height: 100vh;
     }
@@ -62,7 +84,7 @@
       opacity: 1;
     }
 
-    /* Scrollbar minimalista y elegante */
+    /* Scrollbar minimalista */
     ::-webkit-scrollbar {
       width: 8px;
     }
@@ -112,7 +134,7 @@
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
   <script>
-    // Inicialización AOS (solo si lo usas)
+    // Inicialización AOS (si lo usas)
     document.addEventListener('DOMContentLoaded', () => {
       AOS.init({
         duration: 750,
@@ -122,8 +144,7 @@
       });
     });
 
-    // Ocultar loader cuando Angular termina de renderizar
-    // Más confiable que 'load' en aplicaciones SPA
+    // Ocultar loader
     function hideLoader() {
       const loader = document.getElementById('app-loader');
       if (loader) {
@@ -133,16 +154,14 @@
       document.querySelector('app-root').classList.add('loaded');
     }
 
-    // Intentamos varias formas de detectar que Angular ya cargó
     window.addEventListener('load', hideLoader);
     
-    // Método más confiable en Angular moderno
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
       setTimeout(hideLoader, 300);
     }
   </script>
 
-  <!-- Estilo para la animación del spinner -->
+  <!-- Animación del spinner -->
   <script>
     document.head.insertAdjacentHTML('beforeend', `
       <style>
