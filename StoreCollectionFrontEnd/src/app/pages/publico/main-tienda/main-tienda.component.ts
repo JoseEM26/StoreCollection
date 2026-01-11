@@ -1,5 +1,5 @@
 // src/app/pages/publico/main-tienda/main-tienda.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ProductoCardComponent } from '../../../componente/producto-card/producto-card.component';
@@ -22,7 +22,10 @@ export class MainTiendaComponent implements OnInit {
   categorias: Categoria[] = [];
   destacados: ProductoPublic[] = [];
   loading = true;
+@ViewChild('categoriesScroller') categoriesScroller!: ElementRef;
 
+showLeftArrow = false;
+showRightArrow = true;
   constructor(
     private tiendaService: TiendaService,
     private tiendaPublicService: TiendaPublicService,
@@ -69,66 +72,41 @@ export class MainTiendaComponent implements OnInit {
       error: () => this.loading = false
     });
   }
-// Dentro de tu componente (por ejemplo, home.component.ts o donde esté esta sección)
 
-getIconForCategory(nombre: string): string {
-  const lower = nombre.toLowerCase();
-  const iconMap: { [key: string]: string } = {
-    // Personaliza según tus categorías reales
-    'electrónica': 'bi-laptop',
-    'computadora': 'bi-pc-display',
-    'celular': 'bi-phone',
-    'smartphone': 'bi-phone-vibrate',
-    'audio': 'bi-headphones',
-    'cámara': 'bi-camera',
-    'televisor': 'bi-tv',
-    'hogar': 'bi-house-door',
-    'cocina': 'bi-egg-fried',
-    'moda': 'bi-handbag',
-    'ropa': 'bi-tshirt',
-    'zapatos': 'bi-shoe',
-    'belleza': 'bi-stars',
-    'deporte': 'bi-trophy',
-    'juguetes': 'bi-controller',
-    'libros': 'bi-book',
-    'música': 'bi-music-note-beamed',
-    'gaming': 'bi-joystick',
-    'accesorios': 'bi-gem',
-    'salud': 'bi-heart-pulse',
-    'jardín': 'bi-flower1',
-    'automóvil': 'bi-car-front',
-    'moto': 'bi-bicycle',
-  };
 
-  for (const key in iconMap) {
-    if (lower.includes(key)) {
-      return iconMap[key];
-    }
-  }
-  return 'bi-bag-fill'; // fallback genérico
+ngAfterViewInit(): void {
+  this.checkArrows(); // Inicial
 }
 
-hasKnownIcon(nombre: string): boolean {
-  const lower = nombre.toLowerCase();
-  const keys = ['electrónica', 'computadora', 'celular', 'audio', 'cámara', 'televisor', 
-                'hogar', 'cocina', 'moda', 'ropa', 'zapatos', 'belleza', 'deporte', 
-                'juguetes', 'libros', 'música', 'gaming', 'accesorios', 'salud', 
-                'jardín', 'automóvil', 'moto'];
-  return keys.some(k => lower.includes(k));
+onScroll(event: any): void {
+  this.checkArrows();
+}
+
+scrollCategories(direction: 'left' | 'right'): void {
+  const scroller = this.categoriesScroller.nativeElement;
+  const cardWidth = scroller.querySelector('.category-card')?.offsetWidth || 160;
+  const scrollAmount = cardWidth * 3 + 48; // 3 tarjetas + gap
+
+  if (direction === 'left') {
+    scroller.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+  } else {
+    scroller.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+  }
+}
+
+private checkArrows(): void {
+  const scroller = this.categoriesScroller.nativeElement;
+  const tolerance = 10; // px de tolerancia
+
+  this.showLeftArrow = scroller.scrollLeft > tolerance;
+  this.showRightArrow = (scroller.scrollLeft + scroller.clientWidth) < (scroller.scrollWidth - tolerance);
 }
 
 getColorForCategory(index: number): string {
   const colors = [
-    '#6366f1', // indigo
-    '#8b5cf6', // violet
-    '#ec4899', // pink
-    '#f43f5e', // rose
-    '#f97316', // orange
     '#10b981', // emerald
     '#14b8a6', // teal
-    '#06b6d4', // cyan
-    '#3b82f6', // blue
-    '#a855f7', // purple
+    '#626262', // purple
   ];
   return colors[index % colors.length];
 }

@@ -48,31 +48,46 @@
 
 <!-- CATEGORÍAS POPULARES -->
 <section class="section-categories py-5">
-  <div class="container">
+  <div class="container position-relative">
     <h2 class="section-title text-center mb-5 fw-bold">
       Categorías populares
     </h2>
 
     <div *ngIf="categorias.length > 0; else emptyCategories">
-      <div class="categories-grid">
-        <a *ngFor="let cat of categorias; let i = index"
-           [routerLink]="['catalogo', cat.slug]"
-           class="category-card"
-           data-aos="fade-up"
-           [attr.data-aos-delay]="i * 80">
+      <!-- Flechas de navegación -->
+      <button class="nav-arrow nav-left" 
+              (click)="scrollCategories('left')" 
+              [class.hidden]="!showLeftArrow">
+        <i class="bi bi-chevron-left"></i>
+      </button>
 
-          <div class="category-icon-circle">
-            <!-- Icono o inicial -->
-            <i *ngIf="hasKnownIcon(cat.nombre)" 
-               class="bi {{ getIconForCategory(cat.nombre) }} icon-large"></i>
-            <span *ngIf="!hasKnownIcon(cat.nombre)" 
-                  class="fallback-initial">
-              {{ cat.nombre.charAt(0).toUpperCase() }}
-            </span>
-          </div>
+      <button class="nav-arrow nav-right" 
+              (click)="scrollCategories('right')" 
+              [class.hidden]="!showRightArrow">
+        <i class="bi bi-chevron-right"></i>
+      </button>
 
-          <h3 class="category-name mt-3 mb-0">{{ cat.nombre }}</h3>
-        </a>
+      <!-- Contenedor del carrusel -->
+      <div #categoriesScroller class="categories-scroller" (scroll)="onScroll($event)">
+        <div class="categories-track">
+          <!-- Cada tarjeta -->
+          <a *ngFor="let cat of categorias; let i = index"
+             [routerLink]="['catalogo', cat.slug]"
+             class="category-card"
+             data-aos="fade-up"
+             [attr.data-aos-delay]="i * 60">
+
+            <div class="category-icon-circle" [style.backgroundColor]="getColorForCategory(i)">
+              <span class="category-initial">
+                {{ cat.nombre.charAt(0).toUpperCase() }}
+              </span>
+            </div>
+
+            <h3 class="category-name mt-3 mb-0">
+              {{ cat.nombre }}
+            </h3>
+          </a>
+        </div>
       </div>
     </div>
 
