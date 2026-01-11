@@ -1,5 +1,10 @@
 server:
   port: ${PORT:8080}
+  tomcat:
+    max-http-post-size: 100MB          # Tamaño máximo POST (legacy, pero útil)
+    max-swallow-size: -1               # Deshabilita límite de "swallow" (importante)
+    max-part-count: 200                # ← ¡Clave! Número máximo de partes (archivos + campos). Default reciente era 10 o 50
+    max-part-header-size: 8192         # Opcional: sube si tienes muchos campos de texto
 
 spring:
   datasource:
@@ -7,7 +12,6 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
-
     hikari:
       maximum-pool-size: 5
       minimum-idle: 1
@@ -25,11 +29,12 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: false
 
-logging:
-  level:
-    root: INFO
-    org.hibernate.SQL: OFF
-    org.hibernate.type.descriptor.sql.BasicBinder: OFF
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 15MB               # Por cada archivo individual (imagen)
+      max-request-size: 100MB           # Total de la petición completa
+      file-size-threshold: 0            # Escribe directo a disco
 
 jwt:
   secret: ${JWT_SECRET}
