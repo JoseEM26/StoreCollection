@@ -51,6 +51,7 @@
         id INT AUTO_INCREMENT PRIMARY KEY,
         nombre VARCHAR(100) NOT NULL,
         slug VARCHAR(120) UNIQUE NOT NULL,
+        ruc varchar(11) null,
         whatsapp VARCHAR(20),
         moneda VARCHAR(20) DEFAULT 'SOLES' NOT NULL,
         descripcion TEXT,

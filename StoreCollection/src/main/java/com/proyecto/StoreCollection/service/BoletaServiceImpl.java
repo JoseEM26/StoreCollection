@@ -394,7 +394,7 @@ public class BoletaServiceImpl implements BoletaService {
         r.setTotal(boleta.getTotal());
         r.setFecha(boleta.getFecha());
         r.setEstado(boleta.getEstado().name());
-
+        r.setRuc(boleta.getTienda().getRuc());
         if (boleta.getUser() != null) {
             r.setUserId(boleta.getUser().getId());
         }

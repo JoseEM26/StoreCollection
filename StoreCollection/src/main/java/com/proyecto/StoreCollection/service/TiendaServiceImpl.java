@@ -260,6 +260,7 @@ public class TiendaServiceImpl implements TiendaService {
         t.setTiktok(request.getTiktok());
         t.setFacebook(request.getFacebook());
         t.setInstagram(request.getInstagram());
+        t.setRuc(request.getRuc()   );
 
         // Moneda
         if (request.getMoneda() != null && !request.getMoneda().isEmpty()) {
@@ -413,6 +414,7 @@ public class TiendaServiceImpl implements TiendaService {
         dto.setFacebook(t.getFacebook());
         dto.setInstagram(t.getInstagram());
         dto.setTiktok(t.getTiktok());
+        dto.setRuc(t.getRuc());
 
         if (t.getFechaVencimiento() != null) {
             // Opción recomendada: solo fecha (más común para vencimientos)

@@ -57,6 +57,9 @@ public class Tienda {
     @Column(name = "facebook")
     private String facebook;
 
+    @Column(name = "ruc")
+    private String ruc;
+
     @Column(nullable = false)
     private Boolean activo = true;
 

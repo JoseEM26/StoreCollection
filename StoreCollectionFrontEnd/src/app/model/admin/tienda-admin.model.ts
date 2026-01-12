@@ -16,6 +16,7 @@ interface TiendaBase {
   userId?: number;
   userEmail?: string;
 fechaVencimiento?: string | null;  
+ruc?: string | null;  
 }
 
 // Para respuestas del admin/owner (más datos sensibles y de suscripción)
@@ -37,6 +38,8 @@ export interface TiendaResponse extends TiendaBase {
   tiktok?: string | null;
   instagram?: string | null;
   facebook?: string | null;
+ruc?: string | null;  
+
 }
 
 // Para vistas públicas (menos datos, más restringido)

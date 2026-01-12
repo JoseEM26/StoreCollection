@@ -83,9 +83,11 @@ calcularAhorroAnual(mensual: number, anual: number): number {
   return Math.round(((mensual * 12 - anual) / (mensual * 12)) * 100);
 }
 
-// Para el error de imagen en tiendas
 onImageError(event: Event) {
-  (event.target as HTMLImageElement).src = '/assets/images/default-shop-logo.png';
+  // Opcional: si quieres mostrar ícono también cuando falla
+  const img = event.target as HTMLImageElement;
+  img.style.display = 'none'; // Oculta imagen rota
+  img.parentElement?.querySelector('.logo-fallback-icon')?.classList.remove('d-none'); // Muestra ícono si lo tienes oculto
 }
   // ========================================
   // CARGA DE TIENDAS PÚBLICAS

@@ -126,16 +126,18 @@
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4" *ngIf="page?.content?.length; else noResults">
           <div class="col" *ngFor="let tienda of page?.content">
             <div class="tienda-card h-100 rounded-4 shadow-sm overflow-hidden card-hover d-flex flex-column">
-              <div class="tienda-logo-container bg-light position-relative">
-                <img 
-                  [src]="tienda.logo_img_url || '/assets/images/default-shop-logo.png'" 
-                  alt="{{ tienda.nombre }}"
-                  class="tienda-logo img-fluid"
-                  (error)="onImageError($event)">
-                <div class="logo-overlay" *ngIf="!tienda.logo_img_url">
-                  <i class="bi bi-shop-window display-4 text-primary opacity-50"></i>
-                </div>
-              </div>
+              <div class="tienda-logo-container bg-light d-flex align-items-center justify-content-center">
+  <img 
+    [src]="tienda.logo_img_url || ''" 
+    alt="{{ tienda.nombre }}"
+    class="tienda-logo img-fluid"
+    loading="lazy"
+    (error)="onImageError($event)">
+  
+  <!-- Ícono siempre visible como fallback -->
+  <i class="bi bi-shop-window logo-fallback-icon text-primary opacity-50" 
+     *ngIf="!tienda.logo_img_url"></i>
+</div>
               
               <div class="card-body p-4 d-flex flex-column">
                 <h5 class="fw-bold mb-2 text-truncate">{{ tienda.nombre }}</h5>

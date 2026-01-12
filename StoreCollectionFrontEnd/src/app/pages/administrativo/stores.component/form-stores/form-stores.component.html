@@ -93,6 +93,26 @@
                 {{ getErrorMessage('nombre') }}
               </div>
             </div>
+            <!-- RUC - Ahora OPCIONAL -->
+<div class="col-md-6">
+  <label class="form-label fw-semibold">RUC (11 dígitos, opcional)</label>  <!-- ← quitamos "required" -->
+  <input 
+    formControlName="ruc"
+    type="text" 
+    class="form-control form-control-lg rounded-3 shadow-sm"
+    placeholder="20123456789"
+    maxlength="11"
+    inputmode="numeric"
+    pattern="\d{11}"
+    [class.is-invalid]="form.get('ruc')?.invalid && (form.get('ruc')?.touched || formSubmitted)"
+  />
+  <div class="invalid-feedback">
+    <ng-container *ngIf="form.get('ruc')?.errors?.['pattern'] || form.get('ruc')?.errors?.['minlength'] || form.get('ruc')?.errors?.['maxlength']">
+      El RUC debe tener exactamente 11 dígitos numéricos (sin guiones ni espacios)
+    </ng-container>
+  </div>
+  <div class="form-text text-muted small">Ejemplo: 20123456789 (opcional)</div>
+</div>
 
             <!-- Slug -->
             <div class="col-12 col-md-6">

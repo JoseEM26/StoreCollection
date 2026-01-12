@@ -51,6 +51,14 @@ export class FormStoresComponent implements OnInit, OnChanges {
       ],
       nonNullable: true
     }),
+    ruc: new FormControl<string>('', {
+  validators: [
+    Validators.pattern(/^\d{11}$/),
+    Validators.minLength(11),
+    Validators.maxLength(11)
+  ],
+  nonNullable: true
+}),
     whatsapp: new FormControl<string>('+51', {
       validators: [Validators.pattern(/^\+?[0-9\s-]{9,18}$/)]
     }),
@@ -128,6 +136,7 @@ export class FormStoresComponent implements OnInit, OnChanges {
           tiktok: this.tienda.tiktok || null,
           instagram: this.tienda.instagram || null,
           facebook: this.tienda.facebook || null,
+          ruc: this.tienda.ruc || '',
           mapa_url: this.tienda.mapa_url,
           userId: this.tienda.userId,
           planId: this.tienda.planId,
@@ -155,7 +164,8 @@ export class FormStoresComponent implements OnInit, OnChanges {
           instagram: null,
           facebook: null,
           planId: null,
-          activo: true
+          activo: true,
+          ruc: ''
         });
 
         this.form.get('slug')?.enable({ emitEvent: false });
@@ -269,7 +279,11 @@ export class FormStoresComponent implements OnInit, OnChanges {
       if (controlName === 'slug') return 'Solo minúsculas, números y guiones (sin guion al inicio/final)';
       if (controlName === 'whatsapp') return 'Formato inválido (ej: +51987654321)';
       if (controlName === 'mapa_url') return 'Debe ser una URL válida (http/https)';
+    }if (controlName === 'ruc') {
+    if (control.errors['pattern'] || control.errors['minlength'] || control.errors['maxlength']) {
+      return 'El RUC debe tener exactamente 11 dígitos numéricos';
     }
+  }
 
     return 'Valor inválido';
   }
@@ -324,6 +338,8 @@ export class FormStoresComponent implements OnInit, OnChanges {
   tiktok: this.form.value.tiktok?.trim() || undefined,
   instagram: this.form.value.instagram?.trim() || undefined,
   facebook: this.form.value.facebook?.trim() || undefined,
+  ruc: this.form.value.ruc?.trim() || undefined,
+
       };
 
       let response: TiendaResponse;

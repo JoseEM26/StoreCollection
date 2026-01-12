@@ -25,4 +25,7 @@ public class TiendaRequest {
     private String tiktok;
     private String instagram;
     private String facebook;
+
+    private String ruc;
+
 }

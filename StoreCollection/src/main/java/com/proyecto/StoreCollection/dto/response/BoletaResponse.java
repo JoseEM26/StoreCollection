@@ -29,6 +29,7 @@ public class BoletaResponse {
     private String departamento;
     private String codigoPostal;
     private String tipoEntrega;
+    private String ruc;
 
     private List<BoletaDetalleResponse> detalles;
 }

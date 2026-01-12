@@ -32,5 +32,6 @@ public class  TiendaResponse {
     private String tiktok;
     private String instagram;
     private String facebook;
+    private String ruc;
 
 }

@@ -19,11 +19,10 @@ export interface TiendaCreateRequest {
   planId?: number;
   userId?: number;
   activo?: boolean;
-  emailRemitente?: string;           // opcional
-  emailAppPassword?: string;
     tiktok?: string | null;
   instagram?: string | null;
   facebook?: string | null;
+  ruc?: string | null;
 }
 
 export interface TiendaUpdateRequest {
@@ -37,11 +36,11 @@ export interface TiendaUpdateRequest {
   mapa_url?: string;
   planId?: number | null;
   activo?: boolean;
-  emailRemitente?: string;           // opcional
-  emailAppPassword?: string;
     tiktok?: string | null;
   instagram?: string | null;
   facebook?: string | null;
+  ruc?: string | null;
+
 }
 
 @Injectable({
