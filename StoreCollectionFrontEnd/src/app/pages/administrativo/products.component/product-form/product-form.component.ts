@@ -143,7 +143,15 @@ ngOnChanges(changes: SimpleChanges): void {
     this.variantes.update(v => [...v, nueva]);
     this.collapsed.update(c => [...c, false]);
   }
-
+// Devuelve true si el atributo ya está seleccionado en esta variante
+isAtributoYaUsado(varianteIndex: number, atributoNombre: string, excludeIndex?: number): boolean {
+  const variante = this.variantes()[varianteIndex];
+  return variante.atributos.some((attr, idx) => {
+    // Ignoramos el índice actual si estamos editando uno existente
+    if (excludeIndex !== undefined && idx === excludeIndex) return false;
+    return attr.atributoNombre?.trim().toLowerCase() === atributoNombre?.trim().toLowerCase();
+  });
+}
   eliminarVariante(index: number): void {
     this.variantes.update(v => v.filter((_, i) => i !== index));
     this.collapsed.update(c => c.filter((_, i) => i !== index));
@@ -211,24 +219,29 @@ eliminarImagen(index: number): void {
 }
 agregarAtributo(varianteIndex: number): void {
   const variante = this.variantes()[varianteIndex];
-  const nombresUsados = variante.atributos
-    .map(a => a.atributoNombre?.toLowerCase().trim())
-    .filter(nombre => nombre && nombre !== '__new__');
 
-  // Si ya usó todos los atributos disponibles, no permitir más
-  if (nombresUsados.length >= this.atributosDisponibles().length) {
+  // Creamos un Set con los nombres de atributos ya usados (normalizados a minúsculas)
+  const nombresUsados = new Set(
+    variante.atributos
+      .map(a => a.atributoNombre?.trim().toLowerCase())
+      .filter(nombre => nombre && nombre !== '__new__')
+  );
+
+  // 1. Comprobamos si ya se usaron todos los atributos disponibles
+  if (nombresUsados.size >= this.atributosDisponibles().length) {
     Swal.fire({
       icon: 'info',
-      title: 'Límite alcanzado',
-      text: 'Cada variante solo puede tener un valor por cada tipo de atributo (Color, Talla, Presentación, etc.).',
-      confirmButtonText: 'Entendido'
+      title: 'No quedan atributos disponibles',
+      text: 'Ya has usado todos los tipos de atributos posibles en esta variante.',
+      timer: 3000,
+      showConfirmButton: false
     });
     return;
   }
 
-  // Permitir agregar solo si hay atributos disponibles sin usar
+  // 2. Comprobación extra (más amigable): si no hay ninguno disponible sin usar
   const hayDisponibles = this.atributosDisponibles().some(
-    attr => !nombresUsados.includes(attr.descripcion.toLowerCase())
+    attr => !nombresUsados.has(attr.descripcion.trim().toLowerCase())
   );
 
   if (!hayDisponibles) {
@@ -241,7 +254,7 @@ agregarAtributo(varianteIndex: number): void {
     return;
   }
 
-  // Solo ahora agregamos uno nuevo
+  // Todo está bien → agregamos una nueva fila de atributo
   this.variantes.update(v => {
     const copy = [...v];
     copy[varianteIndex].atributos.push({
@@ -253,7 +266,7 @@ agregarAtributo(varianteIndex: number): void {
     return copy;
   });
 
-  // Opcional: expandir la variante para que vea el nuevo campo
+  // Expandimos la variante para que el usuario vea inmediatamente el nuevo campo
   this.collapsed.update(c => c.map((val, i) => i === varianteIndex ? false : val));
 }
 
@@ -488,7 +501,27 @@ agregarAtributo(varianteIndex: number): void {
         }
       }
     }
+for (let i = 0; i < this.variantes().length; i++) {
+    const v = this.variantes()[i];
+    const nombresAtributos = v.atributos
+      .map(a => a.atributoNombre?.trim().toLowerCase())
+      .filter(Boolean);
 
+    const duplicados = nombresAtributos.filter(
+      (nombre, idx) => nombresAtributos.indexOf(nombre) !== idx
+    );
+
+    if (duplicados.length > 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Atributos duplicados',
+        text: `La variante ${i + 1} tiene atributos repetidos (${duplicados.join(', ')}). Cada atributo debe ser único.`,
+        confirmButtonText: 'Corregir'
+      });
+      this.loading.set(false);
+      return;
+    }
+  }
     this.enviarFormulario();
   }
 

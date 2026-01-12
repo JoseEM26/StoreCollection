@@ -179,9 +179,12 @@
                     <option *ngIf="isAtributoPersonalizado(attr)" [value]="attr.atributoNombre">
                       {{ attr.atributoNombre }} (personalizado)
                     </option>
-                    <option *ngFor="let a of atributosDisponibles()" [value]="a.descripcion">
-                      {{ a.descripcion }}
-                    </option>
+                    <option 
+    *ngFor="let a of atributosDisponibles()" 
+    [value]="a.descripcion"
+    [disabled]="isAtributoYaUsado(i, a.descripcion, j)">
+    {{ a.descripcion }}
+  </option>
                     <option value="__new__" class="text-primary fw-bold">+ Crear nuevo atributo</option>
                   </select>
 
@@ -210,7 +213,10 @@
                     <option *ngFor="let v of getValoresForAtributo(attr.atributoNombre)" [value]="v.descripcion">
                       {{ v.descripcion }}
                     </option>
-                    <option value="__new__" class="text-primary fw-bold">+ Crear nuevo valor</option>
+                    <!-- Opción para crear nuevo (siempre habilitada) -->
+  <option value="__new__" class="text-primary fw-bold">
+    + Crear nuevo atributo
+  </option>
                   </select>
 
                   <input
