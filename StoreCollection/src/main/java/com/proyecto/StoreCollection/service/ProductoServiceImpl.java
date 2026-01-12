@@ -44,7 +44,7 @@
 
     
         private void validarLimiteProductos(Tienda tienda) {
-            long conteoActual = productoRepository.countByTiendaId(tienda.getId());
+            long conteoActual = productoRepository.countByTiendaIdAndActivoTrue(tienda.getId());
             int maxPermitido = tienda.getPlan().getMaxProductos();
     
             if (conteoActual >= maxPermitido) {
@@ -334,23 +334,37 @@
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado"));
             return toResponseProductoCreate(producto);
         }
-    
+
         @Override
         @Transactional
         public ProductoResponse toggleActivo(Integer id) {
             Producto producto = productoRepository.findById(id)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado"));
-    
-            boolean nuevoEstado = !producto.isActivo();
-            producto.setActivo(nuevoEstado);
+
+            boolean vaAActivarse = !producto.isActivo();
+
+            // ← Aquí está el cambio importante
+            if (vaAActivarse) {
+                long conteoActual = productoRepository.countByTiendaIdAndActivoTrue(producto.getTienda().getId());
+                int maxPermitido = producto.getTienda().getPlan().getMaxProductos();
+
+                if (conteoActual >= maxPermitido) {
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                            "¡No puedes activar este producto! Has alcanzado el límite de productos activos " +
+                                    "de tu plan (" + maxPermitido + "). Actualmente tienes " + conteoActual + " activos. " +
+                                    "Desactiva alguno o actualiza tu plan.");
+                }
+            }
+
+            producto.setActivo(vaAActivarse);
             productoRepository.save(producto);
-    
-            if (nuevoEstado) {
+
+            if (vaAActivarse) {
                 varianteRepository.activarTodasPorProductoId(id);
             } else {
                 varianteRepository.desactivarTodasPorProductoId(id);
             }
-    
+
             return toResponse(productoRepository.findById(id).get());
         }
         @Override

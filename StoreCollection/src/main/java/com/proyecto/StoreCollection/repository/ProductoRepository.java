@@ -23,9 +23,9 @@ public interface ProductoRepository extends TenantBaseRepository<Producto, Integ
      //long countByTiendaId(Integer tiendaId);
 
      // ==================== BÚSQUEDAS BÁSICAS ====================
-     int countByTiendaId(Integer tiendaId);
+     Integer countByTiendaId(Integer tiendaId);
      Optional<Producto> findBySlugAndTiendaId(String slug, Integer tiendaId);
-
+     Integer countByTiendaIdAndActivoTrue(Integer tiendaId);
      List<Producto> findAllByOrderByNombreAsc();
 
      List<Producto> findByTiendaIdOrderByNombreAsc(Integer tiendaId);

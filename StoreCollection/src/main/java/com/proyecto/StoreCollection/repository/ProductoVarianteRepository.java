@@ -25,7 +25,8 @@ public interface ProductoVarianteRepository extends TenantBaseRepository<Product
       * para no penalizar al usuario por variantes que ya existían.
       */
      long countByProductoId(Integer productoId);
-
+     // En ProductoVarianteRepository.java
+     Integer countByTiendaIdAndActivoTrue(Integer tiendaId);
      // ==================== OPERACIONES MASIVAS POR PRODUCTO ====================
 
      @Modifying

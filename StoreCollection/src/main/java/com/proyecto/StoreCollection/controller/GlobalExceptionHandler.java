@@ -12,23 +12,7 @@ import java.time.LocalDateTime;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Handler específico para tu excepción custom
-    @ExceptionHandler(MissingEmailConfigException.class)
-    public ResponseEntity<ApiErrorResponse> handleMissingEmailConfig(
-            MissingEmailConfigException ex,
-            HttpServletRequest request) {
 
-        ApiErrorResponse error = ApiErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error("MISSING_EMAIL_CONFIG")
-                .message(ex.getMessage())
-                .details("La tienda necesita configurar su correo y contraseña de aplicación para enviar notificaciones automáticas")
-                .path(request.getRequestURI())
-                .build();
-
-        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
-    }
 
     // Handler para IllegalStateException (por si usas la genérica)
     @ExceptionHandler(IllegalStateException.class)

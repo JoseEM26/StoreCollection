@@ -127,9 +127,9 @@ public class DashboardController {
         Tienda tienda = misTiendas.get(0); // ← asumimos 1 tienda por usuario por ahora
         Plan plan = tienda.getPlan();
 
-        // Conteos actuales
-        int productosActuales = productoRepository.countByTiendaId(tienda.getId());
-        int variantesActuales = productoVarianteRepository.countByTiendaId(tienda.getId());
+        // Conteos actuales – solo los activos
+        int productosActuales = productoRepository.countByTiendaIdAndActivoTrue(tienda.getId());
+        int variantesActuales = productoVarianteRepository.countByTiendaIdAndActivoTrue(tienda.getId());
 
         // Porcentajes de uso
         double porcentajeProductos = (plan.getMaxProductos() != null && plan.getMaxProductos() > 0)
@@ -202,6 +202,8 @@ public class DashboardController {
 
         return ResponseEntity.ok(usage);
     }
+
+
     @GetMapping("/tiendas")
     public ResponseEntity<?> getTiendas(
             @RequestParam(defaultValue = "0") int page,
