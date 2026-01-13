@@ -320,37 +320,50 @@ agregarAtributo(varianteIndex: number): void {
     });
   }
 
-  onValorChange(varianteIndex: number, attrIndex: number, value: string): void {
-    this.variantes.update(v => {
-      const copy = [...v];
-      const attr = copy[varianteIndex].atributos[attrIndex];
+onValorChange(varianteIndex: number, attrIndex: number, value: string): void {
+  this.variantes.update(v => {
+    const copy = [...v];
+    const attr = copy[varianteIndex].atributos[attrIndex];
 
-      if (value === '__new__') {
-        attr.valor = '__new__';
-        attr.valorTemp = '';
-      } else {
-        attr.valor = value;
-        delete (attr as any).valorTemp;
-      }
-      return copy;
-    });
-  }
+    if (value === '__new__') {
+      attr.valor = '__new__';
+      attr.valorTemp = '';
+    } else {
+      attr.valor = value;
+      delete (attr as any).valorTemp;
+    }
 
-  finalizarNuevoValor(varianteIndex: number, attrIndex: number): void {
-    this.variantes.update(v => {
-      const copy = [...v];
-      const attr = copy[varianteIndex].atributos[attrIndex];
-      const texto = attr.valorTemp?.trim();
-      if (texto && texto.length > 0) {
-        attr.valor = texto;
-        delete (attr as any).valorTemp;
-      } else {
-        attr.valor = '';
-      }
-      return copy;
-    });
-  }
+    // ¡¡ Actualizamos SKU automáticamente !!
+    copy[varianteIndex].sku = this.generarSkuSugerido(varianteIndex);
 
+    return copy;
+  });
+}
+
+finalizarNuevoValor(varianteIndex: number, attrIndex: number): void {
+  this.variantes.update(v => {
+    const copy = [...v];
+    const attr = copy[varianteIndex].atributos[attrIndex];
+    const texto = attr.valorTemp?.trim();
+    if (texto && texto.length > 0) {
+      attr.valor = texto;
+      delete (attr as any).valorTemp;
+    } else {
+      attr.valor = '';
+    }
+
+    // Actualizamos SKU también al finalizar valor personalizado
+    copy[varianteIndex].sku = this.generarSkuSugerido(varianteIndex);
+
+    return copy;
+  });
+}
+private skuEstaDuplicado(sku: string, excludeIndex: number): boolean {
+  return this.variantes().some((v, i) => 
+    i !== excludeIndex && 
+    v.sku?.trim().toUpperCase() === sku.trim().toUpperCase()
+  );
+}
   isAtributoPersonalizado(attr: any): boolean {
     return !!attr.atributoNombre && 
            attr.atributoNombre !== '__new__' &&
@@ -374,171 +387,199 @@ agregarAtributo(varianteIndex: number): void {
     return this.variantes().map((v, i) => ({ variante: v, index: i }));
   });
 
-  save(): void {
-    this.errorMessage.set(null);
-    this.loading.set(true);
+save(): void {
+  this.errorMessage.set(null);
+  this.loading.set(true);
 
-    const nombreTrim = this.nombre().trim();
-    if (!nombreTrim) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Falta el nombre del producto',
-        text: 'El nombre es obligatorio para identificar el producto en la tienda.',
-        confirmButtonText: 'Entendido'
+  // ── Validaciones generales del producto ──────────────────────────────────────
+  if (!this.nombre().trim()) {
+    this.mostrarAlertaValidacion(
+      'warning',
+      'Falta el nombre del producto',
+      'El nombre es obligatorio para identificar el producto en la tienda.'
+    );
+    return;
+  }
+
+  const slugTrim = this.slug().trim();
+  if (!slugTrim) {
+    this.mostrarAlertaValidacion(
+      'warning',
+      'Slug requerido',
+      'El slug forma parte de la URL del producto.<br>Puedes generarlo automáticamente desde el nombre.'
+    );
+    return;
+  }
+
+  if (!/^[a-z0-9-]+$/.test(slugTrim)) {
+    this.mostrarAlertaValidacion(
+      'warning',
+      'Formato de slug inválido',
+      'Solo se permiten letras minúsculas, números y guiones (-).<br>Ejemplo válido: <b>zapatillas-nike-air-2024</b>'
+    );
+    return;
+  }
+
+  if (!this.categoriaId()) {
+    this.mostrarAlertaValidacion(
+      'warning',
+      'Selecciona una categoría',
+      'La categoría ayuda a organizar y mostrar el producto correctamente.'
+    );
+    return;
+  }
+
+  if (!this.isEdit && this.auth.isAdmin() && !this.tiendaId()) {
+    this.mostrarAlertaValidacion(
+      'warning',
+      'Tienda no seleccionada',
+      'Como administrador, debes asignar este producto a una tienda específica.'
+    );
+    return;
+  }
+
+  if (this.variantes().length === 0) {
+    this.mostrarAlertaValidacion(
+      'warning',
+      'No hay variantes',
+      'Todo producto necesita al menos una variante con precio, stock y SKU.'
+    );
+    return;
+  }
+
+  // ── Validaciones por cada variante ───────────────────────────────────────────
+  for (let i = 0; i < this.variantes().length; i++) {
+    const v = this.variantes()[i];
+    const numVariante = i + 1;
+
+    // 1. SKU
+    let skuFinal = v.sku?.trim() || '';
+
+    if (!skuFinal) {
+      // Auto-generamos si está vacío
+      skuFinal = this.generarSkuSugerido(i);
+      this.variantes.update(variantes => {
+        const copy = [...variantes];
+        copy[i].sku = skuFinal;
+        return copy;
       });
-      this.loading.set(false);
+
+      Swal.fire({
+        icon: 'info',
+        title: `SKU generado automáticamente - Variante ${numVariante}`,
+        html: `Se ha asignado el siguiente SKU único:<br><b>${skuFinal}</b><br><br>Puedes modificarlo si lo deseas.`,
+        timer: 3500,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        toast: true,
+        position: 'top-end',
+        background: '#e3f2fd',
+        color: '#1e88e5'
+      });
+    }
+
+    // Verificamos duplicados después de generar
+    if (this.skuEstaDuplicado(skuFinal, i)) {
+      this.mostrarAlertaValidacion(
+        'error',
+        `SKU duplicado - Variante ${numVariante}`,
+        `El SKU <b>"${skuFinal}"</b> ya está siendo usado en otra variante.<br>Cada variante debe tener un SKU único.`
+      );
       return;
     }
 
-    const slugTrim = this.slug().trim();
-    if (!slugTrim) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Slug requerido',
-        text: 'El slug forma parte de la URL del producto. Puedes generarlo automáticamente desde el nombre.',
-        confirmButtonText: 'Corregir'
-      });
-      this.loading.set(false);
-      return;
-    }
-    if (!/^[a-z0-9-]+$/.test(slugTrim)) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Formato de slug inválido',
-        text: 'Solo se permiten letras minúsculas, números y guiones (-). Ejemplo válido: zapatillas-nike-air-2024',
-        confirmButtonText: 'Corregir'
-      });
-      this.loading.set(false);
+    // 2. Precio anterior (si existe)
+    if (v.precio_anterior != null && v.precio_anterior <= v.precio) {
+      this.mostrarAlertaValidacion(
+        'warning',
+        `Precio anterior inválido - Variante ${numVariante}`,
+        'El precio anterior debe ser **mayor** al precio actual para mostrar la oferta correctamente.'
+      );
       return;
     }
 
-    if (!this.categoriaId()) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Selecciona una categoría',
-        text: 'La categoría ayuda a organizar y mostrar el producto correctamente en la tienda.',
-        confirmButtonText: 'Seleccionar'
-      });
-      this.loading.set(false);
+    // 3. Precio
+    if (!v.precio || v.precio <= 0) {
+      this.mostrarAlertaValidacion(
+        'warning',
+        `Precio inválido - Variante ${numVariante}`,
+        'El precio debe ser mayor que cero.'
+      );
       return;
     }
 
-    if (!this.isEdit && this.auth.isAdmin() && !this.tiendaId()) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Tienda no seleccionada',
-        text: 'Como administrador, debes asignar este producto a una tienda específica.',
-        confirmButtonText: 'Seleccionar tienda'
-      });
-      this.loading.set(false);
+    // 4. Stock
+    if (v.stock == null || v.stock < 0) {
+      this.mostrarAlertaValidacion(
+        'warning',
+        `Stock inválido - Variante ${numVariante}`,
+        'El stock no puede ser negativo. Usa 0 si no hay disponibilidad.'
+      );
       return;
     }
 
-    if (this.variantes().length === 0) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'No hay variantes',
-        text: 'Todo producto necesita al menos una variante con precio, stock y SKU.',
-        confirmButtonText: 'Agregar variante'
-      });
-      this.loading.set(false);
-      return;
-    }
-
-    for (let i = 0; i < this.variantes().length; i++) {
-      const v = this.variantes()[i];
-if (v.precio_anterior !== null && v.precio_anterior !== undefined) {
-    if (v.precio_anterior <= v.precio) {
-      Swal.fire({
-        icon: 'warning',
-        title: `Variante ${i + 1}: Precio anterior inválido`,
-        text: 'El precio anterior (si se usa) debe ser mayor al precio actual para mostrar oferta correctamente.',
-        confirmButtonText: 'Corregir'
-      });
-      this.loading.set(false);
-      return;
+    // 5. Atributos completos
+    for (let j = 0; j < v.atributos.length; j++) {
+      const a = v.atributos[j];
+      if (a.atributoNombre && !a.valor?.trim()) {
+        this.mostrarAlertaValidacion(
+          'warning',
+          `Valor de atributo faltante - Variante ${numVariante}`,
+          `Has seleccionado el atributo "<b>${a.atributoNombre}</b>" pero no has indicado su valor.`
+        );
+        return;
+      }
+      if (!a.atributoNombre?.trim() && a.valor?.trim()) {
+        this.mostrarAlertaValidacion(
+          'warning',
+          `Atributo incompleto - Variante ${numVariante}`,
+          'Has indicado un valor pero no has seleccionado o escrito el nombre del atributo.'
+        );
+        return;
+      }
     }
   }
-      if (!v.sku?.trim()) {
-        Swal.fire({
-          icon: 'warning',
-          title: `Variante ${i + 1}: SKU vacío`,
-          text: 'Cada variante debe tener un código SKU único (ej: ZAP-NEG-42).',
-          confirmButtonText: 'Corregir'
-        });
-        this.loading.set(false);
-        return;
-      }
 
-      if (!v.precio || v.precio <= 0) {
-        Swal.fire({
-          icon: 'warning',
-          title: `Variante ${i + 1}: Precio inválido`,
-          text: 'El precio debe ser mayor que cero.',
-          confirmButtonText: 'Corregir'
-        });
-        this.loading.set(false);
-        return;
-      }
-
-      if (v.stock == null || v.stock < 0) {
-        Swal.fire({
-          icon: 'warning',
-          title: `Variante ${i + 1}: Stock inválido`,
-          text: 'El stock no puede ser negativo. Usa 0 si no hay disponibilidad.',
-          confirmButtonText: 'Corregir'
-        });
-        this.loading.set(false);
-        return;
-      }
-
-      for (let j = 0; j < v.atributos.length; j++) {
-        const a = v.atributos[j];
-        if (a.atributoNombre && !a.valor?.trim()) {
-          Swal.fire({
-            icon: 'warning',
-            title: `Variante ${i + 1}: Valor de atributo faltante`,
-            text: `Has seleccionado el atributo "${a.atributoNombre}" pero no has indicado su valor.`,
-            confirmButtonText: 'Completar'
-          });
-          this.loading.set(false);
-          return;
-        }
-        if (!a.atributoNombre?.trim() && a.valor?.trim()) {
-          Swal.fire({
-            icon: 'warning',
-            title: `Variante ${i + 1}: Atributo incompleto`,
-            text: 'Has indicado un valor pero no has seleccionado o escrito el nombre del atributo.',
-            confirmButtonText: 'Corregir'
-          });
-          this.loading.set(false);
-          return;
-        }
-      }
-    }
-for (let i = 0; i < this.variantes().length; i++) {
+  // ── Última validación: atributos duplicados por variante ─────────────────────
+  for (let i = 0; i < this.variantes().length; i++) {
     const v = this.variantes()[i];
     const nombresAtributos = v.atributos
       .map(a => a.atributoNombre?.trim().toLowerCase())
-      .filter(Boolean);
+      .filter(Boolean) as string[];
 
     const duplicados = nombresAtributos.filter(
       (nombre, idx) => nombresAtributos.indexOf(nombre) !== idx
     );
 
     if (duplicados.length > 0) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Atributos duplicados',
-        text: `La variante ${i + 1} tiene atributos repetidos (${duplicados.join(', ')}). Cada atributo debe ser único.`,
-        confirmButtonText: 'Corregir'
-      });
-      this.loading.set(false);
+      this.mostrarAlertaValidacion(
+        'error',
+        'Atributos duplicados',
+        `La variante ${i + 1} tiene atributos repetidos: <b>${duplicados.join(', ')}</b>.<br>Cada atributo debe ser único por variante.`
+      );
       return;
     }
   }
-    this.enviarFormulario();
-  }
+
+  // ── Todo OK → guardar ───────────────────────────────────────────────────────
+  this.enviarFormulario();
+}
+
+// Método auxiliar para alertas consistentes y bonitas
+private mostrarAlertaValidacion(icon: 'warning' | 'error' | 'info', title: string, html: string): void {
+  Swal.fire({
+    icon,
+    title,
+    html,
+    confirmButtonText: icon === 'error' ? 'Corregir ahora' : 'Entendido',
+    confirmButtonColor: icon === 'error' ? '#ef4444' : '#3b82f6',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    showClass: { popup: 'animate__animated animate__fadeInDown animate__faster' },
+    hideClass: { popup: 'animate__animated animate__fadeOutUp animate__faster' }
+  });
+  this.loading.set(false);
+}
 
   private enviarFormulario(): void {
     const formData = new FormData();
@@ -610,7 +651,41 @@ formData.append('descripcion_corta', this.descripcionCortaProducto()?.trim() || 
       }
     });
   }
+private generarSkuSugerido(varianteIndex: number): string {
+  // 1. Tomamos una versión corta y limpia del nombre del producto
+  const nombreBase = this.nombre()
+    .trim()
+    .toUpperCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .substring(0, 12); // ← límite razonable (ej: ZAPATILLAS-NIKE)
 
+  // 2. Obtenemos los valores de atributos de esta variante
+  const variante = this.variantes()[varianteIndex];
+  const valores = variante.atributos
+    .filter(a => a.valor?.trim() && a.atributoNombre !== '__new__')
+    .map(a => a.valor!.trim().toUpperCase()
+      .replace(/\s+/g, '')
+      .substring(0, 8) // ← evitamos valores muy largos
+    )
+    .filter(Boolean);
+
+  // 3. Construimos el SKU
+  let sku = nombreBase;
+  if (valores.length > 0) {
+    sku += '-' + valores.join('-');
+  }
+
+  // 4. Limpiamos caracteres no deseados y quitamos dobles guiones
+  sku = sku
+    .replace(/[^A-Z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+
+  return sku;
+}
   cancel(): void {
     this.closed.emit();
   }

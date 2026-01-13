@@ -91,192 +91,213 @@
       </div>
     </section>
 
-    <!-- Variantes -->
-    <section class="section mt-5">
-      <div class="d-flex justify-between align-center mb-4">
-        <h3 class="section-title mb-0">Variantes ({{ variantes().length }})</h3>
-        <button type="button" class="btn btn-success btn-sm" (click)="agregarVariante()">
-          <i class="icon-plus">+</i> Agregar variante
-        </button>
+<!-- Variantes -->
+<section class="section mt-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="section-title mb-0">Variantes ({{ variantes().length }})</h3>
+    <button type="button" class="btn btn-success btn-sm" (click)="agregarVariante()">
+      <i class="bi bi-plus-lg"></i> Agregar variante
+    </button>
+  </div>
+
+  <div *ngIf="variantes().length === 0" class="empty-state text-center py-5">
+    <p class="text-muted fs-5">Aún no has agregado variantes.</p>
+    <button class="btn btn-primary btn-lg mt-3" (click)="agregarVariante()">
+      + Crear primera variante
+    </button>
+  </div>
+
+  <!-- Lista de variantes -->
+  <div *ngFor="let item of variantesOrdenadas(); let i = index" class="variante-card mb-4 shadow-sm rounded border">
+    <div class="variante-header p-3 bg-light d-flex justify-content-between align-items-center" (click)="toggleCollapse(i)">
+      <div class="d-flex align-items-center flex-wrap gap-3">
+        <span class="collapse-icon fs-4 me-2">{{ collapsed()[i] ? '▶' : '▼' }}</span>
+        <strong class="fs-5">Variante {{ i + 1 }}</strong>
+
+        <!-- SKU generado automáticamente (solo visualización) -->
+        <span class="badge bg-light text-dark px-3 py-1" *ngIf="item.variante.sku">
+          SKU: <strong>{{ item.variante.sku }}</strong>
+        </span>
+        <span class="badge bg-warning text-dark px-3 py-1" *ngIf="!item.variante.sku">
+          Generando SKU...
+        </span>
+
+        <span class="badge bg-info ms-2" *ngIf="!item.variante.id">Nueva</span>
       </div>
 
-      <div *ngIf="variantes().length === 0" class="empty-state">
-        <p class="text-muted">Aún no has agregado variantes.</p>
-        <button class="btn btn-primary" (click)="agregarVariante()">
-          + Crear primera variante
-        </button>
+      <button type="button" class="btn btn-danger btn-sm" (click)="$event.stopPropagation(); eliminarVariante(i)">
+        <i class="bi bi-trash"></i> Eliminar
+      </button>
+    </div>
+
+    <!-- Contenido que se expande -->
+    <div [hidden]="collapsed()[i]" class="variante-body p-4 bg-white">
+      <div class="row g-4">
+        <!-- Descripción corta -->
+        <div class="col-12">
+          <label class="form-label">Descripción corta (opcional)</label>
+          <textarea
+            rows="2"
+            [(ngModel)]="item.variante.descripcion_corta"
+            [name]="'desc_corta_' + i"
+            class="form-control"
+            placeholder="Ej: ¡Envío gratis + 2x1 en accesorios! Stock limitado."
+            maxlength="255"
+          ></textarea>
+          <small class="form-text text-muted">Máx. 255 caracteres. Aparece en tarjetas y detalles del producto.</small>
+        </div>
+
+        <!-- Precio anterior (oferta) -->
+        <div class="col-md-4">
+          <label class="form-label">Precio anterior (oferta)</label>
+          <input
+            type="number"
+            min="0.01"
+            step="0.01"
+            [(ngModel)]="item.variante.precio_anterior"
+            [name]="'precio_anterior_' + i"
+            class="form-control"
+            placeholder="Ej: 89.99 (dejar vacío si no hay oferta)"
+          />
+          <small class="form-text text-muted">Solo se muestra tachado si es mayor al precio actual.</small>
+        </div>
+
+        <!-- Precio actual -->
+        <div class="col-md-4">
+          <label class="form-label required">Precio</label>
+          <input
+            type="number"
+            min="0.01"
+            step="0.01"
+            [(ngModel)]="item.variante.precio"
+            [name]="'precio_' + i"
+            class="form-control"
+            required
+          />
+        </div>
+
+        <!-- Stock -->
+        <div class="col-md-4">
+          <label class="form-label required">Stock</label>
+          <input
+            type="number"
+            min="0"
+            [(ngModel)]="item.variante.stock"
+            [name]="'stock_' + i"
+            class="form-control"
+            required
+          />
+        </div>
       </div>
 
-      <div *ngFor="let item of variantesOrdenadas(); let i = index" class="variante-card mb-4">
-        <div class="variante-header" (click)="toggleCollapse(i)">
-          <div class="d-flex align-center">
-            <span class="collapse-icon me-3">{{ collapsed()[i] ? '▶' : '▼' }}</span>
-            <strong>Variante {{ i + 1 }}</strong>
-            <span class="badge ms-3" [class.badge-new]="!item.variante.id"> {{ !item.variante.id ? 'Nueva' : 'Existente' }}</span>
-            <span class="text-muted ms-3" *ngIf="item.variante.sku">SKU: {{ item.variante.sku }}</span>
+      <!-- Imagen -->
+      <div class="mt-4">
+        <label class="form-label">Imagen de la variante</label>
+        <div class="image-upload-container">
+          <div class="image-preview-wrapper">
+            <div *ngIf="imagenPreviews().get(i)" class="preview-container position-relative">
+              <img [src]="imagenPreviews().get(i)!" alt="Vista previa" class="preview-img img-fluid rounded">
+              <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2" 
+                      (click)="eliminarImagen(i)" title="Eliminar imagen">
+                ×
+              </button>
+            </div>
+            <div *ngIf="!imagenPreviews().get(i)" class="placeholder-img d-flex align-items-center justify-content-center bg-light rounded border">
+              <span class="text-muted">Sin imagen</span>
+            </div>
           </div>
-          <button type="button" class="btn btn-danger btn-sm" (click)="$event.stopPropagation(); eliminarVariante(i)">
-            Eliminar
+          <input type="file" accept="image/*" (change)="onImagenChange($event, i)" class="form-control mt-3" />
+          <small class="form-text text-muted">Máximo 5 MB. Recomendado: JPG, PNG, WebP.</small>
+        </div>
+      </div>
+
+      <!-- Atributos -->
+      <div class="mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0 fw-bold">Atributos ({{ item.variante.atributos.length }})</h5>
+          <button type="button" class="btn btn-outline-primary btn-sm" (click)="agregarAtributo(i)">
+            <i class="bi bi-plus-lg"></i> Agregar atributo
           </button>
         </div>
 
-        <div [hidden]="collapsed()[i]" class="variante-body">
-          <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label required">SKU</label>
-              <input [(ngModel)]="item.variante.sku" [name]="'sku_' + i" class="form-control" placeholder="Ej: ZAP-BL-42" />
-            </div>
-            <div class="form-grid mt-4">
-  
+        <div *ngIf="item.variante.atributos.length === 0" class="alert alert-info small">
+          No hay atributos definidos para esta variante.
+        </div>
 
-  <div class="form-group">
-    <label class="form-label">Descripción corta (opcional)</label>
-    <textarea
-      rows="2"
-      [(ngModel)]="item.variante.descripcion_corta"
-      [name]="'desc_corta_' + i"
-      class="form-control"
-      placeholder="Ej: ¡Envío gratis + 2x1 en accesorios! Stock limitado."
-      maxlength="255"
-    ></textarea>
-    <small class="form-help">Máx. 255 caracteres. Se muestra en tarjetas y detalles.</small>
-  </div>
-</div>
-<div class="form-group">
-    <label class="form-label">Precio anterior (oferta)</label>
-    <input
-      type="number"
-      min="0.01"
-      step="0.01"
-      [(ngModel)]="item.variante.precio_anterior"
-      [name]="'precio_anterior_' + i"
-      class="form-control"
-      placeholder="Ej: 89.99 (dejar vacío si no hay oferta)"
-    />
-    <div *ngIf="item.variante.precio_anterior" class="mt-1 small text-muted">
-  Vista previa: <s>{{ item.variante.precio_anterior | number:'1.2-2' }}</s> → {{ item.variante.precio | number:'1.2-2' }}
-</div>
-    <small class="form-help">Solo se muestra tachado si es mayor al precio actual.</small>
-  </div>
-            <div class="form-group">
-              <label class="form-label required">Precio</label>
-              <input [(ngModel)]="item.variante.precio" [name]="'precio_' + i" type="number" min="0.01" step="0.01" class="form-control" />
-            </div>
-            <div class="form-group">
-              <label class="form-label required">Stock</label>
-              <input [(ngModel)]="item.variante.stock" [name]="'stock_' + i" type="number" min="0" class="form-control" />
-            </div>
-          </div>
+        <div class="atributos-list">
+          <div class="row g-3" *ngFor="let attr of item.variante.atributos; let j = index">
+            <div class="col-md-5">
+              <label class="form-label">Atributo</label>
+              <select
+                class="form-select"
+                [(ngModel)]="attr.atributoNombre"
+                (ngModelChange)="onAtributoChange(i, j, $event)"
+                [name]="'attrNom_' + i + '_' + j"
+              >
+                <option value="" disabled>Seleccionar atributo</option>
+                <option *ngIf="isAtributoPersonalizado(attr)" [value]="attr.atributoNombre">
+                  {{ attr.atributoNombre }} (personalizado)
+                </option>
+                <option 
+                  *ngFor="let a of atributosDisponibles()" 
+                  [value]="a.descripcion"
+                  [disabled]="isAtributoYaUsado(i, a.descripcion, j)">
+                  {{ a.descripcion }}
+                </option>
+                <option value="__new__" class="text-primary fw-bold">+ Crear nuevo atributo</option>
+              </select>
 
-          <div class="form-group">
-            <label class="form-label">Imagen de la variante</label>
-            <div class="image-upload-container">
-              <div class="image-preview-wrapper">
-                <div *ngIf="imagenPreviews().get(i)" class="preview-container">
-                  <img [src]="imagenPreviews().get(i)!" alt="Preview" class="preview-img">
-                  <button type="button" class="btn-delete-img" (click)="eliminarImagen(i)" title="Eliminar imagen">×</button>
-                </div>
-                <div *ngIf="!imagenPreviews().get(i)" class="placeholder-img">
-                  <span>Sin imagen</span>
-                </div>
-              </div>
-              <input type="file" accept="image/*" (change)="onImagenChange($event, i)" class="file-input mt-3" />
-              <small class="form-help d-block mt-2">Máximo 5 MB. Formatos: JPG, PNG, WebP.</small>
+              <input
+                *ngIf="attr.atributoNombre === '__new__'"
+                type="text"
+                [(ngModel)]="attr.atributoNombreTemp!"
+                placeholder="Ej: Talla, Color, Material"
+                class="form-control mt-2"
+                (blur)="finalizarNuevoAtributo(i, j)"
+                autofocus
+              />
             </div>
-          </div>
 
-          <!-- Atributos -->
-          <div class="mt-4">
-            <div class="d-flex justify-between align-center mb-3">
-              <h5 class="mb-0 fw-bold">Atributos ({{ item.variante.atributos.length }})</h5>
-              <button type="button" class="btn btn-outline-primary btn-sm" (click)="agregarAtributo(i)">
-                + Agregar atributo
+            <div class="col-md-5">
+              <label class="form-label">Valor</label>
+              <select
+                class="form-select"
+                [(ngModel)]="attr.valor"
+                (ngModelChange)="onValorChange(i, j, $event)"
+                [name]="'attrVal_' + i + '_' + j"
+              >
+                <option value="" disabled>Seleccionar valor</option>
+                <option *ngIf="isValorPersonalizado(attr)" [value]="attr.valor">
+                  {{ attr.valor }} (personalizado)
+                </option>
+                <option *ngFor="let v of getValoresForAtributo(attr.atributoNombre)" [value]="v.descripcion">
+                  {{ v.descripcion }}
+                </option>
+                <option value="__new__" class="text-primary fw-bold">+ Crear nuevo valor</option>
+              </select>
+
+              <input
+                *ngIf="attr.valor === '__new__'"
+                type="text"
+                [(ngModel)]="attr.valorTemp!"
+                placeholder="Ej: 42, Rojo, Algodón"
+                class="form-control mt-2"
+                (blur)="finalizarNuevoValor(i, j)"
+                autofocus
+              />
+            </div>
+
+            <div class="col-md-2 d-flex align-items-end">
+              <button type="button" class="btn btn-danger w-100" (click)="eliminarAtributo(i, j)">
+                Eliminar
               </button>
-            </div>
-
-            <div *ngIf="item.variante.atributos.length === 0" class="empty-atributos">
-              No hay atributos definidos para esta variante.
-            </div>
-
-            <div class="atributos-list">
-              <div class="atributo-row" *ngFor="let attr of item.variante.atributos; let j = index">
-                <div class="attr-col">
-                  <select
-                    class="form-select"
-                    [(ngModel)]="attr.atributoNombre"
-                    (ngModelChange)="onAtributoChange(i, j, $event)"
-                    [name]="'attrNom_' + i + '_' + j"
-                  >
-                    <option value="" disabled>Seleccionar atributo</option>
-                    <option *ngIf="isAtributoPersonalizado(attr)" [value]="attr.atributoNombre">
-                      {{ attr.atributoNombre }} (personalizado)
-                    </option>
-                    <option 
-    *ngFor="let a of atributosDisponibles()" 
-    [value]="a.descripcion"
-    [disabled]="isAtributoYaUsado(i, a.descripcion, j)">
-    {{ a.descripcion }}
-  </option>
-                    <option value="__new__" class="text-primary fw-bold">+ Crear nuevo atributo</option>
-                  </select>
-
-                  <input
-                    *ngIf="attr.atributoNombre === '__new__'"
-                    type="text"
-                    [(ngModel)]="attr.atributoNombreTemp!"
-                    placeholder="Ej: Talla, Material"
-                    class="form-control mt-2 nuevo-input"
-                    (blur)="finalizarNuevoAtributo(i, j)"
-                    autofocus
-                  />
-                </div>
-
-                <div class="attr-col" *ngIf="attr.atributoNombre && attr.atributoNombre !== '__new__'">
-                  <select
-                    class="form-select"
-                    [(ngModel)]="attr.valor"
-                    (ngModelChange)="onValorChange(i, j, $event)"
-                    [name]="'attrVal_' + i + '_' + j"
-                  >
-                    <option value="" disabled>Seleccionar valor</option>
-                    <option *ngIf="isValorPersonalizado(attr)" [value]="attr.valor">
-                      {{ attr.valor }} (personalizado)
-                    </option>
-                    <option *ngFor="let v of getValoresForAtributo(attr.atributoNombre)" [value]="v.descripcion">
-                      {{ v.descripcion }}
-                    </option>
-                    <!-- Opción para crear nuevo (siempre habilitada) -->
-  <option value="__new__" class="text-primary fw-bold">
-    + Crear nuevo atributo
-  </option>
-                  </select>
-
-                  <input
-                    *ngIf="attr.valor === '__new__'"
-                    type="text"
-                    [(ngModel)]="attr.valorTemp!"
-                    placeholder="Ej: 42, Rojo, Algodón"
-                    class="form-control mt-2 nuevo-input"
-                    (blur)="finalizarNuevoValor(i, j)"
-                    autofocus
-                  />
-                </div>
-
-                <div class="attr-col action-col">
-                  <button
-                    type="button"
-                    class="btn btn-danger btn-sm w-100"
-                    (click)="eliminarAtributo(i, j)"
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
+  </div>
+</section>
 
     <!-- Acciones finales -->
     <div class="form-actions mt-5">
