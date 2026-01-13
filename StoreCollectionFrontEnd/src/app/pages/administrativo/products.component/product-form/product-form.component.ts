@@ -31,7 +31,7 @@ export class ProductFormComponent implements OnChanges {
   tiendaId = signal<number | null>(null);
   activo = signal<boolean>(true);
   atributosDisponibles = signal<AtributoConValores[]>([]);
-
+descripcionCortaProducto = signal<string | null>(null);
   variantes = signal<VarianteRequest[]>([]);
   collapsed = signal<boolean[]>([]);
 
@@ -76,7 +76,6 @@ ngOnChanges(changes: SimpleChanges): void {
     this.categoriaId.set(this.producto.categoriaId ?? null);
     this.tiendaId.set(this.producto.tiendaId ?? null);
     this.activo.set(this.producto.activo ?? true);
-
     const variantesMapeadas = this.producto.variantes?.map((v, index) => {
       const variante: VarianteRequest = {
         id: v.id,
@@ -85,6 +84,8 @@ ngOnChanges(changes: SimpleChanges): void {
         stock: v.stock ?? 0,
         imagenUrl: v.imagenUrl,
         activo: v.activo ?? true,
+        precio_anterior: v.precio_anterior ?? null,          // ← NUEVO
+        descripcion_corta: v.descripcion_corta ?? null,      // ← NUEVO
         atributos: v.atributos.map(a => ({
           atributoNombre: a.atributoNombre || '',
           valor: a.valor || ''
@@ -120,6 +121,7 @@ ngOnChanges(changes: SimpleChanges): void {
     this.collapsed.set([]);
     this.imagenPreviews.set(new Map());
     this.tiendaActual.set(null);
+    this.descripcionCortaProducto.set(null);
   }
 
   generarSlugDesdeNombre(): void {
@@ -138,6 +140,8 @@ ngOnChanges(changes: SimpleChanges): void {
       precio: 0,
       stock: 0,
       activo: true,
+    precio_anterior: null,               // ← NUEVO (opcional)
+    descripcion_corta: null,             // ← NUEVO (opcional)
       atributos: []
     };
     this.variantes.update(v => [...v, nueva]);
@@ -443,7 +447,18 @@ agregarAtributo(varianteIndex: number): void {
 
     for (let i = 0; i < this.variantes().length; i++) {
       const v = this.variantes()[i];
-
+if (v.precio_anterior !== null && v.precio_anterior !== undefined) {
+    if (v.precio_anterior <= v.precio) {
+      Swal.fire({
+        icon: 'warning',
+        title: `Variante ${i + 1}: Precio anterior inválido`,
+        text: 'El precio anterior (si se usa) debe ser mayor al precio actual para mostrar oferta correctamente.',
+        confirmButtonText: 'Corregir'
+      });
+      this.loading.set(false);
+      return;
+    }
+  }
       if (!v.sku?.trim()) {
         Swal.fire({
           icon: 'warning',
@@ -532,7 +547,7 @@ for (let i = 0; i < this.variantes().length; i++) {
     formData.append('slug', this.slug().trim());
     formData.append('categoriaId', this.categoriaId()!.toString());
     formData.append('activo', this.activo().toString());
-
+formData.append('descripcion_corta', this.descripcionCortaProducto()?.trim() || '');
     if (this.isEdit) {
       formData.append('tiendaId', this.producto!.tiendaId.toString());
     } else if (this.auth.isAdmin()) {
@@ -545,7 +560,13 @@ for (let i = 0; i < this.variantes().length; i++) {
       formData.append(`variantes[${i}].precio`, v.precio.toString());
       formData.append(`variantes[${i}].stock`, v.stock.toString());
       formData.append(`variantes[${i}].activo`, (v.activo ?? true).toString());
-
+// ¡¡ CAMPOS NUEVOS - AGREGAR AQUÍ !!
+    if (v.precio_anterior !== null && v.precio_anterior !== undefined) {
+      formData.append(`variantes[${i}].precio_anterior`, v.precio_anterior.toString());
+    }
+    if (v.descripcion_corta?.trim()) {
+      formData.append(`variantes[${i}].descripcion_corta`, v.descripcion_corta.trim());
+    }
       if (v.imagen) {
         formData.append(`variantes[${i}].imagen`, v.imagen, v.imagen.name);
       } else if (v.imagenUrl) {

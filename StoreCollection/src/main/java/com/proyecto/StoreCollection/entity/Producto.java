@@ -25,7 +25,9 @@ public class Producto {
     @NotBlank
     private String slug;
 
+
     @ManyToOne @JoinColumn(nullable = false)
+    @NotNull(message = "La categoría es obligatoria")
     private Categoria categoria;
 
     @ManyToOne @JoinColumn(nullable = false)

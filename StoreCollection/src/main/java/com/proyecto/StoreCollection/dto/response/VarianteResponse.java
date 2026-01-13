@@ -14,4 +14,6 @@ public class VarianteResponse {
     private String imagenUrl;
     private boolean activo;
     private List<AtributoValorResponse> atributos;
+    private String descripcion_corta;
+    private BigDecimal precio_anterior;
 }

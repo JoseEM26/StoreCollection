@@ -10,7 +10,7 @@ export interface ProductoAdminListItem {
   categoriaId: number;
   categoriaNombre: string;
   tiendaId: number;
-  tiendaNombre: string;          // ¡¡AÑADIDO!! Estaba faltando
+  tiendaNombre: string;
   activo: boolean;
   precioMinimo: number;
   precioMaximo: number;
@@ -18,7 +18,7 @@ export interface ProductoAdminListItem {
   imagenPrincipal: string;
   tieneVariantes: boolean;
   cantidadVariantes: number;
-variantes?: VarianteResponse[] | null;  // ← ahora acepta null
+  variantes?: VarianteResponse[] | null;
 }
 
 // === Página para la lista administrativa ===
@@ -60,7 +60,7 @@ export interface ProductoRequest {
   slug: string;
   categoriaId: number;
   tiendaId?: number;
-  activo: boolean;
+  activo?: boolean;                           // ← Corregido: era obligatorio, ahora opcional (backend lo maneja)
   variantes: VarianteRequest[];
 }
 
@@ -72,6 +72,8 @@ export interface VarianteResponse {
   stock: number;
   imagenUrl?: string | null;
   activo: boolean;
+  precio_anterior?: number | null;            // ← NUEVO: precio anterior para ofertas
+  descripcion_corta?: string | null;          // ← NUEVO: descripción corta de la variante
   atributos: AtributoValorResponse[];
 }
 
@@ -83,6 +85,8 @@ export interface VarianteRequest {
   imagen?: File;
   imagenUrl?: string | null;
   activo?: boolean;
+  precio_anterior?: number | null;            // ← NUEVO
+  descripcion_corta?: string | null;          // ← NUEVO
   atributos: AtributoValorRequest[];
 }
 

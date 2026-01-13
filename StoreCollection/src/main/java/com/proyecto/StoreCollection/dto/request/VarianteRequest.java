@@ -19,6 +19,9 @@ public class VarianteRequest {
     @Positive
     private BigDecimal precio;
 
+    private BigDecimal precio_anterior;
+    private String descripcion_corta;
+
     @PositiveOrZero
     private Integer stock = 0;
     private Boolean activo = true;

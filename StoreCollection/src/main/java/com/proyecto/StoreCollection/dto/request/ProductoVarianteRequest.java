@@ -17,4 +17,6 @@ public class ProductoVarianteRequest {
     private Boolean activo = true;
     private Integer productoId;
     private Set<Integer> atributoValorIds;
+    private String descripcion_corta;
+    private BigDecimal precio_anterior;
 }

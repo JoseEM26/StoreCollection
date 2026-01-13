@@ -14,4 +14,6 @@ public class ProductoVarianteResponse {
     private Boolean activo;
     private Integer productoId;
     private Set<AtributoValorResponse> atributos;
+    private String descripcion_corta;
+    private BigDecimal precio_anterior;
 }

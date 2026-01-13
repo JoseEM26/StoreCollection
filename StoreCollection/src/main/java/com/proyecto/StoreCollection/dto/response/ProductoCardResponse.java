@@ -38,7 +38,8 @@ public class ProductoCardResponse {
         private String imagenUrl;
         @Builder.Default
         private boolean activo = true;
-
+        private String descripcion_corta;
+        private BigDecimal precio_anterior;
         // ← NUEVO: Lista de atributos
         @Builder.Default
         private List<AtributoValorDTO> atributos = new ArrayList<>();

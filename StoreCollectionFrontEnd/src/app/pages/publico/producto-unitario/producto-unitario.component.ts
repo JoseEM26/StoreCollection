@@ -140,6 +140,14 @@ mensajeExito: string | null = null;  // null = oculto, string = se muestra
   // Actualizamos la variante según la nueva selección
   this.actualizarVarianteSegunSeleccion();
 }
+// Calcula el % de descuento (opcional pero muy útil visualmente)
+calcularPorcentajeDescuento(): number {
+  if (!this.varianteSeleccionada?.precio_anterior || !this.precioActual) return 0;
+  
+  const descuento = this.varianteSeleccionada.precio_anterior - this.precioActual;
+  const porcentaje = Math.round((descuento / this.varianteSeleccionada.precio_anterior) * 100);
+  return porcentaje > 0 ? porcentaje : 0;
+}
   private actualizarVarianteSegunSeleccion() {
     if (!this.producto.variantes.length) {
       this.varianteSeleccionada = null;
@@ -194,9 +202,16 @@ mensajeExito: string | null = null;  // null = oculto, string = se muestra
     const url = this.varianteSeleccionada?.imagenUrl || this.producto.imagenPrincipal;
     this.imagenActual = url?.trim() || this.fallbackImage;
   }
-
+get tienePrecioAnteriorMayor(): boolean {
+  return (
+    this.varianteSeleccionada?.precio_anterior != null &&
+    this.varianteSeleccionada.precio_anterior > this.precioActual
+  );
+}
   // ===== GETTERS =====
-  get precioActual() { return this.varianteSeleccionada?.precio ?? this.producto.precioMinimo; }
+get precioActual() {
+  return this.varianteSeleccionada?.precio ?? this.producto.precioMinimo;
+}
   get hayStock() { return (this.varianteSeleccionada?.stock ?? 0) > 0; }
   get stockActual() { return this.varianteSeleccionada?.stock ?? 0; }
 

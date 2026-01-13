@@ -85,7 +85,7 @@ public interface ProductoRepository extends TenantBaseRepository<Producto, Integ
             pv.stock,
             pv.imagenUrl,
             pv.activo,
-            p.activo
+            p.activo     
         FROM Producto p
         JOIN p.categoria c
         LEFT JOIN p.variantes pv WITH pv.activo = true
@@ -98,31 +98,33 @@ public interface ProductoRepository extends TenantBaseRepository<Producto, Integ
      List<Object[]> findRawCatalogByTiendaSlug(@Param("tiendaSlug") String tiendaSlug);
 
      @Query(value = """
-        SELECT 
-            pv.id,                  
-            p.id,                   
-            p.nombre,               
-            p.slug,                 
-            c.nombre,              
-            pv.precio,              
-            pv.stock,               
-            pv.imagen_url AS imagenUrl,          
-            pv.activo,              
-            p.activo,
-            a.nombre AS atributo_nombre,
-            av.valor
-        FROM producto p
-        JOIN categoria c ON c.id = p.categoria_id
-        LEFT JOIN producto_variante pv ON pv.producto_id = p.id AND pv.activo = true
-        LEFT JOIN variante_atributo va ON va.variante_id = pv.id
-        LEFT JOIN atributo_valor av ON av.id = va.atributo_valor_id
-        LEFT JOIN atributo a ON a.id = av.atributo_id
-        WHERE p.tienda_id = (SELECT t.id FROM tienda t WHERE t.slug = :tiendaSlug AND t.activo = true)
-          AND p.slug = :productoSlug
-          AND p.activo = true              
-          AND c.activo = true               
-        ORDER BY p.id, pv.id, a.nombre, av.valor
-        """, nativeQuery = true)
+    SELECT 
+        pv.id                  AS variante_id,
+        p.id                   AS producto_id,
+        p.nombre               AS producto_nombre,
+        p.slug                 AS producto_slug,
+        c.nombre               AS categoria_nombre,
+        pv.precio              AS precio,
+        pv.stock               AS stock,
+        pv.imagen_url          AS imagen_url,
+        pv.activo              AS variante_activo,
+        p.activo               AS producto_activo,
+        pv.precio_anterior     AS precio_anterior,
+        pv.descripcion_corta   AS descripcion_corta,
+        a.nombre               AS atributo_nombre,
+        av.valor               AS atributo_valor
+    FROM producto p
+    JOIN categoria c ON c.id = p.categoria_id
+    LEFT JOIN producto_variante pv ON pv.producto_id = p.id AND pv.activo = true
+    LEFT JOIN variante_atributo va ON va.variante_id = pv.id
+    LEFT JOIN atributo_valor av ON av.id = va.atributo_valor_id
+    LEFT JOIN atributo a ON a.id = av.atributo_id
+    WHERE p.tienda_id = (SELECT t.id FROM tienda t WHERE t.slug = :tiendaSlug AND t.activo = true)
+      AND p.slug = :productoSlug
+      AND p.activo = true
+      AND c.activo = true
+    ORDER BY p.id, pv.id, a.nombre, av.valor
+    """, nativeQuery = true)
      List<Object[]> findRawDetailBySlugs(
              @Param("tiendaSlug") String tiendaSlug,
              @Param("productoSlug") String productoSlug);

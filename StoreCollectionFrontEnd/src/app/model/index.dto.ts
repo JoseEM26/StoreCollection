@@ -6,14 +6,18 @@ export interface AtributoValorPublic {
 }
 
 export interface VariantePublic {
-  id: number;                    // ← Ahora obligatorio
+  id: number;
   precio: number;
   stock: number;
   imagenUrl?: string;
   activo: boolean;
-  atributos: AtributoValorPublic[]; // ← Nueva propiedad
+  
+  // ¡¡ CAMPOS NUEVOS que faltaban !!
+  precio_anterior?: number | null;         // para ofertas (tachado)
+  descripcion_corta?: string | null;       // descripción breve por variante
+  
+  atributos: AtributoValorPublic[];
 }
-
 export interface ProductoPublic {
   id: number;
   nombre: string;
@@ -22,6 +26,8 @@ export interface ProductoPublic {
   precioMinimo: number;
   stockTotal: number;
   imagenPrincipal: string;
+  // Campo NUEVO: descripción corta general del producto
+  descripcion_corta?: string | null;
   activo: boolean;
   variantes: VariantePublic[];
 }

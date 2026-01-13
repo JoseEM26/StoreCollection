@@ -31,6 +31,8 @@ public class ProductoVariante {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal precio;
 
+    private BigDecimal precio_anterior;
+
     @PositiveOrZero(message = "El stock no puede ser negativo")
     @Column(nullable = false)
     private Integer stock = 0;
@@ -40,6 +42,9 @@ public class ProductoVariante {
 
     @Column(nullable = false)
     private boolean activo = true;
+
+    private String descripcion_corta;
+
 
     // === RELACIÓN CON PRODUCTO ===
     @ManyToOne(fetch = FetchType.LAZY)
@@ -68,4 +73,6 @@ public class ProductoVariante {
     )
     @Builder.Default
     private Set<AtributoValor> atributos = new HashSet<>();
+
+    
 }

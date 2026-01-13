@@ -172,7 +172,7 @@
             // ==================== DATOS BÁSICOS ====================
             producto.setNombre(request.getNombre().trim());
             producto.setSlug(request.getSlug().trim());
-    
+
             Categoria categoria = categoriaRepository.findById(request.getCategoriaId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "Categoría no encontrada. Verifica que la categoría exista en tu tienda."));
@@ -240,6 +240,8 @@
                 variante.setTienda(tienda);
                 variante.setSku(req.getSku().trim());
                 variante.setPrecio(req.getPrecio());
+                variante.setDescripcion_corta(req.getDescripcion_corta());
+                variante.setPrecio_anterior(req.getPrecio_anterior());
                 variante.setStock(req.getStock() != null ? req.getStock() : 0);
                 variante.setActivo(req.getActivo() != null ? req.getActivo() : true);
     
@@ -378,34 +380,36 @@
             if (tenantId == null) return Page.empty(pageable);
             return productoRepository.findAllByTiendaId(tenantId, pageable).map(this::toResponse);
         }
-    
         @Override
         @Transactional(readOnly = true)
         public List<ProductoCardResponse> findAllForPublicCatalog(String tiendaSlug) {
             List<Object[]> rows = productoRepository.findRawCatalogByTiendaSlug(tiendaSlug);
             Map<Integer, ProductoCardResponse> map = new LinkedHashMap<>();
-    
+
             for (Object[] row : rows) {
-                Integer id = (Integer) row[0];
-                Boolean activo = (Boolean) row[8];
-                if (activo == null || !activo) continue;
-    
-                ProductoCardResponse p = map.computeIfAbsent(id, k -> {
+                Integer productoId = (Integer) row[0];
+                Boolean productoActivo = (Boolean) row[8];
+
+                if (productoActivo == null || !productoActivo) {
+                    continue;
+                }
+
+                ProductoCardResponse p = map.computeIfAbsent(productoId, k -> {
                     ProductoCardResponse dto = new ProductoCardResponse();
-                    dto.setId(id);
+                    dto.setId(productoId);
                     dto.setNombre((String) row[1]);
                     dto.setSlug((String) row[2]);
                     dto.setNombreCategoria((String) row[3]);
                     dto.setVariantes(new ArrayList<>());
                     return dto;
                 });
-    
-                BigDecimal precio = row[4] != null ? (BigDecimal) row[4] : null;
-                Integer stock = row[5] != null ? (Integer) row[5] : 0;
-                String imagenUrl = (String) row[6];
-                Boolean activoVar = row[7] != null ? (Boolean) row[7] : false;
-    
-                if (activoVar && precio != null) {
+
+                BigDecimal precio = row[4] != null ? new BigDecimal(row[4].toString()) : null;
+                Integer stock     = row[5] != null ? (Integer) row[5] : 0;
+                String imagenUrl  = (String) row[6];
+                Boolean varianteActivo = row[7] != null ? (Boolean) row[7] : false;
+
+                if (varianteActivo && precio != null) {
                     ProductoCardResponse.VarianteCard v = new ProductoCardResponse.VarianteCard();
                     v.setPrecio(precio);
                     v.setStock(stock);
@@ -414,40 +418,47 @@
                     p.getVariantes().add(v);
                 }
             }
-    
+
             return map.values().stream()
                     .peek(this::calcularCamposDerivados)
                     .filter(p -> p.getStockTotal() > 0)
                     .sorted(Comparator.comparingInt(ProductoCardResponse::getStockTotal).reversed())
                     .toList();
         }
-    
+
+
         @Override
         @Transactional(readOnly = true)
         public ProductoCardResponse findByTiendaSlugAndProductoSlug(String tiendaSlug, String productoSlug) {
             List<Object[]> rows = productoRepository.findRawDetailBySlugs(tiendaSlug, productoSlug);
+
             if (rows.isEmpty()) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado o tienda inactiva");
             }
-    
+
             Boolean productoActivo = (Boolean) rows.get(0)[9];
             if (productoActivo == null || !productoActivo) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "El producto no está disponible.");
             }
-    
+
             Map<Integer, ProductoCardResponse> map = new LinkedHashMap<>();
-    
+
             for (Object[] row : rows) {
-                Integer varianteId = (Integer) row[0];
-                Integer productoId = (Integer) row[1];
-                String nombre = (String) row[2];
-                String slug = (String) row[3];
-                String nombreCategoria = (String) row[4];
-                BigDecimal precio = (BigDecimal) row[5];
-                Integer stock = (Integer) row[6];
-                String imagenUrl = (String) row[7];
-                Boolean activoVar = (Boolean) row[8];
-    
+                Integer varianteId     = (Integer) row[0];
+                Integer productoId     = (Integer) row[1];
+                String nombre          = (String)  row[2];
+                String slug            = (String)  row[3];
+                String nombreCategoria = (String)  row[4];
+
+                // ── Corrección importante aquí ────────────────────────────
+                BigDecimal precio      = row[5] != null ? new BigDecimal(row[5].toString()) : null;
+                //                                                   ↑↑↑↑↑
+                //                                                   ¡Ahora sí es el índice correcto!
+
+                Integer stock          = row[6] != null ? (Integer) row[6] : 0;
+                String imagenUrl       = (String)  row[7];
+                Boolean varianteActivo = row[8] != null ? (Boolean) row[8] : false;
+
                 ProductoCardResponse p = map.computeIfAbsent(productoId, k -> {
                     ProductoCardResponse dto = new ProductoCardResponse();
                     dto.setId(productoId);
@@ -457,8 +468,8 @@
                     dto.setVariantes(new ArrayList<>());
                     return dto;
                 });
-    
-                if (activoVar && precio != null) {
+
+                if (varianteActivo && precio != null) {
                     ProductoCardResponse.VarianteCard variante = p.getVariantes().stream()
                             .filter(v -> Objects.equals(v.getId(), varianteId))
                             .findFirst()
@@ -469,31 +480,38 @@
                                 v.setStock(stock);
                                 v.setImagenUrl(imagenUrl);
                                 v.setActivo(true);
+                                v.setPrecio_anterior(null);
+                                v.setDescripcion_corta(null);
+                                v.setAtributos(new ArrayList<>());
                                 p.getVariantes().add(v);
                                 return v;
                             });
-    
-                    String attrNombre = (String) row[10];
-                    String attrValor = (String) row[11];
+
+                    BigDecimal precioAnterior = row[10] != null ? new BigDecimal(row[10].toString()) : null;
+                    String descCorta = (String) row[11];
+                    variante.setPrecio_anterior(precioAnterior);
+                    variante.setDescripcion_corta(descCorta);
+
+                    String attrNombre = (String) row[12];
+                    String attrValor = (String) row[13];
                     if (attrNombre != null && attrValor != null) {
-                        ProductoCardResponse.VarianteCard.AtributoValorDTO attr = new ProductoCardResponse.VarianteCard.AtributoValorDTO();
+                        var attr = new ProductoCardResponse.VarianteCard.AtributoValorDTO();
                         attr.setAtributoNombre(attrNombre);
                         attr.setValor(attrValor);
                         variante.getAtributos().add(attr);
                     }
                 }
             }
-    
+
             ProductoCardResponse resultado = map.values().iterator().next();
             calcularCamposDerivados(resultado);
-    
+
             if (resultado.getStockTotal() <= 0) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "El producto no tiene stock disponible.");
             }
-    
+
             return resultado;
         }
-    
         private void calcularCamposDerivados(ProductoCardResponse p) {
             List<ProductoCardResponse.VarianteCard> activas = p.getVariantes().stream()
                     .filter(ProductoCardResponse.VarianteCard::isActivo)
@@ -557,7 +575,7 @@
             response.setCategoriaNombre(producto.getCategoria().getNombre());
             response.setTiendaId(producto.getTienda().getId());
             response.setActivo(producto.isActivo());
-    
+
             List<VarianteResponse> variantesResponse = producto.getVariantes().stream()
                     .map(v -> {
                         VarianteResponse vr = new VarianteResponse();
@@ -567,7 +585,9 @@
                         vr.setStock(v.getStock());
                         vr.setImagenUrl(v.getImagenUrl());
                         vr.setActivo(v.isActivo());
-    
+                        vr.setDescripcion_corta(v.getDescripcion_corta());
+                        vr.setPrecio_anterior(v.getPrecio_anterior());
+
                         List<AtributoValorResponse> attrs = v.getAtributos().stream()
                                 .map(av -> {
                                     AtributoValorResponse avr = new AtributoValorResponse();
